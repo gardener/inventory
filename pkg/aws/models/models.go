@@ -20,3 +20,20 @@ type Region struct {
 func (Region) TableName() string {
 	return fmt.Sprintf("%s_%s", constants.TablePrefix, "region")
 }
+
+// AvailabilityZone represents an AWS Availability Zone.
+type AvailabilityZone struct {
+	coremodels.Base
+	Name               string
+	ZoneID             string `gorm:"uniqueIndex:aws_az_zone_id_idx"`
+	OptInStatus        string
+	State              string
+	RegionName         string
+	GroupName          string
+	NetworkBorderGroup string
+}
+
+// TableName implements the [gorm.io/gorm/schema.Namer] interface.
+func (AvailabilityZone) TableName() string {
+	return fmt.Sprintf("%s_%s", constants.TablePrefix, "az")
+}

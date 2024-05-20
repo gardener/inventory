@@ -14,7 +14,9 @@ func main() {
 	models := []any{
 		// AWS models
 		&awsmodels.Region{},
+		&awsmodels.AvailabilityZone{},
 	}
+
 	stmts, err := gormschema.New("postgres").Load(models...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load GORM schema: %v\n", err)
