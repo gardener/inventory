@@ -14,7 +14,7 @@ variable "url" {
 
 env "local" {
   src = data.external_schema.gorm.url
-  dev = var.url
+  dev = "docker://postgres/16.2-bookworm/inventory"
   url = var.url
   migration {
     dir = "file://migrations"
