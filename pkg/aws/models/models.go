@@ -11,7 +11,7 @@ import (
 // Region represents an AWS Region
 type Region struct {
 	coremodels.Base
-	Name        string
+	Name        string `gorm:"uniqueIndex:aws_region_name_idx"`
 	Endpoint    string
 	OptInStatus string
 }
