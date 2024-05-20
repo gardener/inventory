@@ -6,10 +6,16 @@ import (
 	"os"
 
 	"ariga.io/atlas-provider-gorm/gormschema"
+
+	awsmodels "github.com/gardener/inventory/pkg/aws/models"
 )
 
 func main() {
-	stmts, err := gormschema.New("postgres").Load()
+	models := []any{
+		// AWS models
+		&awsmodels.Region{},
+	}
+	stmts, err := gormschema.New("postgres").Load(models...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load GORM schema: %v\n", err)
 		os.Exit(1)
