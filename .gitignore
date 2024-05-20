@@ -21,3 +21,9 @@ go.work.sum
 # Editor backup files
 *~
 *.swp
+
+# Local Docker volumes
+dev/local/postgres
+
+# direnv
+.envrc
