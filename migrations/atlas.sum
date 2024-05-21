@@ -1,6 +1,7 @@
-h1:n0bRGcXcUUnO7UGO+s0Tj9+AojuoP/lPBavjXfmBQT4=
+h1:FvQlSAa8Qq3ja5g+O4zrFPvQGj50w2vuYPew3/Wzwlw=
 20240520133310_aws_region.sql h1:AYJwFTPt6fGp8l2s+nnxau3eGmBOCzhaTndX1vZwy7c=
 20240520135422_core_default_timestamp.sql h1:Qc34DStJ02LG92ca30xTKi3XxezEoogRDfrr+4j4mqE=
 20240520135846_aws_availability_zone.sql h1:Zr5mAYM1+vITa/wPpyNckBRgL3qZx1xMO/7bXI7qXsE=
 20240521063640_aws_vpc_model.sql h1:y1YGYoF2DgfLaoKaMbrix/zs1/UupKTOuI1LiQ2uE3Q=
 20240521065031_aws_subnet_model.sql h1:+iDVx3DYOdYjUatyQoNdDkHAfaElZzu7yrmHBnXtU3U=
+20240521073059_aws_instance_model.sql h1:yCr5mv2G5J/Cf761fRDBk3S/KIyRshRa+S9u2stNMkY=

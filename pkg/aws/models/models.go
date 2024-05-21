@@ -80,3 +80,21 @@ type Subnet struct {
 func (Subnet) TableName() string {
 	return tableName("subnet")
 }
+
+// Instance represents an AWS EC2 instance
+type Instance struct {
+	coremodels.Base
+	Name         string
+	Arch         string
+	InstanceID   string `gorm:"uniqueIndex:aws_instance_instance_id_idx"`
+	InstanceType string
+	State        string
+	SubnetID     string
+	VpcID        string
+	Platform     string
+}
+
+// TableName implements the [gorm.io/gorm/schema.Namer] interface.
+func (Instance) TableName() string {
+	return tableName("instance")
+}
