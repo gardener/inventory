@@ -8,6 +8,11 @@ import (
 	"github.com/gardener/inventory/pkg/aws/constants"
 )
 
+// A helper function which returns a table name with prefix
+func tableName(name string) string {
+	return fmt.Sprintf("%s_%s", constants.TablePrefix, name)
+}
+
 // Region represents an AWS Region
 type Region struct {
 	coremodels.Base
@@ -18,7 +23,7 @@ type Region struct {
 
 // TableName implements the [gorm.io/gorm/schema.Namer] interface.
 func (Region) TableName() string {
-	return fmt.Sprintf("%s_%s", constants.TablePrefix, "region")
+	return tableName("region")
 }
 
 // AvailabilityZone represents an AWS Availability Zone.
@@ -35,5 +40,5 @@ type AvailabilityZone struct {
 
 // TableName implements the [gorm.io/gorm/schema.Namer] interface.
 func (AvailabilityZone) TableName() string {
-	return fmt.Sprintf("%s_%s", constants.TablePrefix, "az")
+	return tableName("az")
 }
