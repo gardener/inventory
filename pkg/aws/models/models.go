@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -59,4 +60,23 @@ type VPC struct {
 // TableName implements the [gorm.io/gorm/schema.Namer] interface.
 func (VPC) TableName() string {
 	return tableName("vpc")
+}
+
+// Subnet represents an AWS Subnet
+type Subnet struct {
+	coremodels.Base
+	Name                   string
+	SubnetID               string `gorm:"uniqueIndex:aws_subnet_subnet_id_idx"`
+	VpcID                  string
+	State                  string
+	AZ                     string
+	AzID                   string
+	AvailableIPv4Addresses int
+	IPv4CIDR               sql.NullString
+	IPv6CIDR               sql.NullString
+}
+
+// TableName implements the [gorm.io/gorm/schema.Namer] interface.
+func (Subnet) TableName() string {
+	return tableName("subnet")
 }

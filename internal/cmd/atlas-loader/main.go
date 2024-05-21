@@ -16,6 +16,7 @@ func main() {
 		&awsmodels.Region{},
 		&awsmodels.AvailabilityZone{},
 		&awsmodels.VPC{},
+		&awsmodels.Subnet{},
 	}
 
 	stmts, err := gormschema.New("postgres").Load(models...)
