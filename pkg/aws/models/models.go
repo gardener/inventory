@@ -20,6 +20,7 @@ type Region struct {
 	Name        string `gorm:"uniqueIndex:aws_region_name_idx"`
 	Endpoint    string
 	OptInStatus string
+	VPCList     []*VPC `gorm:"references:Name;foreignKey:RegionName"`
 }
 
 // TableName implements the [gorm.io/gorm/schema.Namer] interface.
