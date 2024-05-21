@@ -42,3 +42,21 @@ type AvailabilityZone struct {
 func (AvailabilityZone) TableName() string {
 	return tableName("az")
 }
+
+// VPC represents an AWS VPC
+type VPC struct {
+	coremodels.Base
+	Name       string
+	VpcID      string `gorm:"uniqueIndex:aws_vpc_vpc_id_idx"`
+	State      string
+	IPv4CIDR   string
+	IPv6CIDR   string
+	IsDefault  bool
+	OwnerID    string
+	RegionName string
+}
+
+// TableName implements the [gorm.io/gorm/schema.Namer] interface.
+func (VPC) TableName() string {
+	return tableName("vpc")
+}

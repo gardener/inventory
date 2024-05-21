@@ -15,6 +15,7 @@ func main() {
 		// AWS models
 		&awsmodels.Region{},
 		&awsmodels.AvailabilityZone{},
+		&awsmodels.VPC{},
 	}
 
 	stmts, err := gormschema.New("postgres").Load(models...)
