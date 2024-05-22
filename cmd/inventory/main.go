@@ -22,7 +22,9 @@ func main() {
 				Value: false,
 			},
 		},
-		Commands: []*cli.Command{},
+		Commands: []*cli.Command{
+			NewDatabaseCommand(),
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
