@@ -41,3 +41,17 @@ func dbFromFlags(ctx *cli.Context) *bun.DB {
 
 	return db
 }
+
+// newMigratorFromFlags returns a new [github.com/uptrace/bun/migrate.Migrator]
+// from the specified flags.
+func newMigratorFromFlags(ctx *cli.Context, db *bun.DB) *migrate.Migrator {
+	// By default we will use the bundled migrations, unless we have an
+	// explicitely specified alternate migrations directory.
+	m := migrations.Migrations
+	migrationDir := ctx.String("migration-dir")
+	if migrationDir != "" {
+		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(migrationDir))
+	}
+
+	return migrate.NewMigrator(db, m)
+}
