@@ -4,12 +4,9 @@ import (
 	"time"
 )
 
-// Base is the base model in the inventory system.
-//
-// The model is similar to the base [gorm.io/gorm.Model], except that it doesn't
-// include the field for soft-deletes.
-type Base struct {
-	ID        uint      `gorm:"primaryKey"`
-	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+// Model is the base model in the inventory system.
+type Model struct {
+	ID        uint64    `bun:"id,pk,autoincrement"`
+	CreatedAt time.Time `bun:"created_at,notnull,default:current_timestamp"`
+	UpdatedAt time.Time `bun:"updated_at,notnull,default:current_timestamp"`
 }

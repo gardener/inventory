@@ -3,27 +3,26 @@ module github.com/gardener/inventory
 go 1.22.3
 
 require (
-	ariga.io/atlas-provider-gorm v0.3.4
-	gorm.io/driver/sqlite v1.5.2
-	gorm.io/gorm v1.25.7
+	github.com/uptrace/bun v1.1.17
+	github.com/uptrace/bun/dialect/pgdialect v1.1.17
+	github.com/uptrace/bun/driver/pgdriver v1.1.17
+	github.com/uptrace/bun/extra/bundebug v1.1.17
+	github.com/urfave/cli/v2 v2.27.2
 )
 
 require (
-	ariga.io/atlas-go-sdk v0.2.3 // indirect
-	github.com/go-sql-driver/mysql v1.7.0 // indirect
-	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
-	github.com/golang-sql/sqlexp v0.1.0 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.3.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/mattn/go-sqlite3 v1.14.17 // indirect
-	github.com/microsoft/go-mssqldb v1.6.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	gorm.io/driver/mysql v1.5.1 // indirect
-	gorm.io/driver/postgres v1.5.2 // indirect
-	gorm.io/driver/sqlserver v1.5.2 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
+	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	mellium.im/sasl v0.3.1 // indirect
 )

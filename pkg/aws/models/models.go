@@ -2,100 +2,77 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
-
-	"github.com/gardener/inventory/pkg/aws/constants"
+	"github.com/uptrace/bun"
 )
-
-// A helper function which returns a table name with prefix
-func tableName(name string) string {
-	return fmt.Sprintf("%s_%s", constants.TablePrefix, name)
-}
 
 // Region represents an AWS Region
 type Region struct {
-	coremodels.Base
-	Name        string `gorm:"uniqueIndex:aws_region_name_idx"`
-	Endpoint    string
-	OptInStatus string
-	VPCList     []*VPC `gorm:"references:Name;foreignKey:RegionName"`
-}
+	bun.BaseModel `bun:"table:aws_region"`
+	coremodels.Model
 
-// TableName implements the [gorm.io/gorm/schema.Namer] interface.
-func (Region) TableName() string {
-	return tableName("region")
+	Name        string `bun:"name,notnull,unique"`
+	Endpoint    string `bun:"endpoint,notnull"`
+	OptInStatus string `bun:"opt_in_status,notnull"`
 }
 
 // AvailabilityZone represents an AWS Availability Zone.
 type AvailabilityZone struct {
-	coremodels.Base
-	Name               string
-	ZoneID             string `gorm:"uniqueIndex:aws_az_zone_id_idx"`
-	OptInStatus        string
-	State              string
-	RegionName         string
-	GroupName          string
-	NetworkBorderGroup string
-}
+	bun.BaseModel `bun:"table:aws_az"`
+	coremodels.Model
 
-// TableName implements the [gorm.io/gorm/schema.Namer] interface.
-func (AvailabilityZone) TableName() string {
-	return tableName("az")
+	ZoneID             string `bun:"zone_id,notnull,unique"`
+	Name               string `bun:"name,notnull"`
+	OptInStatus        string `bun:"opt_in_status,notnull"`
+	State              string `bun:"state,notnull"`
+	RegionName         string `bun:"region_name,notnull"`
+	GroupName          string `bun:"group_name,notnull"`
+	NetworkBorderGroup string `bun:"network_border_group,notnull"`
 }
 
 // VPC represents an AWS VPC
 type VPC struct {
-	coremodels.Base
-	Name       string
-	VpcID      string `gorm:"uniqueIndex:aws_vpc_vpc_id_idx"`
-	State      string
-	IPv4CIDR   string
-	IPv6CIDR   string
-	IsDefault  bool
-	OwnerID    string
-	RegionName string
-}
+	bun.BaseModel `bun:"table:aws_vpc"`
+	coremodels.Model
 
-// TableName implements the [gorm.io/gorm/schema.Namer] interface.
-func (VPC) TableName() string {
-	return tableName("vpc")
+	Name       string `bun:"name,notnull"`
+	VpcID      string `bun:"vpc_id,notnull,unique"`
+	State      string `bun:"state,notnull"`
+	IPv4CIDR   string `bun:"ipv4_cidr,notnull"`
+	IPv6CIDR   string `bun:"ipv4_cidr"`
+	IsDefault  bool   `bun:"is_default,notnull"`
+	OwnerID    string `bun:"owner_id,notnull"`
+	RegionName string `bun:"region_name,notnull"`
 }
 
 // Subnet represents an AWS Subnet
 type Subnet struct {
-	coremodels.Base
-	Name                   string
-	SubnetID               string `gorm:"uniqueIndex:aws_subnet_subnet_id_idx"`
-	VpcID                  string
-	State                  string
-	AZ                     string
-	AzID                   string
-	AvailableIPv4Addresses int
-	IPv4CIDR               sql.NullString
-	IPv6CIDR               sql.NullString
-}
+	bun.BaseModel `bun:"table:aws_subnet"`
+	coremodels.Model
 
-// TableName implements the [gorm.io/gorm/schema.Namer] interface.
-func (Subnet) TableName() string {
-	return tableName("subnet")
+	Name                   string         `bun:"name,notnull"`
+	SubnetID               string         `bun:"subnet_id,notnull"`
+	VpcID                  string         `bun:"vpc_id,notnull"`
+	State                  string         `bun:"state,notnull"`
+	AZ                     string         `bun:"az,notnull"`
+	AzID                   string         `bun:"az_id,notnull"`
+	AvailableIPv4Addresses int            `bun:"available_ipv4_addresses,notnull"`
+	IPv4CIDR               sql.NullString `bun:"ipv4_cidr,notnull"`
+	IPv6CIDR               sql.NullString `bun:"ipv6_cidr"`
 }
 
 // Instance represents an AWS EC2 instance
 type Instance struct {
-	coremodels.Base
-	Name         string
-	Arch         string
-	InstanceID   string `gorm:"uniqueIndex:aws_instance_instance_id_idx"`
-	InstanceType string
-	State        string
-	SubnetID     string
-	VpcID        string
-	Platform     string
-}
+	bun.BaseModel `bun:"table:aws_instance"`
+	coremodels.Model
 
-// TableName implements the [gorm.io/gorm/schema.Namer] interface.
-func (Instance) TableName() string {
-	return tableName("instance")
+	Name         string `bun:"name,notnull"`
+	Arch         string `bun:"arch,notnull"`
+	InstanceID   string `bun:"instance_id,notnull,unique"`
+	InstanceType string `bun:"instance_type,notnull"`
+	State        string `bun:"state,notnull"`
+	SubnetID     string `bun:"subnet_id,notnull"`
+	VpcID        string `bun:"vpc_id,notnull"`
+	Platform     string `bun:"platform,notnull"`
 }
