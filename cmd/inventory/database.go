@@ -146,9 +146,17 @@ func NewDatabaseCommand() *cli.Command {
 						return err
 					}
 
-					fmt.Printf("migrations: %s\n", ms)
-					fmt.Printf("pending migrations: %s\n", ms.Unapplied())
-					fmt.Printf("last migration group: %s\n", ms.LastGroup())
+					pending := ms.Unapplied()
+					group := ms.LastGroup()
+
+					fmt.Printf("pending migration(s): %d\n", len(pending))
+					fmt.Printf("database version: %s\n", group)
+
+					if len(pending) == 0 {
+						fmt.Println("database is up-to-date")
+					} else {
+						fmt.Println("database is out-of-date")
+					}
 
 					return nil
 				},
