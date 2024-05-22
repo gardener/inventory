@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gardener/inventory/internal/pkg/migrations"
+	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -158,6 +161,49 @@ func NewDatabaseCommand() *cli.Command {
 						fmt.Println("database is out-of-date")
 					}
 
+					return nil
+				},
+			},
+			{
+				Name:  "applied",
+				Usage: "display the applied migrations",
+				Action: func(ctx *cli.Context) error {
+					db := newDBFromFlags(ctx)
+					migrator := newMigratorFromFlags(ctx, db)
+					ms, err := migrator.MigrationsWithStatus(ctx.Context)
+					if err != nil {
+						return err
+					}
+
+					applied := ms.Applied()
+					if len(applied) == 0 {
+						return nil
+					}
+
+					table := tablewriter.NewWriter(os.Stdout)
+					headers := []string{
+						"ID",
+						"NAME",
+						"COMMENT",
+						"GROUP-ID",
+						"MIGRATED-AT",
+					}
+					table.SetHeader(headers)
+					table.SetAutoWrapText(false)
+					table.SetBorder(false)
+
+					for _, item := range applied {
+						row := []string{
+							strconv.FormatInt(item.ID, 10),
+							item.Name,
+							item.Comment,
+							strconv.FormatInt(item.GroupID, 10),
+							item.MigratedAt.String(),
+						}
+						table.Append(row)
+					}
+
+					table.Render()
 					return nil
 				},
 			},
