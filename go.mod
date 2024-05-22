@@ -3,10 +3,10 @@ module github.com/gardener/inventory
 go 1.22.3
 
 require (
-	github.com/uptrace/bun v1.1.17
-	github.com/uptrace/bun/dialect/pgdialect v1.1.17
-	github.com/uptrace/bun/driver/pgdriver v1.1.17
-	github.com/uptrace/bun/extra/bundebug v1.1.17
+	github.com/uptrace/bun v1.2.1
+	github.com/uptrace/bun/dialect/pgdialect v1.2.1
+	github.com/uptrace/bun/driver/pgdriver v1.2.1
+	github.com/uptrace/bun/extra/bundebug v1.2.1
 	github.com/urfave/cli/v2 v2.27.2
 )
 
