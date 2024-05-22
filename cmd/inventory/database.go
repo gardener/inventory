@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -166,7 +167,7 @@ func NewDatabaseCommand() *cli.Command {
 			},
 			{
 				Name:  "applied",
-				Usage: "display the applied migrations",
+				Usage: "display the list of applied migrations",
 				Action: func(ctx *cli.Context) error {
 					db := newDBFromFlags(ctx)
 					migrator := newMigratorFromFlags(ctx, db)
@@ -175,35 +176,36 @@ func NewDatabaseCommand() *cli.Command {
 						return err
 					}
 
-					applied := ms.Applied()
-					if len(applied) == 0 {
+					items := ms.Applied()
+					if len(items) == 0 {
 						return nil
 					}
 
-					table := tablewriter.NewWriter(os.Stdout)
-					headers := []string{
-						"ID",
-						"NAME",
-						"COMMENT",
-						"GROUP-ID",
-						"MIGRATED-AT",
-					}
-					table.SetHeader(headers)
-					table.SetAutoWrapText(false)
-					table.SetBorder(false)
-
-					for _, item := range applied {
-						row := []string{
-							strconv.FormatInt(item.ID, 10),
-							item.Name,
-							item.Comment,
-							strconv.FormatInt(item.GroupID, 10),
-							item.MigratedAt.String(),
-						}
-						table.Append(row)
-					}
-
+					table := tabulateMigrations(os.Stdout, items)
 					table.Render()
+
+					return nil
+				},
+			},
+			{
+				Name:  "pending",
+				Usage: "display the list of pending migrations",
+				Action: func(ctx *cli.Context) error {
+					db := newDBFromFlags(ctx)
+					migrator := newMigratorFromFlags(ctx, db)
+					ms, err := migrator.MigrationsWithStatus(ctx.Context)
+					if err != nil {
+						return err
+					}
+
+					items := ms.Unapplied()
+					if len(items) == 0 {
+						return nil
+					}
+
+					table := tabulateMigrations(os.Stdout, items)
+					table.Render()
+
 					return nil
 				},
 			},
@@ -211,6 +213,46 @@ func NewDatabaseCommand() *cli.Command {
 	}
 
 	return cmd
+}
+
+// tabulateMigrations adds the given migration items to a table and returns it.
+// The returned table can be further customized, if needed, and rendered.
+func tabulateMigrations(w io.Writer, items migrate.MigrationSlice) *tablewriter.Table {
+	table := tablewriter.NewWriter(os.Stdout)
+	headers := []string{
+		"ID",
+		"NAME",
+		"COMMENT",
+		"GROUP-ID",
+		"MIGRATED-AT",
+	}
+	table.SetHeader(headers)
+	table.SetAutoWrapText(false)
+	table.SetBorder(false)
+
+	for _, item := range items {
+		id := "N/A"
+		groupId := "N/A"
+
+		if item.ID > 0 {
+			id = strconv.FormatInt(item.ID, 10)
+		}
+
+		if item.GroupID > 0 {
+			groupId = strconv.FormatInt(item.GroupID, 10)
+		}
+
+		row := []string{
+			id,
+			item.Name,
+			item.Comment,
+			groupId,
+			item.MigratedAt.String(),
+		}
+		table.Append(row)
+	}
+
+	return table
 }
 
 // newDbFromFlags returns a Bun database from the specified flags
