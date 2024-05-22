@@ -233,6 +233,7 @@ func tabulateMigrations(w io.Writer, items migrate.MigrationSlice) *tablewriter.
 	for _, item := range items {
 		id := "N/A"
 		groupId := "N/A"
+		migratedAt := "N/A"
 
 		if item.ID > 0 {
 			id = strconv.FormatInt(item.ID, 10)
@@ -242,12 +243,16 @@ func tabulateMigrations(w io.Writer, items migrate.MigrationSlice) *tablewriter.
 			groupId = strconv.FormatInt(item.GroupID, 10)
 		}
 
+		if !item.MigratedAt.IsZero() {
+			migratedAt = item.MigratedAt.String()
+		}
+
 		row := []string{
 			id,
 			item.Name,
 			item.Comment,
 			groupId,
-			item.MigratedAt.String(),
+			migratedAt,
 		}
 		table.Append(row)
 	}
