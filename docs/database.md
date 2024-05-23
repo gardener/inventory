@@ -8,7 +8,7 @@ The persistence layer used by the Gardener Inventory is
 The high-level overview of the data model followed by the Gardener Inventory
 system looks like this.
 
-![Data Model](./images/data-model.svg)
+![Data Model](../images/data-model.svg)
 
 # Models
 
