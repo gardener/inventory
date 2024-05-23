@@ -280,7 +280,7 @@ func newMigratorFromFlags(ctx *cli.Context, db *bun.DB) *migrate.Migrator {
 	m := migrations.Migrations
 	migrationDir := ctx.String("migration-dir")
 	if migrationDir != "" {
-		m = migrate.NewMigrations()
+		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(migrationDir))
 		m.Discover(os.DirFS(migrationDir))
 	}
 
