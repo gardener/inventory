@@ -1,4 +1,4 @@
-package registry
+package task
 
 import (
 	"errors"
@@ -8,8 +8,8 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-// DefaultRegistry is the default task registry.
-var DefaultRegistry = NewRegistry()
+// Default is the default task registry.
+var Default = New()
 
 // ErrTaskAlreadyRegistered is returned when attempting to register a task, for
 // which there is an already registered handler.
@@ -25,8 +25,8 @@ type Registry struct {
 	items map[string]asynq.Handler
 }
 
-// NewRegistry creates a new empty registry.
-func NewRegistry() *Registry {
+// New creates a new empty registry.
+func New() *Registry {
 	r := &Registry{
 		items: make(map[string]asynq.Handler),
 	}
@@ -92,30 +92,4 @@ func (r *Registry) Range(f RangeFunc) {
 			return
 		}
 	}
-}
-
-// Register registers the given task and handler in the default registry.
-func Register(name string, handler asynq.Handler) error {
-	return DefaultRegistry.Register(name, handler)
-}
-
-// Unregister unregisters the given task from the default registry.
-func Unregister(name string) {
-	DefaultRegistry.Unregister(name)
-}
-
-// MustRegister registers the given task and handler in the default registry.
-func MustRegister(name string, handler asynq.Handler) {
-	DefaultRegistry.MustRegister(name, handler)
-}
-
-// Get returns the task handler with the given name from the default registry.
-func Get(name string) (asynq.Handler, bool) {
-	return DefaultRegistry.Get(name)
-}
-
-// Range iterates over the items from the default registry and calls f for each
-// item. If f returns a non-nil error Range will stop the iteration.
-func Range(f RangeFunc) {
-	DefaultRegistry.Range(f)
 }

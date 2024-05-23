@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/core/registry"
+	taskregistry "github.com/gardener/inventory/pkg/core/registry/task"
 	"github.com/hibiken/asynq"
 )
 
@@ -23,5 +23,5 @@ func HandleSampleTask(ctx context.Context, t *asynq.Task) error {
 }
 
 func init() {
-	registry.MustRegister("aws:sample-task", asynq.HandlerFunc(HandleSampleTask))
+	taskregistry.Default.MustRegister("aws:sample-task", asynq.HandlerFunc(HandleSampleTask))
 }
