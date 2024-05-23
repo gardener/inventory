@@ -6,9 +6,9 @@ import (
 	"sync"
 )
 
-// ErrItemAlreadyRegistered is returned when attempting to register an item,
-// which is already present in the registry.
-var ErrItemAlreadyRegistered = errors.New("item is already registered")
+// ErrKeyAlreadyRegistered is returned when attempting to register a key, which
+// is already present in the registry.
+var ErrKeyAlreadyRegistered = errors.New("key is already registered")
 
 // ErrStopIteration is an error, which is used to stop iterating over the
 // registry.
@@ -29,14 +29,14 @@ func New[K comparable, V any]() *Registry[K, V] {
 	return r
 }
 
-// Register registers the task handler with the given name
+// Register registers the key and value with the registry
 func (r *Registry[K, V]) Register(key K, val V) error {
 	r.Lock()
 	defer r.Unlock()
 
 	_, exists := r.items[key]
 	if exists {
-		return fmt.Errorf("%w: %v", ErrItemAlreadyRegistered, key)
+		return fmt.Errorf("%w: %v", ErrKeyAlreadyRegistered, key)
 	}
 
 	r.items[key] = val
@@ -67,15 +67,16 @@ func (r *Registry[K, V]) Get(key K) (V, bool) {
 	r.Lock()
 	defer r.Unlock()
 
-	handler, ok := r.items[key]
-	return handler, ok
+	val, ok := r.items[key]
+	return val, ok
 }
 
-// RangeFunc is a function which is called when iterating over the registry.
+// RangeFunc is a function which is called when iterating over the registry
+// items. In order to stop iteration callers should return ErrStopIteration.
 type RangeFunc[K comparable, V any] func(key K, val V) error
 
-// Range calls f for each key/value pair in the registry. If f returns an error,
-// Range will stop the iteration.
+// Range calls f for each item in the registry. If f returns an error, Range
+// will stop the iteration.
 func (r *Registry[K, V]) Range(f RangeFunc[K, V]) {
 	r.Lock()
 	defer r.Unlock()
