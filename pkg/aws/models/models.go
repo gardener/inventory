@@ -50,7 +50,7 @@ type Subnet struct {
 	coremodels.Model
 
 	Name                   string `bun:"name,notnull"`
-	SubnetID               string `bun:"subnet_id,notnull"`
+	SubnetID               string `bun:"subnet_id,notnull,unique"`
 	VpcID                  string `bun:"vpc_id,notnull"`
 	State                  string `bun:"state,notnull"`
 	AZ                     string `bun:"az,notnull"`
