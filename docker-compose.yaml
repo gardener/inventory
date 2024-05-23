@@ -23,6 +23,18 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    ports:
+      - 6379:6379
+    image: redis:7.2.5-bookworm
+    volumes:
+      - ./dev/local/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   metabase:
     image: metabase/metabase:latest
     ports:
