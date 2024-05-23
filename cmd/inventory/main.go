@@ -25,6 +25,7 @@ func main() {
 		Commands: []*cli.Command{
 			NewDatabaseCommand(),
 			NewWorkerCommand(),
+			NewSchedulerCommand(),
 		},
 	}
 

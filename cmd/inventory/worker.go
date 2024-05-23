@@ -7,9 +7,6 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
-
-	// Import only for the side effects of registering our tasks
-	_ "github.com/gardener/inventory/pkg/aws/tasks"
 )
 
 // NewWorkerCommand returns a new command for interfacing with the workers.
