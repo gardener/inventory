@@ -25,7 +25,7 @@ type Registry struct {
 	items map[string]asynq.Handler
 }
 
-// NewRegistry creates a new emptry registry.
+// NewRegistry creates a new empty registry.
 func NewRegistry() *Registry {
 	r := &Registry{
 		items: make(map[string]asynq.Handler),
@@ -46,6 +46,13 @@ func (r *Registry) Register(name string, handler asynq.Handler) error {
 
 	r.items[name] = handler
 	return nil
+}
+
+// MustRegister registers the tasks, or panics in case of errors.
+func (r *Registry) MustRegister(name string, handler asynq.Handler) {
+	if err := r.Register(name, handler); err != nil {
+		panic(err)
+	}
 }
 
 // Unregister removes the handler associated with the given name (if present)
