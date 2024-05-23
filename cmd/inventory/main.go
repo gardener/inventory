@@ -6,7 +6,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/gardener/inventory/version"
+	"github.com/gardener/inventory/pkg/version"
 )
 
 func main() {
