@@ -1,0 +1,46 @@
+---
+x-postgres:
+  uri: &postgres-uri 'postgresql://inventory:p4ssw0rd@localhost:5432/inventory'
+  user: &postgres-user inventory
+  password: &postgres-password 'p4ssw0rd'
+  db_name: &postgres-db-name inventory
+  port: &postgres-port 5432
+
+services:
+  postgres:
+    ports:
+      - 5432:5432
+    image: postgres:16.2-bookworm
+    environment:
+      POSTGRES_USER: *postgres-user
+      POSTGRES_PASSWORD: *postgres-password
+      POSTGRES_DB: *postgres-db-name
+    volumes:
+      - ./dev/local/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "--username", *postgres-user]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  metabase:
+    image: metabase/metabase:latest
+    ports:
+      - 3000:3000
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: *postgres-port
+      MB_DB_USER: *postgres-user
+      MB_DB_PASS: *postgres-password
+      MB_DB_HOST: postgres
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - metabase
