@@ -2,9 +2,14 @@ package main
 
 import (
 	"context"
+	"log/slog"
 
+	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
+
+	// Import only for the side effects of registering our tasks
+	_ "github.com/gardener/inventory/pkg/aws/tasks"
 )
 
 // NewWorkerCommand returns a new command for interfacing with the workers.
@@ -35,7 +40,12 @@ func NewWorkerCommand() *cli.Command {
 					server := newAsynqServerFromFlags(ctx)
 					mux := asynq.NewServeMux()
 
-					// TODO: register handlers here
+					// Register our task handlers
+					registry.Range(func(name string, handler asynq.Handler) error {
+						slog.Info("registering task", "name", name)
+						mux.Handle(name, handler)
+						return nil
+					})
 
 					if err := server.Run(mux); err != nil {
 						return err
@@ -61,7 +71,7 @@ func newAsynqServerFromFlags(ctx *cli.Context) *asynq.Server {
 		Addr: redisEndpoint,
 	}
 
-	// TODO: Logger, priority queues, etc.
+	// TODO: Logger, priority queues, log level, etc.
 	config := asynq.Config{
 		Concurrency: concurrency,
 		BaseContext: func() context.Context { return ctx.Context },
