@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	taskregistry "github.com/gardener/inventory/pkg/core/registry/task"
+	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
 
@@ -41,7 +41,7 @@ func NewWorkerCommand() *cli.Command {
 					mux := asynq.NewServeMux()
 
 					// Register our task handlers
-					taskregistry.Default.Range(func(name string, handler asynq.Handler) error {
+					registry.TaskRegistry.Range(func(name string, handler asynq.Handler) error {
 						slog.Info("registering task", "name", name)
 						mux.Handle(name, handler)
 						return nil
