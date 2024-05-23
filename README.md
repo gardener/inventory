@@ -32,7 +32,7 @@ TODO: Document me
 For persisting the collected data the Gardener Inventory will use a PostgreSQL
 database.
 
-The database models are built on top of [GORM](https://gorm.io/).
+The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
 
 ## Worker
 
@@ -45,6 +45,17 @@ message passing interface.
 The scheduler is based on [hibiken/asynq](https://github.com/hibiken/asynq) and
 is used to trigger the execution of periodic tasks.
 
+## Message Queue
+
+Redis (or Valkey, or Redict) is used as a message queue for async communication
+between the scheduler and workers.
+
+## CLI
+
+The CLI application is used for interfacing with the inventory system and
+provides various sub-commands such as migrating the database schema, starting up
+services, etc.
+
 # Code Structure
 
 TODO: Document me
@@ -56,135 +67,126 @@ The persistence layer used by the Gardener Inventory is
 
 # Database Models
 
-The database models are built on top of [GORM](https://gorm.io/).
+The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
 
-The following sections provide details about naming conventions and other hints
-to follow when creating a new model.
+The following sections provide additional details about naming conventions and
+other hints to follow when creating a new model, or updating an existing one.
 
 ## Base Model
 
 The [pkg/core/models](./pkg/core/models) package provides base models, which are
 meant to be used by other models.
 
-Make sure that you embed the [pkg/core/models.Base](./pkg/core/models) model
+Make sure that you embed the [pkg/core/models.Model](./pkg/core/models) model
 into your models, so that we have a consistent models structure.
+
+In additional to our core model, we should also embed the
+[bun.BaseModel](https://pkg.go.dev/github.com/uptrace/bun#BaseModel) model,
+which would allow us to customize the model further, e.g. specifying a
+different table name, alias, view name, etc.
+
+Customizing the table name, alias and view name for a model can only be
+configured on the `bun.BaseModel`. See the
+[Struct Tags](https://bun.uptrace.dev/guide/models.html#struct-tags) section from the
+[uptrace/bun](https://bun.uptrace.dev/guide/) documentation.
 
 Example model would look like this.
 
 ``` go
-package mypkg
+package my_package
 
-import coremodels "github.com/gardener/inventory/pkg/core/models"
+import (
+	coremodels "github.com/gardener/inventory/pkg/core/models"
+	"github.com/uptrace/bun"
+)
 
-// Foo does bar
-type Foo struct {
-    coremodels.Base
-    Foo string
-    Bar string
+// MyModel does something
+type MyModel struct {
+	bun.BaseModel `bun:"table:my_table_name"`
+	coremodels.Model
+
+	Name        string `bun:"name,notnull,unique"`
 }
 ```
 
-When creating this data model in the database the field names will be converted
-to `snake_case` according to the [GORM
-conventions](https://gorm.io/docs/models.html#Conventions).
+Make sure to check the documentation about [defining
+models](https://bun.uptrace.dev/guide/models.html) for additional information
+and examples.
 
-If you need to customize permissions to fields or provide some additional
-attributes to your models, please refer to the [Field-Level
-Permissions](https://gorm.io/docs/models.html#Field-Level-Permission) and [Field
-Tags](https://gorm.io/docs/models.html#Fields-Tags) sections of the GORM
-documentation.
-
-Make sure to check the `Register Your Model` section of this document about
-details on how to track and migrate your model.
-
-## Table Names
-
-Table names by default will be converted into `snake_case` when you define a new
-model.
-
-In order to avoid any conflicts between different package models, each table in
-the database should be prefixed with the respective parent package of the model.
-
-For instance, if we have the following Go package and model defined in `pkg/foo/models/models.go`.
-
-``` go
-// file: pkg/foo/models/models.go
-
-package models
-
-type Bar struct {
-    // struct fields omitted for simplicity
-}
-```
-
-We should also, prefix the table, which GORM will create with the parent
-package, which is `foo` in this example.
-
-In order to do that we need to implement the `gorm.io/gorm/schema.Namer`
-interface.
-
-``` go
-// TableName implements the [gorm.io/gorm/schema.Namer] interface.
-func (Bar) TableName() string {
-    return "foo_bar"  // use the foo_ prefix for our table
-}
-```
-
-## Register Your Model
-
-Once you create a new model, you need to register it with the GORM Atlas
-Provider, so that the model is properly tracked and migrated.
-
-In order to do that you need to load your model to
-[internal/cmd/atlas-loader](./internal/cmd/atlas-loader/main.go).
+Also, once you've created the model you should create a migration for it.
 
 # Database Migrations
 
-Database migrations are managed by [Atlas](https://atlasgo.io/) and the
-[GORM Atlas Provider](https://github.com/ariga/atlas-provider-gorm).
+Database migrations are managed by the CLI tool.
 
-> NOTE: Do not install Atlas by using `go get ...` or `go install ...` as this
-> is no longer supported by the Atlas team.  See this issue for more details on
-> this: [ariga/atlas issue #2669](https://github.com/ariga/atlas/issues/2659)
+## Initialize Database
 
-The Atlas configuration for the Gardener Inventory project resides in the
-[atlas.hcl](./atlas.hcl) file.
+Before we apply any migrations we need to initialize the database tables.
 
-Make sure to check the
-[Atlas Getting Started](https://atlasgo.io/getting-started) guide for more
-information about Atlas and how to use it.
+The following command expects that you already have a configured
+[connection string](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING)
+to the database we will be migrating via the `DSN` environment variable.
 
-Other Atlas related documentation worth checking out is:
+``` shell
+inventory db init
+```
 
-- [Atlas Project Configuration](https://atlasgo.io/atlas-schema/projects)
-- [Atlas URLs](https://atlasgo.io/concepts/url)
-- [Atlas Dev Database](https://atlasgo.io/concepts/dev-database)
+If you want to explicitely specify an alternate connection string you can do
+that by using the `--dsn` option, e.g.
 
-See how to configure the database URL: https://atlasgo.io/concepts/url
+``` shell
+inventory db --dsn postgres://user:p4ss@localhost:5432/foo init
+```
 
 ## Migrations Status
 
 Check the database migration status by executing the following command.
 
 ``` shell
-atlas migrate status --env local
+inventory db status
 ```
 
-## Apply Pending Migrations
+Sample output looks like this.
+
+``` text
+pending migration(s): 0
+database version: group #1 (20240522121536_aws_add_region)
+database is up-to-date
+```
+
+## View Pending Migrations
 
 Apply any pending migrations by executing the following command.
 
 ``` shell
-atlas migrate apply --env local
+inventory db pending
 ```
 
-## Create New Migration
+## View Applied Migrations
 
-In order to create a new migration execute the following command, which will
-generate a new migration file in the [migrations directory](./migrations).
+In order to view the list of applied migrations you need to execute the
+following command.
+
+``` text
+inventory db applied
+```
+
+## Create New Migrations
+
+In order to create a new migration sequence execute the following command, which
+will generate an `up` and `down` migration file for you.
 
 ``` shell
-atlas migrate diff --env local <description-of-my-change>
+inventory db create <description-of-my-change>
+```
+
+## Migrate the Database
+
+In order to apply all pending migrations you should execute the following
+command.
+
+``` shell
+inventory db migrate
 ```
 
 # Local Environment
