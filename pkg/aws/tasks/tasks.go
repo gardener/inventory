@@ -8,11 +8,16 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-// NewSampleTask creates a new Sample task
-func NewSampleTask() (*asynq.Task, error) {
-	task := asynq.NewTask("sample", nil)
+const (
+	// sampleTaskName is the name for the sample task
+	sampleTaskName = "aws:sample-task"
+)
 
-	return task, nil
+// NewSampleTask creates a new Sample task
+func NewSampleTask() *asynq.Task {
+	task := asynq.NewTask(sampleTaskName, nil)
+
+	return task
 }
 
 // HandleSampleTask handles our sample task
@@ -22,6 +27,12 @@ func HandleSampleTask(ctx context.Context, t *asynq.Task) error {
 	return nil
 }
 
+// init registers our task handlers and periodic tasks with the registries.
 func init() {
-	registry.TaskRegistry.MustRegister("aws:sample-task", asynq.HandlerFunc(HandleSampleTask))
+	// Task handlers
+	registry.TaskRegistry.MustRegister(sampleTaskName, asynq.HandlerFunc(HandleSampleTask))
+
+	// Periodic tasks
+	sampleTask := NewSampleTask()
+	registry.ScheduledTaskRegistry.MustRegister("@every 30s", sampleTask)
 }
