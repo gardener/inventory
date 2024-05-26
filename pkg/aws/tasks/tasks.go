@@ -9,6 +9,11 @@ import (
 )
 
 const (
+	// Asqynq task type for collecting AWS resources
+	AWS_COLLECT_VPC_TYPE       = "aws:collect-vpcs"
+	AWS_COLLECT_SUBNETS_TYPE   = "aws:collect-subnets"
+	AWS_COLLECT_INSTANCES_TYPE = "aws:collect-instances"
+
 	// sampleTaskName is the name for the sample task
 	sampleTaskName = "aws:sample-task"
 )
@@ -30,7 +35,8 @@ func HandleSampleTask(ctx context.Context, t *asynq.Task) error {
 // init registers our task handlers and periodic tasks with the registries.
 func init() {
 	// Task handlers
-	registry.TaskRegistry.MustRegister(sampleTaskName, asynq.HandlerFunc(HandleSampleTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_REGIONS_TYPE, asynq.HandlerFunc(HandleAwsCollectRegionsTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_AZS_TYPE, asynq.HandlerFunc(HandleAwsCollectAzsTask))
 
 	// Periodic tasks
 	sampleTask := NewSampleTask()
