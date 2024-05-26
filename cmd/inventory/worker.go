@@ -4,6 +4,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/gardener/inventory/pkg/aws/clients"
+
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
@@ -28,6 +30,12 @@ func NewWorkerCommand() *cli.Command {
 				EnvVars:  []string{"REDIS_ENDPOINT"},
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:     "dsn",
+				Usage:    "DSN to connect to",
+				EnvVars:  []string{"DSN"},
+				Required: true,
+			},
 		},
 		Subcommands: []*cli.Command{
 			{
@@ -36,6 +44,10 @@ func NewWorkerCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					server := newAsynqServerFromFlags(ctx)
 					mux := asynq.NewServeMux()
+
+					// Initialize clients in workers
+					clients.SetDB(newDBFromFlags(ctx))
+					clients.SetClient(newAsynqClientFromFlags(ctx))
 
 					// Register our task handlers
 					registry.TaskRegistry.Range(func(name string, handler asynq.Handler) error {
