@@ -26,6 +26,7 @@ func main() {
 			NewDatabaseCommand(),
 			NewWorkerCommand(),
 			NewSchedulerCommand(),
+			NewTaskCommand(),
 		},
 	}
 
