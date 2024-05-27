@@ -24,18 +24,6 @@ func NewWorkerCommand() *cli.Command {
 				EnvVars: []string{"CONCURRENCY_LEVEL"},
 				Value:   10,
 			},
-			&cli.StringFlag{
-				Name:     "redis-endpoint",
-				Usage:    "Redis endpoint to connect to",
-				EnvVars:  []string{"REDIS_ENDPOINT"},
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:     "dsn",
-				Usage:    "DSN to connect to",
-				EnvVars:  []string{"DSN"},
-				Required: true,
-			},
 		},
 		Subcommands: []*cli.Command{
 			{

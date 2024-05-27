@@ -21,6 +21,19 @@ func main() {
 				Usage: "enables debug mode, if set",
 				Value: false,
 			},
+			&cli.StringFlag{
+				Name:     "redis-endpoint",
+				Usage:    "Redis endpoint to connect to",
+				EnvVars:  []string{"REDIS_ENDPOINT"},
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "dsn",
+				Usage:    "DSN to connect to",
+				EnvVars:  []string{"DSN"},
+				Required: true,
+				Aliases:  []string{"database"},
+			},
 		},
 		Commands: []*cli.Command{
 			NewDatabaseCommand(),
