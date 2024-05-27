@@ -1,73 +1,37 @@
 # inventory
 
-Gardener Inventory repo.
+The Gardener Inventory is a system, which collects resources from various data
+sources, persists the data, and establishes relationships between the resources.
 
-TODO: Additional details and diagrams about the project
+The collected data can be later analyzed to show the relationship and
+dependencies between the various resources.
 
 # Requirements
 
 - Go 1.22.x or later
 - [Redis](https://redis.io/)
 - [PostgreSQL](https://www.postgresql.org/)
-- [Atlas](https://atlasgo.io/) for schema migrations
 
-Instead of using Redis because of their recent licence change, please consider
-using their drop-in replacements such as
-[Valkey](https://github.com/valkey-io/valkey) or [Redict](https://redict.io).
+[Valkey](https://github.com/valkey-io/valkey) or [Redict](https://redict.io),
+can be used instead of Redis.
 
-# Design Goals
+# Documentation
 
-TODO: Document me
+- [Design Goals](./docs/design.md)
+- [Database & Data Model](./docs/database.md)
+- [Development Guide](./docs/development.md)
+- Deployment
+- Querying the database
+- Monitoring & Introspection
+- Testing
 
-# Components
+# Contributing
 
-The Gardener Inventory consists of the following components.
+Gardener Inventory is hosted on [Github](https://github.com/gardener/inventory).
 
-## API
+Please contribute by reporting issues, suggesting features or by sending patches
+using pull requests.
 
-TODO: Document me
+# License
 
-## Persistence
-
-For persisting the collected data the Gardener Inventory will use a PostgreSQL
-database.
-
-The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
-
-## Worker
-
-Workers are based on [hibiken/asynq](https://github.com/hibiken/asynq) and use
-Redis (or any of the available alternatives such as Valkey and Redict) as a
-message passing interface.
-
-## Scheduler
-
-The scheduler is based on [hibiken/asynq](https://github.com/hibiken/asynq) and
-is used to trigger the execution of periodic tasks.
-
-## Message Queue
-
-Redis (or Valkey, or Redict) is used as a message queue for async communication
-between the scheduler and workers.
-
-## CLI
-
-The CLI application is used for interfacing with the inventory system and
-provides various sub-commands such as migrating the database schema, starting up
-services, etc.
-
-# Code Structure
-
-TODO: Document me
-
-# Database
-
-Please refer to the [Database](./docs/database.md) document for more details.
-
-# Local Environment
-
-TODO: Document me
-
-# Querying the database
-
-TODO: Document me
+This project is Open Source and licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
