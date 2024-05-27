@@ -50,7 +50,7 @@ type MyModel struct {
 	bun.BaseModel `bun:"table:my_table_name"`
 	coremodels.Model
 
-	Name        string `bun:"name,notnull,unique"`
+	Name string `bun:"name,notnull,unique"`
 }
 ```
 
@@ -133,3 +133,13 @@ command.
 ``` shell
 inventory db migrate
 ```
+
+## Rolling Back Migrations
+
+Rolling back migrations is done via the `inventory db rollback` command.
+
+``` shell
+inventory db rollback
+```
+
+The command above will rollback the last applied migration group.
