@@ -51,7 +51,7 @@ func collectRegions(ctx context.Context) error {
 		regions = append(regions, modelRegion)
 
 		// Create asynq task for collecting availability zones
-		azsTask := NewAwsCollectAzsTask(*region.RegionName)
+		azsTask := NewCollectAzsRegionTask(*region.RegionName)
 		info, err := clients.Client.Enqueue(azsTask)
 		if err != nil {
 			slog.Error("could not enqueue task", "type", azsTask.Type(), "err", err)

@@ -36,7 +36,8 @@ func HandleSampleTask(ctx context.Context, t *asynq.Task) error {
 func init() {
 	// Task handlers
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_REGIONS_TYPE, asynq.HandlerFunc(HandleAwsCollectRegionsTask))
-	registry.TaskRegistry.MustRegister(AWS_COLLECT_AZS_TYPE, asynq.HandlerFunc(HandleAwsCollectAzsTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_AZS_TYPE, asynq.HandlerFunc(HandleCollectAzsTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_AZS_REGION_TYPE, asynq.HandlerFunc(HandleCollectAzsRegionTask))
 
 	// Periodic tasks
 	sampleTask := NewSampleTask()
