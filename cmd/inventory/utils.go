@@ -16,27 +16,30 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// newRedisClientOpt returns a new [asynq.RedisClientOpt] from the specified
+// flags.
+func newRedisClientOpt(ctx *cli.Context) asynq.RedisClientOpt {
+	// TODO: Handle authentication, TLS, etc.
+	endpoint := ctx.String("redis-endpoint")
+	opts := asynq.RedisClientOpt{
+		Addr: endpoint,
+	}
+
+	return opts
+}
+
 // newInspectorFromFlags returns a new [asynq.Inspector] from the specified
 // flags.
 func newInspectorFromFlags(ctx *cli.Context) *asynq.Inspector {
-	redisEndpoint := ctx.String("redis-endpoint")
-	redisClientOpt := asynq.RedisClientOpt{
-		Addr: redisEndpoint,
-	}
-
+	redisClientOpt := newRedisClientOpt(ctx)
 	return asynq.NewInspector(redisClientOpt)
 }
 
 // newAsynqServerFromFlags creates a new [asynq.Server] from the specified
 // flags.
 func newAsynqServerFromFlags(ctx *cli.Context) *asynq.Server {
-	redisEndpoint := ctx.String("redis-endpoint")
 	concurrency := ctx.Int("concurrency")
-
-	// TODO: Handle authentication, TLS, etc.
-	redisClientOpt := asynq.RedisClientOpt{
-		Addr: redisEndpoint,
-	}
+	redisClientOpt := newRedisClientOpt(ctx)
 
 	// TODO: Logger, priority queues, log level, etc.
 	config := asynq.Config{
@@ -79,12 +82,7 @@ func newMigratorFromFlags(ctx *cli.Context, db *bun.DB) *migrate.Migrator {
 // newSchedulerFromFlags creates a new [asynq.Scheduler] from the specified
 // flags.
 func newSchedulerFromFlags(ctx *cli.Context) *asynq.Scheduler {
-	redisEndpoint := ctx.String("redis-endpoint")
-
-	// TODO: Handle authentication, TLS, etc.
-	redisClientOpt := asynq.RedisClientOpt{
-		Addr: redisEndpoint,
-	}
+	redisClientOpt := newRedisClientOpt(ctx)
 
 	// TODO: Logger, log level, etc.
 	preEnqueueFunc := func(t *asynq.Task, opts []asynq.Option) {
