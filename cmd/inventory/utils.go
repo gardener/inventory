@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
+	"io"
 	"log/slog"
 	"os"
 
 	"github.com/gardener/inventory/internal/pkg/migrations"
 	"github.com/hibiken/asynq"
+	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -95,4 +97,19 @@ func newSchedulerFromFlags(ctx *cli.Context) *asynq.Scheduler {
 
 	scheduler := asynq.NewScheduler(redisClientOpt, opts)
 	return scheduler
+}
+
+// newTableWriter creates a new [tablewriter.Table] with the given [io.Writer]
+// and headers
+func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
+	table := tablewriter.NewWriter(w)
+	table.SetHeader(headers)
+	table.SetAutoWrapText(false)
+	table.SetBorder(false)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+
+	return table
 }

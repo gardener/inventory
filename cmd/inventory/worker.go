@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gardener/inventory/pkg/aws/clients"
-	"github.com/olekukonko/tablewriter"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
@@ -44,7 +43,6 @@ func NewWorkerCommand() *cli.Command {
 						return nil
 					}
 
-					table := tablewriter.NewWriter(os.Stdout)
 					headers := []string{
 						"HOST",
 						"PID",
@@ -52,14 +50,7 @@ func NewWorkerCommand() *cli.Command {
 						"STATUS",
 						"UPTIME",
 					}
-
-					table.SetHeader(headers)
-					table.SetAutoWrapText(false)
-					table.SetBorder(false)
-					table.SetCenterSeparator("")
-					table.SetColumnSeparator("")
-					table.SetAlignment(tablewriter.ALIGN_LEFT)
-					table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+					table := newTableWriter(os.Stdout, headers)
 
 					for _, item := range servers {
 						uptime := time.Since(item.Started)

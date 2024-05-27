@@ -209,7 +209,6 @@ func NewDatabaseCommand() *cli.Command {
 // tabulateMigrations adds the given migration items to a table and returns it.
 // The returned table can be further customized, if needed, and rendered.
 func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
-	table := tablewriter.NewWriter(os.Stdout)
 	headers := []string{
 		"ID",
 		"NAME",
@@ -217,13 +216,7 @@ func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 		"GROUP-ID",
 		"MIGRATED-AT",
 	}
-	table.SetHeader(headers)
-	table.SetAutoWrapText(false)
-	table.SetBorder(false)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table := newTableWriter(os.Stdout, headers)
 
 	for _, item := range items {
 		id := "N/A"
