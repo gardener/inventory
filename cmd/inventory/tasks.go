@@ -1,14 +1,17 @@
 package main
 
 import (
-	// Imports only for their side effects of registering our tasks
+	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/gardener/inventory/pkg/aws/tasks"
-	_ "github.com/gardener/inventory/pkg/aws/tasks"
+	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
+
+	// Imports only for their side effects of registering our tasks
+	_ "github.com/gardener/inventory/pkg/aws/tasks"
 )
 
 func NewTaskCommand() *cli.Command {
@@ -18,8 +21,22 @@ func NewTaskCommand() *cli.Command {
 		Aliases: []string{"t"},
 		Subcommands: []*cli.Command{
 			{
-				Name:  "enqueue",
-				Usage: "enqueue asynq task",
+				Name:    "list",
+				Usage:   "list registered tasks",
+				Aliases: []string{"ls"},
+				Action: func(ctx *cli.Context) error {
+					registry.TaskRegistry.Range(func(name string, handler asynq.Handler) error {
+						fmt.Println(name)
+						return nil
+					})
+
+					return nil
+				},
+			},
+			{
+				Name:    "enqueue",
+				Usage:   "submit a task",
+				Aliases: []string{"submit"},
 				Action: func(ctx *cli.Context) error {
 					asynqClient := newAsynqClientFromFlags(ctx)
 					defer asynqClient.Close()
