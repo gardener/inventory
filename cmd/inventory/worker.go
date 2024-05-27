@@ -3,8 +3,12 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
+	"strconv"
+	"time"
 
 	"github.com/gardener/inventory/pkg/aws/clients"
+	"github.com/olekukonko/tablewriter"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
@@ -27,8 +31,58 @@ func NewWorkerCommand() *cli.Command {
 		},
 		Subcommands: []*cli.Command{
 			{
+				Name:    "list",
+				Usage:   "list running workers",
+				Aliases: []string{"ls"},
+				Action: func(ctx *cli.Context) error {
+					inspector := newInspectorFromFlags(ctx)
+					servers, err := inspector.Servers()
+					if err != nil {
+						return err
+					}
+
+					if len(servers) == 0 {
+						return nil
+					}
+
+					table := tablewriter.NewWriter(os.Stdout)
+					headers := []string{
+						"HOST",
+						"PID",
+						"CONCURRENCY",
+						"STATUS",
+						"UPTIME",
+					}
+
+					table.SetHeader(headers)
+					table.SetAutoWrapText(false)
+					table.SetBorder(false)
+					table.SetCenterSeparator("")
+					table.SetColumnSeparator("")
+					table.SetAlignment(tablewriter.ALIGN_LEFT)
+					table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+
+					for _, item := range servers {
+						uptime := time.Since(item.Started)
+						row := []string{
+							item.Host,
+							strconv.Itoa(item.PID),
+							strconv.Itoa(item.Concurrency),
+							item.Status,
+							uptime.String(),
+						}
+						table.Append(row)
+					}
+
+					table.Render()
+
+					return nil
+				},
+			},
+
+			{
 				Name:  "start",
-				Usage: "start the workers",
+				Usage: "start worker",
 				Action: func(ctx *cli.Context) error {
 					server := newAsynqServerFromFlags(ctx)
 					mux := asynq.NewServeMux()
