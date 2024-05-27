@@ -23,7 +23,7 @@ can be used instead of Redis.
 - Deployment
 - Querying the database
 - Monitoring & Introspection
-- Testing
+- [Testing](./docs/testing.md)
 
 # Contributing
 
