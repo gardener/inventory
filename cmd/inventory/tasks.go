@@ -35,6 +35,8 @@ func NewTaskCommand() *cli.Command {
 					switch ctx.Args().First() {
 					case tasks.AWS_COLLECT_REGIONS_TYPE:
 						task = tasks.NewAwsCollectRegionsTask()
+					case tasks.AWS_COLLECT_AZS_TYPE:
+						task = tasks.NewCollectAzsTask()
 					default:
 						slog.Error("unknown task type", "type", ctx.Args().First())
 					}

@@ -15,7 +15,8 @@ import (
 
 const (
 	// Asynq task type for collecting AWS regions
-	AWS_COLLECT_AZS_TYPE = "aws:collect-azs"
+	AWS_COLLECT_AZS_REGION_TYPE = "aws:collect-azs-region"
+	AWS_COLLECT_AZS_TYPE        = "aws:collect-azs"
 )
 
 type CollectAzsPayload struct {
@@ -23,7 +24,7 @@ type CollectAzsPayload struct {
 }
 
 // TODO: Shall it be triggered by the collect regions task?
-func NewAwsCollectAzsTask(region string) *asynq.Task {
+func NewCollectAzsRegionTask(region string) *asynq.Task {
 	if region == "" {
 		slog.Error("region is required and cannot be empty")
 		return nil
@@ -33,19 +34,19 @@ func NewAwsCollectAzsTask(region string) *asynq.Task {
 		slog.Error("could not marshal payload", "err", err)
 		return nil
 	}
-	return asynq.NewTask(AWS_COLLECT_AZS_TYPE, payload)
+	return asynq.NewTask(AWS_COLLECT_AZS_REGION_TYPE, payload)
 }
 
-func HandleAwsCollectAzsTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectAzsRegionTask(ctx context.Context, t *asynq.Task) error {
 	var p CollectAzsPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	return collectAzs(ctx, p.Region)
+	return collectAzsRegion(ctx, p.Region)
 }
 
 // collect AWS availability zones.
-func collectAzs(ctx context.Context, region string) error {
+func collectAzsRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS availability zones", "region", region)
 
 	azsOutput, err := clients.Ec2.DescribeAvailabilityZones(ctx,
@@ -87,5 +88,36 @@ func collectAzs(ctx context.Context, region string) error {
 		return err
 	}
 
+	return nil
+}
+
+// NewCollectAzsTask creates a new task for collecting AWS availability zones without specifying a region.
+// It fetches the reqions from the database and triggers an aws:collect-azs-region task for each region.
+func NewCollectAzsTask() *asynq.Task {
+	return asynq.NewTask(AWS_COLLECT_AZS_TYPE, nil)
+}
+
+func HandleCollectAzsTask(ctx context.Context, t *asynq.Task) error {
+	return collectAzs(ctx)
+}
+
+func collectAzs(ctx context.Context) error {
+	// Collect regions from Db
+	regions := make([]models.Region, 0)
+	err := clients.Db.NewSelect().Model(&regions).Scan(ctx)
+	if err != nil {
+		slog.Error("could not select regions from db", "err", err)
+		return err
+	}
+	for _, r := range regions {
+		// Trigger Asynq task for each region
+		azsTask := NewCollectAzsRegionTask(r.Name)
+		info, err := clients.Client.Enqueue(azsTask)
+		if err != nil {
+			slog.Error("could not enqueue task", "type", azsTask.Type(), "err", err)
+			continue
+		}
+		slog.Info("enqueued task", "type", azsTask.Type(), "id", info.ID, "queue", info.Queue)
+	}
 	return nil
 }
