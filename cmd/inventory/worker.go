@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log/slog"
 	"os"
 	"strconv"
@@ -109,26 +108,4 @@ func NewWorkerCommand() *cli.Command {
 	}
 
 	return cmd
-}
-
-// newAsynqServerFromFlags creates a new [asynq.Server] from the specified
-// flags.
-func newAsynqServerFromFlags(ctx *cli.Context) *asynq.Server {
-	redisEndpoint := ctx.String("redis-endpoint")
-	concurrency := ctx.Int("concurrency")
-
-	// TODO: Handle authentication, TLS, etc.
-	redisClientOpt := asynq.RedisClientOpt{
-		Addr: redisEndpoint,
-	}
-
-	// TODO: Logger, priority queues, log level, etc.
-	config := asynq.Config{
-		Concurrency: concurrency,
-		BaseContext: func() context.Context { return ctx.Context },
-	}
-
-	server := asynq.NewServer(redisClientOpt, config)
-
-	return server
 }

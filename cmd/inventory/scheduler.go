@@ -40,26 +40,3 @@ func NewSchedulerCommand() *cli.Command {
 
 	return cmd
 }
-
-// newSchedulerFromFlags creates a new [asynq.Scheduler] from the specified
-// flags.
-func newSchedulerFromFlags(ctx *cli.Context) *asynq.Scheduler {
-	redisEndpoint := ctx.String("redis-endpoint")
-
-	// TODO: Handle authentication, TLS, etc.
-	redisClientOpt := asynq.RedisClientOpt{
-		Addr: redisEndpoint,
-	}
-
-	// TODO: Logger, log level, etc.
-	preEnqueueFunc := func(t *asynq.Task, opts []asynq.Option) {
-		slog.Info("enqueueing task", "name", t.Type())
-	}
-	opts := &asynq.SchedulerOpts{
-		PreEnqueueFunc: preEnqueueFunc,
-	}
-
-	scheduler := asynq.NewScheduler(redisClientOpt, opts)
-
-	return scheduler
-}

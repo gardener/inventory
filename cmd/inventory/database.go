@@ -1,19 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/gardener/inventory/internal/pkg/migrations"
 	"github.com/olekukonko/tablewriter"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
 )
@@ -42,6 +36,10 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
+				// TODO: When the application was built for
+				// production we should restrict the migrations
+				// only to the ones which are bundled with the
+				// application.
 				Name:  "migrate",
 				Usage: "apply pending migrations",
 				Action: func(ctx *cli.Context) error {
@@ -255,31 +253,4 @@ func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 	}
 
 	return table
-}
-
-// newDbFromFlags returns a Bun database from the specified flags
-func newDBFromFlags(ctx *cli.Context) *bun.DB {
-	dsn := ctx.String("dsn")
-	debug := ctx.Bool("debug")
-
-	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
-	db := bun.NewDB(pgdb, pgdialect.New())
-	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(debug)))
-
-	return db
-}
-
-// newMigratorFromFlags returns a new [github.com/uptrace/bun/migrate.Migrator]
-// from the specified flags.
-func newMigratorFromFlags(ctx *cli.Context, db *bun.DB) *migrate.Migrator {
-	// By default we will use the bundled migrations, unless we have an
-	// explicitely specified alternate migrations directory.
-	m := migrations.Migrations
-	migrationDir := ctx.String("migration-dir")
-	if migrationDir != "" {
-		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(migrationDir))
-		m.Discover(os.DirFS(migrationDir))
-	}
-
-	return migrate.NewMigrator(db, m)
 }
