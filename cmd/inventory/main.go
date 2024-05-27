@@ -30,7 +30,7 @@ func main() {
 			&cli.StringFlag{
 				Name:     "dsn",
 				Usage:    "DSN to connect to",
-				EnvVars:  []string{"DSN"},
+				EnvVars:  []string{"DSN", "DATABASE"},
 				Required: true,
 				Aliases:  []string{"database"},
 			},
