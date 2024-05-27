@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -26,12 +25,6 @@ func NewDatabaseCommand() *cli.Command {
 		Usage:   "database operations",
 		Aliases: []string{"db"},
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "dsn",
-				Usage:    "DSN to connect to",
-				EnvVars:  []string{"DSN"},
-				Required: true,
-			},
 			&cli.StringFlag{
 				Name:    "migration-dir",
 				Usage:   "path to the directory with migration files",
@@ -181,7 +174,7 @@ func NewDatabaseCommand() *cli.Command {
 						return nil
 					}
 
-					table := tabulateMigrations(os.Stdout, items)
+					table := tabulateMigrations(items)
 					table.Render()
 
 					return nil
@@ -203,7 +196,7 @@ func NewDatabaseCommand() *cli.Command {
 						return nil
 					}
 
-					table := tabulateMigrations(os.Stdout, items)
+					table := tabulateMigrations(items)
 					table.Render()
 
 					return nil
@@ -217,7 +210,7 @@ func NewDatabaseCommand() *cli.Command {
 
 // tabulateMigrations adds the given migration items to a table and returns it.
 // The returned table can be further customized, if needed, and rendered.
-func tabulateMigrations(w io.Writer, items migrate.MigrationSlice) *tablewriter.Table {
+func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 	table := tablewriter.NewWriter(os.Stdout)
 	headers := []string{
 		"ID",
@@ -229,6 +222,10 @@ func tabulateMigrations(w io.Writer, items migrate.MigrationSlice) *tablewriter.
 	table.SetHeader(headers)
 	table.SetAutoWrapText(false)
 	table.SetBorder(false)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 
 	for _, item := range items {
 		id := "N/A"

@@ -14,14 +14,6 @@ func NewSchedulerCommand() *cli.Command {
 		Name:    "scheduler",
 		Usage:   "scheduler operations",
 		Aliases: []string{"s"},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "redis-endpoint",
-				Usage:    "Redis endpoint to connect to",
-				EnvVars:  []string{"REDIS_ENDPOINT"},
-				Required: true,
-			},
-		},
 		Subcommands: []*cli.Command{
 			{
 				Name:  "start",

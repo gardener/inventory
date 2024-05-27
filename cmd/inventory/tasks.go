@@ -16,14 +16,6 @@ func NewTaskCommand() *cli.Command {
 		Name:    "task",
 		Usage:   "task type",
 		Aliases: []string{"t"},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "redis-endpoint",
-				Usage:    "Redis endpoint to connect to",
-				EnvVars:  []string{"REDIS_ENDPOINT"},
-				Required: true,
-			},
-		},
 		Subcommands: []*cli.Command{
 			{
 				Name:  "enqueue",
