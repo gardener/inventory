@@ -279,6 +279,67 @@ func NewTaskCommand() *cli.Command {
 					return nil
 				},
 			},
+			{
+				Name:    "inspect",
+				Usage:   "inspect a task",
+				Aliases: []string{"i"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+					&cli.StringFlag{
+						Name:     "id",
+						Usage:    "task id",
+						Required: true,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					queueName := ctx.String("queue")
+					taskID := ctx.String("id")
+					inspector := newInspectorFromFlags(ctx)
+					info, err := inspector.GetTaskInfo(queueName, taskID)
+					if err != nil {
+						return err
+					}
+
+					fmt.Printf("%-20s: %s\n", "ID", info.ID)
+					fmt.Printf("%-20s: %s\n", "Queue", info.Queue)
+					fmt.Printf("%-20s: %s\n", "Type/Name", info.Type)
+					fmt.Printf("%-20s: %v\n", "State", info.State)
+					fmt.Printf("%-20s: %v\n", "Group", info.Group)
+					fmt.Printf("%-20s: %v\n", "Is Orphaned", strconv.FormatBool(info.IsOrphaned))
+
+					fmt.Printf("%-20s: %d/%d\n", "Retry", info.Retried, info.MaxRetry)
+					fmt.Printf("%-20s: %s\n", "Timeout", info.Timeout.String())
+					fmt.Printf("%-20s: %s\n", "Deadline", info.Deadline.String())
+					fmt.Printf("%-20s: %s\n", "Retention", info.Retention.String())
+					fmt.Printf("%-20s: %s\n", "Last Failed At", info.LastFailedAt.String())
+					fmt.Printf("%-20s: %s\n", "Next Process At", info.NextProcessAt.String())
+					fmt.Printf("%-20s: %s\n", "Completed At", info.CompletedAt.String())
+
+					if info.LastErr != "" {
+						fmt.Printf("\nLast Error\n")
+						fmt.Println("----------")
+						fmt.Printf("%s\n", info.LastErr)
+					}
+
+					if info.Payload != nil {
+						fmt.Printf("\nPayload\n")
+						fmt.Println("-------")
+						fmt.Printf("%s\n", string(info.Payload))
+					}
+
+					if info.Result != nil {
+						fmt.Printf("\nResult\n")
+						fmt.Println("------")
+						fmt.Printf("%s\n", string(info.Result))
+					}
+
+					return nil
+				},
+			},
 		},
 	}
 
