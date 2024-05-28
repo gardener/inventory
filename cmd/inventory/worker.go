@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -69,7 +70,44 @@ func NewWorkerCommand() *cli.Command {
 					return nil
 				},
 			},
+			{
+				Name:    "ping",
+				Usage:   "ping a worker",
+				Aliases: []string{"p"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "worker",
+						Usage:    "worker name to ping",
+						Required: true,
+						Aliases:  []string{"name"},
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					// Note: currently asynq does not expose Ping() methods for connected
+					// workers, but we can still rely on the [asynq.Inspector.Servers] to
+					// view whether a given worker is up and running.
+					workerName := ctx.String("worker")
+					inspector := newInspectorFromFlags(ctx)
+					servers, err := inspector.Servers()
+					if err != nil {
+						return err
+					}
 
+					exists := false
+					for _, item := range servers {
+						if item.Host == workerName {
+							exists = true
+							fmt.Printf("%s/%d: OK\n", item.Host, item.PID)
+						}
+					}
+
+					if !exists {
+						return cli.Exit("", 1)
+					}
+
+					return nil
+				},
+			},
 			{
 				Name:  "start",
 				Usage: "start worker",
