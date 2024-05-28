@@ -38,6 +38,46 @@ func NewTaskCommand() *cli.Command {
 				},
 			},
 			{
+				Name:    "cancel",
+				Usage:   "cancel a running task",
+				Aliases: []string{"c"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "id",
+						Usage:    "task id",
+						Required: true,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					taskID := ctx.String("id")
+					inspector := newInspectorFromFlags(ctx)
+					return inspector.CancelProcessing(taskID)
+				},
+			},
+			{
+				Name:    "delete",
+				Usage:   "delete a task",
+				Aliases: []string{"d"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "id",
+						Usage:    "task id",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					taskID := ctx.String("id")
+					queue := ctx.String("queue")
+					inspector := newInspectorFromFlags(ctx)
+					return inspector.DeleteTask(queue, taskID)
+				},
+			},
+			{
 				Name:    "enqueue",
 				Usage:   "submit a task",
 				Aliases: []string{"submit"},
