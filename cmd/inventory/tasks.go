@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
@@ -16,7 +17,7 @@ import (
 func NewTaskCommand() *cli.Command {
 	cmd := &cli.Command{
 		Name:    "task",
-		Usage:   "task type",
+		Usage:   "task operations",
 		Aliases: []string{"t"},
 		Subcommands: []*cli.Command{
 			{
@@ -78,6 +79,155 @@ func NewTaskCommand() *cli.Command {
 				},
 			},
 			{
+				Name:    "active",
+				Usage:   "list active tasks",
+				Aliases: []string{"a"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+					&cli.IntFlag{
+						Name:  "page",
+						Usage: "page number to retrieve",
+						Value: 1,
+					},
+					&cli.IntFlag{
+						Name:  "size",
+						Usage: "page size to use",
+						Value: 50,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					return printTasksInState(ctx, asynq.TaskStateActive)
+				},
+			},
+			{
+				Name:    "pending",
+				Usage:   "list pending tasks",
+				Aliases: []string{"p"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+					&cli.IntFlag{
+						Name:  "page",
+						Usage: "page number to retrieve",
+						Value: 1,
+					},
+					&cli.IntFlag{
+						Name:  "size",
+						Usage: "page size to use",
+						Value: 50,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					return printTasksInState(ctx, asynq.TaskStatePending)
+				},
+			},
+			{
+				Name:    "archived",
+				Usage:   "list archived tasks",
+				Aliases: []string{"ar"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+					&cli.IntFlag{
+						Name:  "page",
+						Usage: "page number to retrieve",
+						Value: 1,
+					},
+					&cli.IntFlag{
+						Name:  "size",
+						Usage: "page size to use",
+						Value: 50,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					return printTasksInState(ctx, asynq.TaskStateArchived)
+				},
+			},
+			{
+				Name:  "completed",
+				Usage: "list completed tasks",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+					&cli.IntFlag{
+						Name:  "page",
+						Usage: "page number to retrieve",
+						Value: 1,
+					},
+					&cli.IntFlag{
+						Name:  "size",
+						Usage: "page size to use",
+						Value: 50,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					return printTasksInState(ctx, asynq.TaskStateCompleted)
+				},
+			},
+			{
+				Name:    "retried",
+				Usage:   "list retried tasks",
+				Aliases: []string{"r"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+					&cli.IntFlag{
+						Name:  "page",
+						Usage: "page number to retrieve",
+						Value: 1,
+					},
+					&cli.IntFlag{
+						Name:  "size",
+						Usage: "page size to use",
+						Value: 50,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					return printTasksInState(ctx, asynq.TaskStateRetry)
+				},
+			},
+			{
+				Name:    "scheduled",
+				Usage:   "list scheduled tasks",
+				Aliases: []string{"s"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+					&cli.IntFlag{
+						Name:  "page",
+						Usage: "page number to retrieve",
+						Value: 1,
+					},
+					&cli.IntFlag{
+						Name:  "size",
+						Usage: "page size to use",
+						Value: 50,
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					return printTasksInState(ctx, asynq.TaskStateScheduled)
+				},
+			},
+			{
 				Name:    "enqueue",
 				Usage:   "submit a task",
 				Aliases: []string{"submit"},
@@ -133,4 +283,56 @@ func NewTaskCommand() *cli.Command {
 	}
 
 	return cmd
+}
+
+// printTasksInState prints the tasks in the given state
+func printTasksInState(ctx *cli.Context, state asynq.TaskState) error {
+	page := ctx.Int("page")
+	size := ctx.Int("size")
+	queueName := ctx.String("queue")
+
+	inspector := newInspectorFromFlags(ctx)
+	headers := []string{
+		"ID",
+		"TYPE",
+		"RETRIED",
+		"IS ORPHANED",
+	}
+	table := newTableWriter(os.Stdout, headers)
+
+	stateToFunc := map[asynq.TaskState]func(queue string, opts ...asynq.ListOption) ([]*asynq.TaskInfo, error){
+		asynq.TaskStateActive:    inspector.ListActiveTasks,
+		asynq.TaskStatePending:   inspector.ListPendingTasks,
+		asynq.TaskStateArchived:  inspector.ListArchivedTasks,
+		asynq.TaskStateCompleted: inspector.ListCompletedTasks,
+		asynq.TaskStateRetry:     inspector.ListRetryTasks,
+		asynq.TaskStateScheduled: inspector.ListScheduledTasks,
+	}
+
+	getFunc, ok := stateToFunc[state]
+	if !ok {
+		return fmt.Errorf("unknown task state: %v", state)
+	}
+
+	items, err := getFunc(queueName, asynq.Page(page), asynq.PageSize(size))
+	if err != nil {
+		return err
+	}
+
+	if len(items) == 0 {
+		return nil
+	}
+
+	for _, item := range items {
+		row := []string{
+			item.ID,
+			item.Type,
+			fmt.Sprintf("%d/%d", item.Retried, item.MaxRetry),
+			strconv.FormatBool(item.IsOrphaned),
+		}
+		table.Append(row)
+	}
+
+	table.Render()
+	return nil
 }

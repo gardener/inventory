@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/urfave/cli/v2"
@@ -66,7 +67,7 @@ func NewQueueCommand() *cli.Command {
 					fmt.Printf("%-20s: %d\n", "Aggregating", q.Aggregating)
 					fmt.Printf("%-20s: %d\n", "Processed (daily)", q.Processed)
 					fmt.Printf("%-20s: %d\n", "Failed (daily)", q.Failed)
-					fmt.Printf("%-20s: %v\n", "Paused", q.Paused)
+					fmt.Printf("%-20s: %s\n", "Is Paused", strconv.FormatBool(q.Paused))
 
 					return nil
 				},
