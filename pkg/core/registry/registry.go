@@ -71,6 +71,14 @@ func (r *Registry[K, V]) Get(key K) (V, bool) {
 	return val, ok
 }
 
+// Length returns the number of items in the registry.
+func (r *Registry[K, V]) Length() int {
+	r.Lock()
+	defer r.Unlock()
+
+	return len(r.items)
+}
+
 // RangeFunc is a function which is called when iterating over the registry
 // items. In order to stop iteration callers should return ErrStopIteration.
 type RangeFunc[K comparable, V any] func(key K, val V) error
