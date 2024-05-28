@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
@@ -23,10 +24,15 @@ func NewTaskCommand() *cli.Command {
 				Usage:   "list registered tasks",
 				Aliases: []string{"ls"},
 				Action: func(ctx *cli.Context) error {
+					tasks := make([]string, 0, registry.TaskRegistry.Length())
 					registry.TaskRegistry.Range(func(name string, handler asynq.Handler) error {
-						fmt.Println(name)
+						tasks = append(tasks, name)
 						return nil
 					})
+					sort.Strings(tasks)
+					for _, task := range tasks {
+						fmt.Println(task)
+					}
 
 					return nil
 				},
