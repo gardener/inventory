@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
-	"github.com/gardener/inventory/pkg/aws/tasks"
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
@@ -37,29 +35,51 @@ func NewTaskCommand() *cli.Command {
 				Name:    "enqueue",
 				Usage:   "submit a task",
 				Aliases: []string{"submit"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "task",
+						Usage:    "name of task to enqueue",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:  "payload",
+						Usage: "path to a payload file",
+					},
+					&cli.StringFlag{
+						Name:  "queue",
+						Usage: "name of queue to use",
+						Value: "default",
+					},
+				},
 				Action: func(ctx *cli.Context) error {
-					asynqClient := newAsynqClientFromFlags(ctx)
-					defer asynqClient.Close()
-					var task *asynq.Task
-					switch ctx.Args().First() {
-					case tasks.AWS_COLLECT_REGIONS_TYPE:
-						task = tasks.NewAwsCollectRegionsTask()
-					case tasks.AWS_COLLECT_AZS_TYPE:
-						task = tasks.NewCollectAzsTask()
-					default:
-						slog.Error("unknown task type", "type", ctx.Args().First())
-					}
-					if task == nil {
-						os.Exit(1)
+					client := newAsynqClientFromFlags(ctx)
+					defer client.Close()
+
+					taskName := ctx.String("task")
+					queue := ctx.String("queue")
+					payloadFile := ctx.String("payload")
+
+					_, ok := registry.TaskRegistry.Get(taskName)
+					if !ok {
+						return fmt.Errorf("Task %q not found in the registry", taskName)
 					}
 
-					info, err := asynqClient.Enqueue(task)
+					var payload []byte
+					if payloadFile != "" {
+						data, err := os.ReadFile(payloadFile)
+						if err != nil {
+							return fmt.Errorf("Cannot read payload file: %w", err)
+						}
+						payload = data
+					}
+
+					task := asynq.NewTask(taskName, payload)
+					info, err := client.EnqueueContext(ctx.Context, task, asynq.Queue(queue))
 					if err != nil {
-						slog.Error("could not enqueu task", "type", task.Type(), "err", err)
-						os.Exit(1)
+						return fmt.Errorf("Cannot enqueue %q task: %w", taskName, err)
 					}
-					slog.Info("enqueued task", "type", task.Type(), "id", info.ID, "queue", info.Queue)
 
+					fmt.Printf("%s/%s\n", info.Queue, info.ID)
 					return nil
 				},
 			},
@@ -67,15 +87,4 @@ func NewTaskCommand() *cli.Command {
 	}
 
 	return cmd
-}
-
-func newAsynqClientFromFlags(ctx *cli.Context) *asynq.Client {
-	redisEndpoint := ctx.String("redis-endpoint")
-
-	// TODO: Handle authentication, TLS, etc.
-	redisClientOpt := asynq.RedisClientOpt{
-		Addr: redisEndpoint,
-	}
-	return asynq.NewClient(redisClientOpt)
-
 }

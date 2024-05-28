@@ -113,3 +113,9 @@ func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
 
 	return table
 }
+
+// newAsynqClientFromFlags creates a new [asynq.Client]
+func newAsynqClientFromFlags(ctx *cli.Context) *asynq.Client {
+	redisClientOpt := newRedisClientOpt(ctx)
+	return asynq.NewClient(redisClientOpt)
+}
