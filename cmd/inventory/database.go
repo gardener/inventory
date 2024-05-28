@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -48,7 +49,12 @@ func NewDatabaseCommand() *cli.Command {
 					if err := migrator.Lock(ctx.Context); err != nil {
 						return err
 					}
-					defer migrator.Unlock(ctx.Context)
+					defer func() {
+						err := migrator.Unlock(ctx.Context)
+						if err != nil {
+							slog.Error("failed to unlock migrations", "error", err)
+						}
+					}()
 
 					group, err := migrator.Migrate(ctx.Context)
 					if err != nil {
@@ -73,7 +79,12 @@ func NewDatabaseCommand() *cli.Command {
 					if err := migrator.Lock(ctx.Context); err != nil {
 						return err
 					}
-					defer migrator.Unlock(ctx.Context)
+					defer func() {
+						err := migrator.Unlock(ctx.Context)
+						if err != nil {
+							slog.Error("failed to unlock migrations", "error", err)
+						}
+					}()
 
 					group, err := migrator.Rollback(ctx.Context)
 					if err != nil {

@@ -25,8 +25,11 @@ func NewSchedulerCommand() *cli.Command {
 
 					// Register our periodic tasks
 					registry.ScheduledTaskRegistry.Range(func(spec string, task *asynq.Task) error {
-						slog.Info("registering periodic task", "spec", spec, "name", task.Type())
-						scheduler.Register(spec, task)
+						id, err := scheduler.Register(spec, task)
+						if err != nil {
+							return err
+						}
+						slog.Info("periodic task registered", "id", id, "spec", spec, "name", task.Type())
 						return nil
 					})
 

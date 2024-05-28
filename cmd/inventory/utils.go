@@ -82,7 +82,10 @@ func newMigratorFromFlags(ctx *cli.Context, db *bun.DB) *migrate.Migrator {
 	migrationDir := ctx.String("migration-dir")
 	if migrationDir != "" {
 		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(migrationDir))
-		m.Discover(os.DirFS(migrationDir))
+		err := m.Discover(os.DirFS(migrationDir))
+		if err != nil {
+			slog.Error("failed to discover migrations", "error", err)
+		}
 	}
 
 	return migrate.NewMigrator(db, m)
