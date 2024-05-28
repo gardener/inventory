@@ -4,8 +4,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
+
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 const (

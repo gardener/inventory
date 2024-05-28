@@ -1,8 +1,9 @@
 package models
 
 import (
-	coremodels "github.com/gardener/inventory/pkg/core/models"
 	"github.com/uptrace/bun"
+
+	coremodels "github.com/gardener/inventory/pkg/core/models"
 )
 
 // Region represents an AWS Region

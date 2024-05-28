@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/gardener/inventory/internal/pkg/migrations"
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
@@ -16,6 +15,8 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
+
+	"github.com/gardener/inventory/internal/pkg/migrations"
 )
 
 // newRedisClientOpt returns a new [asynq.RedisClientOpt] from the specified

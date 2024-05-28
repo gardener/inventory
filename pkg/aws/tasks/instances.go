@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/aws/utils"
-	"github.com/gardener/inventory/pkg/utils/strings"
-
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hibiken/asynq"
+
 	"github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/hibiken/asynq"
+	"github.com/gardener/inventory/pkg/aws/utils"
+	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (

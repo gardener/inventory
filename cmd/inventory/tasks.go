@@ -6,12 +6,11 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
 
-	// Imports only for their side effects of registering our tasks
 	_ "github.com/gardener/inventory/pkg/aws/tasks"
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 func NewTaskCommand() *cli.Command {
