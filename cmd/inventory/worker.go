@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gardener/inventory/pkg/aws/clients"
-
-	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
+
+	"github.com/gardener/inventory/pkg/aws/clients"
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 // NewWorkerCommand returns a new command for interfacing with the workers.

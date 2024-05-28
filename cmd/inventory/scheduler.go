@@ -4,9 +4,10 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
+
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 // NewSchedulerCommand returns a new command for interfacing with the scheduler.
