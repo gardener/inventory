@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/urfave/cli/v2"
@@ -25,16 +24,10 @@ func NewQueueCommand() *cli.Command {
 						return err
 					}
 
-					if len(queues) == 0 {
-						return nil
-					}
-
-					table := newTableWriter(os.Stdout, []string{"NAME"})
 					for _, item := range queues {
-						table.Append([]string{item})
+						fmt.Println(item)
 					}
 
-					table.Render()
 					return nil
 				},
 			},
