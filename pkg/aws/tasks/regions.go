@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"github.com/gardener/inventory/pkg/utils/strings"
 	"log/slog"
 
 	"github.com/gardener/inventory/pkg/aws/clients"
@@ -44,14 +45,14 @@ func collectRegions(ctx context.Context) error {
 	for _, region := range regionsOutput.Regions {
 		slog.Info("Region", "name", *region.RegionName)
 		modelRegion := models.Region{
-			Name:        *region.RegionName,
-			Endpoint:    *region.Endpoint,
-			OptInStatus: *region.OptInStatus,
+			Name:        strings.StringFromPointer(region.RegionName),
+			Endpoint:    strings.StringFromPointer(region.Endpoint),
+			OptInStatus: strings.StringFromPointer(region.OptInStatus),
 		}
 		regions = append(regions, modelRegion)
 
 		// Create asynq task for collecting availability zones
-		azsTask := NewCollectAzsRegionTask(*region.RegionName)
+		azsTask := NewCollectAzsRegionTask(strings.StringFromPointer(region.RegionName))
 		info, err := clients.Client.Enqueue(azsTask)
 		if err != nil {
 			slog.Error("could not enqueue task", "type", azsTask.Type(), "err", err)
@@ -61,11 +62,14 @@ func collectRegions(ctx context.Context) error {
 
 	}
 
+	if len(regions) == 0 {
+		return nil
+	}
+
 	//Bulk insert regions into db
 	_, err = clients.Db.NewInsert().
 		Model(&regions).
-		On("CONFLICT (id) DO UPDATE").
-		Ignore().
+		On("CONFLICT (name) DO UPDATE").
 		Exec(ctx)
 	if err != nil {
 		slog.Error("could not insert regions into db", "err", err)
