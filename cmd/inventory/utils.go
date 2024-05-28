@@ -40,13 +40,20 @@ func newInspectorFromFlags(ctx *cli.Context) *asynq.Inspector {
 // newAsynqServerFromFlags creates a new [asynq.Server] from the specified
 // flags.
 func newAsynqServerFromFlags(ctx *cli.Context) *asynq.Server {
+	debug := ctx.Bool("debug")
 	concurrency := ctx.Int("concurrency")
 	redisClientOpt := newRedisClientOpt(ctx)
 
-	// TODO: Logger, priority queues, log level, etc.
+	// TODO: Logger, priority queues, etc.
+	logLevel := asynq.InfoLevel
+	if debug {
+		logLevel = asynq.DebugLevel
+	}
+
 	config := asynq.Config{
 		Concurrency: concurrency,
 		BaseContext: func() context.Context { return ctx.Context },
+		LogLevel:    logLevel,
 	}
 
 	server := asynq.NewServer(redisClientOpt, config)
@@ -84,15 +91,28 @@ func newMigratorFromFlags(ctx *cli.Context, db *bun.DB) *migrate.Migrator {
 // newSchedulerFromFlags creates a new [asynq.Scheduler] from the specified
 // flags.
 func newSchedulerFromFlags(ctx *cli.Context) *asynq.Scheduler {
+	debug := ctx.Bool("debug")
 	redisClientOpt := newRedisClientOpt(ctx)
 
 	// TODO: Logger, log level, etc.
+	// TODO: PostEnqueue hook to emit metrics per tasks
 	preEnqueueFunc := func(t *asynq.Task, opts []asynq.Option) {
 		slog.Info("enqueueing task", "name", t.Type())
 	}
 
+	errEnqueueFunc := func(t *asynq.Task, opts []asynq.Option, err error) {
+		slog.Error("failed to enqueue", "name", t.Type(), "error", err)
+	}
+
+	logLevel := asynq.InfoLevel
+	if debug {
+		logLevel = asynq.DebugLevel
+	}
+
 	opts := &asynq.SchedulerOpts{
-		PreEnqueueFunc: preEnqueueFunc,
+		PreEnqueueFunc:      preEnqueueFunc,
+		EnqueueErrorHandler: errEnqueueFunc,
+		LogLevel:            logLevel,
 	}
 
 	scheduler := asynq.NewScheduler(redisClientOpt, opts)
