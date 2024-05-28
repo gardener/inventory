@@ -9,10 +9,6 @@ import (
 )
 
 const (
-	// Asqynq task type for collecting AWS resources
-	AWS_COLLECT_VPC_TYPE       = "aws:collect-vpcs"
-	AWS_COLLECT_SUBNETS_TYPE   = "aws:collect-subnets"
-	AWS_COLLECT_INSTANCES_TYPE = "aws:collect-instances"
 
 	// sampleTaskName is the name for the sample task
 	sampleTaskName = "aws:sample-task"
@@ -38,6 +34,8 @@ func init() {
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_REGIONS_TYPE, asynq.HandlerFunc(HandleAwsCollectRegionsTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_AZS_TYPE, asynq.HandlerFunc(HandleCollectAzsTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_AZS_REGION_TYPE, asynq.HandlerFunc(HandleCollectAzsRegionTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_VPC_TYPE, asynq.HandlerFunc(HandleCollectVpcsTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_VPC_REGION_TYPE, asynq.HandlerFunc(HandleCollectVpcsRegionTask))
 
 	// Periodic tasks
 	sampleTask := NewSampleTask()
