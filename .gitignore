@@ -29,3 +29,6 @@ dev/local/redis
 
 # direnv
 .envrc
+
+# tools
+tools/
