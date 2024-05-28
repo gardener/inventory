@@ -38,11 +38,10 @@ func NewQueueCommand() *cli.Command {
 				Aliases: []string{"i"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "queue",
-						Usage:    "queue name",
-						Value:    "default",
-						Required: true,
-						Aliases:  []string{"name"},
+						Name:    "queue",
+						Usage:   "queue name",
+						Value:   "default",
+						Aliases: []string{"name"},
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -78,11 +77,10 @@ func NewQueueCommand() *cli.Command {
 				Aliases: []string{"p"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "queue",
-						Usage:    "queue name",
-						Value:    "default",
-						Required: true,
-						Aliases:  []string{"name"},
+						Name:    "queue",
+						Usage:   "queue name",
+						Value:   "default",
+						Aliases: []string{"name"},
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -97,11 +95,10 @@ func NewQueueCommand() *cli.Command {
 				Aliases: []string{"r"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "queue",
-						Usage:    "queue name",
-						Value:    "default",
-						Required: true,
-						Aliases:  []string{"name"},
+						Name:    "queue",
+						Usage:   "queue name",
+						Value:   "default",
+						Aliases: []string{"name"},
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -116,11 +113,10 @@ func NewQueueCommand() *cli.Command {
 				Aliases: []string{"d"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "queue",
-						Usage:    "queue name",
-						Value:    "default",
-						Required: true,
-						Aliases:  []string{"name"},
+						Name:    "queue",
+						Usage:   "queue name",
+						Value:   "default",
+						Aliases: []string{"name"},
 					},
 					&cli.StringFlag{
 						Name:     "type",
