@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gardener/inventory/pkg/utils/strings"
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -67,21 +68,24 @@ func collectAzsRegion(ctx context.Context, region string) error {
 	for _, az := range azsOutput.AvailabilityZones {
 		slog.Info("Availability Zone", "name", *az.ZoneName, "region", *az.RegionName)
 		modelAz := models.AvailabilityZone{
-			ZoneID:             *az.ZoneId,
-			Name:               *az.ZoneName,
+			ZoneID:             strings.StringFromPointer(az.ZoneId),
+			Name:               strings.StringFromPointer(az.ZoneName),
 			OptInStatus:        string(az.OptInStatus),
 			State:              string(az.State),
-			RegionName:         *az.RegionName,
-			GroupName:          *az.GroupName,
-			NetworkBorderGroup: *az.NetworkBorderGroup,
+			RegionName:         strings.StringFromPointer(az.RegionName),
+			GroupName:          strings.StringFromPointer(az.GroupName),
+			NetworkBorderGroup: strings.StringFromPointer(az.NetworkBorderGroup),
 		}
 		azs = append(azs, modelAz)
 
 	}
+
+	if len(azs) == 0 {
+		return nil
+	}
 	_, err = clients.Db.NewInsert().
 		Model(&azs).
-		On("CONFLICT (id) DO UPDATE").
-		Ignore().
+		On("CONFLICT (zone_id) DO UPDATE").
 		Exec(ctx)
 	if err != nil {
 		slog.Error("could not insert availability zones into db", "err", err)
