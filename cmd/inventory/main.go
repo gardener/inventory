@@ -40,6 +40,7 @@ func main() {
 			NewWorkerCommand(),
 			NewSchedulerCommand(),
 			NewTaskCommand(),
+			NewQueueCommand(),
 		},
 	}
 
