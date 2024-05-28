@@ -2,8 +2,9 @@ package tasks
 
 import (
 	"context"
-	"github.com/gardener/inventory/pkg/utils/strings"
 	"log/slog"
+
+	"github.com/gardener/inventory/pkg/utils/strings"
 
 	"github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"

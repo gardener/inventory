@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gardener/inventory/pkg/utils/strings"
 	"log/slog"
+
+	"github.com/gardener/inventory/pkg/utils/strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/smithy-go/ptr"

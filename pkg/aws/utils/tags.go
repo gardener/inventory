@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
 // FetchTag returns the value of the AWS tag with the key s or an empty string if the tag is not found.
