@@ -19,7 +19,7 @@ other hints to follow when creating a new model, or updating an existing one.
 
 ## Base Model
 
-The [pkg/core/models](./pkg/core/models) package provides base models, which are
+The [pkg/core/models](../pkg/core/models) package provides base models, which are
 meant to be used by other models.
 
 Make sure that you embed the [pkg/core/models.Model](./pkg/core/models) model
