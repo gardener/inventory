@@ -1,5 +1,11 @@
 package config
 
+import (
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
 // Config represents the Inventory configuration.
 type Config struct {
 	// Version is the version of the config file.
@@ -35,4 +41,29 @@ type DatabaseConfig struct {
 type WorkerConfig struct {
 	// Concurrency specifies the concurrency level for workers.
 	Concurrency int `yaml:"concurrency"`
+}
+
+// Parse parses the config from the given path.
+func Parse(path string) (*Config, error) {
+	var config Config
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+// MustParse parses the config from the given path, or panics in case of errors.
+func MustParse(path string) *Config {
+	config, err := Parse(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return config
 }
