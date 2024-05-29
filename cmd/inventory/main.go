@@ -19,6 +19,11 @@ func main() {
 		EnableBashCompletion: true,
 		Usage:                "command-line tool for managing the inventory",
 		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "debug",
+				Usage: "enables debug mode, if set",
+				Value: false,
+			},
 			&cli.StringFlag{
 				Name:     "config",
 				Usage:    "path to config file",
@@ -33,6 +38,12 @@ func main() {
 			if err != nil {
 				return fmt.Errorf("Cannot parse config: %w", err)
 			}
+
+			// Overrides from flags/options
+			if ctx.IsSet("debug") {
+				conf.Debug = ctx.Bool("debug")
+			}
+
 			ctx.Context = context.WithValue(ctx.Context, configKey{}, conf)
 			return nil
 		},
