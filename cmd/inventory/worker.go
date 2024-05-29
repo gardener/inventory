@@ -20,13 +20,9 @@ func NewWorkerCommand() *cli.Command {
 		Name:    "worker",
 		Usage:   "worker operations",
 		Aliases: []string{"w"},
-		Flags: []cli.Flag{
-			&cli.IntFlag{
-				Name:    "concurrency",
-				Usage:   "number of concurrent workers to start",
-				EnvVars: []string{"CONCURRENCY_LEVEL"},
-				Value:   10,
-			},
+		Before: func(ctx *cli.Context) error {
+			conf := getConfig(ctx)
+			return validateRedisConfig(conf)
 		},
 		Subcommands: []*cli.Command{
 			{
@@ -34,7 +30,8 @@ func NewWorkerCommand() *cli.Command {
 				Usage:   "list running workers",
 				Aliases: []string{"ls"},
 				Action: func(ctx *cli.Context) error {
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					servers, err := inspector.Servers()
 					if err != nil {
 						return err
@@ -87,7 +84,8 @@ func NewWorkerCommand() *cli.Command {
 					// workers, but we can still rely on the [asynq.Inspector.Servers] to
 					// view whether a given worker is up and running.
 					workerName := ctx.String("worker")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					servers, err := inspector.Servers()
 					if err != nil {
 						return err
@@ -111,26 +109,37 @@ func NewWorkerCommand() *cli.Command {
 			{
 				Name:  "start",
 				Usage: "start worker",
-				Action: func(ctx *cli.Context) error {
-					server := newAsynqServerFromFlags(ctx)
-					mux := asynq.NewServeMux()
-
-					// Initialize clients in workers
-					clients.SetDB(newDBFromFlags(ctx))
-					clients.SetClient(newAsynqClientFromFlags(ctx))
-
-					// Register our task handlers
-					registry.TaskRegistry.Range(func(name string, handler asynq.Handler) error {
-						slog.Info("registering task", "name", name)
-						mux.Handle(name, handler)
-						return nil
-					})
-
-					if err := server.Run(mux); err != nil {
+				Before: func(ctx *cli.Context) error {
+					conf := getConfig(ctx)
+					if err := validateWorkerConfig(conf); err != nil {
 						return err
 					}
 
-					return nil
+					return validateDBConfig(conf)
+				},
+				Action: func(ctx *cli.Context) error {
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					client := newClient(conf)
+					server := newServer(conf)
+					mux := asynq.NewServeMux()
+
+					// Initialize clients in workers
+					clients.SetDB(db)
+					clients.SetClient(client)
+
+					// Register our task handlers
+					walker := func(name string, handler asynq.Handler) error {
+						slog.Info("registering task", "name", name)
+						mux.Handle(name, handler)
+						return nil
+					}
+
+					if err := registry.TaskRegistry.Range(walker); err != nil {
+						return err
+					}
+
+					return server.Run(mux)
 				},
 			},
 		},

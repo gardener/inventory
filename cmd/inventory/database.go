@@ -19,20 +19,22 @@ func NewDatabaseCommand() *cli.Command {
 		Name:    "database",
 		Usage:   "database operations",
 		Aliases: []string{"db"},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "migration-dir",
-				Usage:   "path to the directory with migration files",
-				EnvVars: []string{"MIGRATION_DIR"},
-			},
+		Before: func(ctx *cli.Context) error {
+			conf := getConfig(ctx)
+			return validateDBConfig(conf)
 		},
 		Subcommands: []*cli.Command{
 			{
 				Name:  "init",
 				Usage: "initialize migration tables",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					return migrator.Init(ctx.Context)
 				},
 			},
@@ -44,8 +46,13 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "migrate",
 				Usage: "apply pending migrations",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					if err := migrator.Lock(ctx.Context); err != nil {
 						return err
 					}
@@ -74,11 +81,17 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "rollback",
 				Usage: "rollback last migration group",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					if err := migrator.Lock(ctx.Context); err != nil {
 						return err
 					}
+
 					defer func() {
 						err := migrator.Unlock(ctx.Context)
 						if err != nil {
@@ -104,8 +117,13 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "lock",
 				Usage: "lock migrations",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					return migrator.Lock(ctx.Context)
 				},
 			},
@@ -113,8 +131,12 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "unlock",
 				Usage: "unlock migrations",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
 					return migrator.Unlock(ctx.Context)
 				},
 			},
@@ -122,8 +144,13 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "create",
 				Usage: "create a new migration",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					name := strings.Join(ctx.Args().Slice(), "_")
 					if name == "" {
 						return errors.New("must specify migration description")
@@ -145,8 +172,13 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "status",
 				Usage: "display migration status",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					ms, err := migrator.MigrationsWithStatus(ctx.Context)
 					if err != nil {
 						return err
@@ -171,8 +203,13 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "applied",
 				Usage: "display the list of applied migrations",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					ms, err := migrator.MigrationsWithStatus(ctx.Context)
 					if err != nil {
 						return err
@@ -193,8 +230,13 @@ func NewDatabaseCommand() *cli.Command {
 				Name:  "pending",
 				Usage: "display the list of pending migrations",
 				Action: func(ctx *cli.Context) error {
-					db := newDBFromFlags(ctx)
-					migrator := newMigratorFromFlags(ctx, db)
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					migrator, err := newMigrator(conf, db)
+					if err != nil {
+						return err
+					}
+
 					ms, err := migrator.MigrationsWithStatus(ctx.Context)
 					if err != nil {
 						return err

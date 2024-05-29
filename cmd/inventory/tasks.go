@@ -18,6 +18,10 @@ func NewTaskCommand() *cli.Command {
 		Name:    "task",
 		Usage:   "task operations",
 		Aliases: []string{"t"},
+		Before: func(ctx *cli.Context) error {
+			conf := getConfig(ctx)
+			return validateRedisConfig(conf)
+		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "list",
@@ -25,10 +29,15 @@ func NewTaskCommand() *cli.Command {
 				Aliases: []string{"ls"},
 				Action: func(ctx *cli.Context) error {
 					tasks := make([]string, 0, registry.TaskRegistry.Length())
-					registry.TaskRegistry.Range(func(name string, handler asynq.Handler) error {
+					walker := func(name string, handler asynq.Handler) error {
 						tasks = append(tasks, name)
 						return nil
-					})
+					}
+
+					if err := registry.TaskRegistry.Range(walker); err != nil {
+						return err
+					}
+
 					sort.Strings(tasks)
 					for _, task := range tasks {
 						fmt.Println(task)
@@ -50,7 +59,8 @@ func NewTaskCommand() *cli.Command {
 				},
 				Action: func(ctx *cli.Context) error {
 					taskID := ctx.String("id")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					return inspector.CancelProcessing(taskID)
 				},
 			},
@@ -73,7 +83,8 @@ func NewTaskCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					taskID := ctx.String("id")
 					queue := ctx.String("queue")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					return inspector.DeleteTask(queue, taskID)
 				},
 			},
@@ -247,7 +258,8 @@ func NewTaskCommand() *cli.Command {
 					},
 				},
 				Action: func(ctx *cli.Context) error {
-					client := newAsynqClientFromFlags(ctx)
+					conf := getConfig(ctx)
+					client := newClient(conf)
 					defer client.Close()
 
 					taskName := ctx.String("task")
@@ -297,7 +309,8 @@ func NewTaskCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					queueName := ctx.String("queue")
 					taskID := ctx.String("id")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					info, err := inspector.GetTaskInfo(queueName, taskID)
 					if err != nil {
 						return err
@@ -350,8 +363,8 @@ func printTasksInState(ctx *cli.Context, state asynq.TaskState) error {
 	page := ctx.Int("page")
 	size := ctx.Int("size")
 	queueName := ctx.String("queue")
-
-	inspector := newInspectorFromFlags(ctx)
+	conf := getConfig(ctx)
+	inspector := newInspector(conf)
 	headers := []string{
 		"ID",
 		"TYPE",

@@ -13,13 +13,18 @@ func NewQueueCommand() *cli.Command {
 		Name:    "queue",
 		Usage:   "queue operations",
 		Aliases: []string{"q"},
+		Before: func(ctx *cli.Context) error {
+			conf := getConfig(ctx)
+			return validateRedisConfig(conf)
+		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "list",
 				Usage:   "list queues",
 				Aliases: []string{"ls"},
 				Action: func(ctx *cli.Context) error {
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					queues, err := inspector.Queues()
 					if err != nil {
 						return err
@@ -46,7 +51,8 @@ func NewQueueCommand() *cli.Command {
 				},
 				Action: func(ctx *cli.Context) error {
 					queueName := ctx.String("name")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					q, err := inspector.GetQueueInfo(queueName)
 					if err != nil {
 						return err
@@ -85,7 +91,8 @@ func NewQueueCommand() *cli.Command {
 				},
 				Action: func(ctx *cli.Context) error {
 					queueName := ctx.String("name")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					return inspector.PauseQueue(queueName)
 				},
 			},
@@ -103,7 +110,8 @@ func NewQueueCommand() *cli.Command {
 				},
 				Action: func(ctx *cli.Context) error {
 					queueName := ctx.String("name")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					return inspector.UnpauseQueue(queueName)
 				},
 			},
@@ -128,7 +136,8 @@ func NewQueueCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					queueName := ctx.String("name")
 					messageType := ctx.String("type")
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 
 					typeToFunc := map[string]func(queue string) (int, error){
 						"scheduled": inspector.DeleteAllScheduledTasks,
