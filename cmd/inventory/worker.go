@@ -139,6 +139,7 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 
+					slog.Info("worker concurrency", "level", conf.Worker.Concurrency)
 					return server.Run(mux)
 				},
 			},
