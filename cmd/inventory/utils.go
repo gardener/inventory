@@ -26,7 +26,7 @@ type configKey struct{}
 
 // errInvalidDSN error is returned, if the DSN configuration is incorrect, or
 // empty.
-var errInvalidDSN = errors.New("invalid DSN configuration")
+var errInvalidDSN = errors.New("invalid or missing database configuration")
 
 // errInvalidWorkerConcurrency error is returned when the worker concurrency
 // setting is invalid, e.g. it is <= 0.
