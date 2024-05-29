@@ -85,14 +85,21 @@ type RangeFunc[K comparable, V any] func(key K, val V) error
 
 // Range calls f for each item in the registry. If f returns an error, Range
 // will stop the iteration.
-func (r *Registry[K, V]) Range(f RangeFunc[K, V]) {
+func (r *Registry[K, V]) Range(f RangeFunc[K, V]) error {
 	r.Lock()
 	defer r.Unlock()
 
 	for k, v := range r.items {
 		err := f(k, v)
-		if err != nil {
-			return
+		switch err {
+		case nil:
+			continue
+		case ErrStopIteration:
+			return nil
+		default:
+			return err
 		}
 	}
+
+	return nil
 }
