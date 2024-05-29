@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"runtime"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -77,6 +79,11 @@ func Parse(path string) (*Config, error) {
 
 	if conf.Version != ConfigFormatVersion {
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedVersion, conf.Version)
+	}
+
+	// Set defaults
+	if conf.Worker.Concurrency <= 0 {
+		conf.Worker.Concurrency = runtime.NumCPU()
 	}
 
 	return &conf, nil
