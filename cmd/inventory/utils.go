@@ -1,8 +1,9 @@
 package main
 
 import (
-	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -23,47 +24,85 @@ import (
 // configKey is the key used to store the parsed configuration in the context
 type configKey struct{}
 
+// errInvalidDSN error is returned, if the DSN configuration is incorrect, or
+// empty.
+var errInvalidDSN = errors.New("invalid DSN configuration")
+
+// errInvalidWorkerConcurrency error is returned when the worker concurrency
+// setting is invalid, e.g. it is <= 0.
+var errInvalidWorkerConcurrency = errors.New("invalid worker concurrency")
+
+// errInvalidRedisEndpoint is returned when Redis is configured with an invalid
+// endpoint.
+var errInvalidRedisEndpoint = errors.New("invalid or missing redis endpoint")
+
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
 	conf := ctx.Context.Value(configKey{}).(*config.Config)
 	return conf
 }
 
-// newRedisClientOpt returns a new [asynq.RedisClientOpt] from the specified
-// flags.
-func newRedisClientOpt(ctx *cli.Context) asynq.RedisClientOpt {
+// validateDBConfig validates the database configuration settings.
+func validateDBConfig(conf *config.Config) error {
+	if conf.Database.DSN == "" {
+		return errInvalidDSN
+	}
+
+	return nil
+}
+
+// validateWorkerConfig validates the worker configuration settings.
+func validateWorkerConfig(conf *config.Config) error {
+	if conf.Worker.Concurrency <= 0 {
+		return fmt.Errorf("%w: %d", errInvalidWorkerConcurrency, conf.Worker.Concurrency)
+	}
+
+	return nil
+}
+
+// validateRedisConfig validates the Redis configuration settings.
+func validateRedisConfig(conf *config.Config) error {
+	if conf.Redis.Endpoint == "" {
+		return errInvalidRedisEndpoint
+	}
+
+	return nil
+}
+
+// newRedisClientOpt returns a new [asynq.RedisClientOpt] from the given config.
+func newRedisClientOpt(conf *config.Config) asynq.RedisClientOpt {
 	// TODO: Handle authentication, TLS, etc.
-	endpoint := ctx.String("redis-endpoint")
 	opts := asynq.RedisClientOpt{
-		Addr: endpoint,
+		Addr: conf.Redis.Endpoint,
 	}
 
 	return opts
 }
 
-// newInspectorFromFlags returns a new [asynq.Inspector] from the specified
-// flags.
-func newInspectorFromFlags(ctx *cli.Context) *asynq.Inspector {
-	redisClientOpt := newRedisClientOpt(ctx)
+// newClient creates a new [asynq.Client] from the given config
+func newClient(conf *config.Config) *asynq.Client {
+	redisClientOpt := newRedisClientOpt(conf)
+	return asynq.NewClient(redisClientOpt)
+}
+
+// newInspector returns a new [asynq.Inspector] from the given config.
+func newInspector(conf *config.Config) *asynq.Inspector {
+	redisClientOpt := newRedisClientOpt(conf)
 	return asynq.NewInspector(redisClientOpt)
 }
 
-// newAsynqServerFromFlags creates a new [asynq.Server] from the specified
-// flags.
-func newAsynqServerFromFlags(ctx *cli.Context) *asynq.Server {
-	debug := ctx.Bool("debug")
-	concurrency := ctx.Int("concurrency")
-	redisClientOpt := newRedisClientOpt(ctx)
+// newServer creates a new [asynq.Server] from the given config.
+func newServer(conf *config.Config) *asynq.Server {
+	redisClientOpt := newRedisClientOpt(conf)
 
 	// TODO: Logger, priority queues, etc.
 	logLevel := asynq.InfoLevel
-	if debug {
+	if conf.Debug {
 		logLevel = asynq.DebugLevel
 	}
 
 	config := asynq.Config{
-		Concurrency: concurrency,
-		BaseContext: func() context.Context { return ctx.Context },
+		Concurrency: conf.Worker.Concurrency,
 		LogLevel:    logLevel,
 	}
 
@@ -72,43 +111,37 @@ func newAsynqServerFromFlags(ctx *cli.Context) *asynq.Server {
 	return server
 }
 
-// newDbFromFlags returns a Bun database from the specified flags
-func newDBFromFlags(ctx *cli.Context) *bun.DB {
-	dsn := ctx.String("dsn")
-	debug := ctx.Bool("debug")
-
-	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+// newDB returns a new [bun.DB] database from the given config.
+func newDB(conf *config.Config) *bun.DB {
+	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(conf.Database.DSN)))
 	db := bun.NewDB(pgdb, pgdialect.New())
-	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(debug)))
+	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(conf.Debug)))
 
 	return db
 }
 
-// newMigratorFromFlags returns a new [github.com/uptrace/bun/migrate.Migrator]
-// from the specified flags.
-func newMigratorFromFlags(ctx *cli.Context, db *bun.DB) *migrate.Migrator {
+// newMigrator creates a new [github.com/uptrace/bun/migrate.Migrator] from the
+// given config.
+func newMigrator(conf *config.Config, db *bun.DB) (*migrate.Migrator, error) {
 	// By default we will use the bundled migrations, unless we have an
 	// explicitely specified alternate migrations directory.
 	m := migrations.Migrations
-	migrationDir := ctx.String("migration-dir")
-	if migrationDir != "" {
-		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(migrationDir))
-		err := m.Discover(os.DirFS(migrationDir))
+	if conf.Database.MigrationDirectory != "" {
+		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(conf.Database.MigrationDirectory))
+		err := m.Discover(os.DirFS(conf.Database.MigrationDirectory))
 		if err != nil {
-			slog.Error("failed to discover migrations", "error", err)
+			return nil, err
 		}
 	}
 
-	return migrate.NewMigrator(db, m)
+	return migrate.NewMigrator(db, m), nil
 }
 
-// newSchedulerFromFlags creates a new [asynq.Scheduler] from the specified
-// flags.
-func newSchedulerFromFlags(ctx *cli.Context) *asynq.Scheduler {
-	debug := ctx.Bool("debug")
-	redisClientOpt := newRedisClientOpt(ctx)
+// newScheduler creates a new [asynq.Scheduler] from the given config.
+func newScheduler(conf *config.Config) *asynq.Scheduler {
+	redisClientOpt := newRedisClientOpt(conf)
 
-	// TODO: Logger, log level, etc.
+	// TODO: Logger, etc.
 	// TODO: PostEnqueue hook to emit metrics per tasks
 	preEnqueueFunc := func(t *asynq.Task, opts []asynq.Option) {
 		slog.Info("enqueueing task", "name", t.Type())
@@ -119,7 +152,7 @@ func newSchedulerFromFlags(ctx *cli.Context) *asynq.Scheduler {
 	}
 
 	logLevel := asynq.InfoLevel
-	if debug {
+	if conf.Debug {
 		logLevel = asynq.DebugLevel
 	}
 
@@ -146,10 +179,4 @@ func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 
 	return table
-}
-
-// newAsynqClientFromFlags creates a new [asynq.Client]
-func newAsynqClientFromFlags(ctx *cli.Context) *asynq.Client {
-	redisClientOpt := newRedisClientOpt(ctx)
-	return asynq.NewClient(redisClientOpt)
 }

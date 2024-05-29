@@ -16,23 +16,32 @@ func NewSchedulerCommand() *cli.Command {
 		Name:    "scheduler",
 		Usage:   "scheduler operations",
 		Aliases: []string{"s"},
+		Before: func(ctx *cli.Context) error {
+			conf := getConfig(ctx)
+			return validateRedisConfig(conf)
+		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "start",
 				Usage:   "start the scheduler",
 				Aliases: []string{"s"},
 				Action: func(ctx *cli.Context) error {
-					scheduler := newSchedulerFromFlags(ctx)
+					conf := getConfig(ctx)
+					scheduler := newScheduler(conf)
 
-					// Register our periodic tasks
-					registry.ScheduledTaskRegistry.Range(func(spec string, task *asynq.Task) error {
+					// Add the periodic tasks from the registry
+					walker := func(spec string, task *asynq.Task) error {
 						id, err := scheduler.Register(spec, task)
 						if err != nil {
 							return err
 						}
 						slog.Info("periodic task registered", "id", id, "spec", spec, "name", task.Type())
 						return nil
-					})
+					}
+
+					if err := registry.ScheduledTaskRegistry.Range(walker); err != nil {
+						return err
+					}
 
 					if err := scheduler.Run(); err != nil {
 						return err
@@ -58,7 +67,8 @@ func NewSchedulerCommand() *cli.Command {
 					},
 				},
 				Action: func(ctx *cli.Context) error {
-					inspector := newInspectorFromFlags(ctx)
+					conf := getConfig(ctx)
+					inspector := newInspector(conf)
 					items, err := inspector.SchedulerEntries()
 					if err != nil {
 						return err
