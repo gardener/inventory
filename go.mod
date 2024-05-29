@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.16
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.161.4
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.162.0
 	github.com/aws/smithy-go v1.20.2
 	github.com/hibiken/asynq v0.24.1
 	github.com/olekukonko/tablewriter v0.0.5
@@ -32,6 +32,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -50,7 +51,6 @@ require (
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.21.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	mellium.im/sasl v0.3.1 // indirect
 )
