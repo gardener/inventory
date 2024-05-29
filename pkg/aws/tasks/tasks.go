@@ -1,33 +1,10 @@
 package tasks
 
 import (
-	"context"
-	"log/slog"
-
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 )
-
-const (
-
-	// sampleTaskName is the name for the sample task
-	sampleTaskName = "aws:sample-task"
-)
-
-// NewSampleTask creates a new Sample task
-func NewSampleTask() *asynq.Task {
-	task := asynq.NewTask(sampleTaskName, nil)
-
-	return task
-}
-
-// HandleSampleTask handles our sample task
-func HandleSampleTask(ctx context.Context, t *asynq.Task) error {
-	slog.Info("handling sample task")
-
-	return nil
-}
 
 // init registers our task handlers and periodic tasks with the registries.
 func init() {
@@ -41,8 +18,4 @@ func init() {
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_SUBNETS_REGION_TYPE, asynq.HandlerFunc(HandleCollectSubnetsRegionTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_TYPE, asynq.HandlerFunc(HandleCollectInstancesTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_REGION_TYPE, asynq.HandlerFunc(HandleCollectInstancesRegionTask))
-
-	// Periodic tasks
-	sampleTask := NewSampleTask()
-	registry.ScheduledTaskRegistry.MustRegister("@every 30s", sampleTask)
 }
