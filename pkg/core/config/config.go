@@ -24,6 +24,9 @@ type Config struct {
 	// Version is the version of the config file.
 	Version string `yaml:"version"`
 
+	// Debug configures debug mode, if set to true.
+	Debug bool `yaml:"debug"`
+
 	// Redis represents the Redis configuration
 	Redis RedisConfig `yaml:"redis"`
 
