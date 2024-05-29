@@ -197,6 +197,9 @@ worker:
   concurrency: 10
 ```
 
+You can also use the [examples/config.yaml](../examples/config.yaml) file as a
+starting point.
+
 The config file can be set either by specifying `--config|--file` option when
 invoking the `inventory` CLI, or via setting the `INVENTORY_CONFIG` env
 variable.
