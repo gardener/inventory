@@ -126,11 +126,12 @@ func newMigrator(conf *config.Config, db *bun.DB) (*migrate.Migrator, error) {
 	// By default we will use the bundled migrations, unless we have an
 	// explicitely specified alternate migrations directory.
 	m := migrations.Migrations
-	if conf.Database.MigrationDirectory != "" {
-		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(conf.Database.MigrationDirectory))
-		err := m.Discover(os.DirFS(conf.Database.MigrationDirectory))
+	migrationDir := conf.Database.MigrationDirectory
+	if migrationDir != "" {
+		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(migrationDir))
+		err := m.Discover(os.DirFS(migrationDir))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to discover migrations from %s: %w", migrationDir, err)
 		}
 	}
 
