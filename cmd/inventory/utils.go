@@ -17,7 +17,17 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/gardener/inventory/internal/pkg/migrations"
+	"github.com/gardener/inventory/pkg/core/config"
 )
+
+// configKey is the key used to store the parsed configuration in the context
+type configKey struct{}
+
+// getConfig extracts and returns the [config.Config] from app's context.
+func getConfig(ctx *cli.Context) *config.Config {
+	conf := ctx.Context.Value(configKey{}).(*config.Config)
+	return conf
+}
 
 // newRedisClientOpt returns a new [asynq.RedisClientOpt] from the specified
 // flags.
