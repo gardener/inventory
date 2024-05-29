@@ -1,10 +1,23 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
+
+// ErrNoConfigVersion error is returned when the configuration does not specify
+// config format version.
+var ErrNoConfigVersion = errors.New("config format version not specified")
+
+// ErrUnsupportedVersion is an error, which is returned when the config file
+// uses an incompatible version format.
+var ErrUnsupportedVersion = errors.New("unsupported config format version")
+
+// ConfigFormatVersion represents the supported config format version.
+const ConfigFormatVersion = "v1alpha1"
 
 // Config represents the Inventory configuration.
 type Config struct {
@@ -45,17 +58,25 @@ type WorkerConfig struct {
 
 // Parse parses the config from the given path.
 func Parse(path string) (*Config, error) {
-	var config Config
+	var conf Config
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := yaml.Unmarshal(data, &config); err != nil {
+	if err := yaml.Unmarshal(data, &conf); err != nil {
 		return nil, err
 	}
 
-	return &config, nil
+	if conf.Version == "" {
+		return nil, ErrNoConfigVersion
+	}
+
+	if conf.Version != ConfigFormatVersion {
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedVersion, conf.Version)
+	}
+
+	return &conf, nil
 }
 
 // MustParse parses the config from the given path, or panics in case of errors.
