@@ -176,8 +176,30 @@ scheduler.
 You can start a local environment using the provided
 [Docker Compose](https://docs.docker.com/compose/) manifest.
 
-The local environment expects a few environment variables to be set before
-starting up the services.
+The CLI tool uses a configuration file, which describes the settings of the
+various components.
+
+The following sample config file should get you started.
+
+``` yaml
+---
+version: v1alpha1
+debug: false
+
+redis:
+  endpoint: 127.0.0.1:6379
+
+database:
+  dsn: "postgresql://inventory:p4ssw0rd@localhost:5432/inventory?sslmode=disable"
+  migration_dir: ./internal/pkg/migrations
+
+worker:
+  concurrency: 10
+```
+
+The config file can be set either by specifying `--config|--file` option when
+invoking the `inventory` CLI, or via setting the `INVENTORY_CONFIG` env
+variable.
 
 In order to make development easier it is recommended to use
 [direnv](https://direnv.net/) along with a `.envrc` file.
@@ -186,9 +208,7 @@ Here's a sample `.envrc` file, which you can customize.
 
 ``` shell
 # .envrc
-
-# Database configuration
-export DSN="postgresql://inventory:p4ssw0rd@localhost:5432/inventory"
+export INVENTORY_CONFIG=/path/to/inventory/config.yaml
 
 # psql(1) env variables
 export PGUSER=inventory
@@ -196,16 +216,6 @@ export PGDATABASE=inventory
 export PGHOST=localhost
 export PGPORT=5432
 export PGPASSWORD=p4ssw0rd
-
-# Migrations directory
-# During development we use the migration files from the filesystem
-export MIGRATION_DIR=internal/pkg/migrations/
-
-# Redis settings
-export REDIS_ENDPOINT=127.0.0.1:6379
-
-# Worker settings
-export CONCURRENCY_LEVEL=10
 ```
 
 The AWS tasks expect that you already have a shared configuration and
