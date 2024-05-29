@@ -36,6 +36,9 @@ type Config struct {
 
 	// Worker represents the worker configuration.
 	Worker WorkerConfig `yaml:"worker"`
+
+	// Scheduler represents the scheduler configuration.
+	Scheduler SchedulerConfig `yaml:"scheduler"`
 }
 
 // RedisConfig provides Redis specific configuration settings.
@@ -58,6 +61,24 @@ type DatabaseConfig struct {
 type WorkerConfig struct {
 	// Concurrency specifies the concurrency level for workers.
 	Concurrency int `yaml:"concurrency"`
+}
+
+// SchedulerConfig provides scheduler specific configuration settings.
+type SchedulerConfig struct {
+	Jobs []*PeriodicJob `yaml:"jobs"`
+}
+
+// PeriodicJob is a job, which is enqueued by the scheduler on regular basis and
+// is processed by workers.
+type PeriodicJob struct {
+	// Name specifies the name of the task to be enqueued
+	Name string `yaml:"name"`
+
+	// Spec represents the cron spec for the task
+	Spec string `yaml:"spec"`
+
+	// Desc is an optional description associated with the job
+	Desc string `yaml:"desc"`
 }
 
 // Parse parses the config from the given path.
