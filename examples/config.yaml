@@ -11,3 +11,21 @@ database:
 
 worker:
   concurrency: 10
+
+scheduler:
+  jobs:
+    - name: "aws:collect-regions"
+      spec: "@every 720h"  # 30 days
+      desc: "Collect AWS Regions"
+    - name: "aws:collect-azs"
+      spec: "@every 720h"  # 30 days
+      desc: "Collect AWS AZs"
+    - name: "aws:collect-vpcs"
+      spec: "@every 1h"
+      desc: "Collect AWS VPCs"
+    - name: "aws:collect-subnets"
+      spec: "@every 1h"
+      desc: "Collect AWS Subnets"
+    - name: "aws:collect-instances"
+      spec: "@every 1h"
+      desc: "Collect AWS EC2 Instances"
