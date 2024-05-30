@@ -35,12 +35,35 @@ func NewSchedulerCommand() *cli.Command {
 						if err != nil {
 							return err
 						}
-						slog.Info("periodic task registered", "id", id, "spec", spec, "name", task.Type())
+						slog.Info(
+							"periodic task registered",
+							"id", id,
+							"name", task.Type(),
+							"spec", spec,
+							"source", "registry",
+						)
 						return nil
 					}
-
 					if err := registry.ScheduledTaskRegistry.Range(walker); err != nil {
 						return err
+					}
+
+					// Add tasks from configuration file as well
+					for _, job := range conf.Scheduler.Jobs {
+						task := asynq.NewTask(job.Name, []byte(job.Payload))
+						id, err := scheduler.Register(job.Spec, task)
+						if err != nil {
+							return err
+						}
+
+						slog.Info(
+							"periodic task registered",
+							"id", id,
+							"name", task.Type(),
+							"spec", job.Spec,
+							"desc", job.Desc,
+							"source", "config",
+						)
 					}
 
 					if err := scheduler.Run(); err != nil {
