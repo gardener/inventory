@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
 
-	"github.com/gardener/inventory/pkg/aws/clients"
+	awsclients "github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
+	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -34,7 +35,7 @@ func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 func collectRegions(ctx context.Context) error {
 	slog.Info("Collecting AWS regions")
 
-	regionsOutput, err := clients.Ec2.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
+	regionsOutput, err := awsclients.Ec2.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 
 	if err != nil {
 		slog.Error("could not describe regions", "err", err)

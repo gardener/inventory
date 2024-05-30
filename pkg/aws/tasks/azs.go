@@ -10,8 +10,9 @@ import (
 	"github.com/aws/smithy-go/ptr"
 	"github.com/hibiken/asynq"
 
-	"github.com/gardener/inventory/pkg/aws/clients"
+	awsclients "github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
+	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -51,7 +52,7 @@ func HandleCollectAzsRegionTask(ctx context.Context, t *asynq.Task) error {
 func collectAzsRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS availability zones", "region", region)
 
-	azsOutput, err := clients.Ec2.DescribeAvailabilityZones(ctx,
+	azsOutput, err := awsclients.Ec2.DescribeAvailabilityZones(ctx,
 		&ec2.DescribeAvailabilityZonesInput{
 			AllAvailabilityZones: ptr.Bool(false),
 		},
