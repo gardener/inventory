@@ -90,7 +90,7 @@ type PeriodicJob struct {
 
 // RetentionConfig provides retention specific configuration settings.
 type RetentionConfig struct {
-	Models []ModelRetentionConfig `yaml:"models"`
+	Models []*ModelRetentionConfig `yaml:"models"`
 }
 
 // ModelRetentionConfig represents the retention configuration for a given
