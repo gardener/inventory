@@ -6,21 +6,22 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/hibiken/asynq"
+	"gopkg.in/yaml.v3"
+
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
-	"github.com/hibiken/asynq"
-	"gopkg.in/yaml.v3"
 )
 
 const (
 	// DeleteStaleRecordsTaskType is the name of the task responsible for
 	// cleaning up stale records from the database.
-	DeleteStaleRecordsTaskType = "common:task:delete-stale-records"
+	DeleteStaleRecordsTaskType = "common:task:housekeeper"
 )
 
 // NewDeleteStaleRecordsTask creates a new task, which deletes stale records.
-func NewDeleteStaleRecordsTask(items []config.ModelRetentionConfig) (*asynq.Task, error) {
+func NewDeleteStaleRecordsTask(items []*config.ModelRetentionConfig) (*asynq.Task, error) {
 	payload, err := yaml.Marshal(items)
 	if err != nil {
 		return nil, err
@@ -54,15 +55,23 @@ func HandleDeleteStaleRecordsTask(ctx context.Context, task *asynq.Task) error {
 
 		now := time.Now()
 		past := now.Add(-item.Duration)
-		_, err := clients.Db.NewDelete().
+		out, err := clients.Db.NewDelete().
 			Model(model).
 			Where("updated_at < ?", past).
 			Exec(ctx)
 
-		if err != nil {
+		switch err {
+		case nil:
+			count, err := out.RowsAffected()
+			if err != nil {
+				slog.Error("failed to get number of deleted rows", "name", item.Name, "reason", err)
+				continue
+			}
+			slog.Info("deleted stale records", "name", item.Name, "count", count)
+		default:
 			// Simply log the error here and keep going with the
 			// rest of the objects to cleanup
-			slog.Error("failed to delete stale model records", "name", item.Name, "reason", err)
+			slog.Error("failed to delete stale records", "name", item.Name, "reason", err)
 		}
 	}
 
