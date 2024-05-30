@@ -90,13 +90,31 @@ type PeriodicJob struct {
 
 // RetentionConfig provides retention specific configuration settings.
 type RetentionConfig struct {
+	// Interval specifies the periodic interval at which to run housekeeping
+	// activities.
+	Interval string `yaml:"interval"`
+
+	// Models specifies the list of models to cleanup.
 	Models []*ModelRetentionConfig `yaml:"models"`
 }
 
 // ModelRetentionConfig represents the retention configuration for a given
 // model.
 type ModelRetentionConfig struct {
-	Name     string        `yaml:"name"`
+	// Name specifies the model name.
+	Name string `yaml:"name"`
+
+	// Duration specifies the max duration for which an object will be kept,
+	// if it hasn't been updated recently.
+	//
+	// For example:
+	//
+	// UpdatedAt field for an object is set to: Thu May 30 16:00:00 EEST 2024
+	// Duration of the object is configured to: 4 hours
+	//
+	// If the object is not update anymore by the time the housekeeper runs,
+	// after 20:00:00 this object will be considered as stale and removed
+	// from the database.
 	Duration time.Duration `yaml:"duration"`
 }
 
