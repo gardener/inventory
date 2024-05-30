@@ -153,6 +153,41 @@ func init() {
 }
 ```
 
+Periodic tasks can be defined externally as well by adding an entry to the
+scheduler configuration.
+
+The following snippet adds a periodic job, which the scheduler will enqueue
+every 1 hour.
+
+``` yaml
+# config.yaml
+---
+scheduler:
+  jobs:
+    - name: "my-sample-task"
+      spec: "@every 1h"
+      desc: "Foo does bar"
+```
+
+If a task requires a payload you can also specify the payload for it. For
+example the following job will be invoked every 1 hour with the specified JSON
+payload.
+
+``` yaml
+# config.yaml
+---
+scheduler:
+  jobs:
+    - name: "my-sample-task"
+      spec: "@every 1h"
+      desc: "Foo does bar"
+      payload: >-
+        {"foo": "bar"}
+```
+
+Make sure to check the [examples/config.yaml](../examples/config.yaml) file for
+additional examples.
+
 When running with multiple schedulers the example task above would be scheduled
 by each instance of the scheduler, which would lead to tasks being duplicated
 when being enqueued.
