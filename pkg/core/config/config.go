@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -39,6 +40,9 @@ type Config struct {
 
 	// Scheduler represents the scheduler configuration.
 	Scheduler SchedulerConfig `yaml:"scheduler"`
+
+	// RetentionConfig represents the retention configuration.
+	Retention RetentionConfig `yaml:"retention"`
 }
 
 // RedisConfig provides Redis specific configuration settings.
@@ -82,6 +86,18 @@ type PeriodicJob struct {
 
 	// Payload is an optional payload to use when submitting the task.
 	Payload string `yaml:"payload"`
+}
+
+// RetentionConfig provides retention specific configuration settings.
+type RetentionConfig struct {
+	Models []ModelRetentionConfig `yaml:"models"`
+}
+
+// ModelRetentionConfig represents the retention configuration for a given
+// model.
+type ModelRetentionConfig struct {
+	Name     string        `yaml:"name"`
+	Duration time.Duration `yaml:"duration"`
 }
 
 // Parse parses the config from the given path.
