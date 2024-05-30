@@ -79,6 +79,9 @@ type PeriodicJob struct {
 
 	// Desc is an optional description associated with the job
 	Desc string `yaml:"desc"`
+
+	// Payload is an optional payload to use when submitting the task.
+	Payload string `yaml:"payload"`
 }
 
 // Parse parses the config from the given path.
