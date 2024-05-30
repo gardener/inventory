@@ -2,7 +2,7 @@
 REPO_ROOT                    := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 IMAGE                        ?= europe-docker.pkg.dev/gardener-project/releases/gardener/inventory
 LOCAL_BIN                    ?= $(REPO_ROOT)/bin
-TOOLS_BIN 				     ?= $(REPO_ROOT)/tools
+TOOLS_BIN		     ?= $(REPO_ROOT)/tools
 BINARY                       ?= $(LOCAL_BIN)/inventory
 SRC_DIRS                     := $(shell find . -name '*.go' -exec dirname {} \; | sort | uniq)
 VERSION                      := $(shell cat VERSION)
@@ -61,14 +61,14 @@ clean-tools-bin:
 .PHONY: goimports
 goimports: $(GOIMPORTS)
 	@for dir in $(SRC_DIRS); do \
-  		$(GOIMPORTS) -w $$dir/; \
+		$(GOIMPORTS) -w $$dir/; \
 	done
 
 .PHONY: goimports-reviser
 goimports-reviser: $(GOIMPORTS_REVISER)
 	@for dir in $(SRC_DIRS); do \
-  		GOIMPORTS_REVISER_OPTIONS="-imports-order std,project,general,company" \
-  		$(GOIMPORTS_REVISER) -recursive $$dir/; \
+		GOIMPORTS_REVISER_OPTIONS="-imports-order std,project,general,company" \
+		$(GOIMPORTS_REVISER) -recursive $$dir/; \
 	done
 
 .PHONY: lint
