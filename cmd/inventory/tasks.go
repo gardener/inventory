@@ -9,8 +9,6 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
 
-	_ "github.com/gardener/inventory/pkg/aws/tasks"
-	_ "github.com/gardener/inventory/pkg/common/tasks"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 

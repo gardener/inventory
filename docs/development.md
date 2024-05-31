@@ -220,7 +220,7 @@ func init() {
 ```
 
 You should also update the imports in
-[cmd/inventory/tasks.go](../cmd/inventory/tasks.go) with an import statement
+[cmd/inventory/init.go](../cmd/inventory/init.go) with an import statement
 similar to the one below.
 
 ``` go
