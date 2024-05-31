@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_INSTANCES_TYPE        = "aws:collect-instances"
-	AWS_COLLECT_INSTANCES_REGION_TYPE = "aws:collect-instances-region"
+	AWS_COLLECT_INSTANCES_TYPE        = "aws:task:collect-instances"
+	AWS_COLLECT_INSTANCES_REGION_TYPE = "aws:task:collect-instances-region"
 )
 
 type CollectInstancesPayload struct {
