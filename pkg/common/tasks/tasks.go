@@ -10,42 +10,49 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/gardener/inventory/pkg/clients"
-	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 const (
-	// DeleteStaleRecordsTaskType is the name of the task responsible for
-	// cleaning up stale records from the database.
-	DeleteStaleRecordsTaskType = "common:task:housekeeper"
+	// HousekeeperTaskType is the name of the task responsible for cleaning
+	// up stale records from the database.
+	HousekeeperTaskType = "common:task:housekeeper"
 )
 
-// NewDeleteStaleRecordsTask creates a new task, which deletes stale records.
-func NewDeleteStaleRecordsTask(items []*config.ModelRetentionConfig) (*asynq.Task, error) {
-	payload, err := yaml.Marshal(items)
-	if err != nil {
-		return nil, err
-	}
-
-	task := asynq.NewTask(DeleteStaleRecordsTaskType, payload)
-
-	return task, nil
+// HousekeeperPayload represents the payload of the housekeeper task.
+type HousekeeperPayload struct {
+	// Retention provides the retention configuration of objects.
+	Retention []RetentionConfig `yaml:"retention"`
 }
 
-// HandleDeleteStaleRecordsTask deletes records, which have been identified as
-// stale.
-func HandleDeleteStaleRecordsTask(ctx context.Context, task *asynq.Task) error {
-	var items []*config.ModelRetentionConfig
+// RetentionConfig represents the retention configuration for a given model.
+type RetentionConfig struct {
+	// Name specifies the model name.
+	Name string `yaml:"name"`
 
-	if err := yaml.Unmarshal(task.Payload(), &items); err != nil {
+	// Duration specifies the max duration for which an object will be kept,
+	// if it hasn't been updated recently.
+	//
+	// For example:
+	//
+	// UpdatedAt field for an object is set to: Thu May 30 16:00:00 EEST 2024
+	// Duration of the object is configured to: 4 hours
+	//
+	// If the object is not update anymore by the time the housekeeper runs,
+	// after 20:00:00 this object will be considered as stale and removed
+	// from the database.
+	Duration time.Duration `yaml:"duration"`
+}
+
+// HandleHousekeeperTask performs housekeeping activities, such as deleting
+// stale records.
+func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
+	var payload HousekeeperPayload
+	if err := yaml.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal payload: %w", err)
 	}
 
-	if items == nil {
-		return nil
-	}
-
-	for _, item := range items {
+	for _, item := range payload.Retention {
 		// Look up the registry for the actual model type
 		model, ok := registry.ModelRegistry.Get(item.Name)
 		if !ok {
@@ -57,7 +64,7 @@ func HandleDeleteStaleRecordsTask(ctx context.Context, task *asynq.Task) error {
 		past := now.Add(-item.Duration)
 		out, err := clients.Db.NewDelete().
 			Model(model).
-			Where("updated_at < ?", past).
+			Where("date_part('epoch', updated_at) < ?", past.Unix()).
 			Exec(ctx)
 
 		switch err {
@@ -80,7 +87,7 @@ func HandleDeleteStaleRecordsTask(ctx context.Context, task *asynq.Task) error {
 
 func init() {
 	registry.TaskRegistry.MustRegister(
-		DeleteStaleRecordsTaskType,
-		asynq.HandlerFunc(HandleDeleteStaleRecordsTask),
+		HousekeeperTaskType,
+		asynq.HandlerFunc(HandleHousekeeperTask),
 	)
 }
