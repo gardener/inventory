@@ -15,7 +15,7 @@ import (
 
 const (
 	// Asynq task type for collecting AWS regions
-	AWS_COLLECT_REGIONS_TYPE = "aws:collect-regions"
+	AWS_COLLECT_REGIONS_TYPE = "aws:task:collect-regions"
 )
 
 // NewAwsCollectRegionsTask creates a new task for collecting AWS regions.

@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_SUBNETS_TYPE        = "aws:collect-subnets"
-	AWS_COLLECT_SUBNETS_REGION_TYPE = "aws:collect-subnets-region"
+	AWS_COLLECT_SUBNETS_TYPE        = "aws:task:collect-subnets"
+	AWS_COLLECT_SUBNETS_REGION_TYPE = "aws:task:collect-subnets-region"
 )
 
 type CollectSubnetsPayload struct {

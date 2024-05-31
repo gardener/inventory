@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_VPC_TYPE        = "aws:collect-vpcs"
-	AWS_COLLECT_VPC_REGION_TYPE = "aws:collect-vpcs-region"
+	AWS_COLLECT_VPC_TYPE        = "aws:task:collect-vpcs"
+	AWS_COLLECT_VPC_REGION_TYPE = "aws:task:collect-vpcs-region"
 )
 
 type CollectVpcsPayload struct {

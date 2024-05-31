@@ -18,8 +18,8 @@ import (
 
 const (
 	// Asynq task type for collecting AWS regions
-	AWS_COLLECT_AZS_REGION_TYPE = "aws:collect-azs-region"
-	AWS_COLLECT_AZS_TYPE        = "aws:collect-azs"
+	AWS_COLLECT_AZS_REGION_TYPE = "aws:task:collect-azs-region"
+	AWS_COLLECT_AZS_TYPE        = "aws:task:collect-azs"
 )
 
 type CollectAzsPayload struct {
