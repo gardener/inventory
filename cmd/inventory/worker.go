@@ -107,8 +107,9 @@ func NewWorkerCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "start",
-				Usage: "start worker",
+				Name:    "start",
+				Usage:   "start worker",
+				Aliases: []string{"s"},
 				Before: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					if err := validateWorkerConfig(conf); err != nil {
