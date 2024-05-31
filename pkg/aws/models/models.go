@@ -4,6 +4,7 @@ import (
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 // Region represents an AWS Region
@@ -74,4 +75,13 @@ type Instance struct {
 	SubnetID     string `bun:"subnet_id,notnull"`
 	VpcID        string `bun:"vpc_id,notnull"`
 	Platform     string `bun:"platform,notnull"`
+}
+
+func init() {
+	// Register the models with the default registry
+	registry.ModelRegistry.MustRegister("aws:model:region", &Region{})
+	registry.ModelRegistry.MustRegister("aws:model:az", &AvailabilityZone{})
+	registry.ModelRegistry.MustRegister("aws:model:vpc", &VPC{})
+	registry.ModelRegistry.MustRegister("aws:model:subnet", &Subnet{})
+	registry.ModelRegistry.MustRegister("aws:model:instance", &Instance{})
 }
