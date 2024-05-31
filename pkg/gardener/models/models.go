@@ -4,6 +4,7 @@ import (
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 // Project represents a Gardener project
@@ -53,4 +54,12 @@ type Machine struct {
 	Namespace  string `bun:"namespace,notnull"`
 	ProviderId string `bun:"provider_id,notnull,unique"`
 	Status     string `bun:"status,notnull"`
+}
+
+func init() {
+	// Register the models with the default registry
+	registry.ModelRegistry.MustRegister("g:model:project", &Project{})
+	registry.ModelRegistry.MustRegister("g:model:seed", &Seed{})
+	registry.ModelRegistry.MustRegister("g:model:shoot", &Shoot{})
+	registry.ModelRegistry.MustRegister("g:model:machine", &Machine{})
 }
