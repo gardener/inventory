@@ -35,6 +35,7 @@ scheduler:
       spec: "@every 2h"
       payload: >-
         retention:
+          # AWS
           - name: "aws:model:region"
             duration: 1080h  # 45 days
           - name: "aws:model:az"
@@ -44,4 +45,13 @@ scheduler:
           - name: "aws:model:subnet"
             duration: 4h
           - name: "aws:model:instance"
+            duration: 4h
+          # Gardener
+          - name: "g:model:project"
+            duration: 24h
+          - name: "g:model:seed"
+            duration: 168h  # 7 days
+          - name: "g:model:shoot"
+            duration: 4h
+          - name: "g:model:machine"
             duration: 4h
