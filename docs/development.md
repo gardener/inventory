@@ -185,6 +185,11 @@ scheduler:
         {"foo": "bar"}
 ```
 
+The naming convention we use when defining new tasks is
+`<datasource>:task:<taskname>`. For example, if you are creating a new
+AWS-specific task called `foo`, you should register the task with the following
+name: `aws:task:foo`.
+
 Make sure to check the [examples/config.yaml](../examples/config.yaml) file for
 additional examples.
 
