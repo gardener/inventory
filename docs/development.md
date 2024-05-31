@@ -3,47 +3,47 @@
 This document provides details to get you started with the development of the
 Inventory system.
 
-## Components
+# Components
 
 The Inventory system consists of the following components.
 
 Please refer to the [Design Goals](./design.md) document for more details about
 the overall design.
 
-### API
+## API
 
 The API service exposes collected and normalized data over a REST API.
 
-### Persistence
+## Persistence
 
 For persisting the collected data the Inventory system uses a PostgreSQL
 database.
 
 The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
 
-### Worker
+## Worker
 
 Workers are based on [hibiken/asynq](https://github.com/hibiken/asynq) and use
 Redis (or any of the available alternatives such as Valkey and Redict) as a
 message passing interface.
 
-### Scheduler
+## Scheduler
 
 The scheduler is based on [hibiken/asynq](https://github.com/hibiken/asynq) and
 is used to trigger the execution of periodic tasks.
 
-### Message Queue
+## Message Queue
 
 Redis (or Valkey, or Redict) is used as a message queue for async communication
 between the scheduler and workers.
 
-### CLI
+## CLI
 
 The CLI application is used for interfacing with the inventory system and
 provides various sub-commands such as migrating the database schema, starting up
 services, etc.
 
-## Code Structure
+# Code Structure
 
 The code is structured in the following way. Each data source (e.g. `aws`,
 `gcp`, etc.) resides in it's own package. When introducing a new data source we
@@ -62,7 +62,109 @@ pkg/aws
 └── utils      # Utilities
 ```
 
-## Tasks
+# Models
+
+The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
+
+The following sections provide additional details about naming conventions and
+other hints to follow when creating a new model, or updating an existing one.
+
+## Base Model
+
+The [pkg/core/models](../pkg/core/models) package provides base models, which are
+meant to be used by other models.
+
+Make sure that you embed the [pkg/core/models.Model](./pkg/core/models) model
+into your models, so that we have a consistent models structure.
+
+In additional to our core model, we should also embed the
+[bun.BaseModel](https://pkg.go.dev/github.com/uptrace/bun#BaseModel) model,
+which would allow us to customize the model further, e.g. specifying a
+different table name, alias, view name, etc.
+
+Customizing the table name, alias and view name for a model can only be
+configured on the `bun.BaseModel`. See the
+[Struct Tags](https://bun.uptrace.dev/guide/models.html#struct-tags) section from the
+[uptrace/bun](https://bun.uptrace.dev/guide/) documentation.
+
+## Example Model
+
+An example model would look like this.
+
+``` go
+package my_package
+
+import (
+	coremodels "github.com/gardener/inventory/pkg/core/models"
+	"github.com/uptrace/bun"
+)
+
+// MyModel does something
+type MyModel struct {
+	bun.BaseModel `bun:"table:my_table_name"`
+	coremodels.Model
+
+	Name string `bun:"name,notnull,unique"`
+}
+```
+
+Make sure to check the documentation about [defining
+models](https://bun.uptrace.dev/guide/models.html) for additional information
+and examples.
+
+Also, once you've created the model you should create a migration for it.
+
+``` shell
+inventory db create <description-of-your-migration>
+```
+
+The command above will create two migration files. Edit the files and describe
+the schema of your model, then commit them to the repo.
+
+Finally, you should register your model with the default models registry.
+
+``` go
+func init() {
+	// Register the models with the default registry
+	registry.ModelRegistry.MustRegister("foo:model:bar", &MyModel{})
+}
+```
+
+The naming convention we follow when defining new models is
+`<datasource>:model:<modelname>`. For example, if you are defining a new AWS
+model called `Foo` you should register the model using the `aws:model:foo` name.
+
+## Model Retention
+
+Each data model registers itself with the
+[default model registry](../pkg/core/registry).
+
+In order to keep the database clean from stale records the Inventory system runs
+a periodic housekeeper task, which cleans up records based on a retention
+period.
+
+In order to define a retention period for an object you should update the
+`common:task:housekeeper` task payload in your
+[config.yaml](../examples/config.yaml) and add an entry for your object.
+
+The following example snippet configures retention for the `foo:model:bar`
+model, which will remove records that were not updated in the last 4 hours.
+
+In this configuration the housekeeper task will be invoked every 1 hour.
+
+``` yaml
+scheduler:
+  jobs:
+    # The housekeeper takes care of cleaning up stale records
+    - name: "common:task:housekeeper"
+      spec: "@every 1h"
+      payload: >-
+        retention:
+          - name: "foo:model:bar"
+            duration: 4h
+```
+
+# Tasks
 
 Tasks are based on [hibiken/asynq](https://github.com/hibiken/asynq).
 
@@ -128,7 +230,7 @@ import _ "github.com/gardener/inventory/pkg/mydatasource/tasks"
 We add this import solely for it's side-effects, so that task registration may
 happen.
 
-## Periodic Tasks
+# Periodic Tasks
 
 Periodic tasks are registered in a way similar to how we register worker tasks.
 
@@ -211,7 +313,7 @@ In the future we may explore different schedulers such as
 [go-redsync/redsync](https://github.com/go-redsync/redsync) with `asynq`'s
 scheduler.
 
-## Local Environment
+# Local Environment
 
 You can start a local environment using the provided
 [Docker Compose](https://docs.docker.com/compose/) manifest.

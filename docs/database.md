@@ -10,56 +10,6 @@ system looks like this.
 
 ![Data Model](../images/data-model.png)
 
-# Models
-
-The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
-
-The following sections provide additional details about naming conventions and
-other hints to follow when creating a new model, or updating an existing one.
-
-## Base Model
-
-The [pkg/core/models](../pkg/core/models) package provides base models, which are
-meant to be used by other models.
-
-Make sure that you embed the [pkg/core/models.Model](./pkg/core/models) model
-into your models, so that we have a consistent models structure.
-
-In additional to our core model, we should also embed the
-[bun.BaseModel](https://pkg.go.dev/github.com/uptrace/bun#BaseModel) model,
-which would allow us to customize the model further, e.g. specifying a
-different table name, alias, view name, etc.
-
-Customizing the table name, alias and view name for a model can only be
-configured on the `bun.BaseModel`. See the
-[Struct Tags](https://bun.uptrace.dev/guide/models.html#struct-tags) section from the
-[uptrace/bun](https://bun.uptrace.dev/guide/) documentation.
-
-Example model would look like this.
-
-``` go
-package my_package
-
-import (
-	coremodels "github.com/gardener/inventory/pkg/core/models"
-	"github.com/uptrace/bun"
-)
-
-// MyModel does something
-type MyModel struct {
-	bun.BaseModel `bun:"table:my_table_name"`
-	coremodels.Model
-
-	Name string `bun:"name,notnull,unique"`
-}
-```
-
-Make sure to check the documentation about [defining
-models](https://bun.uptrace.dev/guide/models.html) for additional information
-and examples.
-
-Also, once you've created the model you should create a migration for it.
-
 # Migrations
 
 Database migrations are managed by the CLI tool.
