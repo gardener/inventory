@@ -29,3 +29,19 @@ scheduler:
     - name: "aws:collect-instances"
       spec: "@every 1h"
       desc: "Collect AWS EC2 Instances"
+
+    # The housekeeper takes care of cleaning up stale records
+    - name: "common:task:housekeeper"
+      spec: "@every 2h"
+      payload: >-
+        retention:
+          - name: "aws:model:region"
+            duration: 1080h  # 45 days
+          - name: "aws:model:az"
+            duration: 1080h  # 45 days
+          - name: "aws:model:vpc"
+            duration: 4h
+          - name: "aws:model:subnet"
+            duration: 4h
+          - name: "aws:model:instance"
+            duration: 4h
