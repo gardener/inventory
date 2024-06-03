@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -24,30 +25,38 @@ type CollectInstancesPayload struct {
 	Region string `json:"region"`
 }
 
+// NewCollectInstancesTask creates a new task for collecting EC2 Instances from
+// all AWS Regions.
 func NewCollectInstancesTask() *asynq.Task {
 	return asynq.NewTask(AWS_COLLECT_INSTANCES_TYPE, nil)
 }
 
-func NewCollectInstancesRegionTask(region string) *asynq.Task {
+// NewCollectInstancesForRegionTask creates a new task for collecting EC2
+// Instances for a given AWS Region.
+func NewCollectInstancesForRegionTask(region string) (*asynq.Task, error) {
 	if region == "" {
-		return nil
+		return nil, ErrMissingRegion
 	}
+
 	payload, err := json.Marshal(CollectInstancesPayload{Region: region})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return asynq.NewTask(AWS_COLLECT_INSTANCES_REGION_TYPE, payload)
+
+	return asynq.NewTask(AWS_COLLECT_INSTANCES_REGION_TYPE, payload), nil
 }
 
-func HandleCollectInstancesRegionTask(ctx context.Context, t *asynq.Task) error {
+// HandleCollectInstancesForRegionTask collects EC2 Instances for a specific Region.
+func HandleCollectInstancesForRegionTask(ctx context.Context, t *asynq.Task) error {
 	var p CollectInstancesPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return err
+		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	return collectInstancesRegion(ctx, p.Region)
+
+	return collectInstancesForRegion(ctx, p.Region)
 }
 
-func collectInstancesRegion(ctx context.Context, region string) error {
+func collectInstancesForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS instances ", "region", region)
 
 	instancesOutput, err := awsclients.Ec2.DescribeInstances(ctx,
@@ -113,6 +122,7 @@ func collectInstancesRegion(ctx context.Context, region string) error {
 	return nil
 }
 
+// HandleCollectInstancesTask collects the EC2 Instances from all known regions.
 func HandleCollectInstancesTask(ctx context.Context, t *asynq.Task) error {
 	return collectInstances(ctx)
 }
@@ -127,13 +137,20 @@ func collectInstances(ctx context.Context) error {
 	}
 	for _, r := range regions {
 		// Trigger Asynq task for each region
-		instanceTask := NewCollectInstancesRegionTask(r.Name)
+		instanceTask, err := NewCollectInstancesForRegionTask(r.Name)
+		if err != nil {
+			slog.Error("failed to create task", "reason", err)
+			continue
+		}
+
 		info, err := clients.Client.Enqueue(instanceTask)
 		if err != nil {
 			slog.Error("could not enqueue task", "type", instanceTask.Type(), "err", err)
 			continue
 		}
+
 		slog.Info("enqueued task", "type", instanceTask.Type(), "id", info.ID, "queue", info.Queue)
 	}
+
 	return nil
 }

@@ -25,30 +25,39 @@ type CollectSubnetsPayload struct {
 	Region string `json:"region"`
 }
 
+// NewCollectSubnetTask creates a new task for collecting all Subnets from all
+// Regions.
 func NewCollectSubnetsTask() *asynq.Task {
 	return asynq.NewTask(AWS_COLLECT_SUBNETS_TYPE, nil)
 }
 
-func NewCollectSubnetsRegionTask(region string) *asynq.Task {
+// NewCollectSubnetsForRegionTask creates a task for collecting Subnets from a
+// given Region.
+func NewCollectSubnetsForRegionTask(region string) (*asynq.Task, error) {
 	if region == "" {
-		return nil
+		return nil, ErrMissingRegion
 	}
+
 	payload, err := json.Marshal(CollectSubnetsPayload{Region: region})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return asynq.NewTask(AWS_COLLECT_SUBNETS_REGION_TYPE, payload)
+
+	return asynq.NewTask(AWS_COLLECT_SUBNETS_REGION_TYPE, payload), nil
 }
 
-func HandleCollectSubnetsRegionTask(ctx context.Context, t *asynq.Task) error {
+// HandleCollectSubnetsForRegionTask collects the Subnets from a specific
+// Region, provided as part of the task payload.
+func HandleCollectSubnetsForRegionTask(ctx context.Context, t *asynq.Task) error {
 	var p CollectSubnetsPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	return collectSubnetsRegion(ctx, p.Region)
+
+	return collectSubnetsForRegion(ctx, p.Region)
 }
 
-func collectSubnetsRegion(ctx context.Context, region string) error {
+func collectSubnetsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS subnets", "region", region)
 
 	subnetsOutput, err := awscl.Ec2.DescribeSubnets(ctx,
@@ -79,7 +88,6 @@ func collectSubnetsRegion(ctx context.Context, region string) error {
 			IPv6CIDR:               "",                                     //TODO: fetch IPv6 CIDR
 		}
 		subnets = append(subnets, modelSubnet)
-
 	}
 
 	if len(subnets) == 0 {
@@ -107,6 +115,7 @@ func collectSubnetsRegion(ctx context.Context, region string) error {
 	return nil
 }
 
+// HandleCollectSubnetsTask collects all AWS Subnets from all AWS Regions.
 func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 	return collectSubnets(ctx)
 }
@@ -119,14 +128,21 @@ func collectSubnets(ctx context.Context) error {
 		slog.Error("could not select regions from db", "err", err)
 		return err
 	}
+
 	for _, r := range regions {
 		// Trigger Asynq task for each region
-		subnetTask := NewCollectSubnetsRegionTask(r.Name)
+		subnetTask, err := NewCollectSubnetsForRegionTask(r.Name)
+		if err != nil {
+			slog.Error("failed to create task", "reason", err)
+			continue
+		}
+
 		info, err := clients.Client.Enqueue(subnetTask)
 		if err != nil {
 			slog.Error("could not enqueue task", "type", subnetTask.Type(), "err", err)
 			continue
 		}
+
 		slog.Info("enqueued task", "type", subnetTask.Type(), "id", info.ID, "queue", info.Queue)
 	}
 	return nil
