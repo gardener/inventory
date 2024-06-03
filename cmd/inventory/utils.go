@@ -23,6 +23,9 @@ import (
 	"github.com/gardener/inventory/pkg/core/config"
 )
 
+// na is the const used to represent N/A values
+const na = "N/A"
+
 // configKey is the key used to store the parsed configuration in the context
 type configKey struct{}
 
