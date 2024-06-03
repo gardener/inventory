@@ -10,6 +10,7 @@ import (
 
 var VirtualGardenerClient *gardenerversioned.Clientset
 
+// TODO: Add k8s in-cluster config, to allow running the application in a k8s cluster
 func init() {
 	kubeconfig := os.Getenv("KUBECONFIG")
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
