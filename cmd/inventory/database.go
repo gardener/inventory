@@ -272,9 +272,9 @@ func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 	table := newTableWriter(os.Stdout, headers)
 
 	for _, item := range items {
-		id := "N/A"
-		groupId := "N/A"
-		migratedAt := "N/A"
+		id := na
+		groupId := na
+		migratedAt := na
 
 		if item.ID > 0 {
 			id = strconv.FormatInt(item.ID, 10)

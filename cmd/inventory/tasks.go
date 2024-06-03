@@ -315,6 +315,26 @@ func NewTaskCommand() *cli.Command {
 						return err
 					}
 
+					deadline := info.Deadline.String()
+					if info.Deadline.IsZero() {
+						deadline = na
+					}
+
+					lastFailedAt := info.LastFailedAt.String()
+					if info.LastFailedAt.IsZero() {
+						lastFailedAt = na
+					}
+
+					nextProcessAt := info.NextProcessAt.String()
+					if info.NextProcessAt.IsZero() {
+						nextProcessAt = na
+					}
+
+					completedAt := info.CompletedAt.String()
+					if info.CompletedAt.IsZero() {
+						completedAt = na
+					}
+
 					fmt.Printf("%-20s: %s\n", "ID", info.ID)
 					fmt.Printf("%-20s: %s\n", "Queue", info.Queue)
 					fmt.Printf("%-20s: %s\n", "Type/Name", info.Type)
@@ -324,11 +344,11 @@ func NewTaskCommand() *cli.Command {
 
 					fmt.Printf("%-20s: %d/%d\n", "Retry", info.Retried, info.MaxRetry)
 					fmt.Printf("%-20s: %s\n", "Timeout", info.Timeout.String())
-					fmt.Printf("%-20s: %s\n", "Deadline", info.Deadline.String())
+					fmt.Printf("%-20s: %s\n", "Deadline", deadline)
 					fmt.Printf("%-20s: %s\n", "Retention", info.Retention.String())
-					fmt.Printf("%-20s: %s\n", "Last Failed At", info.LastFailedAt.String())
-					fmt.Printf("%-20s: %s\n", "Next Process At", info.NextProcessAt.String())
-					fmt.Printf("%-20s: %s\n", "Completed At", info.CompletedAt.String())
+					fmt.Printf("%-20s: %s\n", "Last Failed At", lastFailedAt)
+					fmt.Printf("%-20s: %s\n", "Next Process At", nextProcessAt)
+					fmt.Printf("%-20s: %s\n", "Completed At", completedAt)
 
 					if info.LastErr != "" {
 						fmt.Printf("\nLast Error\n")
