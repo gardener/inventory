@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
 
 	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	"github.com/hibiken/asynq"
@@ -135,8 +136,24 @@ func newLoggingMiddleware() asynq.MiddlewareFunc {
 		mw := func(ctx context.Context, task *asynq.Task) error {
 			taskID, _ := asynq.GetTaskID(ctx)
 			queueName, _ := asynq.GetQueueName(ctx)
-			slog.Info("received task", "id", taskID, "queue", queueName, "name", task.Type())
-			return handler.ProcessTask(ctx, task)
+			taskName := task.Type()
+			slog.Info(
+				"received task",
+				"id", taskID,
+				"queue", queueName,
+				"name", taskName,
+			)
+			start := time.Now()
+			err := handler.ProcessTask(ctx, task)
+			elapsed := time.Since(start)
+			slog.Info(
+				"task finished",
+				"id", taskID,
+				"queue", queueName,
+				"name", taskName,
+				"duration", elapsed,
+			)
+			return err
 		}
 
 		return asynq.HandlerFunc(mw)
