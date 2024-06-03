@@ -40,7 +40,7 @@ func NewQueueCommand() *cli.Command {
 			{
 				Name:    "info",
 				Usage:   "get queue info",
-				Aliases: []string{"i"},
+				Aliases: []string{"inspect", "i"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "queue",
