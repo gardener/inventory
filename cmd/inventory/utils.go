@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -104,9 +105,22 @@ func newServer(conf *config.Config) *asynq.Server {
 		logLevel = asynq.DebugLevel
 	}
 
+	errHandler := func(ctx context.Context, task *asynq.Task, err error) {
+		taskID, _ := asynq.GetTaskID(ctx)
+		queueName, _ := asynq.GetQueueName(ctx)
+		retried, _ := asynq.GetRetryCount(ctx)
+		slog.Error(
+			"task failed",
+			"id", taskID,
+			"queue", queueName,
+			"retry", retried,
+			"reason", err,
+		)
+	}
 	config := asynq.Config{
-		Concurrency: conf.Worker.Concurrency,
-		LogLevel:    logLevel,
+		Concurrency:  conf.Worker.Concurrency,
+		LogLevel:     logLevel,
+		ErrorHandler: asynq.ErrorHandlerFunc(errHandler),
 	}
 
 	server := asynq.NewServer(redisClientOpt, config)
