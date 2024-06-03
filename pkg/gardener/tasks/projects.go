@@ -34,7 +34,7 @@ func HandleGardenerCollectProjectsTask(ctx context.Context, t *asynq.Task) error
 
 func collectProjects(ctx context.Context) error {
 
-	projectList, err := clients.VirtualGardenerClient.CoreV1beta1().Projects().List(ctx, metav1.ListOptions{})
+	projectList, err := clients.VirtualGardenClient.CoreV1beta1().Projects().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

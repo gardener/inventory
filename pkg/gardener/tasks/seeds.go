@@ -34,7 +34,7 @@ func HandleGardenerCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 
 func collectSeeds(ctx context.Context) error {
 
-	seedList, err := clients.VirtualGardenerClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
+	seedList, err := clients.VirtualGardenClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

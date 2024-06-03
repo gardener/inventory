@@ -35,7 +35,7 @@ func HandleGardenerCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 
 func collectShoots(ctx context.Context) error {
 
-	shootList, err := clients.VirtualGardenerClient.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
+	shootList, err := clients.VirtualGardenClient.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
