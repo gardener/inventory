@@ -51,16 +51,6 @@ func collectRegions(ctx context.Context) error {
 			OptInStatus: strings.StringFromPointer(region.OptInStatus),
 		}
 		regions = append(regions, modelRegion)
-
-		// Create asynq task for collecting availability zones
-		azsTask := NewCollectAzsRegionTask(strings.StringFromPointer(region.RegionName))
-		info, err := clients.Client.Enqueue(azsTask)
-		if err != nil {
-			slog.Error("could not enqueue task", "type", azsTask.Type(), "err", err)
-			continue
-		}
-		slog.Info("enqueued task", "type", azsTask.Type(), "id", info.ID, "queue", info.Queue)
-
 	}
 
 	if len(regions) == 0 {
