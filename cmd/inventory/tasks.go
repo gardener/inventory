@@ -350,22 +350,24 @@ func NewTaskCommand() *cli.Command {
 					fmt.Printf("%-20s: %s\n", "Next Process At", nextProcessAt)
 					fmt.Printf("%-20s: %s\n", "Completed At", completedAt)
 
-					if info.LastErr != "" {
-						fmt.Printf("\nLast Error\n")
-						fmt.Println("----------")
-						fmt.Printf("%s\n", info.LastErr)
-					}
+					fmt.Printf("\nLast Error\n")
+					fmt.Println("----------")
+					fmt.Printf("%s\n", info.LastErr)
 
+					fmt.Printf("\nPayload\n")
+					fmt.Println("-------")
 					if info.Payload != nil {
-						fmt.Printf("\nPayload\n")
-						fmt.Println("-------")
 						fmt.Printf("%s\n", string(info.Payload))
+					} else {
+						fmt.Println("<nil>")
 					}
 
+					fmt.Printf("\nResult\n")
+					fmt.Println("------")
 					if info.Result != nil {
-						fmt.Printf("\nResult\n")
-						fmt.Println("------")
 						fmt.Printf("%s\n", string(info.Result))
+					} else {
+						fmt.Println("<nil>")
 					}
 
 					return nil
