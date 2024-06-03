@@ -125,6 +125,23 @@ func newServer(conf *config.Config) *asynq.Server {
 	return server
 }
 
+// newLoggingMiddleware returns a new [asynq.MiddlewareFunc] which logs each
+// received task.
+func newLoggingMiddleware() asynq.MiddlewareFunc {
+	middleware := func(handler asynq.Handler) asynq.Handler {
+		mw := func(ctx context.Context, task *asynq.Task) error {
+			taskID, _ := asynq.GetTaskID(ctx)
+			queueName, _ := asynq.GetQueueName(ctx)
+			slog.Info("received task", "id", taskID, "queue", queueName, "name", task.Type())
+			return handler.ProcessTask(ctx, task)
+		}
+
+		return asynq.HandlerFunc(mw)
+	}
+
+	return asynq.MiddlewareFunc(middleware)
+}
+
 // newDB returns a new [bun.DB] database from the given config.
 func newDB(conf *config.Config) *bun.DB {
 	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(conf.Database.DSN)))
