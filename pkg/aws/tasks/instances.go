@@ -95,6 +95,15 @@ func collectInstancesRegion(ctx context.Context, region string) error {
 	_, err = clients.Db.NewInsert().
 		Model(&instances).
 		On("CONFLICT (instance_id) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("arch = EXCLUDED.arch").
+		Set("instance_type = EXCLUDED.instance_type").
+		Set("state = EXCLUDED.state").
+		Set("subnet_id = EXCLUDED.subnet_id").
+		Set("vpc_id = EXCLUDED.vpc_id").
+		Set("platform = EXCLUDED.platform").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
 		Exec(ctx)
 	if err != nil {
 		slog.Error("could not insert instances into db", "err", err)

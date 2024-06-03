@@ -88,6 +88,16 @@ func collectSubnetsRegion(ctx context.Context, region string) error {
 	_, err = clients.Db.NewInsert().
 		Model(&subnets).
 		On("CONFLICT (subnet_id) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("vpc_id = EXCLUDED.vpc_id").
+		Set("state = EXCLUDED.state").
+		Set("az = EXCLUDED.az").
+		Set("az_id = EXCLUDED.az_id").
+		Set("available_ipv4_addresses = EXCLUDED.available_ipv4_addresses").
+		Set("ipv4_cidr = EXCLUDED.ipv4_cidr").
+		Set("ipv6_cidr = EXCLUDED.ipv6_cidr").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
 		Exec(ctx)
 	if err != nil {
 		slog.Error("could not insert Subnets into db", "err", err)

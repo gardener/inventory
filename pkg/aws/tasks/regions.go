@@ -67,10 +67,14 @@ func collectRegions(ctx context.Context) error {
 		return nil
 	}
 
-	//Bulk insert regions into db
+	// Bulk insert regions into db
 	_, err = clients.Db.NewInsert().
 		Model(&regions).
 		On("CONFLICT (name) DO UPDATE").
+		Set("endpoint = EXCLUDED.endpoint").
+		Set("opt_in_status = EXCLUDED.opt_in_status").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
 		Exec(ctx)
 	if err != nil {
 		slog.Error("could not insert regions into db", "err", err)
