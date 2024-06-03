@@ -112,6 +112,15 @@ func collectVpcsRegion(ctx context.Context, region string) error {
 	_, err = clients.Db.NewInsert().
 		Model(&vpcs).
 		On("CONFLICT (vpc_id) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("state = EXCLUDED.state").
+		Set("ipv4_cidr = EXCLUDED.ipv4_cidr").
+		Set("ipv6_cidr = EXCLUDED.ipv6_cidr").
+		Set("is_default = EXCLUDED.is_default").
+		Set("owner_id = EXCLUDED.owner_id").
+		Set("region_name = EXCLUDED.region_name").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
 		Exec(ctx)
 	if err != nil {
 		slog.Error("could not insert VPCs into db", "region", region, "err", err)

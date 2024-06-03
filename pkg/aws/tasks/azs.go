@@ -88,6 +88,14 @@ func collectAzsRegion(ctx context.Context, region string) error {
 	_, err = clients.Db.NewInsert().
 		Model(&azs).
 		On("CONFLICT (zone_id) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("opt_in_status = EXCLUDED.opt_in_status").
+		Set("state = EXCLUDED.state").
+		Set("region_name = EXCLUDED.region_name").
+		Set("group_name = EXCLUDED.group_name").
+		Set("network_border_group = EXCLUDED.network_border_group").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
 		Exec(ctx)
 	if err != nil {
 		slog.Error("could not insert availability zones into db", "err", err)
