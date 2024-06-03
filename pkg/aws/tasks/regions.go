@@ -25,18 +25,9 @@ func NewAwsCollectRegionsTask() *asynq.Task {
 
 // HandleAwsCollectRegionsTask is a handler function that collects AWS regions.
 func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
-	err := collectRegions(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func collectRegions(ctx context.Context) error {
 	slog.Info("Collecting AWS regions")
 
 	regionsOutput, err := awsclients.Ec2.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
-
 	if err != nil {
 		slog.Error("could not describe regions", "err", err)
 		return err
@@ -44,7 +35,7 @@ func collectRegions(ctx context.Context) error {
 
 	regions := make([]models.Region, 0, len(regionsOutput.Regions))
 	for _, region := range regionsOutput.Regions {
-		slog.Info("Region", "name", *region.RegionName)
+		slog.Info("Region", "name", strings.StringFromPointer(region.RegionName))
 		modelRegion := models.Region{
 			Name:        strings.StringFromPointer(region.RegionName),
 			Endpoint:    strings.StringFromPointer(region.Endpoint),
