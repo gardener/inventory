@@ -108,11 +108,13 @@ func newServer(conf *config.Config) *asynq.Server {
 
 	errHandler := func(ctx context.Context, task *asynq.Task, err error) {
 		taskID, _ := asynq.GetTaskID(ctx)
+		taskName := task.Type()
 		queueName, _ := asynq.GetQueueName(ctx)
 		retried, _ := asynq.GetRetryCount(ctx)
 		slog.Error(
 			"task failed",
 			"id", taskID,
+			"name", taskName,
 			"queue", queueName,
 			"retry", retried,
 			"reason", err,
