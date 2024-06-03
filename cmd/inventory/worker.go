@@ -123,9 +123,9 @@ func NewWorkerCommand() *cli.Command {
 					db := newDB(conf)
 					client := newClient(conf)
 					server := newServer(conf)
+					virtualGardenClient := newVirtualGardenClient(conf)
 					mux := asynq.NewServeMux()
 					mux.Use(newLoggingMiddleware())
-					virtualGardenClient := newVirtualGardenClient(conf)
 
 					// Initialize clients in workers
 					clients.SetDB(db)
