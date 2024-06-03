@@ -3,7 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -21,14 +21,19 @@ const (
 	AWS_COLLECT_VPC_REGION_TYPE = "aws:task:collect-vpcs-region"
 )
 
+// CollectVpcsPayload is the payload for collecting VPCs for a given AWS Region.
 type CollectVpcsPayload struct {
 	Region string `json:"region"`
 }
 
+// NewCollectVpcsTask creates a new task for collecting all VPCs for all
+// Regions.
 func NewCollectVpcsTask() *asynq.Task {
 	return asynq.NewTask(AWS_COLLECT_VPC_TYPE, nil)
 }
 
+// HandleCollectVpcsTask handles the task, which collects all VPCs for all known
+// AWS Regions.
 func HandleCollectVpcsTask(ctx context.Context, t *asynq.Task) error {
 	return collectVpcs(ctx)
 }
@@ -43,39 +48,50 @@ func collectVpcs(ctx context.Context) error {
 	}
 	for _, r := range regions {
 		// Trigger Asynq task for each region
-		vpcsTask := NewCollectVpcsRegionTask(r.Name)
-		info, err := clients.Client.Enqueue(vpcsTask)
+		vpcsTask, err := NewCollectVpcsForRegionTask(r.Name)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", vpcsTask.Type(), "err", err)
+			slog.Error("failed to create task", "reason", err)
 			continue
 		}
+
+		info, err := clients.Client.Enqueue(vpcsTask)
+		if err != nil {
+			slog.Error("could not enqueue task", "type", vpcsTask.Type(), "reason", err)
+			continue
+		}
+
 		slog.Info("enqueued task", "type", vpcsTask.Type(), "id", info.ID, "queue", info.Queue)
 	}
 	return nil
 }
 
-func NewCollectVpcsRegionTask(region string) *asynq.Task {
+// NewCollectVpcsForRegionTask creates a new task for collecting VPCs for a
+// given region.
+func NewCollectVpcsForRegionTask(region string) (*asynq.Task, error) {
 	if region == "" {
-		slog.Info("region is required and cannot be empty")
-		return nil
+		return nil, ErrMissingRegion
 	}
+
 	payload, err := json.Marshal(CollectVpcsPayload{Region: region})
 	if err != nil {
-		slog.Error("could not marshal payload", "err", err)
-		return nil
+		return nil, err
 	}
-	return asynq.NewTask(AWS_COLLECT_VPC_REGION_TYPE, payload)
+
+	return asynq.NewTask(AWS_COLLECT_VPC_REGION_TYPE, payload), err
 }
 
-func HandleCollectVpcsRegionTask(ctx context.Context, t *asynq.Task) error {
+// HandleCollectVpcsForRegionTask handles the task for collecting VPCs for a
+// given AWS Region.
+func HandleCollectVpcsForRegionTask(ctx context.Context, t *asynq.Task) error {
 	var p CollectVpcsPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return errors.New("json.Unmarshal failed")
+		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	return collectVpcsRegion(ctx, p.Region)
+
+	return collectVpcsForRegion(ctx, p.Region)
 }
 
-func collectVpcsRegion(ctx context.Context, region string) error {
+func collectVpcsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS VPCs", "region", region)
 	vpcsOutput, err := awsclients.Ec2.DescribeVpcs(ctx,
 		&ec2.DescribeVpcsInput{},
@@ -102,7 +118,6 @@ func collectVpcsRegion(ctx context.Context, region string) error {
 			RegionName: region,
 		}
 		vpcs = append(vpcs, vpcModel)
-
 	}
 
 	if len(vpcs) == 0 {

@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -12,6 +13,9 @@ import (
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
+
+// ErrMissingRegion is returned when an expected region name is missing.
+var ErrMissingRegion = errors.New("missing region name")
 
 const (
 	// Asynq task type for collecting AWS regions
