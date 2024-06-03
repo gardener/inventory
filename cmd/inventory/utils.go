@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 
+	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
@@ -16,6 +17,8 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/gardener/inventory/internal/pkg/migrations"
 	"github.com/gardener/inventory/pkg/core/config"
@@ -180,4 +183,37 @@ func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
 	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 
 	return table
+}
+
+func newVirtualGardenClient(conf *config.Config) *gardenerversioned.Clientset {
+	var (
+		restConfig *rest.Config
+		err        error
+	)
+
+	// Attempt to read the kubeconfig from the configuration file
+	kubeconfig := conf.VirtualGarden.Kubeconfig
+
+	// If not found, attempt to read from the environment variable
+	if kubeconfig == "" {
+		kubeconfig = os.Getenv("KUBECONFIG")
+	}
+
+	// If still not found, attempt check for in-cluster use
+	switch kubeconfig {
+	case "":
+		restConfig, err = rest.InClusterConfig()
+		if err != nil {
+			slog.Error("Error creating in-cluster config", "err", err)
+			os.Exit(1)
+		}
+	default:
+		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			slog.Error("Error creating config", "err", err, "kubeconfig", kubeconfig)
+			os.Exit(1)
+		}
+	}
+
+	return gardenerversioned.NewForConfigOrDie(restConfig)
 }
