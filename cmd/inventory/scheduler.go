@@ -110,11 +110,15 @@ func NewSchedulerCommand() *cli.Command {
 					}
 					table := newTableWriter(os.Stdout, headers)
 					for _, item := range items {
+						prev := item.Prev.String()
+						if item.Prev.IsZero() {
+							prev = na
+						}
 						row := []string{
 							item.ID,
 							item.Spec,
 							item.Task.Type(),
-							item.Prev.String(),
+							prev,
 							item.Next.String(),
 						}
 						table.Append(row)
