@@ -124,6 +124,7 @@ func NewWorkerCommand() *cli.Command {
 					client := newClient(conf)
 					server := newServer(conf)
 					mux := asynq.NewServeMux()
+					mux.Use(newLoggingMiddleware())
 
 					// Initialize clients in workers
 					clients.SetDB(db)
