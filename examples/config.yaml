@@ -55,3 +55,7 @@ scheduler:
             duration: 4h
           - name: "g:model:machine"
             duration: 4h
+
+virtual_garden:
+  # Path to Virtual Garden kubeconfig
+  kubeconfig:

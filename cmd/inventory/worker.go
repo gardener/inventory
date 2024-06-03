@@ -125,10 +125,12 @@ func NewWorkerCommand() *cli.Command {
 					server := newServer(conf)
 					mux := asynq.NewServeMux()
 					mux.Use(newLoggingMiddleware())
+					virtualGardenClient := newVirtualGardenClient(conf)
 
 					// Initialize clients in workers
 					clients.SetDB(db)
 					clients.SetClient(client)
+					clients.SetVirtualGardenClient(virtualGardenClient)
 
 					// Register our task handlers
 					walker := func(name string, handler asynq.Handler) error {
