@@ -39,6 +39,9 @@ type Config struct {
 
 	// Scheduler represents the scheduler configuration.
 	Scheduler SchedulerConfig `yaml:"scheduler"`
+
+	// VirtualGarden represents the virtual garden configuration.
+	VirtualGarden VirtualGardenConfig `yaml:"virtual_garden"`
 }
 
 // RedisConfig provides Redis specific configuration settings.
@@ -82,6 +85,12 @@ type PeriodicJob struct {
 
 	// Payload is an optional payload to use when submitting the task.
 	Payload string `yaml:"payload"`
+}
+
+// VirtualGardenConfig represents the Virtual Garden configuration.
+type VirtualGardenConfig struct {
+	// KubeConfig is the path to the kubeconfig file of the Virtual Garden
+	Kubeconfig string `yaml:"kubeconfig"`
 }
 
 // Parse parses the config from the given path.
