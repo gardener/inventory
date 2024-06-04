@@ -124,7 +124,7 @@ func NewWorkerCommand() *cli.Command {
 					client := newClient(conf)
 					server := newServer(conf)
 
-					virtualGardenClient, err := newVirtualGardenClient(conf)
+					gardenConfigs, err := newGardenConfigs(conf)
 					if err != nil {
 						return err
 					}
@@ -135,7 +135,7 @@ func NewWorkerCommand() *cli.Command {
 					// Initialize clients in workers
 					clients.SetDB(db)
 					clients.SetClient(client)
-					clients.SetVirtualGardenClient(virtualGardenClient)
+					clients.SetGardenConfigs(gardenConfigs)
 
 					// Register our task handlers
 					walker := func(name string, handler asynq.Handler) error {
