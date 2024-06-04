@@ -1,10 +1,13 @@
 ---
 x-postgres:
-  uri: &postgres-uri 'postgresql://inventory:p4ssw0rd@localhost:5432/inventory'
+  uri: &postgres-uri 'postgresql://inventory:p4ssw0rd@postgres:5432/inventory?sslmode=disable'
   user: &postgres-user inventory
   password: &postgres-password 'p4ssw0rd'
   db_name: &postgres-db-name inventory
   port: &postgres-port 5432
+
+x-redis:
+  endpoint: &redis-endpoint 'redis:6379'
 
 services:
   postgres:
@@ -34,6 +37,30 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: ["/app/inventory", "worker", "start"]
+    environment:
+      KUBECONFIG: /home/nonroot/.kube/config
+      KUBECACHEDIR: /home/nonroot/.kube/cache
+      AWS_CONFIG_FILE: /home/nonroot/.aws/config
+      AWS_SHARED_CREDENTIALS_FILE: /home/nonroot/.aws/credentials
+      INVENTORY_CONFIG: /home/nonroot/config.yaml
+      REDIS_ENDPOINT: *redis-endpoint
+      DATABASE_URI: *postgres-uri
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ~/.aws:/home/nonroot/.aws
+      - ~/.kube/cache:/home/nonroot/.kube/cache
+      - ${KUBECONFIG}:/home/nonroot/.kube/config
+      - ./examples/config.yaml:/home/nonroot/config.yaml
 
   metabase:
     image: metabase/metabase:latest
