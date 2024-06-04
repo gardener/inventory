@@ -17,23 +17,18 @@ const (
 	GARDENER_COLLECT_SEEDS_TYPE = "g:task:collect-seeds"
 )
 
-// NewGardenerCollectSeeds creates a new task for collecting Gardener seeds.
-func NewGardenerCollectSeeds() *asynq.Task {
+// NewGardenerCollectSeedsTask creates a new task for collecting Gardener seeds.
+func NewGardenerCollectSeedsTask() *asynq.Task {
 	return asynq.NewTask(GARDENER_COLLECT_SEEDS_TYPE, nil)
 }
 
 // HandleGardenerCollectSeedsTask is a handler function that collects Gardener seeds.
 func HandleGardenerCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 	slog.Info("Collecting Gardener seeds")
-	err := collectSeeds(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return collectSeeds(ctx)
 }
 
 func collectSeeds(ctx context.Context) error {
-
 	seedList, err := clients.VirtualGardenClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -59,6 +54,6 @@ func collectSeeds(ctx context.Context) error {
 		slog.Error("could not insert gardener seeds into db", "err", err)
 		return err
 	}
-	return nil
 
+	return nil
 }

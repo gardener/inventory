@@ -17,23 +17,18 @@ const (
 	GARDENER_COLLECT_PROJECTS_TYPE = "g:task:collect-projects"
 )
 
-// NewGardenerCollectProjects creates a new task for collecting Gardener projects.
-func NewGardenerCollectProjects() *asynq.Task {
+// NewGardenerCollectProjectsTask creates a new task for collecting Gardener projects.
+func NewGardenerCollectProjectsTask() *asynq.Task {
 	return asynq.NewTask(GARDENER_COLLECT_PROJECTS_TYPE, nil)
 }
 
 // HandleGardenerCollectProjectsTask is a handler function that collects Gardener projects.
 func HandleGardenerCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	slog.Info("Collecting Gardener projects")
-	err := collectProjects(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return collectProjects(ctx)
 }
 
 func collectProjects(ctx context.Context) error {
-
 	projectList, err := clients.VirtualGardenClient.CoreV1beta1().Projects().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -65,6 +60,6 @@ func collectProjects(ctx context.Context) error {
 		slog.Error("could not insert gardener projects into db", "err", err)
 		return err
 	}
-	return nil
 
+	return nil
 }

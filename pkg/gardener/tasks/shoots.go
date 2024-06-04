@@ -18,23 +18,18 @@ const (
 	GARDENER_COLLECT_SHOOTS_TYPE = "g:task:collect-shoots"
 )
 
-// NewGardenerCollectShoots creates a new task for collecting Gardener shoots.
-func NewGardenerCollectShoots() *asynq.Task {
+// NewGardenerCollectShootsTask creates a new task for collecting Gardener shoots.
+func NewGardenerCollectShootsTask() *asynq.Task {
 	return asynq.NewTask(GARDENER_COLLECT_SHOOTS_TYPE, nil)
 }
 
 // HandleGardenerCollectShootsTask is a handler function that collects Gardener shoots.
 func HandleGardenerCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 	slog.Info("Collecting Gardener shoots")
-	err := collectShoots(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return collectShoots(ctx)
 }
 
 func collectShoots(ctx context.Context) error {
-
 	shootList, err := clients.VirtualGardenClient.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -77,6 +72,6 @@ func collectShoots(ctx context.Context) error {
 		slog.Error("could not insert gardener shoots into db", "err", err)
 		return err
 	}
-	return nil
 
+	return nil
 }
