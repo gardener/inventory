@@ -72,6 +72,7 @@ func main() {
 			NewTaskCommand(),
 			NewQueueCommand(),
 			NewModelCommand(),
+			NewDashboardCommand(),
 		},
 	}
 
