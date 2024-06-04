@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/hibiken/asynq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/gardener/models"
-
-	"github.com/hibiken/asynq"
 )
 
 const (
