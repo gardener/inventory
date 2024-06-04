@@ -2,6 +2,8 @@ package tasks
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/hibiken/asynq"
@@ -16,6 +18,8 @@ const (
 	// GARDENER_COLLECT_SEEDS_TYPE is the type of the task that collects Gardener seeds.
 	GARDENER_COLLECT_SEEDS_TYPE = "g:task:collect-seeds"
 )
+
+var ErrMissingSeed = errors.New("missing seed name")
 
 // NewGardenerCollectSeeds creates a new task for collecting Gardener seeds.
 func NewGardenerCollectSeeds() *asynq.Task {
@@ -33,8 +37,11 @@ func HandleGardenerCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 }
 
 func collectSeeds(ctx context.Context) error {
-
-	seedList, err := clients.VirtualGardenClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
+	gardenClient := clients.VirtualGardenClient()
+	if gardenClient == nil {
+		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
+	}
+	seedList, err := gardenClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

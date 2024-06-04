@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/hibiken/asynq"
@@ -33,8 +34,11 @@ func HandleGardenerCollectProjectsTask(ctx context.Context, t *asynq.Task) error
 }
 
 func collectProjects(ctx context.Context) error {
-
-	projectList, err := clients.VirtualGardenClient.CoreV1beta1().Projects().List(ctx, metav1.ListOptions{})
+	gardenClient := clients.VirtualGardenClient()
+	if gardenClient == nil {
+		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
+	}
+	projectList, err := gardenClient.CoreV1beta1().Projects().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
