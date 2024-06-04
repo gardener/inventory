@@ -18,12 +18,10 @@ can be used instead of Redis.
 # Documentation
 
 - [Design Goals](./docs/design.md)
-- [Database & Data Model](./docs/database.md)
 - [Development Guide](./docs/development.md)
+- [Operations Guide](./docs/ops-guide.md)
 - Deployment
 - Querying the database
-- Monitoring & Introspection
-- [Testing](./docs/testing.md)
 
 # Contributing
 

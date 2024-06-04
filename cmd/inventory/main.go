@@ -31,6 +31,16 @@ func main() {
 				Aliases:  []string{"file"},
 				EnvVars:  []string{"INVENTORY_CONFIG"},
 			},
+			&cli.StringFlag{
+				Name:    "redis-endpoint",
+				Usage:   "redis endpoint to connect to",
+				EnvVars: []string{"REDIS_ENDPOINT"},
+			},
+			&cli.StringFlag{
+				Name:    "database-uri",
+				Usage:   "database uri to connect to",
+				EnvVars: []string{"DATABASE_URI"},
+			},
 		},
 		Before: func(ctx *cli.Context) error {
 			configFile := ctx.String("config")
@@ -42,6 +52,14 @@ func main() {
 			// Overrides from flags/options
 			if ctx.IsSet("debug") {
 				conf.Debug = ctx.Bool("debug")
+			}
+
+			if ctx.IsSet("redis-endpoint") {
+				conf.Redis.Endpoint = ctx.String("redis-endpoint")
+			}
+
+			if ctx.IsSet("database-uri") {
+				conf.Database.DSN = ctx.String("database-uri")
 			}
 
 			ctx.Context = context.WithValue(ctx.Context, configKey{}, conf)
