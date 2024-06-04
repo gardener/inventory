@@ -505,3 +505,17 @@ Last Failed At      : N/A
 Next Process At     : 2024-06-03 14:48:58 +0300 EEST
 Completed At        : N/A
 ```
+
+# Monitoring
+
+You can start the inventory dashboard UI by executing the following command.
+
+``` shell
+inventory dashboard start
+```
+
+Once the UI is up and running the following endpoints should be accessible from
+your browser.
+
+- http://localhost:8080/ - Dashboard UI
+- http://localhost:8080/metrics - Prometheus Metrics
