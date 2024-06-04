@@ -14,6 +14,7 @@ worker:
 
 scheduler:
   jobs:
+    # AWS
     - name: "aws:task:collect-regions"
       spec: "@every 720h"  # 30 days
       desc: "Collect AWS Regions"
@@ -30,9 +31,20 @@ scheduler:
       spec: "@every 1h"
       desc: "Collect AWS EC2 Instances"
 
+    # Gardener
+    - name: "g:task:collect-projects"
+      spec: "@every 1h"
+      desc: "Collect Gardener Projects"
+    - name: "g:task:collect-seeds"
+      spec: "@every 1h"
+      desc: "Collect Gardener Seeds"
+    - name: "g:task:collect-shoots"
+      spec: "@every 1h"
+      desc: "Collect Gardener Shoots"
+
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
-      spec: "@every 2h"
+      spec: "@every 12h"
       payload: >-
         retention:
           # AWS
@@ -41,20 +53,20 @@ scheduler:
           - name: "aws:model:az"
             duration: 1080h  # 45 days
           - name: "aws:model:vpc"
-            duration: 4h
+            duration: 24h
           - name: "aws:model:subnet"
-            duration: 4h
+            duration: 24h
           - name: "aws:model:instance"
-            duration: 4h
+            duration: 24h
           # Gardener
           - name: "g:model:project"
             duration: 24h
           - name: "g:model:seed"
             duration: 168h  # 7 days
           - name: "g:model:shoot"
-            duration: 4h
+            duration: 24h
           - name: "g:model:machine"
-            duration: 4h
+            duration: 24h
 
 virtual_garden:
   # Path to Virtual Garden kubeconfig
