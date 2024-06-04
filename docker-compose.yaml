@@ -83,15 +83,20 @@ services:
       - ./examples/config.yaml:/home/nonroot/config.yaml
 
   dashboard:
+    ports:
+      - 8080:8080
     build:
       context: .
       dockerfile: Dockerfile
     entrypoint: ["/app/inventory", "dashboard", "start"]
     environment:
+      INVENTORY_CONFIG: /home/nonroot/config.yaml
       REDIS_ENDPOINT: *redis-endpoint
     depends_on:
       redis:
         condition: service_healthy
+    volumes:
+      - ./examples/config.yaml:/home/nonroot/config.yaml
 
   metabase:
     image: metabase/metabase:latest
