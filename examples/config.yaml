@@ -71,3 +71,5 @@ scheduler:
 virtual_garden:
   # Path to Virtual Garden kubeconfig
   kubeconfig:
+  # Environment type (dev, staging, canary, live)
+  environment:
