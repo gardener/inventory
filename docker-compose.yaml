@@ -54,6 +54,7 @@ services:
       KUBECACHEDIR: /home/nonroot/.kube/cache
       AWS_CONFIG_FILE: /home/nonroot/.aws/config
       AWS_SHARED_CREDENTIALS_FILE: /home/nonroot/.aws/credentials
+      AWS_PROFILE: default
       INVENTORY_CONFIG: /home/nonroot/config.yaml
       REDIS_ENDPOINT: *redis-endpoint
       DATABASE_URI: *postgres-uri
