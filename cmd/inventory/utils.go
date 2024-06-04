@@ -11,13 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gardener/inventory/pkg/clients"
-
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/gardener/inventory/internal/pkg/migrations"
-	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
@@ -26,6 +19,12 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/gardener/inventory/internal/pkg/migrations"
+	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/core/config"
 )
 
 // na is the const used to represent N/A values
