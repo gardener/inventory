@@ -91,6 +91,8 @@ type PeriodicJob struct {
 type VirtualGardenConfig struct {
 	// KubeConfig is the path to the kubeconfig file of the Virtual Garden
 	Kubeconfig string `yaml:"kubeconfig"`
+	// Environment is the environment of the running Garden
+	Environment string `yaml:"environment"`
 }
 
 // Parse parses the config from the given path.
