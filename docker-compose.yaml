@@ -82,6 +82,17 @@ services:
     volumes:
       - ./examples/config.yaml:/home/nonroot/config.yaml
 
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: ["/app/inventory", "dashboard", "start"]
+    environment:
+      REDIS_ENDPOINT: *redis-endpoint
+    depends_on:
+      redis:
+        condition: service_healthy
+
   metabase:
     image: metabase/metabase:latest
     ports:
