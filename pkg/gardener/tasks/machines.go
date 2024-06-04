@@ -1,0 +1,129 @@
+package tasks
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/gardener/models"
+
+	"github.com/hibiken/asynq"
+)
+
+const (
+	// GARDENER_COLLECT_MACHINES_TYPE is the type of the task that collects Gardener machines.
+	GARDENER_COLLECT_MACHINES_TYPE = "g:task:collect-machines"
+
+	// GARDENER_COLLECT_MACHINES_SEED_TYPE is the type of the task that collects Gardener machines for a given seed.
+	GARDENER_COLLECT_MACHINES_SEED_TYPE = "g:task:collect-machines-seed"
+)
+
+// CollectMachinesPayload is the payload for collecting Machines for a given Gardener seed.
+type CollectMachinesPayload struct {
+	Seed string `json:"seed"`
+}
+
+// NewGardenerCollectMachines creates a new task for collecting Gardener machines.
+func NewGardenerCollectMachines() *asynq.Task {
+	return asynq.NewTask(GARDENER_COLLECT_MACHINES_TYPE, nil)
+}
+
+// HandleGardenerCollectMachinesTask is a handler function that collects Gardener machines.
+func HandleGardenerCollectMachinesTask(ctx context.Context, t *asynq.Task) error {
+	return collectMachines(ctx)
+}
+
+func collectMachines(ctx context.Context) error {
+	slog.Info("Collecting Gardener Machines")
+	seeds := make([]models.Seed, 0)
+	err := clients.Db.NewSelect().Model(&seeds).Scan(ctx)
+	if err != nil {
+		slog.Error("could not select seeds from db", "err", err)
+		return err
+	}
+	for _, s := range seeds {
+		// Trigger Asynq task for each region
+		machineTask, err := NewGardenerCollectMachinesForSeed(s.Name)
+		if err != nil {
+			slog.Error("failed to create task", "reason", err)
+			continue
+		}
+
+		info, err := clients.Client.Enqueue(machineTask)
+		if err != nil {
+			slog.Error("could not enqueue task", "type", machineTask.Type(), "reason", err)
+			continue
+		}
+
+		slog.Info("enqueued task", "type", machineTask.Type(), "id", info.ID, "queue", info.Queue)
+	}
+	return nil
+}
+
+// NewGardenerCollectMachinesForSeed creates a new task for collecting Gardener machines for a given seed.
+func NewGardenerCollectMachinesForSeed(seed string) (*asynq.Task, error) {
+	if seed == "" {
+		return nil, ErrMissingSeed
+	}
+
+	payload, err := json.Marshal(CollectMachinesPayload{Seed: seed})
+	if err != nil {
+		return nil, err
+	}
+
+	return asynq.NewTask(GARDENER_COLLECT_MACHINES_SEED_TYPE, payload), nil
+}
+
+// HandleGardenerCollectMachinesForSeedTask is a handler function that collects Gardener machines for a given seed.
+func HandleGardenerCollectMachinesForSeedTask(ctx context.Context, t *asynq.Task) error {
+	var p CollectMachinesPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	}
+
+	return collectMachinesForSeed(ctx, p.Seed)
+}
+
+func collectMachinesForSeed(ctx context.Context, seed string) error {
+	slog.Info("Collecting Gardener machines for seed", "seed", seed)
+
+	gardenClient := clients.GardenClient(seed)
+	if gardenClient == nil {
+		return fmt.Errorf("could not get garden client for seed %q: %w", seed, asynq.SkipRetry)
+	}
+	machineList, err := gardenClient.MachineV1alpha1().Machines("").List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	machines := make([]models.Machine, 0, len(machineList.Items))
+	for _, m := range machineList.Items {
+		machine := models.Machine{
+			Name:       m.Name,
+			Namespace:  m.Namespace,
+			ProviderId: m.Spec.ProviderID,
+			Status:     string(m.Status.CurrentStatus.Phase),
+		}
+		machines = append(machines, machine)
+	}
+	if len(machines) == 0 {
+		return nil
+	}
+	_, err = clients.Db.NewInsert().
+		Model(&machines).
+		On("CONFLICT (name) DO UPDATE").
+		On("CONFLICT (provider_id) DO UPDATE").
+		Set("namespace = EXCLUDED.namespace").
+		Set("status = EXCLUDED.status").
+		Returning("id").
+		Exec(ctx)
+	if err != nil {
+		slog.Error("could not insert gardener machines into db", "err", err)
+		return err
+	}
+
+	return nil
+}
