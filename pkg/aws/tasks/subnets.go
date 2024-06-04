@@ -84,8 +84,8 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 			AZ:                     strings.StringFromPointer(s.AvailabilityZone),
 			AzID:                   strings.StringFromPointer(s.AvailabilityZoneId),
 			AvailableIPv4Addresses: int(*s.AvailableIpAddressCount),
-			IPv4CIDR:               strings.StringFromPointer(s.CidrBlock), //TODO: this can be nil ? and cause panic
-			IPv6CIDR:               "",                                     //TODO: fetch IPv6 CIDR
+			IPv4CIDR:               strings.StringFromPointer(s.CidrBlock),
+			IPv6CIDR:               "", //TODO: fetch IPv6 CIDR
 		}
 		subnets = append(subnets, modelSubnet)
 	}
