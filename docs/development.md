@@ -354,13 +354,6 @@ Here's a sample `.envrc` file, which you can customize.
 ``` shell
 # .envrc
 export INVENTORY_CONFIG=/path/to/inventory/config.yaml
-
-# psql(1) env variables
-export PGUSER=inventory
-export PGDATABASE=inventory
-export PGHOST=localhost
-export PGPORT=5432
-export PGPASSWORD=p4ssw0rd
 ```
 
 The AWS tasks expect that you already have a shared configuration and
@@ -375,17 +368,28 @@ docker compose up --build --remove-orphans
 
 The services which will be started are summarized in the table below.
 
-| Service     | Description                           |
-|:------------|:--------------------------------------|
-| `postgres`  | PostgreSQL database                   |
-| `worker`    | Handles task messages                 |
-| `scheduler` | Schedules tasks on regular basis      |
-| `redis`     | Redis service used as a message queue |
+| Service     | Description                               |
+|:------------|:------------------------------------------|
+| `postgres`  | PostgreSQL database                       |
+| `worker`    | Handles task messages                     |
+| `scheduler` | Schedules tasks on regular basis          |
+| `redis`     | Redis service used as a message queue     |
+| `dashboard` | Asynq UI dashboard and Prometheus metrics |
 
 Once the services are up and running you can access the following endpoints from
 your local system.
 
-| Endpoint       | Description       |
-|:---------------|:------------------|
-| localhost:5432 | PostgreSQL server |
-| localhost:6379 | Redis server      |
+| Endpoint                      | Description                 |
+|:------------------------------|:----------------------------|
+| localhost:5432                | PostgreSQL server           |
+| localhost:6379                | Redis server                |
+| http://localhost:8080/        | Dashboard UI                |
+| http://localhost:8080/metrics | Prometheus Metrics endpoint |
+
+# Testing
+
+In order to run the unit tests execute the following command.
+
+``` shell
+make test
+```
