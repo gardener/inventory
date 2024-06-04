@@ -8,9 +8,16 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
-	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
+	"github.com/gardener/inventory/pkg/clients"
+
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/gardener/inventory/internal/pkg/migrations"
+	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
@@ -19,11 +26,6 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/gardener/inventory/internal/pkg/migrations"
-	"github.com/gardener/inventory/pkg/core/config"
 )
 
 // na is the const used to represent N/A values
@@ -238,36 +240,52 @@ func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
 	return table
 }
 
-func newVirtualGardenClient(conf *config.Config) (*gardenerversioned.Clientset, error) {
-	var (
-		restConfig *rest.Config
-		err        error
-	)
+func newGardenConfigs(conf *config.Config) (map[string]*rest.Config, error) {
+
+	configs := make(map[string]*rest.Config)
 
 	// Attempt to read the kubeconfig from the configuration file
-	kubeconfig := conf.VirtualGarden.Kubeconfig
+	kubeconfig := fetchKubeconfig(conf)
 
-	// If not found, attempt to read from the environment variable
+	// If the kubeconfig is not set, assume we are running in a Kubernetes cluster
 	if kubeconfig == "" {
-		kubeconfig = os.Getenv("KUBECONFIG")
+		inClusterConfig, err := rest.InClusterConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create in-cluster config: %w", err)
+		}
+		//TODO: Most likely we are not going to deploy in the virtual-garden cluster
+		// so we need to supply the virtual-garden cluster config via the configuration
+		configs[clients.VIRTUAL_GARDEN] = inClusterConfig
+		return configs, nil
 	}
 
-	// If still not found, attempt check for in-cluster use
-	switch kubeconfig {
-	case "":
-		restConfig, err = rest.InClusterConfig()
-		if err != nil {
-			return nil, fmt.Errorf("error creating in-cluster config: %w", err)
-		}
-	default:
-		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			return nil, fmt.Errorf("error creating out-of-cluster config: %w", err)
-		}
-	}
-	clientset, err := gardenerversioned.NewForConfig(restConfig)
+	apiConfig, err := clientcmd.LoadFromFile(kubeconfig)
 	if err != nil {
-		return nil, fmt.Errorf("error creating clientset: %w", err)
+		return nil, fmt.Errorf("failed to load kubeconfig: %w", err)
 	}
-	return clientset, nil
+	for name := range apiConfig.Contexts {
+		contextName := fetchContextName(name, conf.VirtualGarden.Environment)
+		clientConfig := clientcmd.NewNonInteractiveClientConfig(*apiConfig, name, &clientcmd.ConfigOverrides{}, nil)
+		restConfig, err := clientConfig.ClientConfig()
+		if err != nil {
+			slog.Error("failed to create rest config, skipping", "context", contextName, "err", err)
+			continue
+		}
+		configs[contextName] = restConfig
+	}
+	return configs, nil
+}
+
+func fetchContextName(name string, prefix string) string {
+	if strings.HasPrefix(name, prefix+"-") {
+		return strings.TrimPrefix(name, prefix+"-")
+	}
+	return name
+}
+
+func fetchKubeconfig(conf *config.Config) string {
+	if conf.VirtualGarden.Kubeconfig != "" {
+		return conf.VirtualGarden.Kubeconfig
+	}
+	return os.Getenv("KUBECONFIG")
 }
