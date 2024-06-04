@@ -43,6 +43,12 @@ services:
       context: .
       dockerfile: Dockerfile
     entrypoint: ["/app/inventory", "worker", "start"]
+    hostname: inventory-worker-1
+    healthcheck:
+      test: ["CMD", "/app/inventory", "worker", "ping", "--name", "inventory-worker-1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     environment:
       KUBECONFIG: /home/nonroot/.kube/config
       KUBECACHEDIR: /home/nonroot/.kube/cache
