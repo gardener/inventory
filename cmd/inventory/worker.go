@@ -123,7 +123,12 @@ func NewWorkerCommand() *cli.Command {
 					db := newDB(conf)
 					client := newClient(conf)
 					server := newServer(conf)
-					virtualGardenClient := newVirtualGardenClient(conf)
+
+					virtualGardenClient, err := newVirtualGardenClient(conf)
+					if err != nil {
+						return err
+					}
+
 					mux := asynq.NewServeMux()
 					mux.Use(newLoggingMiddleware())
 

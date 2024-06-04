@@ -238,7 +238,7 @@ func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
 	return table
 }
 
-func newVirtualGardenClient(conf *config.Config) *gardenerversioned.Clientset {
+func newVirtualGardenClient(conf *config.Config) (*gardenerversioned.Clientset, error) {
 	var (
 		restConfig *rest.Config
 		err        error
@@ -257,16 +257,17 @@ func newVirtualGardenClient(conf *config.Config) *gardenerversioned.Clientset {
 	case "":
 		restConfig, err = rest.InClusterConfig()
 		if err != nil {
-			slog.Error("Error creating in-cluster config", "err", err)
-			os.Exit(1)
+			return nil, fmt.Errorf("error creating in-cluster config: %w", err)
 		}
 	default:
 		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			slog.Error("Error creating config", "err", err, "kubeconfig", kubeconfig)
-			os.Exit(1)
+			return nil, fmt.Errorf("error creating out-of-cluster config: %w", err)
 		}
 	}
-
-	return gardenerversioned.NewForConfigOrDie(restConfig)
+	clientset, err := gardenerversioned.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating clientset: %w", err)
+	}
+	return clientset, nil
 }
