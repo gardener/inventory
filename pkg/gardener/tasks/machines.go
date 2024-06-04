@@ -27,8 +27,8 @@ type CollectMachinesPayload struct {
 	Seed string `json:"seed"`
 }
 
-// NewGardenerCollectMachines creates a new task for collecting Gardener machines.
-func NewGardenerCollectMachines() *asynq.Task {
+// NewGardenerCollectMachinesTask creates a new task for collecting Gardener machines.
+func NewGardenerCollectMachinesTask() *asynq.Task {
 	return asynq.NewTask(GARDENER_COLLECT_MACHINES_TYPE, nil)
 }
 
