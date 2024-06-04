@@ -41,6 +41,9 @@ scheduler:
     - name: "g:task:collect-shoots"
       spec: "@every 1h"
       desc: "Collect Gardener Shoots"
+    - name: "g:task:collect-machines"
+      spec: "@every 1h"
+      desc: "Collect Gardener Machines"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
