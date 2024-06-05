@@ -50,9 +50,9 @@ type Machine struct {
 	bun.BaseModel `bun:"table:g_machine"`
 	coremodels.Model
 
-	Name       string `bun:"name,notnull,unique"`
-	Namespace  string `bun:"namespace,notnull"`
-	ProviderId string `bun:"provider_id,notnull,unique"`
+	Name       string `bun:"name,notnull,unique:g_machine_name_namespace_key"`
+	Namespace  string `bun:"namespace,notnull,unique:g_machine_name_namespace_key"`
+	ProviderId string `bun:"provider_id,notnull"`
 	Status     string `bun:"status,notnull"`
 }
 

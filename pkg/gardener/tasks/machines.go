@@ -113,9 +113,7 @@ func collectMachinesForSeed(ctx context.Context, seed string) error {
 	}
 	_, err = clients.Db.NewInsert().
 		Model(&machines).
-		On("CONFLICT (name) DO UPDATE").
-		On("CONFLICT (provider_id) DO UPDATE").
-		Set("namespace = EXCLUDED.namespace").
+		On("CONFLICT (name, namespace) DO UPDATE").
 		Set("status = EXCLUDED.status").
 		Returning("id").
 		Exec(ctx)
