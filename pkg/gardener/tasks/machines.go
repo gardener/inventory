@@ -115,6 +115,7 @@ func collectMachinesForSeed(ctx context.Context, seed string) error {
 		Model(&machines).
 		On("CONFLICT (name, namespace) DO UPDATE").
 		Set("status = EXCLUDED.status").
+		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
 	if err != nil {

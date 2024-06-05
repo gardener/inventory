@@ -56,6 +56,7 @@ func collectSeeds(ctx context.Context) error {
 		Model(&seeds).
 		On("CONFLICT (name) DO UPDATE").
 		Set("kubernetes_version = EXCLUDED.kubernetes_version").
+		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
 	if err != nil {

@@ -59,6 +59,7 @@ func collectProjects(ctx context.Context) error {
 		Set("status = EXCLUDED.status").
 		Set("purpose = EXCLUDED.purpose").
 		Set("owner = EXCLUDED.owner").
+		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
 	if err != nil {
