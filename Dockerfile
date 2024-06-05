@@ -17,11 +17,11 @@ RUN go mod download
 # have some issues related to the cache.
 RUN apt-get update && \
     apt-get install -y curl zip && \
-    curl -L -O https://dl.k8s.io/release/v1.30.1/bin/linux/amd64/kubectl && \
-    curl -L -O https://github.com/int128/kubelogin/releases/download/v1.28.0/kubelogin_linux_amd64.zip && \
-    unzip kubelogin_linux_amd64.zip kubelogin && mv kubelogin kubectl-oidc_login && \
+    curl -L -O https://dl.k8s.io/release/v1.30.1/bin/linux/$TARGETARCH/kubectl && \
+    curl -L -O https://github.com/int128/kubelogin/releases/download/v1.28.0/kubelogin_linux_$TARGETARCH.zip && \
+    unzip kubelogin_linux_$TARGETARCH.zip kubelogin && mv kubelogin kubectl-oidc_login && \
     chmod +x kubectl kubectl-oidc_login && \
-    rm -f kubelogin_linux_amd64.zip && \
+    rm -f kubelogin_linux_$TARGETARCH.zip && \
     rm -rf /var/cache/apt/archives
 
 # Build
