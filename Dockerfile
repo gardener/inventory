@@ -30,9 +30,17 @@ COPY internal/ ./internal
 COPY pkg/ ./pkg
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o inventory ./cmd/inventory
 
-FROM gcr.io/distroless/static:nonroot
+#FROM gcr.io/distroless/static:nonroot
+FROM alpine:3.20
+RUN apk add --update \
+    python3 curl which bash
+RUN curl -sSL https://sdk.cloud.google.com > /tmp/gcl && \
+    bash /tmp/gcl --install-dir=/app --disable-prompts && \
+    /app/google-cloud-sdk/bin/gcloud components install gke-gcloud-auth-plugin
+
+RUN addgroup -S nonroot && adduser -S nonroot -G nonroot
 WORKDIR /app
-ENV PATH=$PATH:/app/bin
+ENV PATH=$PATH:/app/bin:/app/google-cloud-sdk/bin
 COPY --from=builder /workspace/kubectl ./bin/
 COPY --from=builder /workspace/kubectl-oidc_login ./bin/
 COPY --from=builder /workspace/inventory .
