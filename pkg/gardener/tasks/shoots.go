@@ -71,6 +71,7 @@ func collectShoots(ctx context.Context) error {
 		Set("status = EXCLUDED.status").
 		Set("is_hibernated = EXCLUDED.is_hibernated").
 		Set("created_by = EXCLUDED.created_by").
+		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
 	if err != nil {
