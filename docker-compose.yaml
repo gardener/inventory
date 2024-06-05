@@ -55,6 +55,7 @@ services:
       AWS_CONFIG_FILE: /home/nonroot/.aws/config
       AWS_SHARED_CREDENTIALS_FILE: /home/nonroot/.aws/credentials
       AWS_PROFILE: default
+      CLOUDSDK_CONFIG: /home/nonroot/.config/gcloud
       INVENTORY_CONFIG: /home/nonroot/config.yaml
       REDIS_ENDPOINT: *redis-endpoint
       DATABASE_URI: *postgres-uri
@@ -68,6 +69,7 @@ services:
       - ~/.kube/cache:/home/nonroot/.kube/cache
       - ${KUBECONFIG}:/home/nonroot/.kube/config
       - ./examples/config.yaml:/home/nonroot/config.yaml
+      - ~/.config/gcloud:/home/nonroot/.config/gcloud
 
   scheduler:
     build:
