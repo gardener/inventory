@@ -49,7 +49,7 @@ func collectShoots(ctx context.Context) error {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
-		projectName, _ := strings.CutPrefix("garden-", s.Namespace)
+		projectName, _ := strings.CutPrefix(s.Namespace, "garden-")
 		shoot := models.Shoot{
 			Name:         s.Name,
 			TechnicalId:  s.Status.TechnicalID,
