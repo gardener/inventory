@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/hibiken/asynq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/gardener/models"
@@ -94,12 +97,17 @@ func collectMachinesForSeed(ctx context.Context, seed string) error {
 	if gardenClient == nil {
 		return fmt.Errorf("could not get garden client for seed %q: %w", seed, asynq.SkipRetry)
 	}
-	machineList, err := gardenClient.MachineV1alpha1().Machines("").List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	machines := make([]models.Machine, 0, len(machineList.Items))
-	for _, m := range machineList.Items {
+
+	machines := make([]models.Machine, 0, 100)
+	err := pager.New(
+		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
+			return gardenClient.MachineV1alpha1().Machines("").List(ctx, opts)
+		}),
+	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
+		m, ok := obj.(*v1alpha1.Machine)
+		if !ok {
+			return fmt.Errorf("unexpected object type: %T", obj)
+		}
 		machine := models.Machine{
 			Name:       m.Name,
 			Namespace:  m.Namespace,
@@ -107,6 +115,11 @@ func collectMachinesForSeed(ctx context.Context, seed string) error {
 			Status:     string(m.Status.CurrentStatus.Phase),
 		}
 		machines = append(machines, machine)
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("could not list machines for seed %q: %w", seed, err)
 	}
 	if len(machines) == 0 {
 		return nil
