@@ -6,8 +6,11 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hibiken/asynq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/gardener/models"
@@ -35,12 +38,17 @@ func collectShoots(ctx context.Context) error {
 	if gardenClient == nil {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}
-	shootList, err := clients.VirtualGardenClient().CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	shoots := make([]models.Shoot, 0, len(shootList.Items))
-	for _, s := range shootList.Items {
+
+	shoots := make([]models.Shoot, 0, 100)
+	err := pager.New(
+		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
+			return clients.VirtualGardenClient().CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
+		}),
+	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
+		s, ok := obj.(*v1beta1.Shoot)
+		if !ok {
+			return fmt.Errorf("unexpected object type: %T", obj)
+		}
 		projectName, _ := strings.CutPrefix("garden-", s.Namespace)
 		shoot := models.Shoot{
 			Name:         s.Name,
@@ -55,7 +63,13 @@ func collectShoots(ctx context.Context) error {
 			CreatedBy:    s.Annotations["garden.sapcloud.io/createdBy"],
 		}
 		shoots = append(shoots, shoot)
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("could not list shoots: %w", err)
 	}
+
 	if len(shoots) == 0 {
 		return nil
 	}
