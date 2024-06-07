@@ -10,7 +10,7 @@ database:
   migration_dir: ./internal/pkg/migrations
 
 worker:
-  concurrency: 10
+  concurrency: 100
 
 scheduler:
   jobs:
