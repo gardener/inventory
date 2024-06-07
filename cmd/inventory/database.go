@@ -30,6 +30,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -48,6 +49,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -83,6 +85,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -119,6 +122,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -133,6 +137,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -146,6 +151,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -174,6 +180,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -205,6 +212,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err
@@ -232,6 +240,7 @@ func NewDatabaseCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
 						return err

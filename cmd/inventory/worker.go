@@ -121,6 +121,7 @@ func NewWorkerCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
+					defer db.Close()
 					client := newClient(conf)
 					server := newServer(conf)
 
