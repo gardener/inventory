@@ -47,7 +47,7 @@ type VPC struct {
 	IsDefault  bool        `bun:"is_default,notnull"`
 	OwnerID    string      `bun:"owner_id,notnull"`
 	RegionName string      `bun:"region_name,notnull"`
-	Region     *Region     `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	Region     *Region     `bun:"rel:has-one,join:region_name=name"`
 	Subnets    []*Subnet   `bun:"rel:has-many,join:vpc_id=vpc_id"`
 	Instances  []*Instance `bun:"rel:has-many,join:vpc_id=vpc_id"`
 }
