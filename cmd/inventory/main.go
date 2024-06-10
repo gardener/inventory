@@ -41,6 +41,12 @@ func main() {
 				Usage:   "database uri to connect to",
 				EnvVars: []string{"DATABASE_URI"},
 			},
+			&cli.StringFlag{
+				Name:    "environment",
+				Usage:   "garden environment",
+				EnvVars: []string{"ENVIRONMENT"},
+				Aliases: []string{"env"},
+			},
 		},
 		Before: func(ctx *cli.Context) error {
 			configFile := ctx.String("config")
@@ -60,6 +66,10 @@ func main() {
 
 			if ctx.IsSet("database-uri") {
 				conf.Database.DSN = ctx.String("database-uri")
+			}
+
+			if ctx.IsSet("environment") {
+				conf.VirtualGarden.Environment = ctx.String("environment")
 			}
 
 			ctx.Context = context.WithValue(ctx.Context, configKey{}, conf)
