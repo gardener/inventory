@@ -15,9 +15,9 @@ const (
 	AWSCollectAllTaskType = "aws:task:collect-all"
 )
 
-// HandleAWSCollectAllTask is a handler, which enqueues tasks for collecting all
+// HandleCollectAllTask is a handler, which enqueues tasks for collecting all
 // AWS objects.
-func HandleAWSCollectAllTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
 	taskFns := []utils.TaskConstructor{
 		NewCollectRegionsTask,
@@ -42,5 +42,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_SUBNETS_REGION_TYPE, asynq.HandlerFunc(HandleCollectSubnetsForRegionTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_TYPE, asynq.HandlerFunc(HandleCollectInstancesTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_REGION_TYPE, asynq.HandlerFunc(HandleCollectInstancesForRegionTask))
-	registry.TaskRegistry.MustRegister(AWSCollectAllTaskType, asynq.HandlerFunc(HandleAWSCollectAllTask))
+	registry.TaskRegistry.MustRegister(AWSCollectAllTaskType, asynq.HandlerFunc(HandleCollectAllTask))
 }
