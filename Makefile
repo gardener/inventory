@@ -4,7 +4,7 @@ IMAGE                        ?= europe-docker.pkg.dev/gardener-project/releases/
 LOCAL_BIN                    ?= $(REPO_ROOT)/bin
 TOOLS_BIN		     ?= $(REPO_ROOT)/tools
 BINARY                       ?= $(LOCAL_BIN)/inventory
-SRC_DIRS                     := $(shell find . -name '*.go' -exec dirname {} \; | sort | uniq)
+SRC_DIRS                     := $(shell go list -f '{{.Dir}}' ./...)
 VERSION                      := $(shell cat VERSION)
 EFFECTIVE_VERSION            ?= $(VERSION)-$(shell git rev-parse --short HEAD)
 
