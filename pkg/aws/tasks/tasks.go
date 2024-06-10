@@ -1,10 +1,55 @@
 package tasks
 
 import (
+	"context"
+	"log/slog"
+
 	"github.com/hibiken/asynq"
 
+	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
+
+const (
+	// AWSCollectAllTaskType is a meta task, which enqueues all relevant AWS
+	// tasks.
+	AWSCollectAllTaskType = "aws:task:collect-all"
+)
+
+// HandleAWSCollectAllTask is a handler, which enqueues tasks for collecting all
+// AWS objects.
+func HandleAWSCollectAllTask(ctx context.Context, t *asynq.Task) error {
+	// Task constructors
+	taskFns := []func() *asynq.Task{
+		NewCollectRegionsTask,
+		NewCollectAzsTask,
+		NewCollectVpcsTask,
+		NewCollectSubnetsTask,
+		NewCollectInstancesTask,
+	}
+
+	for _, fn := range taskFns {
+		task := fn()
+		info, err := clients.Client.Enqueue(task)
+		if err != nil {
+			slog.Info(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"reason", err,
+			)
+			continue
+		}
+
+		slog.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+		)
+	}
+
+	return nil
+}
 
 // init registers our task handlers and periodic tasks with the registries.
 func init() {
@@ -18,4 +63,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_SUBNETS_REGION_TYPE, asynq.HandlerFunc(HandleCollectSubnetsForRegionTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_TYPE, asynq.HandlerFunc(HandleCollectInstancesTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_REGION_TYPE, asynq.HandlerFunc(HandleCollectInstancesForRegionTask))
+	registry.TaskRegistry.MustRegister(AWSCollectAllTaskType, asynq.HandlerFunc(HandleAWSCollectAllTask))
 }

@@ -23,7 +23,7 @@ const (
 )
 
 // NewAwsCollectRegionsTask creates a new task for collecting AWS regions.
-func NewAwsCollectRegionsTask() *asynq.Task {
+func NewCollectRegionsTask() *asynq.Task {
 	return asynq.NewTask(AWS_COLLECT_REGIONS_TYPE, nil)
 }
 
