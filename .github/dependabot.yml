@@ -8,6 +8,11 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: ":seedling:"
+    # Skip gardaner packages. These shall be updated manually.
+    ignore:
+      - dependency-name: github.com/gardener/*
+        versions:
+          - "*"
   # Create PRs for golang version updates
   - package-ecosystem: docker
     directory: /
