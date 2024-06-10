@@ -102,7 +102,7 @@ services:
       - ./examples/config.yaml:/home/nonroot/config.yaml
 
   metabase:
-    image: metabase/metabase:latest
+    image: nickytd/metabase:latest
     ports:
       - 3000:3000
     environment:
