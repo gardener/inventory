@@ -192,7 +192,8 @@ func newMigrator(conf *config.Config, db *bun.DB) (*migrate.Migrator, error) {
 		}
 	}
 
-	return migrate.NewMigrator(db, m), nil
+	migrator := migrate.NewMigrator(db, m, migrate.WithMarkAppliedOnSuccess(true))
+	return migrator, nil
 }
 
 // newScheduler creates a new [asynq.Scheduler] from the given config.
