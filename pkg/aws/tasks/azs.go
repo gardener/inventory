@@ -78,6 +78,7 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 		)
 		modelAz := models.AvailabilityZone{
 			ZoneID:             strings.StringFromPointer(az.ZoneId),
+			ZoneType:           strings.StringFromPointer(az.ZoneType),
 			Name:               strings.StringFromPointer(az.ZoneName),
 			OptInStatus:        string(az.OptInStatus),
 			State:              string(az.State),
@@ -94,6 +95,7 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 	_, err = clients.Db.NewInsert().
 		Model(&azs).
 		On("CONFLICT (zone_id) DO UPDATE").
+		Set("zone_type = EXCLUDED.zone_type").
 		Set("name = EXCLUDED.name").
 		Set("opt_in_status = EXCLUDED.opt_in_status").
 		Set("state = EXCLUDED.state").

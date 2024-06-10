@@ -25,6 +25,7 @@ type AvailabilityZone struct {
 	coremodels.Model
 
 	ZoneID             string  `bun:"zone_id,notnull,unique"`
+	ZoneType           string  `bun:"zone_type,notnull"`
 	Name               string  `bun:"name,notnull"`
 	OptInStatus        string  `bun:"opt_in_status,notnull"`
 	State              string  `bun:"state,notnull"`
