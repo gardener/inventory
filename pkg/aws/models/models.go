@@ -60,6 +60,7 @@ type Subnet struct {
 
 	Name                   string            `bun:"name,notnull"`
 	SubnetID               string            `bun:"subnet_id,notnull,unique"`
+	SubnetArn              string            `bun:"subnet_arn,notnull"`
 	VpcID                  string            `bun:"vpc_id,notnull"`
 	State                  string            `bun:"state,notnull"`
 	AZ                     string            `bun:"az,notnull"`
