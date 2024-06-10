@@ -2,11 +2,10 @@ package tasks
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/hibiken/asynq"
 
-	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/common/utils"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
@@ -20,7 +19,7 @@ const (
 // AWS objects.
 func HandleAWSCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
-	taskFns := []func() *asynq.Task{
+	taskFns := []utils.TaskConstructor{
 		NewCollectRegionsTask,
 		NewCollectAzsTask,
 		NewCollectVpcsTask,
@@ -28,27 +27,7 @@ func HandleAWSCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectInstancesTask,
 	}
 
-	for _, fn := range taskFns {
-		task := fn()
-		info, err := clients.Client.Enqueue(task)
-		if err != nil {
-			slog.Info(
-				"failed to enqueue task",
-				"type", task.Type(),
-				"reason", err,
-			)
-			continue
-		}
-
-		slog.Info(
-			"enqueued task",
-			"type", task.Type(),
-			"id", info.ID,
-			"queue", info.Queue,
-		)
-	}
-
-	return nil
+	return utils.Enqueue(taskFns)
 }
 
 // init registers our task handlers and periodic tasks with the registries.
