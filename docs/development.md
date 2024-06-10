@@ -375,6 +375,7 @@ The services which will be started are summarized in the table below.
 | `scheduler` | Schedules tasks on regular basis          |
 | `redis`     | Redis service used as a message queue     |
 | `dashboard` | Asynq UI dashboard and Prometheus metrics |
+| `grafana`   | Grafana instance                          |
 
 Once the services are up and running you can access the following endpoints from
 your local system.
@@ -385,6 +386,7 @@ your local system.
 | localhost:6379                | Redis server                |
 | http://localhost:8080/        | Dashboard UI                |
 | http://localhost:8080/metrics | Prometheus Metrics endpoint |
+| http://localhost:3000/        | Grafana UI                  |
 
 # Testing
 
