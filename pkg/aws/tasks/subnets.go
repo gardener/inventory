@@ -79,6 +79,7 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		modelSubnet := models.Subnet{
 			Name:                   name,
 			SubnetID:               strings.StringFromPointer(s.SubnetId),
+			SubnetArn:              strings.StringFromPointer(s.SubnetArn),
 			VpcID:                  strings.StringFromPointer(s.VpcId),
 			State:                  string(s.State),
 			AZ:                     strings.StringFromPointer(s.AvailabilityZone),
@@ -97,6 +98,7 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		Model(&subnets).
 		On("CONFLICT (subnet_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
+		Set("subnet_arn = EXCLUDED.subnet_arn").
 		Set("vpc_id = EXCLUDED.vpc_id").
 		Set("state = EXCLUDED.state").
 		Set("az = EXCLUDED.az").
