@@ -1,0 +1,1 @@
+ALTER TABLE aws_subnet ADD COLUMN subnet_arn VARCHAR NOT NULL DEFAULT '';
