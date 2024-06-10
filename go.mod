@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.18
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.162.0
 	github.com/aws/smithy-go v1.20.2
-	github.com/gardener/gardener v1.96.1
+	github.com/gardener/gardener v1.96.2
 	github.com/gardener/machine-controller-manager v0.53.0
 	github.com/hibiken/asynq v0.24.1
 	github.com/hibiken/asynq/x v0.0.0-20240506061152-d04888e74845
