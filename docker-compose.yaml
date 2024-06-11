@@ -95,6 +95,7 @@ services:
     environment:
       INVENTORY_CONFIG: /home/nonroot/config.yaml
       REDIS_ENDPOINT: *redis-endpoint
+      PROMETHEUS_ENDPOINT: http://prometheus:9090/
     depends_on:
       redis:
         condition: service_healthy
@@ -117,3 +118,13 @@ services:
       - ./extra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./extra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./extra/grafana/dashboards:/var/lib/grafana/dashboards
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    ports:
+      - 9090:9090
+    depends_on:
+      dashboard:
+        condition: service_started
+    volumes:
+      - ./extra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
