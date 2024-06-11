@@ -60,7 +60,7 @@ func collectShoots(ctx context.Context) error {
 			SeedName:     utils.StringFromPointer(s.Spec.SeedName),
 			Status:       s.Labels["shoot.gardener.cloud/status"],
 			IsHibernated: s.Status.IsHibernated,
-			CreatedBy:    s.Annotations["garden.sapcloud.io/createdBy"],
+			CreatedBy:    s.Annotations["gardener.cloud/created-by"],
 		}
 		shoots = append(shoots, shoot)
 		return nil
