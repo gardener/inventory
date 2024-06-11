@@ -50,7 +50,7 @@ func collectProjects(ctx context.Context) error {
 		}
 		project := models.Project{
 			Name:      p.Name,
-			Namespace: p.Namespace,
+			Namespace: strings.StringFromPointer(p.Spec.Namespace),
 			Status:    string(p.Status.Phase),
 			Purpose:   strings.StringFromPointer(p.Spec.Purpose),
 			Owner:     p.Spec.Owner.Name,
