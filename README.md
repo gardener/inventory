@@ -20,6 +20,7 @@ can be used instead of Redis.
 - [Design Goals](./docs/design.md)
 - [Development Guide](./docs/development.md)
 - [Operations Guide](./docs/ops-guide.md)
+- [Database Queries](./docs/db-queries.md)
 - Deployment
 - Querying the database
 
