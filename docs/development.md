@@ -164,6 +164,56 @@ scheduler:
             duration: 4h
 ```
 
+## Link / Nexus Tables
+
+Relationships between models in the database are established with the help of
+[link tables](https://en.wikipedia.org/wiki/Associative_entity).
+
+Even though some relationships might be one-to-one, or one-to-many we still use
+separate link tables to connect the models for a few reasons.
+
+- Keep the codebase and database more consistent and cleaner
+- Be able to enhance the model with additional attributes, by having properties
+  on the link table
+
+Since data collection runs concurrently and indendently from each other, linking
+usually happens on a later stage, e.g. when all relevant data is collected.
+
+Another benefit of having a separate link table is that we can extend the model
+by having additional properties on the link table itself, and this way we don't
+have to modify the base models, e.g. have columns which identify when the link
+was created, updated, etc. This allows us to keep our collectors simple at the
+same time.
+
+There are two kinds of _link tables_ we use in the Inventory system, and both
+serve the same purpose, but are called differently.
+
+When we create links between models within the same data source (e.g. AWS) we create
+relationships between the models by following this naming convention:
+
+- `l_<datasource>_<model_a>_to_<model_b>`
+
+For instance, the following link table contains the relationships between the
+AWS Region and the AWS VPCs, where both models are defined in the same Go
+package.
+
+- `l_aws_region_to_vpc`
+
+When creating cross-package relationships we create a
+[nexus](https://en.wiktionary.org/wiki/nexus) table instead, which follows this
+naming convention.
+
+- `n_<datasource_a>_<model_a>_to_<datasource_b>_<model_b>`
+
+For instance, the following _nexus_ table contains the relationships between the
+AWS VPCs and Gardener Shoots.
+
+- `n_aws_vpc_to_g_shoot`
+
+Both tables -- _link_ and _nexus_ -- serve the same purpose, but are named
+differently in order to make it easier to distinguish between _in-package_ and
+_cross-package_ relationships.
+
 # Tasks
 
 Tasks are based on [hibiken/asynq](https://github.com/hibiken/asynq).
@@ -368,14 +418,15 @@ docker compose up --build --remove-orphans
 
 The services which will be started are summarized in the table below.
 
-| Service     | Description                               |
-|:------------|:------------------------------------------|
-| `postgres`  | PostgreSQL database                       |
-| `worker`    | Handles task messages                     |
-| `scheduler` | Schedules tasks on regular basis          |
-| `redis`     | Redis service used as a message queue     |
-| `dashboard` | Asynq UI dashboard and Prometheus metrics |
-| `grafana`   | Grafana instance                          |
+| Service      | Description                               |
+|:-------------|:------------------------------------------|
+| `postgres`   | PostgreSQL database                       |
+| `worker`     | Handles task messages                     |
+| `scheduler`  | Schedules tasks on regular basis          |
+| `redis`      | Redis service used as a message queue     |
+| `dashboard`  | Asynq UI dashboard and Prometheus metrics |
+| `grafana`    | Grafana instance                          |
+| `prometheus` | Prometheus instance                       |
 
 Once the services are up and running you can access the following endpoints from
 your local system.
@@ -387,6 +438,7 @@ your local system.
 | http://localhost:8080/        | Dashboard UI                |
 | http://localhost:8080/metrics | Prometheus Metrics endpoint |
 | http://localhost:3000/        | Grafana UI                  |
+| http://localhost:9090/        | Prometheus UI               |
 
 # Testing
 
