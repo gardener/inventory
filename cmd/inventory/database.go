@@ -25,8 +25,9 @@ func NewDatabaseCommand() *cli.Command {
 		},
 		Subcommands: []*cli.Command{
 			{
-				Name:  "init",
-				Usage: "initialize migration tables",
+				Name:    "init",
+				Usage:   "initialize migration tables",
+				Aliases: []string{"i"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -44,8 +45,9 @@ func NewDatabaseCommand() *cli.Command {
 				// production we should restrict the migrations
 				// only to the ones which are bundled with the
 				// application.
-				Name:  "migrate",
-				Usage: "apply pending migrations",
+				Name:    "migrate",
+				Usage:   "apply pending migrations",
+				Aliases: []string{"m"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -80,8 +82,9 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "rollback",
-				Usage: "rollback last migration group",
+				Name:    "rollback",
+				Usage:   "rollback last migration group",
+				Aliases: []string{"r"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -117,8 +120,9 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "lock",
-				Usage: "lock migrations",
+				Name:    "lock",
+				Usage:   "lock migrations",
+				Aliases: []string{"l"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -132,8 +136,9 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "unlock",
-				Usage: "unlock migrations",
+				Name:    "unlock",
+				Usage:   "unlock migrations",
+				Aliases: []string{"u"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -146,8 +151,9 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "create",
-				Usage: "create a new migration",
+				Name:    "create",
+				Usage:   "create a new migration",
+				Aliases: []string{"c"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -175,8 +181,9 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "status",
-				Usage: "display migration status",
+				Name:    "status",
+				Usage:   "display migration status",
+				Aliases: []string{"s"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -207,8 +214,9 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "applied",
-				Usage: "display the list of applied migrations",
+				Name:    "applied",
+				Usage:   "display the list of applied migrations",
+				Aliases: []string{"a"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -235,8 +243,9 @@ func NewDatabaseCommand() *cli.Command {
 				},
 			},
 			{
-				Name:  "pending",
-				Usage: "display the list of pending migrations",
+				Name:    "pending",
+				Usage:   "display the list of pending migrations",
+				Aliases: []string{"p"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					db := newDB(conf)
