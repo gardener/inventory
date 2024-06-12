@@ -52,6 +52,15 @@ type SubnetToAZ struct {
 	SubnetID           uint64 `bun:"subnet_id,notnull,unique:l_aws_subnet_to_az_key"`
 }
 
+// InstanceToSubnet represents a link table connecting the Instance with Subnet.
+type InstanceToSubnet struct {
+	bun.BaseModel `bun:"table:l_aws_instance_to_subnet"`
+	coremodels.Model
+
+	InstanceID uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_subnet_key"`
+	SubnetID   uint64 `bun:"subnet_id,notnull,unique:l_aws_instance_to_subnet_key"`
+}
+
 // Region represents an AWS Region
 type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
