@@ -61,6 +61,15 @@ type InstanceToSubnet struct {
 	SubnetID   uint64 `bun:"subnet_id,notnull,unique:l_aws_instance_to_subnet_key"`
 }
 
+// InstanceToRegion represents a link table connecting the Instance with Region.
+type InstanceToRegion struct {
+	bun.BaseModel `bun:"table:l_aws_instance_to_region"`
+	coremodels.Model
+
+	InstanceID uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_region_key"`
+	RegionID   uint64 `bun:"region_id,notnull,unique:l_aws_instance_to_region_key"`
+}
+
 // Region represents an AWS Region
 type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
@@ -71,6 +80,7 @@ type Region struct {
 	OptInStatus string              `bun:"opt_in_status,notnull"`
 	Zones       []*AvailabilityZone `bun:"rel:has-many,join:name=region_name"`
 	VPCs        []*VPC              `bun:"rel:has-many,join:name=region_name"`
+	Instances   []*Instance         `bun:"rel:has-many,join:name=region_name"`
 }
 
 // AvailabilityZone represents an AWS Availability Zone.
