@@ -162,4 +162,13 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:vpc", &VPC{})
 	registry.ModelRegistry.MustRegister("aws:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("aws:model:instance", &Instance{})
+
+	// Link tables
+	registry.ModelRegistry.MustRegister("aws:model:link_region_to_az", &RegionToAZ{})
+	registry.ModelRegistry.MustRegister("aws:model:link_region_to_vpc", &RegionToVPC{})
+	registry.ModelRegistry.MustRegister("aws:model:link_vpc_to_subnet", &VPCToSubnet{})
+	registry.ModelRegistry.MustRegister("aws:model:link_vpc_to_instance", &VPCToInstance{})
+	registry.ModelRegistry.MustRegister("aws:model:link_subnet_to_az", &SubnetToAZ{})
+	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_subnet", &InstanceToSubnet{})
+	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_region", &InstanceToRegion{})
 }
