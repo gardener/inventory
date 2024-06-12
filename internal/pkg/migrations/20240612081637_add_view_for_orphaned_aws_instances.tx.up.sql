@@ -1,4 +1,4 @@
-CREATE VIEW aws_orphan_instance AS
+CREATE OR REPLACE VIEW aws_orphan_instance AS
 SELECT
         i.*,
         v.name AS vpc_name,
