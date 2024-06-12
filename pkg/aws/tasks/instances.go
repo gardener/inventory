@@ -112,6 +112,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		Set("subnet_id = EXCLUDED.subnet_id").
 		Set("vpc_id = EXCLUDED.vpc_id").
 		Set("platform = EXCLUDED.platform").
+		Set("region_name = EXCLUDED.region_name").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
