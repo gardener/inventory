@@ -16,6 +16,15 @@ type RegionToAZ struct {
 	AvailabilityZoneID uint64 `bun:"az_id,notnull,unique:l_aws_region_to_az_key"`
 }
 
+// RegionToVPC represents a link table connecting the Region with VPC.
+type RegionToVPC struct {
+	bun.BaseModel `bun:"table:l_aws_region_to_vpc"`
+	coremodels.Model
+
+	RegionID uint64 `bun:"region_id,notnull,unique:l_aws_region_to_vpc_key"`
+	VpcID    uint64 `bun:"vpc_id,notnull,unique:l_aws_region_to_vpc_key"`
+}
+
 // Region represents an AWS Region
 type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
