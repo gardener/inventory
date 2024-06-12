@@ -92,6 +92,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 				SubnetID:     strings.StringFromPointer(instance.SubnetId),
 				VpcID:        strings.StringFromPointer(instance.VpcId),
 				Platform:     strings.StringFromPointer(instance.PlatformDetails),
+				RegionName:   region,
 			}
 			instances = append(instances, modelInstance)
 		}
