@@ -25,6 +25,15 @@ type RegionToVPC struct {
 	VpcID    uint64 `bun:"vpc_id,notnull,unique:l_aws_region_to_vpc_key"`
 }
 
+// VPCToSubnet represents a link table connecting the VPC with Subnet.
+type VPCToSubnet struct {
+	bun.BaseModel `bun:"table:l_aws_vpc_to_subnet"`
+	coremodels.Model
+
+	VpcID    uint64 `bun:"vpc_id,notnull,unique:l_aws_vpc_to_subnet_key"`
+	SubnetID uint64 `bun:"subnet_id,notnull,unique:l_aws_vpc_to_subnet_key"`
+}
+
 // Region represents an AWS Region
 type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
