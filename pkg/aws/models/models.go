@@ -7,6 +7,15 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
+// RegionToAZ represents a link table connecting the Region with AZ.
+type RegionToAZ struct {
+	bun.BaseModel `bun:"table:l_aws_region_to_az"`
+	coremodels.Model
+
+	RegionID           uint64 `bun:"region_id,notnull,unique:l_aws_region_to_az_key"`
+	AvailabilityZoneID uint64 `bun:"az_id,notnull,unique:l_aws_region_to_az_key"`
+}
+
 // Region represents an AWS Region
 type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
