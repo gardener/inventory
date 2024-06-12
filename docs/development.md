@@ -3,6 +3,17 @@
 This document provides details to get you started with the development of the
 Inventory system.
 
+The development in summary is:
+
+1. Define models and then register them
+2. Create schema migration for the models
+3. Define tasks and register them
+4. Configure retention policy for the models
+5. Define scheduler entries for any periodic tasks
+6. Add test cases
+
+For more details on each point, please read the rest of this document.
+
 # Components
 
 The Inventory system consists of the following components.
