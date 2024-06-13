@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/hibiken/asynq"
+	"github.com/uptrace/bun"
 )
 
 // TaskConstructor is a function which creates and returns a new [asynq.Task].
@@ -30,6 +32,21 @@ func Enqueue(items []TaskConstructor) error {
 			"id", info.ID,
 			"queue", info.Queue,
 		)
+	}
+
+	return nil
+}
+
+// LinkFunction is a function, which establishes relationships between models.
+type LinkFunction func(ctx context.Context, db *bun.DB) error
+
+// LinkObjects links objects by using the provided [LinkFunction] items.
+func LinkObjects(ctx context.Context, db *bun.DB, items []LinkFunction) error {
+	for _, linkFunc := range items {
+		if err := linkFunc(ctx, db); err != nil {
+			slog.Error("failed to link objects", "reason", err)
+			return err
+		}
 	}
 
 	return nil
