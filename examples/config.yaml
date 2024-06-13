@@ -30,6 +30,9 @@ scheduler:
     - name: "aws:task:collect-instances"
       spec: "@every 1h"
       desc: "Collect AWS EC2 Instances"
+    - name: "aws:task:link-all"
+      spec: "@every 30m"
+      desc: "Link all AWS models"
 
     # Gardener
     - name: "g:task:collect-projects"
