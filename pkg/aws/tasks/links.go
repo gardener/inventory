@@ -202,3 +202,42 @@ func LinkSubnetToAZ(ctx context.Context, db *bun.DB) error {
 
 	return err
 }
+
+// LinkInstanceToSubnet creates links between the Instance and Subnet.
+func LinkInstanceToSubnet(ctx context.Context, db *bun.DB) error {
+	var instances []models.Instance
+	err := db.NewSelect().
+		Model(&instances).
+		Relation("Subnet").
+		Where("subnet.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.InstanceToSubnet, 0, len(instances))
+	for _, instance := range instances {
+		link := models.InstanceToSubnet{
+			InstanceID: instance.ID,
+			SubnetID:   instance.Subnet.ID,
+		}
+		links = append(links, link)
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (instance_id, subnet_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws instance with subnet", "count", count)
+
+	return err
+}
