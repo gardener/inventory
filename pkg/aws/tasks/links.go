@@ -163,3 +163,42 @@ func LinkInstanceWithVPC(ctx context.Context, db *bun.DB) error {
 
 	return err
 }
+
+// LinkSubnetToAZ creates links between the AZ and Subnets.
+func LinkSubnetToAZ(ctx context.Context, db *bun.DB) error {
+	var subnets []models.Subnet
+	err := db.NewSelect().
+		Model(&subnets).
+		Relation("AvailabilityZone").
+		Where("availability_zone.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.SubnetToAZ, 0, len(subnets))
+	for _, subnet := range subnets {
+		link := models.SubnetToAZ{
+			SubnetID:           subnet.ID,
+			AvailabilityZoneID: subnet.AvailabilityZone.ID,
+		}
+		links = append(links, link)
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (subnet_id, az_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws subnet with az", "count", count)
+
+	return err
+}
