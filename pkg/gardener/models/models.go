@@ -16,6 +16,15 @@ type ShootToProject struct {
 	ProjectID uint64 `bun:"project_id,notnull,unique:l_g_shoot_to_project_key"`
 }
 
+// ShootToSeed represents a link table connecting the Shoot with Seed.
+type ShootToSeed struct {
+	bun.BaseModel `bun:"table:l_g_shoot_to_seed"`
+	coremodels.Model
+
+	ShootID uint64 `bun:"shoot_id,notnull,unique:l_g_shoot_to_seed_key"`
+	SeedID  uint64 `bun:"seed_id,notnull,unique:l_g_shoot_to_seed_key"`
+}
+
 // Project represents a Gardener project
 type Project struct {
 	bun.BaseModel `bun:"table:g_project"`
@@ -80,4 +89,5 @@ func init() {
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})
+	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_seed", &ShootToSeed{})
 }
