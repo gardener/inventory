@@ -5,6 +5,7 @@ import (
 
 	"github.com/hibiken/asynq"
 
+	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/common/utils"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
@@ -13,6 +14,10 @@ const (
 	// AWSCollectAllTaskType is a meta task, which enqueues all relevant AWS
 	// tasks.
 	AWSCollectAllTaskType = "aws:task:collect-all"
+
+	// AWSLinkAllTaskType is a task, which creates links between the AWS
+	// models.
+	AWSLinkAllTaskType = "aws:task:link-all"
 )
 
 // HandleCollectAllTask is a handler, which enqueues tasks for collecting all
@@ -30,6 +35,22 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	return utils.Enqueue(taskFns)
 }
 
+// HandleLinkAllTask is a handler, which establishes links between the various
+// AWS models.
+func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
+	linkFns := []utils.LinkFunction{
+		LinkAvailabilityZoneWithRegion,
+		LinkInstanceWithRegion,
+		LinkInstanceWithSubnet,
+		LinkInstanceWithVPC,
+		LinkRegionWithVPC,
+		LinkSubnetWithAZ,
+		LinkSubnetWithVPC,
+	}
+
+	return utils.LinkObjects(ctx, clients.Db, linkFns)
+}
+
 // init registers our task handlers and periodic tasks with the registries.
 func init() {
 	// Task handlers
@@ -43,4 +64,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_TYPE, asynq.HandlerFunc(HandleCollectInstancesTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_REGION_TYPE, asynq.HandlerFunc(HandleCollectInstancesForRegionTask))
 	registry.TaskRegistry.MustRegister(AWSCollectAllTaskType, asynq.HandlerFunc(HandleCollectAllTask))
+	registry.TaskRegistry.MustRegister(AWSLinkAllTaskType, asynq.HandlerFunc(HandleLinkAllTask))
 }
