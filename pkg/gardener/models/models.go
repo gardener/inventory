@@ -7,6 +7,15 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
+// ShootToProject represents a link table connecting the Shoot with Project.
+type ShootToProject struct {
+	bun.BaseModel `bun:"table:l_g_shoot_to_project"`
+	coremodels.Model
+
+	ShootID   uint64 `bun:"shoot_id,notnull,unique:l_g_shoot_to_project_key"`
+	ProjectID uint64 `bun:"project_id,notnull,unique:l_g_shoot_to_project_key"`
+}
+
 // Project represents a Gardener project
 type Project struct {
 	bun.BaseModel `bun:"table:g_project"`
@@ -68,4 +77,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:seed", &Seed{})
 	registry.ModelRegistry.MustRegister("g:model:shoot", &Shoot{})
 	registry.ModelRegistry.MustRegister("g:model:machine", &Machine{})
+
+	// Link tables
+	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})
 }
