@@ -41,6 +41,10 @@ func LinkAvailabilityZoneWithRegion(ctx context.Context, db *bun.DB) error {
 		Returning("id").
 		Exec(ctx)
 
+	if err != nil {
+		return err
+	}
+
 	count, err := out.RowsAffected()
 	if err != nil {
 		return err
@@ -48,7 +52,7 @@ func LinkAvailabilityZoneWithRegion(ctx context.Context, db *bun.DB) error {
 
 	slog.Info("linked aws region with az", "count", count)
 
-	return err
+	return nil
 }
 
 // LinkRegionWithVPC creates links between the AWS Region and VPC
@@ -84,6 +88,10 @@ func LinkRegionWithVPC(ctx context.Context, db *bun.DB) error {
 		Returning("id").
 		Exec(ctx)
 
+	if err != nil {
+		return err
+	}
+
 	count, err := out.RowsAffected()
 	if err != nil {
 		return err
@@ -91,7 +99,7 @@ func LinkRegionWithVPC(ctx context.Context, db *bun.DB) error {
 
 	slog.Info("linked aws region with vpc", "count", count)
 
-	return err
+	return nil
 }
 
 // LinkSubnetWithVPC creates links between the AWS Subnet and VPC
@@ -127,6 +135,10 @@ func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
 		Returning("id").
 		Exec(ctx)
 
+	if err != nil {
+		return err
+	}
+
 	count, err := out.RowsAffected()
 	if err != nil {
 		return err
@@ -134,7 +146,7 @@ func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
 
 	slog.Info("linked aws subnet with vpc", "count", count)
 
-	return err
+	return nil
 }
 
 // LinkInstanceWithVPC creates links between the AWS VPC and Instance.
@@ -170,6 +182,10 @@ func LinkInstanceWithVPC(ctx context.Context, db *bun.DB) error {
 		Returning("id").
 		Exec(ctx)
 
+	if err != nil {
+		return err
+	}
+
 	count, err := out.RowsAffected()
 	if err != nil {
 		return err
@@ -177,7 +193,7 @@ func LinkInstanceWithVPC(ctx context.Context, db *bun.DB) error {
 
 	slog.Info("linked aws instance with vpc", "count", count)
 
-	return err
+	return nil
 }
 
 // LinkSubnetWithAZ creates links between the AZ and Subnets.
@@ -213,6 +229,10 @@ func LinkSubnetWithAZ(ctx context.Context, db *bun.DB) error {
 		Returning("id").
 		Exec(ctx)
 
+	if err != nil {
+		return err
+	}
+
 	count, err := out.RowsAffected()
 	if err != nil {
 		return err
@@ -220,7 +240,7 @@ func LinkSubnetWithAZ(ctx context.Context, db *bun.DB) error {
 
 	slog.Info("linked aws subnet with az", "count", count)
 
-	return err
+	return nil
 }
 
 // LinkInstanceWithSubnet creates links between the Instance and Subnet.
@@ -256,6 +276,10 @@ func LinkInstanceWithSubnet(ctx context.Context, db *bun.DB) error {
 		Returning("id").
 		Exec(ctx)
 
+	if err != nil {
+		return err
+	}
+
 	count, err := out.RowsAffected()
 	if err != nil {
 		return err
@@ -263,7 +287,7 @@ func LinkInstanceWithSubnet(ctx context.Context, db *bun.DB) error {
 
 	slog.Info("linked aws instance with subnet", "count", count)
 
-	return err
+	return nil
 }
 
 // LinkInstanceWithRegion creates links between the Instance and Region.
@@ -299,6 +323,10 @@ func LinkInstanceWithRegion(ctx context.Context, db *bun.DB) error {
 		Returning("id").
 		Exec(ctx)
 
+	if err != nil {
+		return err
+	}
+
 	count, err := out.RowsAffected()
 	if err != nil {
 		return err
@@ -306,5 +334,5 @@ func LinkInstanceWithRegion(ctx context.Context, db *bun.DB) error {
 
 	slog.Info("linked aws instance with region", "count", count)
 
-	return err
+	return nil
 }
