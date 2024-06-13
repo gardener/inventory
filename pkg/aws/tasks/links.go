@@ -164,8 +164,8 @@ func LinkInstanceWithVPC(ctx context.Context, db *bun.DB) error {
 	return err
 }
 
-// LinkSubnetToAZ creates links between the AZ and Subnets.
-func LinkSubnetToAZ(ctx context.Context, db *bun.DB) error {
+// LinkSubnetWithAZ creates links between the AZ and Subnets.
+func LinkSubnetWithAZ(ctx context.Context, db *bun.DB) error {
 	var subnets []models.Subnet
 	err := db.NewSelect().
 		Model(&subnets).
@@ -203,8 +203,8 @@ func LinkSubnetToAZ(ctx context.Context, db *bun.DB) error {
 	return err
 }
 
-// LinkInstanceToSubnet creates links between the Instance and Subnet.
-func LinkInstanceToSubnet(ctx context.Context, db *bun.DB) error {
+// LinkInstanceWithSubnet creates links between the Instance and Subnet.
+func LinkInstanceWithSubnet(ctx context.Context, db *bun.DB) error {
 	var instances []models.Instance
 	err := db.NewSelect().
 		Model(&instances).
@@ -238,6 +238,45 @@ func LinkInstanceToSubnet(ctx context.Context, db *bun.DB) error {
 	}
 
 	slog.Info("linked aws instance with subnet", "count", count)
+
+	return err
+}
+
+// LinkInstanceWithRegion creates links between the Instance and Region.
+func LinkInstanceWithRegion(ctx context.Context, db *bun.DB) error {
+	var instances []models.Instance
+	err := db.NewSelect().
+		Model(&instances).
+		Relation("Region").
+		Where("region.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.InstanceToRegion, 0, len(instances))
+	for _, instance := range instances {
+		link := models.InstanceToRegion{
+			InstanceID: instance.ID,
+			RegionID:   instance.Region.ID,
+		}
+		links = append(links, link)
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (instance_id, region_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws instance with region", "count", count)
 
 	return err
 }
