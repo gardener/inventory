@@ -85,3 +85,42 @@ func LinkRegionWithVPC(ctx context.Context, db *bun.DB) error {
 
 	return err
 }
+
+// LinkSubnetWithVPC creates links between the AWS Subnet and VPC
+func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
+	var subnets []models.Subnet
+	err := db.NewSelect().
+		Model(&subnets).
+		Relation("VPC").
+		Where("vpc.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.VPCToSubnet, 0, len(subnets))
+	for _, subnet := range subnets {
+		link := models.VPCToSubnet{
+			SubnetID: subnet.ID,
+			VpcID:    subnet.VPC.ID,
+		}
+		links = append(links, link)
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (subnet_id, vpc_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws subnet with vpc", "count", count)
+
+	return err
+}
