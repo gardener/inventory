@@ -151,6 +151,7 @@ type Instance struct {
 	VpcID        string  `bun:"vpc_id,notnull"`
 	Platform     string  `bun:"platform,notnull"`
 	RegionName   string  `bun:"region_name,notnull"`
+	Region       *Region `bun:"rel:has-one,join:region_name=name"`
 	VPC          *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id"`
 	Subnet       *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id"`
 }
