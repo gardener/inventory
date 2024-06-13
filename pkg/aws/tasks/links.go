@@ -30,6 +30,10 @@ func LinkAvailabilityZoneWithRegion(ctx context.Context, db *bun.DB) error {
 		links = append(links, link)
 	}
 
+	if len(links) == 0 {
+		return nil
+	}
+
 	out, err := db.NewInsert().
 		Model(&links).
 		On("CONFLICT (region_id, az_id) DO UPDATE").
@@ -67,6 +71,10 @@ func LinkRegionWithVPC(ctx context.Context, db *bun.DB) error {
 			RegionID: vpc.Region.ID,
 		}
 		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
 	}
 
 	out, err := db.NewInsert().
@@ -108,6 +116,10 @@ func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
 		links = append(links, link)
 	}
 
+	if len(links) == 0 {
+		return nil
+	}
+
 	out, err := db.NewInsert().
 		Model(&links).
 		On("CONFLICT (subnet_id, vpc_id) DO UPDATE").
@@ -145,6 +157,10 @@ func LinkInstanceWithVPC(ctx context.Context, db *bun.DB) error {
 			VpcID:      instance.VPC.ID,
 		}
 		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
 	}
 
 	out, err := db.NewInsert().
@@ -186,6 +202,10 @@ func LinkSubnetWithAZ(ctx context.Context, db *bun.DB) error {
 		links = append(links, link)
 	}
 
+	if len(links) == 0 {
+		return nil
+	}
+
 	out, err := db.NewInsert().
 		Model(&links).
 		On("CONFLICT (subnet_id, az_id) DO UPDATE").
@@ -225,6 +245,10 @@ func LinkInstanceWithSubnet(ctx context.Context, db *bun.DB) error {
 		links = append(links, link)
 	}
 
+	if len(links) == 0 {
+		return nil
+	}
+
 	out, err := db.NewInsert().
 		Model(&links).
 		On("CONFLICT (instance_id, subnet_id) DO UPDATE").
@@ -262,6 +286,10 @@ func LinkInstanceWithRegion(ctx context.Context, db *bun.DB) error {
 			RegionID:   instance.Region.ID,
 		}
 		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
 	}
 
 	out, err := db.NewInsert().
