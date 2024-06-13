@@ -124,3 +124,42 @@ func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
 
 	return err
 }
+
+// LinkInstanceWithVPC creates links between the AWS VPC and Instance.
+func LinkInstanceWithVPC(ctx context.Context, db *bun.DB) error {
+	var instances []models.Instance
+	err := db.NewSelect().
+		Model(&instances).
+		Relation("VPC").
+		Where("vpc.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.VPCToInstance, 0, len(instances))
+	for _, instance := range instances {
+		link := models.VPCToInstance{
+			InstanceID: instance.ID,
+			VpcID:      instance.VPC.ID,
+		}
+		links = append(links, link)
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (instance_id, vpc_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws instance with vpc", "count", count)
+
+	return err
+}
