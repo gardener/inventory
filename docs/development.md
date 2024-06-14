@@ -438,6 +438,7 @@ The services which will be started are summarized in the table below.
 | `dashboard`  | Asynq UI dashboard and Prometheus metrics |
 | `grafana`    | Grafana instance                          |
 | `prometheus` | Prometheus instance                       |
+| `pgadmin`    | PostgreSQL Admin Interface                |
 
 Once the services are up and running you can access the following endpoints from
 your local system.
@@ -450,6 +451,7 @@ your local system.
 | http://localhost:8080/metrics | Prometheus Metrics endpoint |
 | http://localhost:3000/        | Grafana UI                  |
 | http://localhost:9090/        | Prometheus UI               |
+| http://localhost:7080/        | pgAdmin UI                  |
 
 # Testing
 
