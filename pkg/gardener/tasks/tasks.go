@@ -43,7 +43,7 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 		LinkMachineWithShoot,
 	}
 
-	return utils.LinkObjects(ctx, clients.Db, linkFns)
+	return utils.LinkObjects(ctx, clients.DB, linkFns)
 }
 
 func init() {

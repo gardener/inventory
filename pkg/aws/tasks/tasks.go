@@ -48,7 +48,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkSubnetWithVPC,
 	}
 
-	return utils.LinkObjects(ctx, clients.Db, linkFns)
+	return utils.LinkObjects(ctx, clients.DB, linkFns)
 }
 
 // init registers our task handlers and periodic tasks with the registries.
