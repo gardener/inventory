@@ -55,3 +55,50 @@ func LinkShootWithProject(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkShootWithSeed creates the relationship between the Shoot and Seed
+func LinkShootWithSeed(ctx context.Context, db *bun.DB) error {
+	var shoots []models.Shoot
+	err := db.NewSelect().
+		Model(&shoots).
+		Relation("Seed").
+		Where("seed.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.ShootToSeed, 0, len(shoots))
+	for _, shoot := range shoots {
+		link := models.ShootToSeed{
+			ShootID: shoot.ID,
+			SeedID:  shoot.Seed.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (shoot_id, seed_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked gardener shoot with seed", "count", count)
+
+	return nil
+}
