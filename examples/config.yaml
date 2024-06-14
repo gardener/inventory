@@ -47,6 +47,9 @@ scheduler:
     - name: "g:task:collect-machines"
       spec: "@every 1h"
       desc: "Collect Gardener Machines"
+    - name: "g:task:link-all"
+      spec: "@every 30m"
+      desc: "Link all Gardener models"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
