@@ -135,7 +135,7 @@ services:
       - 7080:80
     environment:
       PGADMIN_DEFAULT_PASSWORD: p4ssw0rd
-      PGADMIN_DEFAULT_EMAIL: gardener@sap.com
+      PGADMIN_DEFAULT_EMAIL: inventory@foo.bar
       PGADMIN_DISABLE_POSTFIX: true
     depends_on:
       postgres:
