@@ -128,3 +128,15 @@ services:
         condition: service_started
     volumes:
       - ./extra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  pgadmin:
+    image: dpage/pgadmin4:8.8
+    ports:
+      - 7080:80
+    environment:
+      PGADMIN_DEFAULT_PASSWORD: p4ssw0rd
+      PGADMIN_DEFAULT_EMAIL: gardener@sap.com
+      PGADMIN_DISABLE_POSTFIX: true
+    depends_on:
+      postgres:
+        condition: service_healthy
