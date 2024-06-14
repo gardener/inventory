@@ -102,3 +102,50 @@ func LinkShootWithSeed(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkMachineWithShoot creates the relationship between the Machine and Shoot
+func LinkMachineWithShoot(ctx context.Context, db *bun.DB) error {
+	var machines []models.Machine
+	err := db.NewSelect().
+		Model(&machines).
+		Relation("Shoot").
+		Where("shoot.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.MachineToShoot, 0, len(machines))
+	for _, machine := range machines {
+		link := models.MachineToShoot{
+			MachineID: machine.ID,
+			ShootID:   machine.Shoot.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (machine_id, shoot_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked gardener machine with shoot", "count", count)
+
+	return nil
+}
