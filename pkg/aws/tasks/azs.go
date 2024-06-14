@@ -92,7 +92,7 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 	if len(azs) == 0 {
 		return nil
 	}
-	_, err = clients.Db.NewInsert().
+	_, err = clients.DB.NewInsert().
 		Model(&azs).
 		On("CONFLICT (zone_id) DO UPDATE").
 		Set("zone_type = EXCLUDED.zone_type").
@@ -127,7 +127,7 @@ func HandleCollectAzsTask(ctx context.Context, t *asynq.Task) error {
 func collectAzs(ctx context.Context) error {
 	// Collect regions from Db
 	regions := make([]models.Region, 0)
-	err := clients.Db.NewSelect().Model(&regions).Scan(ctx)
+	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
 		slog.Error("could not select regions from db", "err", err)
 		return err

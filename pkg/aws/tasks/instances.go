@@ -102,7 +102,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		return nil
 	}
 
-	_, err = clients.Db.NewInsert().
+	_, err = clients.DB.NewInsert().
 		Model(&instances).
 		On("CONFLICT (instance_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -132,7 +132,7 @@ func HandleCollectInstancesTask(ctx context.Context, t *asynq.Task) error {
 func collectInstances(ctx context.Context) error {
 	// Collect regions from Db
 	regions := make([]models.Region, 0)
-	err := clients.Db.NewSelect().Model(&regions).Scan(ctx)
+	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
 		slog.Error("could not select regions from db", "err", err)
 		return err

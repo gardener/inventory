@@ -75,7 +75,6 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 	subnets := make([]models.Subnet, 0, len(subnetsOutput.Subnets))
 	for _, s := range subnetsOutput.Subnets {
 		name := utils.FetchTag(s.Tags, "Name")
-		slog.Info("Subnet", "name", name)
 		modelSubnet := models.Subnet{
 			Name:                   name,
 			SubnetID:               strings.StringFromPointer(s.SubnetId),
@@ -94,7 +93,7 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 	if len(subnets) == 0 {
 		return nil
 	}
-	_, err = clients.Db.NewInsert().
+	_, err = clients.DB.NewInsert().
 		Model(&subnets).
 		On("CONFLICT (subnet_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -125,7 +124,7 @@ func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 func collectSubnets(ctx context.Context) error {
 	// Collect regions from Db
 	regions := make([]models.Region, 0)
-	err := clients.Db.NewSelect().Model(&regions).Scan(ctx)
+	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
 		slog.Error("could not select regions from db", "err", err)
 		return err

@@ -66,7 +66,7 @@ func collectSeeds(ctx context.Context) error {
 	if len(seeds) == 0 {
 		return nil
 	}
-	_, err = clients.Db.NewInsert().
+	_, err = clients.DB.NewInsert().
 		Model(&seeds).
 		On("CONFLICT (name) DO UPDATE").
 		Set("kubernetes_version = EXCLUDED.kubernetes_version").

@@ -62,7 +62,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 
 		now := time.Now()
 		past := now.Add(-item.Duration)
-		out, err := clients.Db.NewDelete().
+		out, err := clients.DB.NewDelete().
 			Model(model).
 			Where("date_part('epoch', updated_at) < ?", past.Unix()).
 			Exec(ctx)

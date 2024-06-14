@@ -66,7 +66,7 @@ func collectProjects(ctx context.Context) error {
 	if len(projects) == 0 {
 		return nil
 	}
-	_, err = clients.Db.NewInsert().
+	_, err = clients.DB.NewInsert().
 		Model(&projects).
 		On("CONFLICT (name) DO UPDATE").
 		Set("namespace = EXCLUDED.namespace").

@@ -53,7 +53,7 @@ func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	// Bulk insert regions into db
-	_, err = clients.Db.NewInsert().
+	_, err = clients.DB.NewInsert().
 		Model(&regions).
 		On("CONFLICT (name) DO UPDATE").
 		Set("endpoint = EXCLUDED.endpoint").

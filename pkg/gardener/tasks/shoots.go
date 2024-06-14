@@ -73,7 +73,7 @@ func collectShoots(ctx context.Context) error {
 	if len(shoots) == 0 {
 		return nil
 	}
-	_, err = clients.Db.NewInsert().
+	_, err = clients.DB.NewInsert().
 		Model(&shoots).
 		On("CONFLICT (technical_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
