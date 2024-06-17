@@ -8,9 +8,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/clients"
 	"github.com/hibiken/asynq"
 	"github.com/uptrace/bun"
+
+	"github.com/gardener/inventory/pkg/clients"
 )
 
 // TaskConstructor is a function which creates and returns a new [asynq.Task].
