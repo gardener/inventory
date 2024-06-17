@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: inventory
+    app.kubernetes.io/managed-by: kustomize
+  name: worker
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: worker
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker
+        command:
+          - /app/inventory
+        args:
+          - worker
+          - start
+        image: europe-docker.pkg.dev/gardener-project/releases/gardener/inventory:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: inventory-config
+            mountPath: /app/config
+            readOnly: true
+        env:
+          - name: INVENTORY_CONFIG
+            value: /app/config/config.yaml
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        livenessProbe:
+          failureThreshold: 3
+          exec:
+            command:
+              - sh
+              - -c
+              - "/app/inventory worker ping --name ${HOSTNAME}"
+          initialDelaySeconds: 5
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          failureThreshold: 3
+          exec:
+            command:
+              - sh
+              - -c
+              - "/app/inventory worker ping --name ${HOSTNAME}"
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: inventory-config
+          secret:
+            secretName: inventory-config
