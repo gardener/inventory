@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: inventory
+    app.kubernetes.io/managed-by: kustomize
+  name: dashboard
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: dashboard
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+      - name: dashboard
+        command:
+          - /app/inventory
+        args:
+          - dashboard
+          - start
+        image: europe-docker.pkg.dev/gardener-project/releases/gardener/inventory:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: inventory-config
+            mountPath: /app/config
+            readOnly: true
+        env:
+          - name: INVENTORY_CONFIG
+            value: /app/config/config.yaml
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: inventory-config
+          secret:
+            secretName: inventory-config
