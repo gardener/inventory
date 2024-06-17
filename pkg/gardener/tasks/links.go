@@ -8,8 +8,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/uptrace/bun"
+
+	"github.com/gardener/inventory/pkg/gardener/models"
 )
 
 // LinkShootWithProject creates the relationship between the Gardener Shoot and

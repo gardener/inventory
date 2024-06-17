@@ -8,8 +8,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/uptrace/bun"
+
+	"github.com/gardener/inventory/pkg/aws/models"
 )
 
 // LinkAvailabilityZoneWithRegion creates links between the AWS AZs and Regions
