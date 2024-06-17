@@ -1,0 +1,54 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: scheduler
+    app.kubernetes.io/component: scheduler
+    app.kubernetes.io/part-of: inventory
+    app.kubernetes.io/managed-by: kustomize
+  name: scheduler
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: scheduler
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: scheduler
+    spec:
+      containers:
+      - name: scheduler
+        command:
+          - /app/inventory
+        args:
+          - scheduler
+          - start
+        image: europe-docker.pkg.dev/gardener-project/releases/gardener/inventory:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: inventory-config
+            mountPath: /app/config
+            readOnly: true
+        env:
+          - name: INVENTORY_CONFIG
+            value: /app/config/config.yaml
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: inventory-config
+          secret:
+            secretName: inventory-config
