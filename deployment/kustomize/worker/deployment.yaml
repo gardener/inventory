@@ -25,6 +25,11 @@ spec:
     spec:
       containers:
       - name: worker
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
         command:
           - /app/inventory
         args:
