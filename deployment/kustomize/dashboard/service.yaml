@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: inventory
+    app.kubernetes.io/managed-by: kustomize
+  name: dashboard
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: dashboard
+  sessionAffinity: None
+  type: ClusterIP
