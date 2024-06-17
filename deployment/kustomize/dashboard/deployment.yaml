@@ -30,6 +30,8 @@ spec:
           capabilities:
             drop:
             - "ALL"
+        ports:
+          - containerPort: 8080
         command:
           - /app/inventory
         args:
