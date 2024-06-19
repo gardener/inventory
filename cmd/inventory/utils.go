@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"os"
 	"strings"
@@ -188,10 +189,22 @@ func newMigrator(conf *config.Config, db *bun.DB) (*migrate.Migrator, error) {
 	// explicitely specified alternate migrations directory.
 	m := migrations.Migrations
 	migrationDir := conf.Database.MigrationDirectory
+
 	if migrationDir != "" {
 		m = migrate.NewMigrations(migrate.WithMigrationsDirectory(migrationDir))
 		err := m.Discover(os.DirFS(migrationDir))
-		if err != nil {
+		switch {
+		case err == nil:
+			break
+		case errors.Is(err, fs.ErrNotExist):
+			slog.Warn(
+				"falling back to bundled migrations",
+				"reason", "migration path does not exist",
+				"path", migrationDir,
+			)
+			m = migrations.Migrations
+		default:
+			// Any other error should bubble up to the caller
 			return nil, fmt.Errorf("failed to discover migrations from %s: %w", migrationDir, err)
 		}
 	}
