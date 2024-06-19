@@ -15,6 +15,12 @@ dependencies between the various resources.
 [Valkey](https://github.com/valkey-io/valkey) or [Redict](https://redict.io),
 can be used instead of Redis.
 
+Additional requirements for local development.
+
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [minikube](https://minikube.sigs.k8s.io/docs/drivers/)
+
 # Documentation
 
 - [Design Goals](./docs/design.md)
