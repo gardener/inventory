@@ -424,7 +424,7 @@ respectively.
 In order to start all services, execute the following command.
 
 ``` shell
-docker compose up --build --remove-orphans
+make docker-compose-up
 ```
 
 The services which will be started are summarized in the table below.
