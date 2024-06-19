@@ -48,7 +48,8 @@ define download-tool
 tool=$(1) ;\
 echo "Downloading $${tool}" ;\
 curl -o $(TOOLS_BIN)/$(1) -sSfL $(2) ;\
-chmod +x $(TOOLS_BIN)/$(1)
+chmod +x $(TOOLS_BIN)/$(1) ;\
+touch $(TOOLS_BIN)/$(1)
 endef
 
 $(LOCAL_BIN):
@@ -131,8 +132,24 @@ test-cover:
 
 .PHONY: docker-build
 docker-build:
-	docker build -t ${IMAGE}:${IMAGE_TAG} .
+	docker build -t $(IMAGE):$(IMAGE_TAG) .
 
 .PHONY: docker-compose-up
 docker-compose-up:
 	docker compose up --build --remove-orphans
+
+.PHONY: minikube-up
+minikube-up: $(KUSTOMIZE) $(MINIKUBE)
+	$(MINIKUBE) -p $(MINIKUBE_PROFILE) start --driver $(MINIKUBE_DRIVER)
+	$(MAKE) minikube-load-image
+	# TODO: kustomize and deploy
+
+.PHONY: minikube-down
+minikube-down: $(MINIKUBE)
+	$(MINIKUBE) delete -p $(MINIKUBE_PROFILE)
+
+.PHONY: minikube-load-image
+minikube-load-image: docker-build $(MINIKUBE)
+	docker image save -o image.tar $(IMAGE):$(IMAGE_TAG)
+	$(MINIKUBE) -p $(MINIKUBE_PROFILE) image load --overwrite=true image.tar
+	rm -f image.tar
