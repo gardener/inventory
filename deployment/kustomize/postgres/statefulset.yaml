@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/part-of: inventory
+    app.kubernetes.io/managed-by: kustomize
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  serviceName: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        env:
+          - name: POSTGRES_USER
+            value: inventory
+          - name: POSTGRES_DB
+            value: inventory
+          - name: POSTGRES_PASSWORD
+            value: p4ssw0rd
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+        image: postgres:16.2-bookworm
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        livenessProbe:
+          failureThreshold: 3
+          exec:
+            command:
+              - sh
+              - -c
+              - "pg_isready --username inventory"
+          initialDelaySeconds: 5
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          failureThreshold: 3
+          exec:
+            command:
+              - sh
+              - -c
+              - "pg_isready --username inventory"
+      securityContext:
+        fsGroup: 999
+        runAsGroup: 999
+        runAsUser: 999
