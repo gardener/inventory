@@ -24,7 +24,7 @@ GOIMPORTS_VERSION            ?= $(call version_gomod,golang.org/x/tools)
 GOIMPORTS_REVISER_VERSION    ?= v3.6.5
 GOLANGCI_LINT_VERSION        ?= v1.59.0
 KUSTOMIZE_VERSION            ?= v5.4.2
-MINIKUBE_VERSION 	     ?= v1.32.0
+MINIKUBE_VERSION 	     ?= v1.33.1
 
 # Minikube settings
 MINIKUBE_PROFILE ?= inventory
@@ -49,8 +49,7 @@ define download-tool
 tool=$(1) ;\
 echo "Downloading $${tool}" ;\
 curl -o $(TOOLS_BIN)/$(1) -sSfL $(2) ;\
-chmod +x $(TOOLS_BIN)/$(1) ;\
-touch $(TOOLS_BIN)/$(1)
+chmod +x $(TOOLS_BIN)/$(1)
 endef
 
 $(LOCAL_BIN):
@@ -148,7 +147,7 @@ kustomize-build: $(KUSTOMIZE)
 minikube-up: $(MINIKUBE)
 	$(MINIKUBE) -p $(MINIKUBE_PROFILE) start --driver $(MINIKUBE_DRIVER)
 	$(MAKE) minikube-load-image
-	$(MAKE) kustomize-build | $(MINIKUBE) -p $(MINIKUBE_PROFILE) kubectl -- apply -f -
+	@$(MAKE) -s kustomize-build | $(MINIKUBE) -p $(MINIKUBE_PROFILE) kubectl -- apply -f -
 
 .PHONY: minikube-down
 minikube-down: $(MINIKUBE)
