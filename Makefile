@@ -29,6 +29,7 @@ MINIKUBE_VERSION 	     ?= v1.32.0
 # Minikube settings
 MINIKUBE_PROFILE ?= inventory
 MINIKUBE_DRIVER ?= docker
+KUSTOMIZE_OVERLAY ?= local
 
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
@@ -138,13 +139,16 @@ docker-build:
 docker-compose-up:
 	docker compose up --build --remove-orphans
 
+.PHONY: kustomize-build
+kustomize-build: $(KUSTOMIZE)
+	@$(KUSTOMIZE) build \
+		--load-restrictor LoadRestrictionsNone deployment/kustomize/$(KUSTOMIZE_OVERLAY)
+
 .PHONY: minikube-up
-minikube-up: $(KUSTOMIZE) $(MINIKUBE)
+minikube-up: $(MINIKUBE)
 	$(MINIKUBE) -p $(MINIKUBE_PROFILE) start --driver $(MINIKUBE_DRIVER)
 	$(MAKE) minikube-load-image
-	$(KUSTOMIZE) build \
-		--load-restrictor LoadRestrictionsNone \
-		deployment/kustomize/local | $(MINIKUBE) -p $(MINIKUBE_PROFILE) kubectl -- apply -f -
+	$(MAKE) kustomize-build | $(MINIKUBE) -p $(MINIKUBE_PROFILE) kubectl -- apply -f -
 
 .PHONY: minikube-down
 minikube-down: $(MINIKUBE)
