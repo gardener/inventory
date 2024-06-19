@@ -114,18 +114,25 @@ $(BINARY): $(LOCAL_BIN) goimports lint
 		-ldflags="-X 'github.com/gardener/inventory/pkg/version.Version=${EFFECTIVE_VERSION}'" \
 		./cmd/inventory
 
+.PHONY: build
 build: $(BINARY)
 
+.PHONY: get
 get:
 	go mod download
 
+.PHONY: test
 test:
 	go test -v -race ./...
 
+.PHONY: test-cover
 test-cover:
 	go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
+.PHONY: docker-build
 docker-build:
 	docker build -t ${IMAGE}:${IMAGE_TAG} .
 
-.PHONY: get test test-cover build docker-build
+.PHONY: docker-compose-up
+docker-compose-up:
+	docker compose up --build --remove-orphans
