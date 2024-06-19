@@ -1,0 +1,25 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: inventory
+
+namespace: inventory
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: inventory-config
+    files:
+      - ../../../examples/config.yaml
+
+resources:
+  - namespace.yaml
+  - ../redis
+  - ../postgres
+  - ../grafana
+  - ../prometheus
+  - ../scheduler
+  - ../worker
+  - ../dashboard
