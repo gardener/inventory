@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: redis
+    app.kubernetes.io/part-of: inventory
+    app.kubernetes.io/managed-by: kustomize
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  serviceName: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+        image: redis:7.2.5-bookworm
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6379
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        livenessProbe:
+          failureThreshold: 3
+          exec:
+            command:
+              - sh
+              - -c
+              - "redis-cli ping"
+          initialDelaySeconds: 5
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          failureThreshold: 3
+          exec:
+            command:
+              - sh
+              - -c
+              - "redis-cli ping"
+      securityContext:
+        fsGroup: 999
+        runAsGroup: 999
+        runAsUser: 999
