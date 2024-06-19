@@ -17,10 +17,14 @@ IMAGE_TAG                    ?= $(EFFECTIVE_VERSION)
 GOIMPORTS                    := $(TOOLS_BIN)/goimports
 GOLANGCI_LINT                := $(TOOLS_BIN)/golangci-lint
 GOIMPORTS_REVISER            := $(TOOLS_BIN)/goimports-reviser
+KUSTOMIZE                    := $(TOOLS_BIN)/kustomize
 
 GOIMPORTS_VERSION            ?= $(call version_gomod,golang.org/x/tools)
 GOIMPORTS_REVISER_VERSION    ?= v3.6.5
 GOLANGCI_LINT_VERSION        ?= v1.59.0
+KUSTOMIZE_VERSION            ?= v5.4.2
+
+export PATH := $(abspath $(TOOLS_BIN)):$(PATH)
 
 # Fetch the version of a go module from go.mod
 version_gomod = $(shell go list -mod=mod -f '{{ .Version }}' -m $(1))
@@ -48,6 +52,9 @@ $(GOIMPORTS): $(call tool_version_file,$(GOIMPORTS),$(GOIMPORTS_VERSION))
 
 $(GOIMPORTS_REVISER): $(call tool_version_file,$(GOIMPORTS_REVISER),$(GOIMPORTS_REVISER_VERSION))
 	@GOBIN=$(abspath $(TOOLS_BIN)) go install github.com/incu6us/goimports-reviser/v3@$(GOIMPORTS_REVISER_VERSION)
+
+$(KUSTOMIZE): $(call tool_version_file,$(KUSTOMIZE),$(KUSTOMIZE_VERSION))
+	@GOBIN=$(abspath $(TOOLS_BIN)) go install sigs.k8s.io/kustomize/kustomize/v5@$(KUSTOMIZE_VERSION)
 
 .PHONY: clean-tools-bin
 clean-tools-bin:
