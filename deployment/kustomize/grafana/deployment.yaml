@@ -1,0 +1,76 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: grafana
+    app.kubernetes.io/part-of: inventory
+    app.kubernetes.io/managed-by: kustomize
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        ports:
+          - containerPort: 3000
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+        image: grafana/grafana:11.0.0-ubuntu
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: provisioning-dashboards-vol
+            mountPath: /etc/grafana/provisioning/dashboards
+            readOnly: true
+          - name: provisioning-datasources-vol
+            mountPath: /etc/grafana/provisioning/datasources
+            readOnly: true
+          - name: dashboards-vol
+            mountPath: /var/lib/grafana/dashboards
+            readOnly: true
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: provisioning-dashboards-vol
+          configMap:
+            name: grafana-provisioning-dashboards
+        - name: provisioning-datasources-vol
+          configMap:
+            name: grafana-provisioning-datasources
+        - name: dashboards-vol
+          configMap:
+            name: grafana-dashboards
