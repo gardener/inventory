@@ -1,0 +1,19 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: inventory
+
+namespace: default
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - ../../../extra/prometheus/prometheus.yml
+
+resources:
+  - statefulset.yaml
+  - service.yaml
