@@ -144,7 +144,7 @@ minikube-up: $(KUSTOMIZE) $(MINIKUBE)
 	$(MAKE) minikube-load-image
 	$(KUSTOMIZE) build \
 		--load-restrictor LoadRestrictionsNone \
-		deployment/kustomize/local | $(MINIKUBE) kubectl -- apply -f -
+		deployment/kustomize/local | $(MINIKUBE) -p $(MINIKUBE_PROFILE) kubectl -- apply -f -
 
 .PHONY: minikube-down
 minikube-down: $(MINIKUBE)
