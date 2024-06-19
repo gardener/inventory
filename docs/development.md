@@ -376,36 +376,17 @@ scheduler.
 
 # Local Environment
 
-You can start a local environment using the provided
-[Docker Compose](https://docs.docker.com/compose/) manifest.
+Local development environment can be started either in
+[Docker Compose](https://docs.docker.com/compose/), a Kubernetes cluster via
+[minikube](https://minikube.sigs.k8s.io/), or run the services in
+standalone mode locally.
 
-The CLI tool uses a configuration file, which describes the settings of the
-various components.
+If you are running the services in standalone mode on the local system, then
+make sure to provide a valid configuration file before starting them up.
 
-The following sample config file should get you started.
-
-``` yaml
----
-version: v1alpha1
-debug: false
-
-redis:
-  endpoint: 127.0.0.1:6379
-
-database:
-  dsn: "postgresql://inventory:p4ssw0rd@localhost:5432/inventory?sslmode=disable"
-  migration_dir: ./internal/pkg/migrations
-
-worker:
-  concurrency: 10
-```
-
-You can also use the [examples/config.yaml](../examples/config.yaml) file as a
-starting point.
-
-The config file can be set either by specifying `--config|--file` option when
-invoking the `inventory` CLI, or via setting the `INVENTORY_CONFIG` env
-variable.
+You can use the [examples/config.yaml](../examples/config.yaml) file as a
+starting point. The configuration file can be specified via the
+`INVENTORY_CONFIG` env var as well.
 
 In order to make development easier it is recommended to use
 [direnv](https://direnv.net/) along with a `.envrc` file.
@@ -416,6 +397,11 @@ Here's a sample `.envrc` file, which you can customize.
 # .envrc
 export INVENTORY_CONFIG=/path/to/inventory/config.yaml
 ```
+
+## Docker Compose
+
+You can start a dev environment using the provided
+[Docker Compose](https://docs.docker.com/compose/) manifest.
 
 The AWS tasks expect that you already have a shared configuration and
 credentials files configured in `~/.aws/config` and `~/.aws/credentials`
@@ -452,6 +438,30 @@ your local system.
 | http://localhost:3000/        | Grafana UI                  |
 | http://localhost:9090/        | Prometheus UI               |
 | http://localhost:7080/        | pgAdmin UI                  |
+
+## minikube
+
+In order to start a dev environment with
+[minikube](https://minikube.sigs.k8s.io/) execute the following command.
+
+``` shell
+make minikube-up
+```
+
+> NOTE: The kustomize manifests for Grafana, Prometheus, PostgreSQL and Redis,
+> which can be found in the [deployment/kustomize](../deployment/kustomize)
+> directory are meant to be used in local dev environments only. For production
+> environments it is recommended that you use the respective Kubernetes
+> operators instead.
+
+The command above will create a new `minikube` cluster with profile `inventory`,
+build the latest image, load it into the node and deploy the services.
+
+In order to tear down the environment execute the following command.
+
+``` shell
+make minikube-down
+```
 
 # Testing
 
