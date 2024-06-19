@@ -1,11 +1,16 @@
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package tasks
 
 import (
 	"context"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/uptrace/bun"
+
+	"github.com/gardener/inventory/pkg/gardener/models"
 )
 
 // LinkShootWithProject creates the relationship between the Gardener Shoot and

@@ -1,12 +1,17 @@
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package utils
 
 import (
 	"context"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/clients"
 	"github.com/hibiken/asynq"
 	"github.com/uptrace/bun"
+
+	"github.com/gardener/inventory/pkg/clients"
 )
 
 // TaskConstructor is a function which creates and returns a new [asynq.Task].
