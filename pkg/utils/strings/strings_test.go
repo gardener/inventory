@@ -10,7 +10,7 @@ var flagtests = []struct {
     in *string
     out string
 }{
-    {nil, ""},
+    {nil, "a"},
     {&emptyString, ""},
     {&nonEmptyString, nonEmptyString},
 }
@@ -20,7 +20,7 @@ func TestStringFromPointer(t *testing.T) {
         out := StringFromPointer(tt.in)
 
         if tt.out != out {
-            t.Fatalf(`StringFromPointer(%q) == %q, expected %q.`, tt.in, out, tt.out)
+            t.Fatalf(`StringFromPointer(%v) == %q, expected %q.`, tt.in, out, tt.out)
         }
     }
 }
