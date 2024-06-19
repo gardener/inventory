@@ -3,10 +3,10 @@ version: v1alpha1
 debug: false
 
 redis:
-  endpoint: 127.0.0.1:6379
+  endpoint: redis:6379
 
 database:
-  dsn: "postgresql://inventory:p4ssw0rd@localhost:5432/inventory?sslmode=disable"
+  dsn: "postgresql://inventory:p4ssw0rd@postgres:5432/inventory?sslmode=disable"
   migration_dir: ./internal/pkg/migrations
 
 worker:
