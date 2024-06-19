@@ -4,18 +4,23 @@ import (
     "testing"
 )
 
-func TestStringFromPointerNil(t *testing.T) {
-    var ptr *string
-    res := StringFromPointer(ptr)
-    if res != "" {
-        t.Fatalf(`StringFromPointer(nil) == %q, expected empty string.`, res)
-    }
+var emptyString = ""
+var nonEmptyString = "abc"
+var flagtests = []struct {
+    in *string
+    out string
+}{
+    {nil, ""},
+    {&emptyString, ""},
+    {&nonEmptyString, nonEmptyString},
 }
 
-func TestStringFromPointerToEmpty(t *testing.T) {
-    input := ""
-    res := StringFromPointer(&input)
-    if res != "" {
-        t.Fatalf(`StringFromPointer with empty string returned %q, expected empty string.`, res)
+func TestStringFromPointer(t *testing.T) {
+    for _, tt := range flagtests {
+        out := StringFromPointer(tt.in)
+
+        if tt.out != out {
+            t.Fatalf(`StringFromPointer(%q) == %q, expected %q.`, tt.in, out, tt.out)
+        }
     }
 }
