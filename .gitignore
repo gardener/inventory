@@ -27,8 +27,8 @@ go.work.sum
 dev/local/postgres
 dev/local/redis
 
+# Dev tools
+dev/tools
+
 # direnv
 .envrc
-
-# tools
-tools/
