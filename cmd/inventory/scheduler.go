@@ -5,8 +5,10 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
@@ -112,8 +114,10 @@ func NewSchedulerCommand() *cli.Command {
 						"PREV",
 						"NEXT",
 					}
+
 					table := newTableWriter(os.Stdout, headers)
 					for _, item := range items {
+						nextIn := time.Until(item.Next)
 						prev := item.Prev.String()
 						if item.Prev.IsZero() {
 							prev = na
@@ -123,7 +127,7 @@ func NewSchedulerCommand() *cli.Command {
 							item.Spec,
 							item.Task.Type(),
 							prev,
-							item.Next.String(),
+							fmt.Sprintf("In %s", nextIn.String()),
 						}
 						table.Append(row)
 					}
