@@ -46,6 +46,10 @@ type Config struct {
 
 	// VirtualGarden represents the virtual garden configuration.
 	VirtualGarden VirtualGardenConfig `yaml:"virtual_garden"`
+
+	// Dashboard represents the configuration for the Dashboard
+	// service.
+	Dashboard DashboardConfig `yaml:"dashboard"`
 }
 
 // RedisConfig provides Redis specific configuration settings.
@@ -97,6 +101,19 @@ type VirtualGardenConfig struct {
 	Kubeconfig string `yaml:"kubeconfig"`
 	// Environment is the environment of the running Garden
 	Environment string `yaml:"environment"`
+}
+
+// DashboardConfig provides the Dashboard service configuration.
+type DashboardConfig struct {
+	// Address specifies the address on which the services binds
+	Address string `yaml:"address"`
+
+	// ReadOnly specifies whether to run the Dashboard UI in read-only mode.
+	ReadOnly bool `yaml:"read_only"`
+
+	// PrometheusEndpoint specifies the Prometheus endpoint from which the
+	// Dashboard UI will read metrics.
+	PrometheusEndpoint string `yaml:"prometheus_endpoint"`
 }
 
 // Parse parses the config from the given path.
