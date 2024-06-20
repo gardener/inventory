@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -50,6 +51,10 @@ var errInvalidWorkerConcurrency = errors.New("invalid worker concurrency")
 // endpoint.
 var errInvalidRedisEndpoint = errors.New("invalid or missing redis endpoint")
 
+// errNoDashboardAddress is an error, which is returned when the Dashboard
+// service was not configured with a bind address.
+var errNoDashboardAddress = errors.New("no bind address specified")
+
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
 	conf := ctx.Context.Value(configKey{}).(*config.Config)
@@ -72,6 +77,16 @@ func validateWorkerConfig(conf *config.Config) error {
 	}
 
 	return nil
+}
+
+// validateDashboardConfig validates the Dashboard service configuration.
+func validateDashboardConfig(conf *config.Config) error {
+	if conf.Dashboard.Address == "" {
+		return errNoDashboardAddress
+	}
+
+	_, err := url.Parse(conf.Dashboard.PrometheusEndpoint)
+	return err
 }
 
 // validateRedisConfig validates the Redis configuration settings.

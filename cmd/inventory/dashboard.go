@@ -24,27 +24,10 @@ func NewDashboardCommand() *cli.Command {
 		Aliases: []string{"ui"},
 		Before: func(ctx *cli.Context) error {
 			conf := getConfig(ctx)
-			return validateRedisConfig(conf)
-		},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "address",
-				Usage:   "bind server to this address",
-				Value:   ":8080",
-				EnvVars: []string{"ADDRESS"},
-			},
-			&cli.BoolFlag{
-				Name:    "read-only",
-				Usage:   "if set to true, ui will run in read-only mode",
-				Value:   false,
-				EnvVars: []string{"READ_ONLY"},
-			},
-			&cli.StringFlag{
-				Name:    "prometheus-endpoint",
-				Usage:   "prometheus endpoint to query data from",
-				Value:   "",
-				EnvVars: []string{"PROMETHEUS_ENDPOINT"},
-			},
+			if err := validateRedisConfig(conf); err != nil {
+				return err
+			}
+			return validateDashboardConfig(conf)
 		},
 		Subcommands: []*cli.Command{
 			{
@@ -56,16 +39,12 @@ func NewDashboardCommand() *cli.Command {
 					redisClientOpt := newRedisClientOpt(conf)
 					inspector := newInspector(conf)
 
-					address := ctx.String("address")
-					readOnly := ctx.Bool("read-only")
-					prometheusEndpoint := ctx.String("prometheus-endpoint")
-
 					// Asynq UI
 					opts := asynqmon.Options{
 						RootPath:          "/",
 						RedisConnOpt:      redisClientOpt,
-						ReadOnly:          readOnly,
-						PrometheusAddress: prometheusEndpoint,
+						ReadOnly:          conf.Dashboard.ReadOnly,
+						PrometheusAddress: conf.Dashboard.PrometheusEndpoint,
 					}
 					ui := asynqmon.New(opts)
 
@@ -84,11 +63,11 @@ func NewDashboardCommand() *cli.Command {
 					mux.Handle("/metrics", promhttp.HandlerFor(promRegistry, promhttp.HandlerOpts{}))
 
 					srv := &http.Server{
-						Addr:    address,
+						Addr:    conf.Dashboard.Address,
 						Handler: mux,
 					}
 
-					slog.Info("starting server", "address", address, "ui", "/", "metrics", "/metrics")
+					slog.Info("starting server", "address", conf.Dashboard.Address, "ui", "/", "metrics", "/metrics")
 
 					return srv.ListenAndServe()
 				},
