@@ -457,6 +457,12 @@ make minikube-up
 The command above will create a new `minikube` cluster with profile `inventory`,
 build the latest image, load it into the node and deploy the services.
 
+By default the `minikube-up` target will use the
+[deployment/kustomization/local](../deployment/kustomization/local) overlay to
+bring up the services. If you want to use a different overlay instead, you
+should set the `KUSTOMIZE_OVERLAY` variable to the name of the overlay you want
+to use.
+
 In order to tear down the environment execute the following command.
 
 ``` shell
