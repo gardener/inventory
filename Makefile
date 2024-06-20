@@ -57,7 +57,7 @@ $(LOCAL_BIN):
 $(TOOLS_BIN):
 	mkdir -p $(TOOLS_BIN)
 
-$(TOOLS_BIN)/.version_%: $(TOOLS_BIN)
+$(TOOLS_BIN)/.version_%: | $(TOOLS_BIN)
 	@version_file=$@; rm -f $${version_file%_*}*
 	@touch $@
 
