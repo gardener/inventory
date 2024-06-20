@@ -12,6 +12,11 @@ database:
 worker:
   concurrency: 100
 
+dashboard:
+  address: ":8080"
+  read_only: false
+  prometheus_endpoint: http://prometheus:9090/
+
 scheduler:
   jobs:
     # AWS
