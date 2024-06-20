@@ -2,7 +2,7 @@
 REPO_ROOT                    := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 IMAGE                        ?= europe-docker.pkg.dev/gardener-project/releases/gardener/inventory
 LOCAL_BIN                    ?= $(REPO_ROOT)/bin
-TOOLS_BIN		     ?= $(REPO_ROOT)/dev/tools
+TOOLS_BIN		     ?= $(REPO_ROOT)/bin/tools
 BINARY                       ?= $(LOCAL_BIN)/inventory
 SRC_DIRS                     := $(shell go list -f '{{.Dir}}' ./...)
 VERSION                      := $(shell cat VERSION)
