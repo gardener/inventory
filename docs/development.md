@@ -3,7 +3,7 @@
 This document provides details to get you started with the development of the
 Inventory system.
 
-The development in summary is:
+The development flow in summary is:
 
 1. Define models and then register them
 2. Create schema migration for the models
@@ -458,7 +458,7 @@ The command above will create a new `minikube` cluster with profile `inventory`,
 build the latest image, load it into the node and deploy the services.
 
 By default the `minikube-up` target will use the
-[deployment/kustomization/local](../deployment/kustomization/local) overlay to
+[deployment/kustomize/local](../deployment/kustomize/local) overlay to
 bring up the services. If you want to use a different overlay instead, you
 should set the `KUSTOMIZE_OVERLAY` variable to the name of the overlay you want
 to use.
