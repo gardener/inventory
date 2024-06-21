@@ -11,7 +11,7 @@ import (
 func TestStringFromPointer(t *testing.T) {
 	emptyString := ""
 	nonEmptyString := "abc"
-	flagtests := []struct {
+	testCases := []struct {
 		in  *string
 		out string
 	}{
@@ -20,7 +20,7 @@ func TestStringFromPointer(t *testing.T) {
 		{&nonEmptyString, nonEmptyString},
 	}
 
-	for _, tt := range flagtests {
+	for _, tt := range testCases {
 		out := StringFromPointer(tt.in)
 
 		if tt.out != out {
