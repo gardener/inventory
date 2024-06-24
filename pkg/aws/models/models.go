@@ -158,6 +158,7 @@ type Instance struct {
 	Region       *Region `bun:"rel:has-one,join:region_name=name"`
 	VPC          *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id"`
 	Subnet       *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id"`
+	ImageID      string  `bun:"image_id, notnull"`
 }
 
 func init() {
