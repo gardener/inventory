@@ -82,6 +82,15 @@ type InstanceToImage struct {
 	ImageID    uint64 `bun:"image_id,notnull,unique:l_aws_instance_to_image_key"`
 }
 
+// ImageToRegion represents a link table connecting the Image with Region.
+type ImageToRegion struct {
+	bun.BaseModel `bun:"table:l_aws_image_to_region"`
+	coremodels.Model
+
+	ImageID  uint64 `bun:"image_id,notnull,unique:l_aws_image_to_region_key"`
+	RegionID uint64 `bun:"region_id,notnull,unique:l_aws_image_to_region_key"`
+}
+
 // Region represents an AWS Region
 type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
@@ -169,6 +178,7 @@ type Instance struct {
 	ImageID      string  `bun:"image_id, notnull"`
 }
 
+// Image represents an AWS AMI
 type Image struct {
 	bun.BaseModel `bun:"table:aws_image"`
 	coremodels.Model
@@ -180,6 +190,8 @@ type Image struct {
 	ImageType      string      `bun:"image_type,notnull"`
 	RootDeviceType string      `bun:"root_device_type,notnull"`
 	Description    string      `bun:"description,notnull"`
+	RegionName     string      `bun:"region_name,notnull"`
+	Region         *Region     `bun:"rel:has-one,join:region_name=name"`
 	Instances      []*Instance `bun:"rel:has-many,join:image_id=image_id"`
 }
 
@@ -201,4 +213,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_subnet", &InstanceToSubnet{})
 	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_region", &InstanceToRegion{})
 	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_image", &InstanceToImage{})
+	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_region", &ImageToRegion{})
 }
