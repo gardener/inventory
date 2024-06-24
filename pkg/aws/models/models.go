@@ -74,6 +74,14 @@ type InstanceToRegion struct {
 	RegionID   uint64 `bun:"region_id,notnull,unique:l_aws_instance_to_region_key"`
 }
 
+type InstanceToImage struct {
+	bun.BaseModel `bun:"table:l_aws_instance_to_image"`
+	coremodels.Model
+
+	InstanceID uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_image_key"`
+	ImageID    uint64 `bun:"image_id,notnull,unique:l_aws_instance_to_image_key"`
+}
+
 // Region represents an AWS Region
 type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
@@ -161,6 +169,20 @@ type Instance struct {
 	ImageID      string  `bun:"image_id, notnull"`
 }
 
+type Image struct {
+	bun.BaseModel `bun:"table:aws_image"`
+	coremodels.Model
+
+	ImageID        string      `bun:"image_id,notnull,unique"`
+	Name           string      `bun:"name,notnull"`
+	Source         string      `bun:"source,notnull"`
+	OwnerID        string      `bun:"owner_id,notnull"`
+	ImageType      string      `bun:"image_type,notnull"`
+	RootDeviceType string      `bun:"root_device_type,notnull"`
+	Description    string      `bun:"description,notnull"`
+	Instances      []*Instance `bun:"rel:has-many,join:image_id=image_id"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("aws:model:region", &Region{})
@@ -168,6 +190,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:vpc", &VPC{})
 	registry.ModelRegistry.MustRegister("aws:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("aws:model:instance", &Instance{})
+	registry.ModelRegistry.MustRegister("aws:model:image", &Image{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("aws:model:link_region_to_az", &RegionToAZ{})
@@ -177,4 +200,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:link_subnet_to_az", &SubnetToAZ{})
 	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_subnet", &InstanceToSubnet{})
 	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_region", &InstanceToRegion{})
+	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_image", &InstanceToImage{})
 }
