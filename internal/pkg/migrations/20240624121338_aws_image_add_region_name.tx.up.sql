@@ -1,0 +1,1 @@
+ALTER TABLE aws_image ADD COLUMN region_name VARCHAR NOT NULL DEFAULT '';
