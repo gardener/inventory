@@ -97,6 +97,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 				VpcID:        strings.StringFromPointer(instance.VpcId),
 				Platform:     strings.StringFromPointer(instance.PlatformDetails),
 				RegionName:   region,
+				ImageID:      strings.StringFromPointer(instance.ImageId),
 			}
 			instances = append(instances, modelInstance)
 		}
@@ -117,6 +118,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		Set("vpc_id = EXCLUDED.vpc_id").
 		Set("platform = EXCLUDED.platform").
 		Set("region_name = EXCLUDED.region_name").
+		Set("image_id = EXCLUDED.image_id").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
