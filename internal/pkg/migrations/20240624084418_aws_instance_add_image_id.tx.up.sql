@@ -1,0 +1,1 @@
+ALTER TABLE aws_instance ADD COLUMN image_id VARCHAR NOT NULL DEFAULT '';
