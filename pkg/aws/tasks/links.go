@@ -341,3 +341,95 @@ func LinkInstanceWithRegion(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+func LinkImageWithRegion(ctx context.Context, db *bun.DB) error {
+	var images []models.Image
+	err := db.NewSelect().
+		Model(&images).
+		Relation("Region").
+		Where("region.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.ImageToRegion, 0, len(images))
+	for _, image := range images {
+		link := models.ImageToRegion{
+			ImageID:  image.ID,
+			RegionID: image.Region.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (image_id, region_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("Linked AWS images (AMIs) with region", "count", count)
+
+	return nil
+}
+
+func LinkInstanceWithImage(ctx context.Context, db *bun.DB) error {
+	var instances []models.Instance
+	err := db.NewSelect().
+		Model(&instances).
+		Relation("Image").
+		Where("image.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.InstanceToImage, 0, len(instances))
+	for _, instance := range instances {
+		link := models.InstanceToImage{
+			InstanceID: instance.ID,
+			ImageID:    instance.Image.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (instance_id, image_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws instance with image", "count", count)
+
+	return nil
+}
