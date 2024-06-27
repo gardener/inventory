@@ -35,6 +35,12 @@ scheduler:
     - name: "aws:task:collect-instances"
       spec: "@every 1h"
       desc: "Collect AWS EC2 Instances"
+    - name: "aws:task:collect-images"
+      spec: "@every 1h"
+      desc: "Collect AWS AMIs"
+      payload: >-
+        image_owners:
+          - 544319711298
     - name: "aws:task:link-all"
       spec: "@every 30m"
       desc: "Link all AWS models"
@@ -71,6 +77,8 @@ scheduler:
           - name: "aws:model:subnet"
             duration: 24h
           - name: "aws:model:instance"
+            duration: 24h
+          - name: "aws:model:image"
             duration: 24h
           # Gardener
           - name: "g:model:project"
