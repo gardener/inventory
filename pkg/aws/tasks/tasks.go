@@ -34,7 +34,6 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectVpcsTask,
 		NewCollectSubnetsTask,
 		NewCollectInstancesTask,
-		NewCollectImagesTask,
 	}
 
 	return utils.Enqueue(taskFns)

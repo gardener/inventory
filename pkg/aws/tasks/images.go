@@ -67,6 +67,10 @@ func HandleCollectImagesForRegionTask(ctx context.Context, t *asynq.Task) error 
 		return fmt.Errorf("yaml.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
+	if payload.Region == "" {
+		return ErrMissingRegion
+	}
+
 	if payload.ImageOwners == nil || len(payload.ImageOwners) == 0 {
 		return ErrMissingOwners
 	}
