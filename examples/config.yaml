@@ -38,6 +38,7 @@ scheduler:
     - name: "aws:task:collect-images"
       spec: "@every 1h"
       desc: "Collect AWS AMIs"
+      # this ID was taken from the AWS Web UI as the owner of garden-linux images
       payload: >-
         image_owners:
           - 544319711298
