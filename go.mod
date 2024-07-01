@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/aws/aws-sdk-go-v2 v1.30.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.23
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.165.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.167.1
 	github.com/aws/smithy-go v1.20.3
 	github.com/gardener/gardener v1.96.2
 	github.com/gardener/machine-controller-manager v0.53.0
