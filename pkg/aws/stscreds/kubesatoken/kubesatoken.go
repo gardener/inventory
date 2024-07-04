@@ -127,3 +127,61 @@ func NewTokenRetriever(opts ...TokenRetrieverOption) (*TokenRetriever, error) {
 
 	return tokenRetriever, nil
 }
+
+// WithNamespace configures the [TokenRetriever] to use the specified namespace.
+func WithNamespace(namespace string) TokenRetrieverOption {
+	opt := func(t *TokenRetriever) {
+		t.namespace = namespace
+	}
+
+	return opt
+}
+
+// WithServiceAccount configures the [TokenRetriever] to use the specified
+// service account name.
+func WithServiceAccount(serviceAccount string) TokenRetrieverOption {
+	opt := func(t *TokenRetriever) {
+		t.serviceAccount = serviceAccount
+	}
+
+	return opt
+}
+
+// WithKubeconfig configures the [TokenRetriever] to use the given kubeconfig
+// file.
+func WithKubeconfig(kubeconfigFile string) TokenRetrieverOption {
+	opt := func(t *TokenRetriever) {
+		t.kubeconfigFile = kubeconfigFile
+	}
+
+	return opt
+}
+
+// WithAudiences configures the [TokenRetriever] to use the given audiences.
+func WithAudiences(audiences []string) TokenRetrieverOption {
+	opt := func(t *TokenRetriever) {
+		t.audiences = audiences
+	}
+
+	return opt
+}
+
+// WithTokenExpiration configures the [TokenRetriever] to use the given token
+// expiration duration.
+func WithTokenExpiration(duration time.Duration) TokenRetrieverOption {
+	opt := func(t *TokenRetriever) {
+		t.duration = duration
+	}
+
+	return opt
+}
+
+// WithClient configures the [TokenRetriever] to use the given Kubernetes
+// client.
+func WithClient(client *kubernetes.Clientset) TokenRetrieverOption {
+	opt := func(t *TokenRetriever) {
+		t.kubeClient = client
+	}
+
+	return opt
+}
