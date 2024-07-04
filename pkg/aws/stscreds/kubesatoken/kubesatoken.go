@@ -113,6 +113,12 @@ func NewTokenRetriever(opts ...TokenRetrieverOption) (*TokenRetriever, error) {
 		return nil, ErrNoServiceAccount
 	}
 
+	// We have a configured client, we are done here.
+	if tokenRetriever.kubeClient != nil {
+		return tokenRetriever, nil
+	}
+
+	// ... otherwise, create a new Kubernetes client
 	config, err := clientcmd.BuildConfigFromFlags("", tokenRetriever.kubeconfigFile)
 	if err != nil {
 		return nil, err
