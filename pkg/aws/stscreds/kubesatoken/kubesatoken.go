@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
 // Package kubesatoken implements utilities for retrieving Kubernetes service
 // account tokens.
 //
@@ -114,7 +118,7 @@ func (t *TokenRetriever) GetIdentityToken() ([]byte, error) {
 
 // TokenRetrieverOption is a function which configures a [TokenRetriever]
 // instance.
-type TokenRetrieverOption func(k *TokenRetriever)
+type TokenRetrieverOption func(*TokenRetriever)
 
 // NewTokenRetriever creates a new [TokenRetriever] and configures it using the
 // provided options.
