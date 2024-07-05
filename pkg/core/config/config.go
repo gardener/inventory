@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -50,6 +51,73 @@ type Config struct {
 	// Dashboard represents the configuration for the Dashboard
 	// service.
 	Dashboard DashboardConfig `yaml:"dashboard"`
+
+	// AWS represents the AWS specific configuration settings.
+	AWS AWSConfig `yaml:"aws"`
+}
+
+// AWSConfig provides AWS specific configuration settings.
+type AWSConfig struct {
+	// Region is the region to use when initializing the AWS client.
+	Region string `yaml:"region"`
+
+	// DefaultRegion is the default region to use when initializing the AWS client.
+	DefaultRegion string `yaml:"default_region"`
+
+	// AppID is an optional application specific identifier.
+	AppID string `yaml:"app_id"`
+
+	// Credentials specifies the AWS credentials configuration.
+	Credentials AWSCredentialsConfig `yaml:"credentials"`
+}
+
+// AWSCredentialsConfig provides credentials specific configuration for the AWS
+// client.
+type AWSCredentialsConfig struct {
+	// Provider represents the credentials provider. Currently supported
+	// providers are `default' and `kube_sa_token'.
+	//
+	// When using the `default' credentials provider the AWS client will be
+	// initialized using the shared credentials file at ~/.aws/credentials.
+	//
+	// With the `kube_sa_token' credentials provider the AWS client will be
+	// initialized with Web Identity Credentials Provider, which uses
+	// Kubernetes service account tokens, which are then exchanged for
+	// temporary security credentials when communicating with the AWS
+	// services.
+	Provider string `yaml:"provider"`
+
+	// KubeSATokenProvider provides the configuration settings for the
+	// Kubernetes Service Account Token Credentials Provider.
+	KubeSATokenProvider AWSKubeSATokenProviderConfig `yaml:"kube_sa_token"`
+}
+
+// AWSKubeSATokenProviderConfig represents the configuration settings for the
+// AWS Kubernetes Service Account Token credentials provider.
+type AWSKubeSATokenProviderConfig struct {
+	// Kubeconfig specifies the path to a Kubeconfig file to use when
+	// creating the underlying Kubernetes client. If empty, the Kubernetes
+	// client will be created using in-cluster configuration.
+	Kubeconfig string `yaml:"kubeconfig"`
+
+	// ServiceAccount specifies the Kubernetes service account name.
+	ServiceAccount string `yaml:"service_account"`
+
+	// Namespace specifies the Kubernetes namespace of the service account.
+	Namespace string `yaml:"namespace"`
+
+	// Duration specifies the expiry duration for the service account token.
+	Duration time.Duration `yaml:"duration"`
+
+	// Audiences specifies the list of audiences the service account token
+	// will be issued for.
+	Audiences []string `yaml:"audiences"`
+
+	// RoleARN specifies the IAM Role ARN to be assumed.
+	RoleARN string `yaml:"role_arn"`
+
+	// RoleSessionName is a unique name for the session.
+	RoleSessionName string `yaml:"role_session_name"`
 }
 
 // RedisConfig provides Redis specific configuration settings.
