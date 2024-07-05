@@ -39,6 +39,11 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+const (
+	// ProviderName specifies the name of the Credentials Provider.
+	ProviderName = "kube_sa_token"
+)
+
 // ErrNoServiceAccount is an error, which is returned when the
 // [TokenRetriever] was configured without a service account.
 var ErrNoServiceAccount = errors.New("no service account specified")
@@ -238,7 +243,7 @@ type CredentialsProviderSpec struct {
 	TokenRetriever stscreds.IdentityTokenRetriever
 }
 
-// NewCredentialsProvider creates a new [stscreds.CredentialsProvider] based on
+// NewCredentialsProvider creates a new [aws.CredentialsProvider] based on
 // the provided spec.
 func NewCredentialsProvider(spec *CredentialsProviderSpec) (aws.CredentialsProvider, error) {
 	if spec.Client == nil {
