@@ -14,6 +14,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	// DefaultAWSCredentialsProvider is the name of the default AWS
+	// Credentials Provider.
+	DefaultAWSCredentialsProvider = "default"
+
+	// DefaultAWSAppID is the name of the default AWS App ID.
+	DefaultAWSAppID = "gardener-inventory"
+)
+
 // ErrNoConfigVersion error is returned when the configuration does not specify
 // config format version.
 var ErrNoConfigVersion = errors.New("config format version not specified")
@@ -204,9 +213,18 @@ func Parse(path string) (*Config, error) {
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedVersion, conf.Version)
 	}
 
-	// Set defaults
+	// Worker defaults
 	if conf.Worker.Concurrency <= 0 {
 		conf.Worker.Concurrency = runtime.NumCPU()
+	}
+
+	// AWS defaults
+	if conf.AWS.AppID == "" {
+		conf.AWS.AppID = DefaultAWSAppID
+	}
+
+	if conf.AWS.Credentials.Provider == "" {
+		conf.AWS.Credentials.Provider = DefaultAWSCredentialsProvider
 	}
 
 	return &conf, nil
