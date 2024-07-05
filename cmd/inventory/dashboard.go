@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/hibiken/asynq/x/metrics"
 	"github.com/hibiken/asynqmon"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,10 +25,18 @@ func NewDashboardCommand() *cli.Command {
 		Aliases: []string{"ui"},
 		Before: func(ctx *cli.Context) error {
 			conf := getConfig(ctx)
-			if err := validateRedisConfig(conf); err != nil {
-				return err
+			validatorFuncs := []func(c *config.Config) error{
+				validateRedisConfig,
+				validateDashboardConfig,
 			}
-			return validateDashboardConfig(conf)
+
+			for _, validator := range validatorFuncs {
+				if err := validator(conf); err != nil {
+					return err
+				}
+			}
+
+			return nil
 		},
 		Subcommands: []*cli.Command{
 			{
