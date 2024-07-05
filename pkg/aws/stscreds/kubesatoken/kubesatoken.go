@@ -43,6 +43,10 @@ import (
 // [TokenRetriever] was configured without a service account.
 var ErrNoServiceAccount = errors.New("no service account specified")
 
+// ErrNoNamespace is an error, which is returned when the [TokenRetriever] was
+// configured without namespace for the service account.
+var ErrNoNamespace = errors.New("no namespace specified")
+
 // ErrNoSTSClient is an error, which is returned when creating a new credentials
 // provider without the required AWS STS client.
 var ErrNoSTSClient = errors.New("no STS client specified")
@@ -130,6 +134,10 @@ func NewTokenRetriever(opts ...TokenRetrieverOption) (*TokenRetriever, error) {
 
 	if tokenRetriever.serviceAccount == "" {
 		return nil, ErrNoServiceAccount
+	}
+
+	if tokenRetriever.namespace == "" {
+		return nil, ErrNoNamespace
 	}
 
 	// We have a configured client, we are done here.
