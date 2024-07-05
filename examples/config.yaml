@@ -17,6 +17,26 @@ dashboard:
   read_only: false
   prometheus_endpoint: http://prometheus:9090/
 
+aws:
+  region: eu-central-1  # Frankfurt
+  default_region: eu-central-1  # Frankfurt
+  app_id: gardener-inventory  # Optional application specific identifier
+  credentials:
+    # The currently supported providers are `default' and `kube_sa_token'.
+    provider: default
+
+    # Example configuration for `kube_sa_token' provider
+    kube_sa_token:
+      kubeconfig_file: /path/to/kubeconfig
+      namespace: inventory
+      service_account: inventory-worker
+      duration: 30m
+      audiences:
+        - foo
+        - bar
+      role_arn: role-arn-goes-here
+      role_session_name: role-session-name-goes-here
+
 scheduler:
   jobs:
     # AWS
@@ -94,5 +114,6 @@ scheduler:
 virtual_garden:
   # Path to Virtual Garden kubeconfig
   kubeconfig:
+
   # Environment type (dev, staging, canary, live)
   environment: dev
