@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
 
-	awsclients "github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
@@ -63,7 +62,7 @@ func HandleCollectInstancesForRegionTask(ctx context.Context, t *asynq.Task) err
 func collectInstancesForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS instances ", "region", region)
 
-	instancesOutput, err := awsclients.Ec2.DescribeInstances(ctx,
+	instancesOutput, err := clients.EC2.DescribeInstances(ctx,
 		&ec2.DescribeInstancesInput{},
 		func(o *ec2.Options) {
 			o.Region = region

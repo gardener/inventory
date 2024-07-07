@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
 
-	awsclients "github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
@@ -88,7 +87,7 @@ func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionP
 		owners = append(owners, fmt.Sprintf("%d", o))
 	}
 
-	imagesOutput, err := awsclients.Ec2.DescribeImages(ctx,
+	imagesOutput, err := clients.EC2.DescribeImages(ctx,
 		&ec2.DescribeImagesInput{
 			Owners: owners,
 		},
