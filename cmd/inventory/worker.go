@@ -15,6 +15,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
@@ -116,11 +117,19 @@ func NewWorkerCommand() *cli.Command {
 				Aliases: []string{"s"},
 				Before: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					if err := validateWorkerConfig(conf); err != nil {
-						return err
+					validatorFuncs := []func(c *config.Config) error{
+						validateWorkerConfig,
+						validateDBConfig,
+						validateAWSConfig,
 					}
 
-					return validateDBConfig(conf)
+					for _, validator := range validatorFuncs {
+						if err := validator(conf); err != nil {
+							return err
+						}
+					}
+
+					return nil
 				},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
