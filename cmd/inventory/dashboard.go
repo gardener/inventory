@@ -8,13 +8,14 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/hibiken/asynq/x/metrics"
 	"github.com/hibiken/asynqmon"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/urfave/cli/v2"
+
+	"github.com/gardener/inventory/pkg/core/config"
 )
 
 // NewDashboardCommand returns a new command for interfacing with the dashboard.

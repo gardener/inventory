@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
+	"gopkg.in/yaml.v3"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
