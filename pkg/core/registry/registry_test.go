@@ -12,7 +12,9 @@ import (
 func TestRegistryLengthAfterAdd(t *testing.T) {
 	registry := New[string, int]()
 
-	registry.Register("key", 1)
+	if err := registry.Register("key", 1); err != nil {
+		t.Fatal(err)
+	}
 
 	if registry.Length() != 1 {
 		t.Fatalf("Adding one key/value pair to a new registry results in length different than 1.")
@@ -25,7 +27,9 @@ func TestRegistryGetAfterAdd(t *testing.T) {
 	const key = "key"
 	const value = 42
 
-	registry.Register(key, value)
+	if err := registry.Register(key, value); err != nil {
+		t.Fatal(err)
+	}
 
 	outValue, exists := registry.Get(key)
 	if !exists {
@@ -49,7 +53,10 @@ func TestUnregisterReducesLength(t *testing.T) {
 	registry := New[string, int]()
 
 	key := "key"
-	registry.Register(key, 1)
+	if err := registry.Register(key, 1); err != nil {
+		t.Fatal(err)
+	}
+
 	registry.Unregister(key)
 
 	if registry.Length() != 0 {
@@ -61,7 +68,9 @@ func TestMustRegisterPanicsOnDuplicateKey(t *testing.T) {
 	registry := New[string, int]()
 
 	key := "key"
-	registry.Register(key, 1)
+	if err := registry.Register(key, 1); err != nil {
+		t.Fatal(err)
+	}
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -74,7 +83,9 @@ func TestMustRegisterPanicsOnDuplicateKey(t *testing.T) {
 
 func TestRangeStopsOnError(t *testing.T) {
 	registry := New[string, int]()
-	registry.Register("key", 1)
+	if err := registry.Register("key", 1); err != nil {
+		t.Fatal(err)
+	}
 
 	rangeFunc := func(key string, val int) error {
 		return ErrStopIteration
@@ -89,7 +100,9 @@ func TestRangeStopsOnError(t *testing.T) {
 
 func TestRangeReturnNilOnNoError(t *testing.T) {
 	registry := New[string, int]()
-	registry.Register("key", 1)
+	if err := registry.Register("key", 1); err != nil {
+		t.Fatal(err)
+	}
 
 	rangeFunc := func(key string, val int) error {
 		return nil
@@ -104,7 +117,9 @@ func TestRangeReturnNilOnNoError(t *testing.T) {
 
 func TestRangePassesError(t *testing.T) {
 	registry := New[string, int]()
-	registry.Register("key", 1)
+	if err := registry.Register("key", 1); err != nil {
+		t.Fatal(err)
+	}
 
 	err := errors.New("custom error")
 
