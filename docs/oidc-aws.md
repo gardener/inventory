@@ -27,7 +27,7 @@ You need a Kubernetes cluster with
 flag enabled.
 
 The Inventory system system will be deployed in the Kubernetes cluster. Check
-the [deployment/kustomize](../deployments/kustomize) directory for sample
+the [deployment/kustomize](../deployment/kustomize) directory for sample
 [kustomize](https://kustomize.io/) manifests, which you can use to deploy the
 Inventory.
 
