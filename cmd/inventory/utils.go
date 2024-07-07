@@ -17,6 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
@@ -29,6 +32,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/gardener/inventory/internal/pkg/migrations"
+	"github.com/gardener/inventory/pkg/aws/stscreds/kubesatoken"
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/core/config"
 )
@@ -55,6 +59,14 @@ var errInvalidRedisEndpoint = errors.New("invalid or missing redis endpoint")
 // service was not configured with a bind address.
 var errNoDashboardAddress = errors.New("no bind address specified")
 
+// errNoAWSRegion is an error which is returned when there was no region or
+// default region configured for the AWS client.
+var errNoAWSRegion = errors.New("no AWS region specified")
+
+// errNoAWSCredentialsProvider is an error, which is returned when there was no
+// credentials provider configured for the AWS client.
+var errNoAWSCredentialsProvider = errors.New("no AWS credentials provider specified")
+
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
 	conf := ctx.Context.Value(configKey{}).(*config.Config)
@@ -65,6 +77,19 @@ func getConfig(ctx *cli.Context) *config.Config {
 func validateDBConfig(conf *config.Config) error {
 	if conf.Database.DSN == "" {
 		return errInvalidDSN
+	}
+
+	return nil
+}
+
+// validateAWSConfig validates the AWS configuration settings.
+func validateAWSConfig(conf *config.Config) error {
+	if conf.AWS.Region == "" && conf.AWS.DefaultRegion == "" {
+		return errNoAWSRegion
+	}
+
+	if conf.AWS.Credentials.Provider == "" {
+		return errNoAWSCredentialsProvider
 	}
 
 	return nil
@@ -96,6 +121,65 @@ func validateRedisConfig(conf *config.Config) error {
 	}
 
 	return nil
+}
+
+// newAWSSTSClient creates a new [sts.Client] based on the provided
+// [config.Config] spec.
+func newAWSSTSClient(conf *config.Config) *sts.Client {
+	awsConf := aws.Config{
+		Region: conf.AWS.Region,
+		AppID:  conf.AWS.AppID,
+	}
+	client := sts.NewFromConfig(awsConf)
+
+	return client
+}
+
+// newKubeSATokenCredentialsProvider creates a new [aws.CredentialsProvider],
+// which uses Kubernetes Service Account Tokens for exchanging them with
+// temporary security credentials when accessing AWS resources.
+func newKubeSATokenCredentialsProvider(conf *config.Config) (aws.CredentialsProvider, error) {
+	tokenRetriever, err := kubesatoken.NewTokenRetriever(
+		kubesatoken.WithKubeconfig(conf.AWS.Credentials.KubeSATokenProvider.Kubeconfig),
+		kubesatoken.WithServiceAccount(conf.AWS.Credentials.KubeSATokenProvider.ServiceAccount),
+		kubesatoken.WithNamespace(conf.AWS.Credentials.KubeSATokenProvider.Namespace),
+		kubesatoken.WithAudiences(conf.AWS.Credentials.KubeSATokenProvider.Audiences),
+		kubesatoken.WithTokenExpiration(conf.AWS.Credentials.KubeSATokenProvider.Duration),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	providerSpec := &kubesatoken.CredentialsProviderSpec{
+		Client:          newAWSSTSClient(conf),
+		RoleARN:         conf.AWS.Credentials.KubeSATokenProvider.RoleARN,
+		RoleSessionName: conf.AWS.Credentials.KubeSATokenProvider.RoleSessionName,
+		Duration:        conf.AWS.Credentials.KubeSATokenProvider.Duration,
+		TokenRetriever:  tokenRetriever,
+	}
+
+	return kubesatoken.NewCredentialsProvider(providerSpec)
+}
+
+// loadAWSDefaultConfig loads the AWS configurations and returns it.
+func loadAWSDefaultConfig(ctx context.Context, conf *config.Config) (aws.Config, error) {
+	opts := []func(o *awsconfig.LoadOptions) error{
+		awsconfig.WithRegion(conf.AWS.Region),
+		awsconfig.WithDefaultRegion(conf.AWS.DefaultRegion),
+		awsconfig.WithAppID(conf.AWS.AppID),
+	}
+
+	if conf.AWS.Credentials.Provider == kubesatoken.ProviderName {
+		credsProvider, err := newKubeSATokenCredentialsProvider(conf)
+		if err != nil {
+			return aws.Config{}, err
+		}
+
+		opts = append(opts, awsconfig.WithCredentialsProvider(credsProvider))
+	}
+
+	return awsconfig.LoadDefaultConfig(ctx, opts...)
 }
 
 // newRedisClientOpt returns a new [asynq.RedisClientOpt] from the given config.
