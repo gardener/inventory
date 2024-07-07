@@ -14,6 +14,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -67,6 +68,10 @@ var errNoAWSRegion = errors.New("no AWS region specified")
 // credentials provider configured for the AWS client.
 var errNoAWSCredentialsProvider = errors.New("no AWS credentials provider specified")
 
+// errUnknownAWSCredentialsProvider is an error, which is returned when using an
+// unknown/unsupported credentials provider.
+var errUnknownAWSCredentialsProvider = errors.New("unknown AWS credentials specified")
+
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
 	conf := ctx.Context.Value(configKey{}).(*config.Config)
@@ -90,6 +95,15 @@ func validateAWSConfig(conf *config.Config) error {
 
 	if conf.AWS.Credentials.Provider == "" {
 		return errNoAWSCredentialsProvider
+	}
+
+	supportedCredProviders := []string{
+		config.DefaultAWSCredentialsProvider,
+		kubesatoken.ProviderName,
+	}
+
+	if !slices.Contains(supportedCredProviders, conf.AWS.Credentials.Provider) {
+		return fmt.Errorf("%w: %s", errUnknownAWSCredentialsProvider, conf.AWS.Credentials.Provider)
 	}
 
 	return nil
