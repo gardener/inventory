@@ -86,6 +86,9 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 	}
 
 	rawPayload, err := yaml.Marshal(nilOwnerPayload)
+	if err != nil {
+		t.Fatal(err)
+	}
 	testTask := asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
@@ -99,6 +102,10 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 	}
 
 	rawPayload, err = yaml.Marshal(emptyOwner)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	testTask = asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
@@ -112,6 +119,9 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 	}
 
 	rawPayload, err = yaml.Marshal(emptyRegion)
+	if err != nil {
+		t.Fatal(err)
+	}
 	testTask = asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
@@ -125,10 +135,12 @@ func TestHandleCollectImagesTaskValidatesPayload(t *testing.T) {
 	nilOwnerPayload := CollectImagesPayload{}
 
 	rawPayload, err := yaml.Marshal(nilOwnerPayload)
+	if err != nil {
+		t.Fatal(err)
+	}
 	testTask := asynq.NewTask(AWS_COLLECT_IMAGES_TYPE, rawPayload)
 
 	err = HandleCollectImagesTask(context.Background(), testTask)
-
 	if err == nil {
 		t.Errorf("ImageOwners should be checked for nil on handling task.")
 	}
@@ -138,6 +150,9 @@ func TestHandleCollectImagesTaskValidatesPayload(t *testing.T) {
 	}
 
 	rawPayload, err = yaml.Marshal(emptyOwner)
+	if err != nil {
+		t.Fatal(err)
+	}
 	testTask = asynq.NewTask(AWS_COLLECT_IMAGES_TYPE, rawPayload)
 
 	err = HandleCollectImagesTask(context.Background(), testTask)
