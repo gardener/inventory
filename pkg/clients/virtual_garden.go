@@ -45,6 +45,6 @@ func GardenClient(name string) *machineversioned.Clientset {
 		slog.Error("Failed to create GardenClient", "error", err)
 		return nil
 	}
-	return client
 
+	return client
 }

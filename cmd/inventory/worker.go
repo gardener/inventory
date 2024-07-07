@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
 
@@ -143,15 +144,22 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 
-					mux := asynq.NewServeMux()
-					mux.Use(newLoggingMiddleware())
+					awsConfig, err := loadAWSDefaultConfig(ctx.Context, conf)
+					if err != nil {
+						return err
+					}
+					ec2Client := ec2.NewFromConfig(awsConfig)
 
 					// Initialize clients in workers
 					clients.SetDB(db)
 					clients.SetClient(client)
 					clients.SetGardenConfigs(gardenConfigs)
+					clients.SetEC2Client(ec2Client)
 
 					// Register our task handlers
+					mux := asynq.NewServeMux()
+					mux.Use(newLoggingMiddleware())
+
 					walker := func(name string, handler asynq.Handler) error {
 						slog.Info("registering task", "name", name)
 						mux.Handle(name, handler)

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
 
-	awsclients "github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
@@ -97,7 +96,7 @@ func HandleCollectVpcsForRegionTask(ctx context.Context, t *asynq.Task) error {
 
 func collectVpcsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS VPCs", "region", region)
-	vpcsOutput, err := awsclients.Ec2.DescribeVpcs(ctx,
+	vpcsOutput, err := clients.EC2.DescribeVpcs(ctx,
 		&ec2.DescribeVpcsInput{},
 		func(o *ec2.Options) {
 			o.Region = region

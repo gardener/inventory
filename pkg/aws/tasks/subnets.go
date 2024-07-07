@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
 
-	awscl "github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
@@ -64,7 +63,7 @@ func HandleCollectSubnetsForRegionTask(ctx context.Context, t *asynq.Task) error
 func collectSubnetsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS subnets", "region", region)
 
-	subnetsOutput, err := awscl.Ec2.DescribeSubnets(ctx,
+	subnetsOutput, err := clients.EC2.DescribeSubnets(ctx,
 		&ec2.DescribeSubnetsInput{},
 		func(o *ec2.Options) {
 			o.Region = region
