@@ -91,7 +91,7 @@ aws:
   credentials:
     provider: kube_sa_token
     kube_sa_token:
-      kubeconfig_file: /path/to/kubeconfig
+      kubeconfig: /path/to/kubeconfig
       namespace: inventory
       service_account: inventory-worker
       duration: 30m
