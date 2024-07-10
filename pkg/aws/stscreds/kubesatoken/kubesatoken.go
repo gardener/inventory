@@ -5,22 +5,9 @@
 // Package kubesatoken implements utilities for retrieving Kubernetes service
 // account tokens.
 //
-// The same utilities are used to construct a Web Identity Credentials Provider
-// for AWS using the AWS STS, where a Kubernetes service account token is used
-// to request temporary security credentials to the AWS services.
-//
-// In order to exchange the Kubernetes service account token for temporary
-// security credentials it is expected that you already have an OpenID Connect
-// IdP created in AWS and your Kubernetes cluster OpenID Metadata Provider
-// endpoint is publically available.
-//
-// For more information, please refer to the following documentation.
-//
-// https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
-// https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html
-// https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html
-// https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html
-// https://docs.aws.amazon.com/STS/latest/APIReference/welcome.html
+// The token retriever is meant to be plugged-in to an AWS Web Identity
+// Credentials Provider, so that short-lived JWT tokens can be exchanged for
+// temporary security credentials when accessing AWS resources.
 
 package kubesatoken
 
@@ -29,9 +16,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 	authenticationv1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -40,8 +25,8 @@ import (
 )
 
 const (
-	// ProviderName specifies the name of the Credentials Provider.
-	ProviderName = "kube_sa_token"
+	// TokenRetrieverName specifies the name of the Token Retriever.
+	TokenRetrieverName = "kube_sa_token"
 )
 
 // ErrNoServiceAccount is an error, which is returned when the
@@ -51,19 +36,6 @@ var ErrNoServiceAccount = errors.New("no service account specified")
 // ErrNoNamespace is an error, which is returned when the [TokenRetriever] was
 // configured without namespace for the service account.
 var ErrNoNamespace = errors.New("no namespace specified")
-
-// ErrNoSTSClient is an error, which is returned when creating a new credentials
-// provider without the required AWS STS client.
-var ErrNoSTSClient = errors.New("no STS client specified")
-
-// ErrNoRoleARN is an error, which is returned when creating a new credentials
-// provider without specifying a IAM Role ARN.
-var ErrNoRoleARN = errors.New("no IAM Role ARN specified")
-
-// ErrNoTokenRetriever is an error, which is returned when creating a new
-// credentials provider, without specifying a [stscreds.IdentityTokenRetriever]
-// implementation.
-var ErrNoTokenRetriever = errors.New("no token retriever specified")
 
 // TokenRetriever retrieves a service account token from Kubernetes, which can
 // later be used to request temporary security credentials to access the AWS
@@ -222,57 +194,4 @@ func WithClient(client *kubernetes.Clientset) TokenRetrieverOption {
 	}
 
 	return opt
-}
-
-// CredentialsProviderSpec provides the configuration settings for the Web
-// Identity Credentials Provider.
-type CredentialsProviderSpec struct {
-	// Client is the API client used to make API calls to the AWS STS.
-	Client *sts.Client
-
-	// RoleARN is the IAM Role ARN to assume.
-	RoleARN string
-
-	// RoleSessionName is the name of the session, which uniquely identifies it
-	RoleSessionName string
-
-	// Duration specifies the expiry duration of the STS credentials.
-	Duration time.Duration
-
-	// TokenRetriever is the identity token retriever implementation to use.
-	TokenRetriever stscreds.IdentityTokenRetriever
-}
-
-// NewCredentialsProvider creates a new [aws.CredentialsProvider] based on
-// the provided spec.
-func NewCredentialsProvider(spec *CredentialsProviderSpec) (aws.CredentialsProvider, error) {
-	if spec.Client == nil {
-		return nil, ErrNoSTSClient
-	}
-
-	if spec.RoleARN == "" {
-		return nil, ErrNoRoleARN
-	}
-
-	if spec.TokenRetriever == nil {
-		return nil, ErrNoTokenRetriever
-	}
-
-	opts := []func(o *stscreds.WebIdentityRoleOptions){
-		func(o *stscreds.WebIdentityRoleOptions) {
-			o.Duration = spec.Duration
-		},
-		func(o *stscreds.WebIdentityRoleOptions) {
-			o.RoleSessionName = spec.RoleSessionName
-		},
-	}
-
-	provider := stscreds.NewWebIdentityRoleProvider(
-		spec.Client,
-		spec.RoleARN,
-		spec.TokenRetriever,
-		opts...,
-	)
-
-	return provider, nil
 }
