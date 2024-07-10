@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	// DefaultAWSCredentialsProvider is the name of the default AWS
-	// Credentials Provider.
-	DefaultAWSCredentialsProvider = "default"
+	// DefaultAWSTokenRetriever is the name of the default AWS Token
+	// Retriever.
+	DefaultAWSTokenRetriever = "none"
 
 	// DefaultAWSAppID is the name of the default AWS App ID.
 	DefaultAWSAppID = "gardener-inventory"
@@ -83,27 +83,48 @@ type AWSConfig struct {
 // AWSCredentialsConfig provides credentials specific configuration for the AWS
 // client.
 type AWSCredentialsConfig struct {
-	// Provider represents the credentials provider. Currently supported
-	// providers are `default' and `kube_sa_token'.
+	// TokenRetriever specifies the name of the token retriever to be used.
 	//
-	// When using the `default' credentials provider the AWS client will be
-	// initialized using the shared credentials file at ~/.aws/credentials.
+	// The token retriever, in combination with Web Identity Credentials
+	// Provider is used for retrieving JWT identity tokens, which are then
+	// exchanged for temporary security credentials when accessing AWS
+	// resources.
 	//
-	// With the `kube_sa_token' credentials provider the AWS client will be
-	// initialized with Web Identity Credentials Provider, which uses
-	// Kubernetes service account tokens, which are then exchanged for
-	// temporary security credentials when communicating with the AWS
-	// services.
-	Provider string `yaml:"provider"`
+	// The currently supported token retrievers are: `none', `kube_sa_token'
+	// and `token_file'.
+	//
+	// When using the `none' token retriever the AWS client will be
+	// initialized using the shared credentials file at ~/.aws/credentials
+	// without creating a Web Identity Credentials Provider.
+	//
+	// With the `kube_sa_token' retriever the AWS client will be initialized
+	// with a Web Identity Credentials provider, which uses Kubernetes
+	// service account tokens, which are then exchanged for temporary
+	// security credentials when communicating with the AWS services.
+	//
+	// When using the `token_file' retriever the AWS client will be
+	// initialized with a Web Identity Credentials Provider, which will read
+	// JWT identity tokens from a specified path. The JWT token will be
+	// exchanged for temporary security credentials for AWS, in a way
+	// similar to the `kube_sa_token' retriever.
+	//
+	// When using `kube_sa_token' and `token_file' retrievers it is assumed
+	// that OIDC Trust is already established between the OIDC Providers and
+	// AWS.
+	TokenRetriever string `yaml:"token_retriever"`
 
-	// KubeSATokenProvider provides the configuration settings for the
-	// Kubernetes Service Account Token Credentials Provider.
-	KubeSATokenProvider AWSKubeSATokenProviderConfig `yaml:"kube_sa_token"`
+	// KubeSATokenRetriever provides the configuration settings for the
+	// Kubernetes Service Account Token Retriever.
+	KubeSATokenRetriever AWSKubeSATokenRetrieverConfig `yaml:"kube_sa_token"`
+
+	// TokenFileRetriever provides the configuration settings for the Token
+	// File retriever.
+	TokenFileRetriever AWSTokenFileRetrieverConfig `yaml:"token_file"`
 }
 
-// AWSKubeSATokenProviderConfig represents the configuration settings for the
-// AWS Kubernetes Service Account Token credentials provider.
-type AWSKubeSATokenProviderConfig struct {
+// AWSKubeSATokenRetrieverConfig represents the configuration settings for the
+// AWS Kubernetes Service Account Token retriever.
+type AWSKubeSATokenRetrieverConfig struct {
 	// Kubeconfig specifies the path to a Kubeconfig file to use when
 	// creating the underlying Kubernetes client. If empty, the Kubernetes
 	// client will be created using in-cluster configuration.
@@ -121,6 +142,19 @@ type AWSKubeSATokenProviderConfig struct {
 	// Audiences specifies the list of audiences the service account token
 	// will be issued for.
 	Audiences []string `yaml:"audiences"`
+
+	// RoleARN specifies the IAM Role ARN to be assumed.
+	RoleARN string `yaml:"role_arn"`
+
+	// RoleSessionName is a unique name for the session.
+	RoleSessionName string `yaml:"role_session_name"`
+}
+
+// AWSTokenFileRetrieverConfig represents the configuration settings for the AWS
+// Token File retriever.
+type AWSTokenFileRetrieverConfig struct {
+	// Path specifies the path to the identity token file.
+	Path string `yaml:"path"`
 
 	// RoleARN specifies the IAM Role ARN to be assumed.
 	RoleARN string `yaml:"role_arn"`
@@ -224,7 +258,7 @@ func Parse(path string) (*Config, error) {
 	}
 
 	if conf.AWS.Credentials.Provider == "" {
-		conf.AWS.Credentials.Provider = DefaultAWSCredentialsProvider
+		conf.AWS.Credentials.TokenRetriever = DefaultAWSTokenRetriever
 	}
 
 	return &conf, nil
