@@ -97,13 +97,12 @@ func (t *TokenRetriever) GetIdentityToken() ([]byte, error) {
 	return []byte(out.Status.Token), nil
 }
 
-// TokenRetrieverOption is a function which configures a [TokenRetriever]
-// instance.
-type TokenRetrieverOption func(*TokenRetriever)
+// Option is a function which configures a [TokenRetriever] instance.
+type Option func(*TokenRetriever)
 
 // NewTokenRetriever creates a new [TokenRetriever] and configures it using the
 // provided options.
-func NewTokenRetriever(opts ...TokenRetrieverOption) (*TokenRetriever, error) {
+func NewTokenRetriever(opts ...Option) (*TokenRetriever, error) {
 	tokenRetriever := &TokenRetriever{}
 	for _, opt := range opts {
 		opt(tokenRetriever)
@@ -139,7 +138,7 @@ func NewTokenRetriever(opts ...TokenRetrieverOption) (*TokenRetriever, error) {
 }
 
 // WithNamespace configures the [TokenRetriever] to use the specified namespace.
-func WithNamespace(namespace string) TokenRetrieverOption {
+func WithNamespace(namespace string) Option {
 	opt := func(t *TokenRetriever) {
 		t.namespace = namespace
 	}
@@ -149,7 +148,7 @@ func WithNamespace(namespace string) TokenRetrieverOption {
 
 // WithServiceAccount configures the [TokenRetriever] to use the specified
 // service account name.
-func WithServiceAccount(serviceAccount string) TokenRetrieverOption {
+func WithServiceAccount(serviceAccount string) Option {
 	opt := func(t *TokenRetriever) {
 		t.serviceAccount = serviceAccount
 	}
@@ -159,7 +158,7 @@ func WithServiceAccount(serviceAccount string) TokenRetrieverOption {
 
 // WithKubeconfig configures the [TokenRetriever] to use the given kubeconfig
 // file.
-func WithKubeconfig(kubeconfigFile string) TokenRetrieverOption {
+func WithKubeconfig(kubeconfigFile string) Option {
 	opt := func(t *TokenRetriever) {
 		t.kubeconfigFile = kubeconfigFile
 	}
@@ -168,7 +167,7 @@ func WithKubeconfig(kubeconfigFile string) TokenRetrieverOption {
 }
 
 // WithAudiences configures the [TokenRetriever] to use the given audiences.
-func WithAudiences(audiences []string) TokenRetrieverOption {
+func WithAudiences(audiences []string) Option {
 	opt := func(t *TokenRetriever) {
 		t.audiences = audiences
 	}
@@ -178,7 +177,7 @@ func WithAudiences(audiences []string) TokenRetrieverOption {
 
 // WithTokenExpiration configures the [TokenRetriever] to use the given token
 // expiration duration.
-func WithTokenExpiration(duration time.Duration) TokenRetrieverOption {
+func WithTokenExpiration(duration time.Duration) Option {
 	opt := func(t *TokenRetriever) {
 		t.duration = duration
 	}
@@ -188,7 +187,7 @@ func WithTokenExpiration(duration time.Duration) TokenRetrieverOption {
 
 // WithClient configures the [TokenRetriever] to use the given Kubernetes
 // client.
-func WithClient(client *kubernetes.Clientset) TokenRetrieverOption {
+func WithClient(client *kubernetes.Clientset) Option {
 	opt := func(t *TokenRetriever) {
 		t.kubeClient = client
 	}
