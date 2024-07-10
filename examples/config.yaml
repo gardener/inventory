@@ -22,20 +22,26 @@ aws:
   default_region: eu-central-1  # Frankfurt
   app_id: gardener-inventory  # Optional application specific identifier
   credentials:
-    # The currently supported providers are `default' and `kube_sa_token'.
-    provider: default
+    # The currently supported token retrievers are `none', `kube_sa_token' and
+    # `token_file'. See docs/oidc-aws.md for more details.
+    token_retriever: none
 
-    # Example configuration for `kube_sa_token' provider
+    # Example configuration for `kube_sa_token' token retriever
     kube_sa_token:
       kubeconfig: /path/to/kubeconfig
       namespace: inventory
-      service_account: inventory-worker
+      service_account: worker
       duration: 30m
       audiences:
-        - foo
-        - bar
-      role_arn: role-arn-goes-here
-      role_session_name: role-session-name-goes-here
+        - gardener-inventory-playground
+      role_arn: arn:aws:iam::account:role/name
+      role_session_name: gardener-inventory-worker
+
+    # Example configuration for the `token_file' token retriever
+    token_file:
+      path: /path/to/identity/token
+      role_arn: arn:aws:iam::account:role/name
+      role_session_name: gardener-inventory-worker
 
 scheduler:
   jobs:
