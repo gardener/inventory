@@ -28,8 +28,7 @@ Additional requirements for local development.
 - [Operations Guide](./docs/ops-guide.md)
 - [Database Queries](./docs/db-queries.md)
 - [AWS OIDC Trust](./docs/oidc-aws.md)
-- Deployment
-- Querying the database
+- [Deployment](./deployment)
 
 # Contributing
 
