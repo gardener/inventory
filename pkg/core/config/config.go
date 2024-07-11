@@ -136,7 +136,8 @@ type AWSKubeSATokenRetrieverConfig struct {
 	// Namespace specifies the Kubernetes namespace of the service account.
 	Namespace string `yaml:"namespace"`
 
-	// Duration specifies the expiry duration for the service account token.
+	// Duration specifies the expiry duration for the service account token
+	// and STS credentials.
 	Duration time.Duration `yaml:"duration"`
 
 	// Audiences specifies the list of audiences the service account token
@@ -161,6 +162,9 @@ type AWSTokenFileRetrieverConfig struct {
 
 	// RoleSessionName is a unique name for the session.
 	RoleSessionName string `yaml:"role_session_name"`
+
+	// Duration specifies the expiry duration for the STS credentials.
+	Duration time.Duration `yaml:"duration"`
 }
 
 // RedisConfig provides Redis specific configuration settings.

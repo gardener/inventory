@@ -40,6 +40,7 @@ aws:
     # Example configuration for the `token_file' token retriever
     token_file:
       path: /path/to/identity/token
+      duration: 30m
       role_arn: arn:aws:iam::account:role/name
       role_session_name: gardener-inventory-worker
 
