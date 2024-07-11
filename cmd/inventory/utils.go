@@ -34,6 +34,8 @@ import (
 
 	"github.com/gardener/inventory/internal/pkg/migrations"
 	"github.com/gardener/inventory/pkg/aws/stscreds/kubesatoken"
+	"github.com/gardener/inventory/pkg/aws/stscreds/provider"
+	"github.com/gardener/inventory/pkg/aws/stscreds/tokenfile"
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/core/config"
 )
@@ -64,13 +66,13 @@ var errNoDashboardAddress = errors.New("no bind address specified")
 // default region configured for the AWS client.
 var errNoAWSRegion = errors.New("no AWS region specified")
 
-// errNoAWSCredentialsProvider is an error, which is returned when there was no
-// credentials provider configured for the AWS client.
-var errNoAWSCredentialsProvider = errors.New("no AWS credentials provider specified")
+// errNoAWSTokenRetriever is an error, which is returned when there was no token
+// retriever name specified.
+var errNoAWSTokenRetriever = errors.New("no AWS token retriever specified")
 
-// errUnknownAWSCredentialsProvider is an error, which is returned when using an
-// unknown/unsupported credentials provider.
-var errUnknownAWSCredentialsProvider = errors.New("unknown AWS credentials specified")
+// errUnknownAWSTokenRetriever is an error, which is returned when using an
+// unknown/unsupported identity token retriever.
+var errUnknownAWSTokenRetriever = errors.New("unknown AWS token retriever specified")
 
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
@@ -93,17 +95,18 @@ func validateAWSConfig(conf *config.Config) error {
 		return errNoAWSRegion
 	}
 
-	if conf.AWS.Credentials.Provider == "" {
-		return errNoAWSCredentialsProvider
+	if conf.AWS.Credentials.TokenRetriever == "" {
+		return errNoAWSTokenRetriever
 	}
 
-	supportedCredProviders := []string{
-		config.DefaultAWSCredentialsProvider,
-		kubesatoken.ProviderName,
+	supportedTokenRetrievers := []string{
+		config.DefaultAWSTokenRetriever,
+		kubesatoken.TokenRetrieverName,
+		tokenfile.TokenRetrieverName,
 	}
 
-	if !slices.Contains(supportedCredProviders, conf.AWS.Credentials.Provider) {
-		return fmt.Errorf("%w: %s", errUnknownAWSCredentialsProvider, conf.AWS.Credentials.Provider)
+	if !slices.Contains(supportedTokenRetrievers, conf.AWS.Credentials.TokenRetriever) {
+		return fmt.Errorf("%w: %s", errUnknownAWSTokenRetriever, conf.AWS.Credentials.TokenRetriever)
 	}
 
 	return nil
@@ -154,26 +157,49 @@ func newAWSSTSClient(conf *config.Config) *sts.Client {
 // temporary security credentials when accessing AWS resources.
 func newKubeSATokenCredentialsProvider(conf *config.Config) (aws.CredentialsProvider, error) {
 	tokenRetriever, err := kubesatoken.NewTokenRetriever(
-		kubesatoken.WithKubeconfig(conf.AWS.Credentials.KubeSATokenProvider.Kubeconfig),
-		kubesatoken.WithServiceAccount(conf.AWS.Credentials.KubeSATokenProvider.ServiceAccount),
-		kubesatoken.WithNamespace(conf.AWS.Credentials.KubeSATokenProvider.Namespace),
-		kubesatoken.WithAudiences(conf.AWS.Credentials.KubeSATokenProvider.Audiences),
-		kubesatoken.WithTokenExpiration(conf.AWS.Credentials.KubeSATokenProvider.Duration),
+		kubesatoken.WithKubeconfig(conf.AWS.Credentials.KubeSATokenRetriever.Kubeconfig),
+		kubesatoken.WithServiceAccount(conf.AWS.Credentials.KubeSATokenRetriever.ServiceAccount),
+		kubesatoken.WithNamespace(conf.AWS.Credentials.KubeSATokenRetriever.Namespace),
+		kubesatoken.WithAudiences(conf.AWS.Credentials.KubeSATokenRetriever.Audiences),
+		kubesatoken.WithTokenExpiration(conf.AWS.Credentials.KubeSATokenRetriever.Duration),
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	providerSpec := &kubesatoken.CredentialsProviderSpec{
+	providerSpec := &provider.Spec{
 		Client:          newAWSSTSClient(conf),
-		RoleARN:         conf.AWS.Credentials.KubeSATokenProvider.RoleARN,
-		RoleSessionName: conf.AWS.Credentials.KubeSATokenProvider.RoleSessionName,
-		Duration:        conf.AWS.Credentials.KubeSATokenProvider.Duration,
+		RoleARN:         conf.AWS.Credentials.KubeSATokenRetriever.RoleARN,
+		RoleSessionName: conf.AWS.Credentials.KubeSATokenRetriever.RoleSessionName,
+		Duration:        conf.AWS.Credentials.KubeSATokenRetriever.Duration,
 		TokenRetriever:  tokenRetriever,
 	}
 
-	return kubesatoken.NewCredentialsProvider(providerSpec)
+	return provider.New(providerSpec)
+}
+
+// newTokenFileCredentialsProvider creates a new [aws.CredentialsProvider],
+// which reads a JWT token from a specified path and exchanges the token for
+// temporary security credentials when accessing AWS resources.
+func newTokenFileCredentialsProvider(conf *config.Config) (aws.CredentialsProvider, error) {
+	tokenRetriever, err := tokenfile.NewTokenRetriever(
+		tokenfile.WithPath(conf.AWS.Credentials.TokenFileRetriever.Path),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	providerSpec := &provider.Spec{
+		Client:          newAWSSTSClient(conf),
+		RoleARN:         conf.AWS.Credentials.TokenFileRetriever.RoleARN,
+		RoleSessionName: conf.AWS.Credentials.TokenFileRetriever.RoleSessionName,
+		Duration:        conf.AWS.Credentials.TokenFileRetriever.Duration,
+		TokenRetriever:  tokenRetriever,
+	}
+
+	return provider.New(providerSpec)
 }
 
 // loadAWSDefaultConfig loads the AWS configurations and returns it.
@@ -184,12 +210,18 @@ func loadAWSDefaultConfig(ctx context.Context, conf *config.Config) (aws.Config,
 		awsconfig.WithAppID(conf.AWS.AppID),
 	}
 
-	if conf.AWS.Credentials.Provider == kubesatoken.ProviderName {
+	switch conf.AWS.Credentials.TokenRetriever {
+	case kubesatoken.TokenRetrieverName:
 		credsProvider, err := newKubeSATokenCredentialsProvider(conf)
 		if err != nil {
 			return aws.Config{}, err
 		}
-
+		opts = append(opts, awsconfig.WithCredentialsProvider(credsProvider))
+	case tokenfile.TokenRetrieverName:
+		credsProvider, err := newTokenFileCredentialsProvider(conf)
+		if err != nil {
+			return aws.Config{}, err
+		}
 		opts = append(opts, awsconfig.WithCredentialsProvider(credsProvider))
 	}
 
