@@ -261,7 +261,7 @@ func Parse(path string) (*Config, error) {
 		conf.AWS.AppID = DefaultAWSAppID
 	}
 
-	if conf.AWS.Credentials.Provider == "" {
+	if conf.AWS.Credentials.TokenRetriever == "" {
 		conf.AWS.Credentials.TokenRetriever = DefaultAWSTokenRetriever
 	}
 
