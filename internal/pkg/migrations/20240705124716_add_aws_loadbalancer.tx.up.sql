@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS "aws_loadbalancer" (
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
     PRIMARY KEY ("id"),
-    UNIQUE ("name")
+    UNIQUE ("lb_arn")
 );

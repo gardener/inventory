@@ -202,7 +202,7 @@ type LoadBalancer struct {
 	coremodels.Model
 
 	LbArn                 string  `bun:"lb_arn,notnull,unique"`
-	Name                  string  `bun:"name,notnull,unique"`
+	Name                  string  `bun:"name,notnull"`
 	DNSName               string  `bun:"dns_name,notnull"`
 	IpAddressType         string  `bun:"ip_address_type,notnull"`
 	CanonicalHostedZoneId string  `bun:"canonical_hosted_zone_id,notnull"`
