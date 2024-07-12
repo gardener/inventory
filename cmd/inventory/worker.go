@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
 
@@ -149,12 +150,14 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 					ec2Client := ec2.NewFromConfig(awsConfig)
+					elbClient := elb.NewFromConfig(awsConfig)
 
 					// Initialize clients in workers
 					clients.SetDB(db)
 					clients.SetClient(client)
 					clients.SetGardenConfigs(gardenConfigs)
 					clients.SetEC2Client(ec2Client)
+					clients.SetELBClient(elbClient)
 
 					// Register our task handlers
 					mux := asynq.NewServeMux()
