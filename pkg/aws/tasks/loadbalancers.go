@@ -64,7 +64,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 
 	slog.Info("Collecting AWS LoadBalancers", "region", region)
 
-	lbOutput, err := clients.Elb.DescribeLoadBalancers(ctx,
+	lbOutput, err := clients.ELB.DescribeLoadBalancers(ctx,
 		&elb.DescribeLoadBalancersInput{},
 		func(o *elb.Options) {
 			o.Region = region
