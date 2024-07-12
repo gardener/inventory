@@ -1,4 +1,3 @@
-// TODO switch to blackbox (tasks_testing)
 package tasks
 
 import (
