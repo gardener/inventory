@@ -10,7 +10,6 @@ import (
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/hibiken/asynq"
 
-	awsclients "github.com/gardener/inventory/pkg/aws/clients"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/utils/strings"
@@ -65,7 +64,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 
 	slog.Info("Collecting AWS LoadBalancers", "region", region)
 
-	lbOutput, err := awsclients.Elb.DescribeLoadBalancers(ctx,
+	lbOutput, err := clients.Elb.DescribeLoadBalancers(ctx,
 		&elb.DescribeLoadBalancersInput{},
 		func(o *elb.Options) {
 			o.Region = region
@@ -103,8 +102,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 
 	_, err = clients.DB.NewInsert().
 		Model(&lbs).
-		// TODO: figure out of this is really unique
-		On("CONFLICT (name) DO UPDATE").
+		On("CONFLICT (lb_arn) DO UPDATE").
 		Set("lb_arn = EXCLUDED.lb_arn").
 		Set("dns_name = EXCLUDED.dns_name").
 		Set("ip_address_type = EXCLUDED.ip_address_type").
