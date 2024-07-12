@@ -211,6 +211,9 @@ func loadAWSDefaultConfig(ctx context.Context, conf *config.Config) (aws.Config,
 	}
 
 	switch conf.AWS.Credentials.TokenRetriever {
+	case config.DefaultAWSTokenRetriever:
+		// Load shared credentials config only
+		break
 	case kubesatoken.TokenRetrieverName:
 		credsProvider, err := newKubeSATokenCredentialsProvider(conf)
 		if err != nil {
@@ -223,6 +226,8 @@ func loadAWSDefaultConfig(ctx context.Context, conf *config.Config) (aws.Config,
 			return aws.Config{}, err
 		}
 		opts = append(opts, awsconfig.WithCredentialsProvider(credsProvider))
+	default:
+		return aws.Config{}, errUnknownAWSTokenRetriever
 	}
 
 	return awsconfig.LoadDefaultConfig(ctx, opts...)
