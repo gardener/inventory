@@ -11,9 +11,11 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
 	"gopkg.in/yaml.v3"
 
+	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/utils/strings"
@@ -28,7 +30,7 @@ const (
 var ErrMissingOwners = errors.New("missing owner names")
 
 type CollectImagesPayload struct {
-	ImageOwners []int64 `yaml:"image_owners"`
+	ImageOwners []string `yaml:"image_owners"`
 }
 
 type CollectImagesForRegionPayload struct {
@@ -82,27 +84,36 @@ func HandleCollectImagesForRegionTask(ctx context.Context, t *asynq.Task) error 
 func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionPayload) error {
 	region := payload.Region
 	slog.Info("Collecting AWS AMI ", "region", region)
-
-	imagesOutput, err := clients.EC2.DescribeImages(ctx,
+	paginator := ec2.NewDescribeImagesPaginator(
+		clients.EC2,
 		&ec2.DescribeImagesInput{
 			Owners: payload.ImageOwners,
 		},
-		func(o *ec2.Options) {
-			o.Region = region
+		func(params *ec2.DescribeImagesPaginatorOptions) {
+			params.Limit = int32(constants.PageSize)
+			params.StopOnDuplicateToken = true
 		},
 	)
 
-	if err != nil {
-		slog.Error("could not describe images", "err", err)
-		return err
+	// Fetch items from all pages
+	items := make([]types.Image, 0)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(
+			ctx,
+			func(o *ec2.Options) {
+				o.Region = region
+			},
+		)
+
+		if err != nil {
+			slog.Error("could not describe images", "region", region, "reason", err)
+			return err
+		}
+		items = append(items, page.Images...)
 	}
 
-	count := len(imagesOutput.Images)
-	slog.Info("found images", "count", count, "region", region)
-
-	images := make([]models.Image, 0, count)
-
-	for _, image := range imagesOutput.Images {
+	images := make([]models.Image, 0, len(items))
+	for _, image := range items {
 		modelImage := models.Image{
 			ImageID:        strings.StringFromPointer(image.ImageId),
 			Name:           strings.StringFromPointer(image.Name),
@@ -119,7 +130,7 @@ func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionP
 		return nil
 	}
 
-	_, err = clients.DB.NewInsert().
+	out, err := clients.DB.NewInsert().
 		Model(&images).
 		On("CONFLICT (image_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -131,10 +142,18 @@ func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionP
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert images into db", "err", err)
+		slog.Error("could not insert images into db", "region", region, "reason", err)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated aws images", "region", region, "count", count)
 
 	return nil
 }
@@ -161,6 +180,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		slog.Error("could not select regions from db", "err", err)
 		return err
 	}
+
 	for _, r := range regions {
 		// Trigger Asynq task for each region
 		collectImagesForRegionPayload := CollectImagesForRegionPayload{
@@ -175,11 +195,22 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 
 		info, err := clients.Client.Enqueue(imageTask)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", imageTask.Type(), "err", err)
+			slog.Error(
+				"could not enqueue task",
+				"type", imageTask.Type(),
+				"region", r.Name,
+				"reason", err,
+			)
 			continue
 		}
 
-		slog.Info("enqueued task", "type", imageTask.Type(), "id", info.ID, "queue", info.Queue)
+		slog.Info(
+			"enqueued task",
+			"type", imageTask.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+		)
 	}
 
 	return nil
