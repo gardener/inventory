@@ -11,8 +11,10 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
 
+	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
@@ -61,52 +63,57 @@ func HandleCollectInstancesForRegionTask(ctx context.Context, t *asynq.Task) err
 
 func collectInstancesForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS instances ", "region", region)
-
-	instancesOutput, err := clients.EC2.DescribeInstances(ctx,
+	paginator := ec2.NewDescribeInstancesPaginator(
+		clients.EC2,
 		&ec2.DescribeInstancesInput{},
-		func(o *ec2.Options) {
-			o.Region = region
+		func(params *ec2.DescribeInstancesPaginatorOptions) {
+			params.Limit = int32(constants.PageSize)
+			params.StopOnDuplicateToken = true
 		},
 	)
 
-	if err != nil {
-		slog.Error("could not describe instances", "err", err)
-		return err
+	// Fetch items from all pages
+	items := make([]types.Instance, 0)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(
+			ctx,
+			func(o *ec2.Options) {
+				o.Region = region
+			},
+		)
+		if err != nil {
+			slog.Error("could not describe instances", "region", region, "reason", err)
+			return err
+		}
+		for _, reservation := range page.Reservations {
+			items = append(items, reservation.Instances...)
+		}
 	}
-
-	count := 0
-	for _, reservation := range instancesOutput.Reservations {
-		count = count + len(reservation.Instances)
-	}
-	slog.Info("found instances", "count", count, "region", region)
 
 	// Parse reservations and add to instances
-	instances := make([]models.Instance, 0, count)
-
-	for _, reservation := range instancesOutput.Reservations {
-		for _, instance := range reservation.Instances {
-			name := utils.FetchTag(instance.Tags, "Name")
-			modelInstance := models.Instance{
-				Name:         name,
-				Arch:         string(instance.Architecture),
-				InstanceID:   strings.StringFromPointer(instance.InstanceId),
-				InstanceType: string(instance.InstanceType),
-				State:        string(instance.State.Name),
-				SubnetID:     strings.StringFromPointer(instance.SubnetId),
-				VpcID:        strings.StringFromPointer(instance.VpcId),
-				Platform:     strings.StringFromPointer(instance.PlatformDetails),
-				RegionName:   region,
-				ImageID:      strings.StringFromPointer(instance.ImageId),
-			}
-			instances = append(instances, modelInstance)
+	instances := make([]models.Instance, 0, len(items))
+	for _, instance := range items {
+		name := utils.FetchTag(instance.Tags, "Name")
+		modelInstance := models.Instance{
+			Name:         name,
+			Arch:         string(instance.Architecture),
+			InstanceID:   strings.StringFromPointer(instance.InstanceId),
+			InstanceType: string(instance.InstanceType),
+			State:        string(instance.State.Name),
+			SubnetID:     strings.StringFromPointer(instance.SubnetId),
+			VpcID:        strings.StringFromPointer(instance.VpcId),
+			Platform:     strings.StringFromPointer(instance.PlatformDetails),
+			RegionName:   region,
+			ImageID:      strings.StringFromPointer(instance.ImageId),
 		}
+		instances = append(instances, modelInstance)
 	}
 
 	if len(instances) == 0 {
 		return nil
 	}
 
-	_, err = clients.DB.NewInsert().
+	out, err := clients.DB.NewInsert().
 		Model(&instances).
 		On("CONFLICT (instance_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -121,10 +128,18 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert instances into db", "err", err)
+		slog.Error("could not insert instances into db", "region", region, "reason", err)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated aws instances", "region", region, "count", count)
 
 	return nil
 }
@@ -152,11 +167,22 @@ func collectInstances(ctx context.Context) error {
 
 		info, err := clients.Client.Enqueue(instanceTask)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", instanceTask.Type(), "err", err)
+			slog.Error(
+				"could not enqueue task",
+				"type", instanceTask.Type(),
+				"region", r.Name,
+				"reason", err,
+			)
 			continue
 		}
 
-		slog.Info("enqueued task", "type", instanceTask.Type(), "id", info.ID, "queue", info.Queue)
+		slog.Info(
+			"enqueued task",
+			"type", instanceTask.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+		)
 	}
 
 	return nil
