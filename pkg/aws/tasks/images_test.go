@@ -14,7 +14,7 @@ func TestNewCollectImagesForRegionTaskCorrectPath(t *testing.T) {
 	payload := CollectImagesForRegionPayload{
 		//Test must catch this.
 		Region:      "valid-region",
-		ImageOwners: []int64{1, 2, 3},
+		ImageOwners: []string{"1", "2", "3"},
 	}
 
 	task, err := NewCollectImagesForRegionTask(payload)
@@ -40,7 +40,7 @@ func TestNewCollectImagesForRegionTaskValidatesInput(t *testing.T) {
 	}
 
 	// nil ImageOwners case
-	var nilOwners []int64
+	var nilOwners []string
 	payload = CollectImagesForRegionPayload{
 		//Test must catch this.
 		Region:      "example-region",
@@ -53,7 +53,7 @@ func TestNewCollectImagesForRegionTaskValidatesInput(t *testing.T) {
 	}
 
 	// empty ImageOwners case
-	var emptyOwners []int64
+	var emptyOwners []string
 	payload = CollectImagesForRegionPayload{
 		//Test must catch this.
 		Region:      "example-region",
@@ -97,7 +97,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 
 	emptyOwner := CollectImagesForRegionPayload{
 		Region:      "test-region",
-		ImageOwners: []int64{},
+		ImageOwners: []string{},
 	}
 
 	rawPayload, err = yaml.Marshal(emptyOwner)
@@ -114,7 +114,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 
 	emptyRegion := CollectImagesForRegionPayload{
 		Region:      "",
-		ImageOwners: []int64{1},
+		ImageOwners: []string{"1"},
 	}
 
 	rawPayload, err = yaml.Marshal(emptyRegion)
@@ -145,7 +145,7 @@ func TestHandleCollectImagesTaskValidatesPayload(t *testing.T) {
 	}
 
 	emptyOwner := CollectImagesPayload{
-		ImageOwners: []int64{},
+		ImageOwners: []string{},
 	}
 
 	rawPayload, err = yaml.Marshal(emptyOwner)
