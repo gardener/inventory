@@ -61,7 +61,12 @@ func collectVpcs(ctx context.Context) error {
 
 		info, err := clients.Client.Enqueue(vpcsTask)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", vpcsTask.Type(), "reason", err)
+			slog.Error(
+				"could not enqueue task",
+				"type", vpcsTask.Type(),
+				"region", r.Name,
+				"reason", err,
+			)
 			continue
 		}
 
@@ -113,7 +118,7 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 		},
 	)
 
-	// Fetch all pages of VPCs
+	// Fetch items from all pages
 	items := make([]types.Vpc, 0)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(
@@ -123,7 +128,7 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 			},
 		)
 		if err != nil {
-			slog.Error("could not describe VPCs", "region", region, "err", err)
+			slog.Error("could not describe VPCs", "region", region, "reason", err)
 			return err
 		}
 		items = append(items, page.Vpcs...)
@@ -164,7 +169,7 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert VPCs into db", "region", region, "err", err)
+		slog.Error("could not insert VPCs into db", "region", region, "reason", err)
 		return err
 	}
 

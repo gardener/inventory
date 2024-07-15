@@ -11,8 +11,10 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
 
+	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
@@ -62,21 +64,33 @@ func HandleCollectSubnetsForRegionTask(ctx context.Context, t *asynq.Task) error
 
 func collectSubnetsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS subnets", "region", region)
-
-	subnetsOutput, err := clients.EC2.DescribeSubnets(ctx,
+	paginator := ec2.NewDescribeSubnetsPaginator(
+		clients.EC2,
 		&ec2.DescribeSubnetsInput{},
-		func(o *ec2.Options) {
-			o.Region = region
+		func(params *ec2.DescribeSubnetsPaginatorOptions) {
+			params.Limit = int32(constants.PageSize)
+			params.StopOnDuplicateToken = true
 		},
 	)
 
-	if err != nil {
-		slog.Error("could not describe subnets", "err", err)
-		return err
+	// Fetch items from all pages
+	items := make([]types.Subnet, 0)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(
+			ctx,
+			func(o *ec2.Options) {
+				o.Region = region
+			},
+		)
+		if err != nil {
+			slog.Error("could not describe subnets", "reason", err)
+			return err
+		}
+		items = append(items, page.Subnets...)
 	}
 
-	subnets := make([]models.Subnet, 0, len(subnetsOutput.Subnets))
-	for _, s := range subnetsOutput.Subnets {
+	subnets := make([]models.Subnet, 0, len(items))
+	for _, s := range items {
 		name := utils.FetchTag(s.Tags, "Name")
 		modelSubnet := models.Subnet{
 			Name:                   name,
@@ -96,7 +110,8 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 	if len(subnets) == 0 {
 		return nil
 	}
-	_, err = clients.DB.NewInsert().
+
+	out, err := clients.DB.NewInsert().
 		Model(&subnets).
 		On("CONFLICT (subnet_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -111,10 +126,18 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert Subnets into db", "err", err)
+		slog.Error("could not insert Subnets into db", "reason", err)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated aws subnets", "region", region, "count", count)
 
 	return nil
 }
@@ -143,11 +166,22 @@ func collectSubnets(ctx context.Context) error {
 
 		info, err := clients.Client.Enqueue(subnetTask)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", subnetTask.Type(), "err", err)
+			slog.Error(
+				"could not enqueue task",
+				"type", subnetTask.Type(),
+				"region", r.Name,
+				"err", err,
+			)
 			continue
 		}
 
-		slog.Info("enqueued task", "type", subnetTask.Type(), "id", info.ID, "queue", info.Queue)
+		slog.Info(
+			"enqueued task",
+			"type", subnetTask.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+		)
 	}
 	return nil
 }
