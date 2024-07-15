@@ -49,7 +49,7 @@ func NewCollectImagesForRegionTask(payload CollectImagesForRegionPayload) (*asyn
 		return nil, ErrMissingRegion
 	}
 
-	if payload.ImageOwners == nil || len(payload.ImageOwners) == 0 {
+	if len(payload.ImageOwners) == 0 {
 		return nil, ErrMissingOwners
 	}
 
@@ -72,7 +72,7 @@ func HandleCollectImagesForRegionTask(ctx context.Context, t *asynq.Task) error 
 		return ErrMissingRegion
 	}
 
-	if payload.ImageOwners == nil || len(payload.ImageOwners) == 0 {
+	if len(payload.ImageOwners) == 0 {
 		return ErrMissingOwners
 	}
 
@@ -152,7 +152,7 @@ func HandleCollectImagesTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("yaml.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
-	if payload.ImageOwners == nil || len(payload.ImageOwners) == 0 {
+	if len(payload.ImageOwners) == 0 {
 		return ErrMissingOwners
 	}
 
