@@ -11,8 +11,10 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
 
+	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
@@ -63,7 +65,13 @@ func collectVpcs(ctx context.Context) error {
 			continue
 		}
 
-		slog.Info("enqueued task", "type", vpcsTask.Type(), "id", info.ID, "queue", info.Queue)
+		slog.Info(
+			"enqueued task",
+			"type", vpcsTask.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+		)
 	}
 	return nil
 }
@@ -96,20 +104,34 @@ func HandleCollectVpcsForRegionTask(ctx context.Context, t *asynq.Task) error {
 
 func collectVpcsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS VPCs", "region", region)
-	vpcsOutput, err := clients.EC2.DescribeVpcs(ctx,
+	paginator := ec2.NewDescribeVpcsPaginator(
+		clients.EC2,
 		&ec2.DescribeVpcsInput{},
-		func(o *ec2.Options) {
-			o.Region = region
-		})
-	if err != nil {
-		slog.Error("could not describe VPCs", "region", region, "err", err)
-		return err
+		func(params *ec2.DescribeVpcsPaginatorOptions) {
+			params.Limit = int32(constants.PageSize)
+			params.StopOnDuplicateToken = true
+		},
+	)
+
+	// Fetch all pages of VPCs
+	items := make([]types.Vpc, 0)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(
+			ctx,
+			func(o *ec2.Options) {
+				o.Region = region
+			},
+		)
+		if err != nil {
+			slog.Error("could not describe VPCs", "region", region, "err", err)
+			return err
+		}
+		items = append(items, page.Vpcs...)
 	}
 
-	vpcs := make([]models.VPC, 0, len(vpcsOutput.Vpcs))
-	for _, vpc := range vpcsOutput.Vpcs {
+	vpcs := make([]models.VPC, 0, len(items))
+	for _, vpc := range items {
 		name := utils.FetchTag(vpc.Tags, "Name")
-		slog.Info("VPC", "name", name, "region", region)
 		vpcModel := models.VPC{
 			Name:       name,
 			VpcID:      strings.StringFromPointer(vpc.VpcId),
@@ -127,7 +149,7 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 		return nil
 	}
 
-	_, err = clients.DB.NewInsert().
+	out, err := clients.DB.NewInsert().
 		Model(&vpcs).
 		On("CONFLICT (vpc_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -140,10 +162,18 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
 		slog.Error("could not insert VPCs into db", "region", region, "err", err)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated aws vpcs", "region", region, "count", count)
 
 	return nil
 }
