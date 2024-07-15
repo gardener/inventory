@@ -32,8 +32,8 @@ type CollectImagesPayload struct {
 }
 
 type CollectImagesForRegionPayload struct {
-	Region      string  `yaml:"region"`
-	ImageOwners []int64 `yaml:"image_owners"`
+	Region      string   `yaml:"region"`
+	ImageOwners []string `yaml:"image_owners"`
 }
 
 // NewCollectImagesTask creates a new task for collecting AMI Images from
@@ -81,17 +81,11 @@ func HandleCollectImagesForRegionTask(ctx context.Context, t *asynq.Task) error 
 
 func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionPayload) error {
 	region := payload.Region
-
 	slog.Info("Collecting AWS AMI ", "region", region)
-
-	owners := make([]string, 0, len(payload.ImageOwners))
-	for _, o := range payload.ImageOwners {
-		owners = append(owners, fmt.Sprintf("%d", o))
-	}
 
 	imagesOutput, err := clients.EC2.DescribeImages(ctx,
 		&ec2.DescribeImagesInput{
-			Owners: owners,
+			Owners: payload.ImageOwners,
 		},
 		func(o *ec2.Options) {
 			o.Region = region
