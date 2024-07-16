@@ -97,7 +97,7 @@ func HandleGardenerCollectMachinesForSeedTask(ctx context.Context, t *asynq.Task
 func collectMachinesForSeed(ctx context.Context, seed string) error {
 	slog.Info("Collecting Gardener machines for seed", "seed", seed)
 
-	gardenClient := clients.GardenClient(seed)
+	gardenClient := clients.SeedClient(seed)
 	if gardenClient == nil {
 		return fmt.Errorf("could not get garden client for seed %q: %w", seed, asynq.SkipRetry)
 	}
