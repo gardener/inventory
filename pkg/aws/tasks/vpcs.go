@@ -93,7 +93,7 @@ func NewCollectVpcsForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_VPC_REGION_TYPE, payload), err
+	return asynq.NewTask(AWS_COLLECT_VPC_REGION_TYPE, payload), nil
 }
 
 // HandleCollectVpcsForRegionTask handles the task for collecting VPCs for a
