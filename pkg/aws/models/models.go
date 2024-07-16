@@ -201,7 +201,7 @@ type LoadBalancer struct {
 	bun.BaseModel `bun:"table:aws_loadbalancer"`
 	coremodels.Model
 
-	LbArn                 string  `bun:"lb_arn,notnull,unique"`
+	ARN                 string  `bun:"arn,notnull,unique"`
 	Name                  string  `bun:"name,notnull"`
 	DNSName               string  `bun:"dns_name,notnull"`
 	IpAddressType         string  `bun:"ip_address_type,notnull"`
