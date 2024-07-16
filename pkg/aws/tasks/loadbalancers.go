@@ -9,10 +9,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"gopkg.in/yaml.v3"
-
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/hibiken/asynq"
+	"gopkg.in/yaml.v3"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients"
@@ -24,6 +23,7 @@ const (
 	AWS_COLLECT_LOADBALANCERS_REGION_TYPE = "aws:task:collect-lbs-region"
 )
 
+// CollectLoadBalancersForRegionPayload is the payload needed for aws:task:collect-lbs-region
 type CollectLoadBalancersForRegionPayload struct {
 	Region string `yaml:"region"`
 }
@@ -90,7 +90,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 
 	for _, lb := range lbOutput.LoadBalancers {
 		modelLb := models.LoadBalancer{
-			ARN:                 strings.StringFromPointer(lb.LoadBalancerArn),
+			ARN:                   strings.StringFromPointer(lb.LoadBalancerArn),
 			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
 			DNSName:               strings.StringFromPointer(lb.DNSName),
 			IpAddressType:         string(lb.IpAddressType),
@@ -107,7 +107,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 	_, err = clients.DB.NewInsert().
 		Model(&lbs).
 		On("CONFLICT (arn) DO UPDATE").
-		Set("arn = EXCLUDED.arn").
+		Set("name = EXCLUDED.name").
 		Set("dns_name = EXCLUDED.dns_name").
 		Set("ip_address_type = EXCLUDED.ip_address_type").
 		Set("canonical_hosted_zone_id = EXCLUDED.canonical_hosted_zone_id").
@@ -115,6 +115,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 		Set("scheme = EXCLUDED.scheme").
 		Set("vpc_id = EXCLUDED.vpc_id").
 		Set("region_name = EXCLUDED.region_name").
+		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
 
