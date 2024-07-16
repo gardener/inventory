@@ -34,6 +34,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectVpcsTask,
 		NewCollectSubnetsTask,
 		NewCollectInstancesTask,
+		NewCollectLoadBalancersTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -52,6 +53,8 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkSubnetWithVPC,
 		LinkInstanceWithImage,
 		LinkImageWithRegion,
+		LinkLoadBalancerWithVpc,
+		LinkLoadBalancerWithRegion,
 	}
 
 	return utils.LinkObjects(ctx, clients.DB, linkFns)
@@ -71,6 +74,8 @@ func init() {
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_IMAGES_TYPE, asynq.HandlerFunc(HandleCollectImagesTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_INSTANCES_REGION_TYPE, asynq.HandlerFunc(HandleCollectInstancesForRegionTask))
 	registry.TaskRegistry.MustRegister(AWS_COLLECT_IMAGES_REGION_TYPE, asynq.HandlerFunc(HandleCollectImagesForRegionTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_LOADBALANCERS_REGION_TYPE, asynq.HandlerFunc(HandleCollectLoadBalancersForRegionTask))
+	registry.TaskRegistry.MustRegister(AWS_COLLECT_LOADBALANCERS_TYPE, asynq.HandlerFunc(HandleCollectLoadBalancersTask))
 	registry.TaskRegistry.MustRegister(AWSCollectAllTaskType, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(AWSLinkAllTaskType, asynq.HandlerFunc(HandleLinkAllTask))
 }

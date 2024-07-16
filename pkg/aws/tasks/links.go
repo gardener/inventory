@@ -342,6 +342,7 @@ func LinkInstanceWithRegion(ctx context.Context, db *bun.DB) error {
 	return nil
 }
 
+// LinkImageWithRegion creates links between the Image and Region.
 func LinkImageWithRegion(ctx context.Context, db *bun.DB) error {
 	var images []models.Image
 	err := db.NewSelect().
@@ -388,6 +389,101 @@ func LinkImageWithRegion(ctx context.Context, db *bun.DB) error {
 	return nil
 }
 
+// LinkLoadBalancerWithVpc creates links between the LoadBalancer and VPC.
+func LinkLoadBalancerWithVpc(ctx context.Context, db *bun.DB) error {
+	var lbs []models.LoadBalancer
+	err := db.NewSelect().
+		Model(&lbs).
+		Relation("VPC").
+		Where("vpc.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.LoadBalancerToVPC, 0, len(lbs))
+	for _, lb := range lbs {
+		link := models.LoadBalancerToVPC{
+			LoadBalancerId: lb.ID,
+			VpcID:          lb.VPC.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (lb_id, vpc_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws load balancers with VPC", "count", count)
+
+	return nil
+}
+
+// LinkLoadBalancerWithRegion creates links between the LoadBalancer and Region.
+func LinkLoadBalancerWithRegion(ctx context.Context, db *bun.DB) error {
+	var lbs []models.LoadBalancer
+	err := db.NewSelect().
+		Model(&lbs).
+		Relation("Region").
+		Where("region.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.LoadBalancerToRegion, 0, len(lbs))
+	for _, lb := range lbs {
+		link := models.LoadBalancerToRegion{
+			LoadBalancerId: lb.ID,
+			RegionID:       lb.Region.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (lb_id, region_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws load balancer with region", "count", count)
+
+	return nil
+}
+
+// LinkInstanceWithImage creates links between the Instance and Image.
 func LinkInstanceWithImage(ctx context.Context, db *bun.DB) error {
 	var instances []models.Instance
 	err := db.NewSelect().
