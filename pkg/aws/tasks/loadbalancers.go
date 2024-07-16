@@ -90,7 +90,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 
 	for _, lb := range lbOutput.LoadBalancers {
 		modelLb := models.LoadBalancer{
-			LbArn:                 strings.StringFromPointer(lb.LoadBalancerArn),
+			ARN:                 strings.StringFromPointer(lb.LoadBalancerArn),
 			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
 			DNSName:               strings.StringFromPointer(lb.DNSName),
 			IpAddressType:         string(lb.IpAddressType),
@@ -106,8 +106,8 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 
 	_, err = clients.DB.NewInsert().
 		Model(&lbs).
-		On("CONFLICT (lb_arn) DO UPDATE").
-		Set("lb_arn = EXCLUDED.lb_arn").
+		On("CONFLICT (arn) DO UPDATE").
+		Set("arn = EXCLUDED.arn").
 		Set("dns_name = EXCLUDED.dns_name").
 		Set("ip_address_type = EXCLUDED.ip_address_type").
 		Set("canonical_hosted_zone_id = EXCLUDED.canonical_hosted_zone_id").

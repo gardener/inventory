@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "aws_loadbalancer" (
-    "lb_arn" VARCHAR NOT NULL,
+    "arn" VARCHAR NOT NULL,
     "name" VARCHAR NOT NULL,
     "dns_name" VARCHAR NOT NULL,
     "ip_address_type" VARCHAR NOT NULL,
@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS "aws_loadbalancer" (
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
     PRIMARY KEY ("id"),
-    UNIQUE ("lb_arn")
+    UNIQUE ("arn")
 );
