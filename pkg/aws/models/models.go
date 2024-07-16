@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributorsmodelsvpc_id
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -196,6 +196,42 @@ type Image struct {
 	Instances      []*Instance `bun:"rel:has-many,join:image_id=image_id"`
 }
 
+// LoadBalancer represents an AWS load balancer
+type LoadBalancer struct {
+	bun.BaseModel `bun:"table:aws_loadbalancer"`
+	coremodels.Model
+
+	LbArn                 string  `bun:"lb_arn,notnull,unique"`
+	Name                  string  `bun:"name,notnull,unique"`
+	DNSName               string  `bun:"dns_name,notnull"`
+	IpAddressType         string  `bun:"ip_address_type,notnull"`
+	CanonicalHostedZoneId string  `bun:"canonical_hosted_zone_id,notnull"`
+	State                 string  `bun:"state,notnull"`
+	Scheme                string  `bun:"scheme,notnull"`
+	VpcID                 string  `bun:"vpc_id,notnull"`
+	VPC                   *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	RegionName            string  `bun:"region_name,notnull"`
+	Region                *Region `bun:"rel:has-one,join:region_name=name"`
+}
+
+// LoadBalancerToVPC represents a link table connecting the LoadBalancer with VPC.
+type LoadBalancerToVPC struct {
+	bun.BaseModel `bun:"table:l_aws_lb_to_vpc"`
+	coremodels.Model
+
+	LoadBalancerId uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_vpc_key"`
+	VpcID          uint64 `bun:"vpc_id,notnull,unique:l_aws_lb_to_vpc_key"`
+}
+
+// LoadBalancerToRegion represents a link table connecting the LoadBalancer with Region.
+type LoadBalancerToRegion struct {
+	bun.BaseModel `bun:"table:l_aws_lb_to_region"`
+	coremodels.Model
+
+	LoadBalancerId uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_region_key"`
+	RegionID       uint64 `bun:"region_id,notnull,unique:l_aws_lb_to_region_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("aws:model:region", &Region{})
@@ -204,6 +240,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("aws:model:instance", &Instance{})
 	registry.ModelRegistry.MustRegister("aws:model:image", &Image{})
+	registry.ModelRegistry.MustRegister("aws:model:lb", &LoadBalancer{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("aws:model:link_region_to_az", &RegionToAZ{})
@@ -215,4 +252,6 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_region", &InstanceToRegion{})
 	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_image", &InstanceToImage{})
 	registry.ModelRegistry.MustRegister("aws:model:link_image_to_region", &ImageToRegion{})
+	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_vpc", &LoadBalancerToVPC{})
+	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_region", &LoadBalancerToRegion{})
 }

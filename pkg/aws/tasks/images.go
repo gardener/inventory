@@ -11,7 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -100,17 +99,15 @@ func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionP
 		return err
 	}
 
-	// Parse reservations and add to images
 	count := len(imagesOutput.Images)
 	slog.Info("found images", "count", count, "region", region)
 
 	images := make([]models.Image, 0, count)
 
 	for _, image := range imagesOutput.Images {
-		name := utils.FetchTag(image.Tags, "Name")
 		modelImage := models.Image{
 			ImageID:        strings.StringFromPointer(image.ImageId),
-			Name:           name,
+			Name:           strings.StringFromPointer(image.Name),
 			OwnerID:        strings.StringFromPointer(image.OwnerId),
 			ImageType:      string(image.ImageType),
 			RootDeviceType: string(image.RootDeviceType),
