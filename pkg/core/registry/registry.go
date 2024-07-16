@@ -84,7 +84,7 @@ func (r *Registry[K, V]) Length() int {
 }
 
 // RangeFunc is a function which is called when iterating over the registry
-// items. In order to stop iteration callers should return ErrStopIteration.
+// items. In order to stop iteration callers should return [ErrStopIteration].
 type RangeFunc[K comparable, V any] func(key K, val V) error
 
 // Range calls f for each item in the registry. If f returns an error, Range
