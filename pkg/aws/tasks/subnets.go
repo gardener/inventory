@@ -83,7 +83,7 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 			},
 		)
 		if err != nil {
-			slog.Error("could not describe subnets", "reason", err)
+			slog.Error("could not describe subnets", "region", region, "reason", err)
 			return err
 		}
 		items = append(items, page.Subnets...)
@@ -152,7 +152,7 @@ func collectSubnets(ctx context.Context) error {
 	regions := make([]models.Region, 0)
 	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
-		slog.Error("could not select regions from db", "err", err)
+		slog.Error("could not select regions from db", "reason", err)
 		return err
 	}
 
