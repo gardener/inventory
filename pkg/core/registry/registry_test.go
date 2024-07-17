@@ -156,3 +156,46 @@ func TestRegistryRange(t *testing.T) {
 		})
 	}
 }
+
+func TestRegistryOverwrite(t *testing.T) {
+	testCases := []struct {
+		key  string
+		val1 string
+		val2 string
+	}{
+		{
+			key:  "foo",
+			val1: "foo",
+			val2: "bar",
+		},
+		{
+			key:  "bar",
+			val1: "bar",
+			val2: "qux",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("test overwrite with key %s", tc.key), func(t *testing.T) {
+			r := registry.New[string, string]()
+			// Set initial key value
+			r.MustRegister(tc.key, tc.val1)
+			gotVal1, ok := r.Get(tc.key)
+			if !ok {
+				t.Fatalf("value for key %q not found", tc.key)
+			}
+			if gotVal1 != tc.val1 {
+				t.Fatalf("got value %q for %q, want %q", gotVal1, tc.key, tc.val1)
+			}
+			// Overwrite value
+			r.Overwrite(tc.key, tc.val2)
+			gotVal2, ok := r.Get(tc.key)
+			if !ok {
+				t.Fatalf("value for key %q not found", tc.key)
+			}
+			if gotVal2 != tc.val2 {
+				t.Fatalf("got value %q for %q, want %q", gotVal2, tc.key, tc.val2)
+			}
+		})
+	}
+}
