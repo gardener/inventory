@@ -81,55 +81,43 @@ func TestMustRegisterPanicsOnDuplicateKey(t *testing.T) {
 	registry.MustRegister(key, 1)
 }
 
-func TestRangeStopsOnError(t *testing.T) {
-	registry := New[string, int]()
-	if err := registry.Register("key", 1); err != nil {
-		t.Fatal(err)
+func TestRange(t *testing.T) {
+	r := New[string, string]()
+	r.MustRegister("foo", "bar")
+	r.MustRegister("bar", "baz")
+	r.MustRegister("baz", "qux")
+
+	type testCase struct {
+		desc    string
+		wantErr error
+		walker  func(k, v string) error
 	}
 
-	rangeFunc := func(key string, val int) error {
-		return ErrStopIteration
+	dummyErr := errors.New("dummy error")
+	testCases := []testCase{
+		{
+			desc:    "returns nil on ErrStopIteration",
+			wantErr: nil,
+			walker:  func(k, v string) error { return ErrStopIteration },
+		},
+		{
+			desc:    "returns nil on success",
+			wantErr: nil,
+			walker:  func(k, v string) error { return nil },
+		},
+		{
+			desc:    "propagates error back to caller",
+			wantErr: dummyErr,
+			walker:  func(k, v string) error { return dummyErr },
+		},
 	}
 
-	out := registry.Range(rangeFunc)
-
-	if out != nil {
-		t.Fatalf("Range didn't explicitly stop at ErrStopIteration error.")
-	}
-}
-
-func TestRangeReturnNilOnNoError(t *testing.T) {
-	registry := New[string, int]()
-	if err := registry.Register("key", 1); err != nil {
-		t.Fatal(err)
-	}
-
-	rangeFunc := func(key string, val int) error {
-		return nil
-	}
-
-	out := registry.Range(rangeFunc)
-
-	if out != nil {
-		t.Fatalf("Range didn't return nil when no errors were encounted.")
-	}
-}
-
-func TestRangePassesError(t *testing.T) {
-	registry := New[string, int]()
-	if err := registry.Register("key", 1); err != nil {
-		t.Fatal(err)
-	}
-
-	err := errors.New("custom error")
-
-	rangeFunc := func(key string, val int) error {
-		return err
-	}
-
-	out := registry.Range(rangeFunc)
-
-	if out != err {
-		t.Fatalf("Range encountered an error and didn't return it.")
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := r.Range(tc.walker)
+			if err != tc.wantErr {
+				t.Fatalf("want error %v, got error %v", tc.wantErr, err)
+			}
+		})
 	}
 }
