@@ -42,7 +42,6 @@ func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 
 	regions := make([]models.Region, 0, len(regionsOutput.Regions))
 	for _, region := range regionsOutput.Regions {
-		slog.Info("Region", "name", strings.StringFromPointer(region.RegionName))
 		modelRegion := models.Region{
 			Name:        strings.StringFromPointer(region.RegionName),
 			Endpoint:    strings.StringFromPointer(region.Endpoint),
