@@ -212,6 +212,8 @@ type PeriodicJob struct {
 
 // VirtualGardenConfig represents the Virtual Garden configuration.
 type VirtualGardenConfig struct {
+	// TokenPath is the path to the Inventory SA token, used for requesting the Virtual Garden
+	TokenPath string `yaml:"token_path"`
 	// KubeConfig is the path to the kubeconfig file of the Virtual Garden
 	Kubeconfig string `yaml:"kubeconfig"`
 	// Environment is the environment of the running Garden
