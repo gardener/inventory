@@ -119,6 +119,9 @@ scheduler:
             duration: 24h
 
 virtual_garden:
+  # Path to token for Virtual Garden cluster authentication
+  token_path:
+
   # Path to Virtual Garden kubeconfig
   kubeconfig:
 
