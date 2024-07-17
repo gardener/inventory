@@ -65,6 +65,14 @@ func (r *Registry[K, V]) Unregister(key K) {
 	}
 }
 
+// Overwrite replaces the key specified by K with the value V in the registry.
+func (r *Registry[K, V]) Overwrite(key K, val V) {
+	r.Lock()
+	defer r.Unlock()
+
+	r.items[key] = val
+}
+
 // Get returns the value associated with the given key and a boolean indicating
 // whether the key is present in the registry.
 func (r *Registry[K, V]) Get(key K) (V, bool) {
