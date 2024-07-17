@@ -128,7 +128,7 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert Subnets into db", "reason", err)
+		slog.Error("could not insert Subnets into db", "region", region, "reason", err)
 		return err
 	}
 
@@ -170,7 +170,7 @@ func collectSubnets(ctx context.Context) error {
 				"could not enqueue task",
 				"type", subnetTask.Type(),
 				"region", r.Name,
-				"err", err,
+				"reason", err,
 			)
 			continue
 		}

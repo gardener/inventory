@@ -152,7 +152,7 @@ func collectLoadBalancers(ctx context.Context) error {
 	// Collect regions from Db
 	regions := make([]models.Region, 0)
 	if err := clients.DB.NewSelect().Model(&regions).Scan(ctx); err != nil {
-		slog.Error("could not select regions from db", "err", err)
+		slog.Error("could not select regions from db", "reason", err)
 		return err
 	}
 

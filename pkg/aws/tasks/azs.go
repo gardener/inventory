@@ -68,7 +68,7 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 	)
 
 	if err != nil {
-		slog.Error("could not describe availability zones", "err", err)
+		slog.Error("could not describe availability zones", "reason", err)
 		return err
 	}
 
@@ -109,7 +109,7 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 		Returning("id").
 		Exec(ctx)
 	if err != nil {
-		slog.Error("could not insert availability zones into db", "err", err)
+		slog.Error("could not insert availability zones into db", "region", region, "reason", err)
 		return err
 	}
 
@@ -132,7 +132,7 @@ func collectAzs(ctx context.Context) error {
 	regions := make([]models.Region, 0)
 	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
-		slog.Error("could not select regions from db", "err", err)
+		slog.Error("could not select regions from db", "reason", err)
 		return err
 	}
 
