@@ -62,11 +62,11 @@ func HandleCollectLoadBalancersForRegionTask(ctx context.Context, t *asynq.Task)
 		return ErrMissingRegion
 	}
 
-	return collectLoadBalancersForRegion(ctx, payload)
+	return collectLoadBalancersForRegion(ctx, payload.Region)
 }
 
-func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalancersForRegionPayload) error {
-	slog.Info("Collecting AWS LoadBalancers", "region", payload.Region)
+func collectLoadBalancersForRegion(ctx context.Context, region string) error {
+	slog.Info("Collecting AWS LoadBalancers", "region", region)
 
 	pageSize := int32(constants.PageSize)
 	paginator := elb.NewDescribeLoadBalancersPaginator(
@@ -83,11 +83,11 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 		page, err := paginator.NextPage(
 			ctx,
 			func(o *elb.Options) {
-				o.Region = payload.Region
+				o.Region = region
 			},
 		)
 		if err != nil {
-			slog.Error("could not describe load balancers", "region", payload.Region, "reason", err)
+			slog.Error("could not describe load balancers", "region", region, "reason", err)
 			return err
 		}
 		items = append(items, page.LoadBalancers...)
@@ -104,7 +104,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 			State:                 string(lb.State.Code),
 			Scheme:                string(lb.Scheme),
 			VpcID:                 strings.StringFromPointer(lb.VpcId),
-			RegionName:            payload.Region,
+			RegionName:            region,
 		}
 		lbs = append(lbs, modelLb)
 	}
@@ -129,7 +129,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert load balancer into db", "region", payload.Region, "reason", err)
+		slog.Error("could not insert load balancer into db", "region", region, "reason", err)
 		return err
 	}
 
@@ -138,7 +138,7 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 		return err
 	}
 
-	slog.Info("populated aws load balancers", "region", payload.Region, "count", count)
+	slog.Info("populated aws load balancers", "region", region, "count", count)
 
 	return nil
 }
