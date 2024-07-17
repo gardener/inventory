@@ -2,87 +2,122 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package registry
+package registry_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
+
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
-func TestRegistryLengthAfterAdd(t *testing.T) {
-	registry := New[string, int]()
-
-	if err := registry.Register("key", 1); err != nil {
-		t.Fatal(err)
+func TestRegistryLength(t *testing.T) {
+	testCases := []struct {
+		desc  string
+		items map[string]string
+	}{
+		{
+			desc:  "empty registry",
+			items: map[string]string{},
+		},
+		{
+			desc:  "non-empty registry",
+			items: map[string]string{"foo": "bar", "bar": "baz"},
+		},
 	}
 
-	if registry.Length() != 1 {
-		t.Fatalf("Adding one key/value pair to a new registry results in length different than 1.")
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			r := registry.New[string, string]()
+			for k, v := range tc.items {
+				r.MustRegister(k, v)
+			}
+			if r.Length() != len(tc.items) {
+				t.Fatalf("want len %d, got len %d", len(tc.items), r.Length())
+			}
+		})
 	}
 }
 
-func TestRegistryGetAfterAdd(t *testing.T) {
-	registry := New[string, int]()
+func TestRegistryGet(t *testing.T) {
+	r := registry.New[string, int]()
 
-	const key = "key"
-	const value = 42
+	key := "key"
+	value := 42
 
-	if err := registry.Register(key, value); err != nil {
-		t.Fatal(err)
-	}
-
-	outValue, exists := registry.Get(key)
+	r.MustRegister(key, value)
+	gotValue, exists := r.Get(key)
 	if !exists {
-		t.Fatalf("No value found for registered key %q", key)
+		t.Fatalf("expected value %v not found", value)
 	}
 
-	if outValue != value {
-		t.Fatalf("Registry returned value %q, expected %q.", outValue, value)
-	}
-}
-
-func TestNewRegistryLength(t *testing.T) {
-	registry := New[string, int]()
-
-	if registry.Length() != 0 {
-		t.Fatalf("New registry must have a length of 0.")
+	if gotValue != value {
+		t.Fatalf("want value %v, got value %v", value, gotValue)
 	}
 }
 
-func TestUnregisterReducesLength(t *testing.T) {
-	registry := New[string, int]()
-
-	key := "key"
-	if err := registry.Register(key, 1); err != nil {
-		t.Fatal(err)
+func TestRegistryRegister(t *testing.T) {
+	testCaseItems := []map[string]string{
+		{},
+		{"foo": "bar"},
+		{"bar": "baz", "baz": "qux"},
 	}
 
-	registry.Unregister(key)
-
-	if registry.Length() != 0 {
-		t.Fatalf("After registering and unregistering a single item, registry must have a length of 0.")
+	for _, tci := range testCaseItems {
+		r := registry.New[string, string]()
+		t.Run(fmt.Sprintf("registry with %d items", len(tci)), func(t *testing.T) {
+			for k, v := range tci {
+				// First time registering it should succeed
+				if err := r.Register(k, v); err != nil {
+					t.Fatalf("expected nil error on Register(), got %v", err)
+				}
+				// Second time registering the same K/V should result in
+				// ErrKeyAlreadyExists error
+				if err := r.Register(k, v); !errors.Is(err, registry.ErrKeyAlreadyRegistered) {
+					t.Fatalf("expected ErrKeyAlreadyExists error, got %v", err)
+				}
+			}
+		})
 	}
 }
 
-func TestMustRegisterPanicsOnDuplicateKey(t *testing.T) {
-	registry := New[string, int]()
-
-	key := "key"
-	if err := registry.Register(key, 1); err != nil {
-		t.Fatal(err)
+func TestRegistryUnregister(t *testing.T) {
+	testCaseItems := []map[string]string{
+		{},
+		{"foo": "bar"},
+		{"bar": "baz", "baz": "qux"},
 	}
+
+	for _, tci := range testCaseItems {
+		r := registry.New[string, string]()
+		t.Run(fmt.Sprintf("registry with %d items", len(tci)), func(t *testing.T) {
+			for k, v := range tci {
+				r.MustRegister(k, v)
+				r.Unregister(k)
+			}
+			if r.Length() != 0 {
+				t.Fatal("registry length must be 0")
+			}
+		})
+	}
+}
+
+func TestRegistryMustRegister(t *testing.T) {
+	r := registry.New[string, string]()
+	r.MustRegister("foo", "bar")
 
 	defer func() {
 		if r := recover(); r == nil {
-			t.Fatalf("MustRegister did not panic when registering duplicate key.")
+			t.Fatalf("expected MustRegister() to panic")
 		}
 	}()
 
-	registry.MustRegister(key, 1)
+	r.MustRegister("foo", "qux")
 }
 
-func TestRange(t *testing.T) {
-	r := New[string, string]()
+func TestRegistryRange(t *testing.T) {
+	r := registry.New[string, string]()
 	r.MustRegister("foo", "bar")
 	r.MustRegister("bar", "baz")
 	r.MustRegister("baz", "qux")
@@ -98,7 +133,7 @@ func TestRange(t *testing.T) {
 		{
 			desc:    "returns nil on ErrStopIteration",
 			wantErr: nil,
-			walker:  func(k, v string) error { return ErrStopIteration },
+			walker:  func(k, v string) error { return registry.ErrStopIteration },
 		},
 		{
 			desc:    "returns nil on success",
