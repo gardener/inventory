@@ -10,9 +10,11 @@ import (
 	"log/slog"
 
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hibiken/asynq"
 	"gopkg.in/yaml.v3"
 
+	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/utils/strings"
@@ -36,17 +38,17 @@ func NewCollectLoadBalancersTask() *asynq.Task {
 
 // NewCollectLoadbalancersForRegionTask creates a new task for collecting load balancers
 // for a given AWS Region.
-func NewCollectLoadBalancersForRegionTask(payload CollectLoadBalancersForRegionPayload) (*asynq.Task, error) {
-	if payload.Region == "" {
+func NewCollectLoadBalancersForRegionTask(region string) (*asynq.Task, error) {
+	if region == "" {
 		return nil, ErrMissingRegion
 	}
 
-	rawPayload, err := yaml.Marshal(payload)
+	payload, err := yaml.Marshal(CollectLoadBalancersForRegionPayload{Region: region})
 	if err != nil {
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_LOADBALANCERS_REGION_TYPE, rawPayload), nil
+	return asynq.NewTask(AWS_COLLECT_LOADBALANCERS_REGION_TYPE, payload), nil
 }
 
 // HandleCollectLoadBalancersForRegionTask collects load balancers for a specific Region.
@@ -64,31 +66,35 @@ func HandleCollectLoadBalancersForRegionTask(ctx context.Context, t *asynq.Task)
 }
 
 func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalancersForRegionPayload) error {
-	region := payload.Region
+	slog.Info("Collecting AWS LoadBalancers", "region", payload.Region)
 
-	slog.Info("Collecting AWS LoadBalancers", "region", region)
-
-	lbOutput, err := clients.ELB.DescribeLoadBalancers(ctx,
-		&elb.DescribeLoadBalancersInput{},
-		func(o *elb.Options) {
-			o.Region = region
+	pageSize := int32(constants.PageSize)
+	paginator := elb.NewDescribeLoadBalancersPaginator(
+		clients.ELB,
+		&elb.DescribeLoadBalancersInput{PageSize: &pageSize},
+		func(params *elb.DescribeLoadBalancersPaginatorOptions) {
+			params.StopOnDuplicateToken = true
 		},
 	)
 
-	if err != nil {
-		slog.Error("could not describe load balancers", "err", err)
-		return err
+	// Fetch items from all pages
+	items := make([]types.LoadBalancer, 0)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(
+			ctx,
+			func(o *elb.Options) {
+				o.Region = payload.Region
+			},
+		)
+		if err != nil {
+			slog.Error("could not describe load balancers", "region", payload.Region, "reason", err)
+			return err
+		}
+		items = append(items, page.LoadBalancers...)
 	}
 
-	count := len(lbOutput.LoadBalancers)
-	slog.Info("found load balancers", "count", count, "region", region)
-	if count == 0 {
-		return nil
-	}
-
-	lbs := make([]models.LoadBalancer, 0, count)
-
-	for _, lb := range lbOutput.LoadBalancers {
+	lbs := make([]models.LoadBalancer, 0, len(items))
+	for _, lb := range items {
 		modelLb := models.LoadBalancer{
 			ARN:                   strings.StringFromPointer(lb.LoadBalancerArn),
 			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
@@ -98,13 +104,16 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 			State:                 string(lb.State.Code),
 			Scheme:                string(lb.Scheme),
 			VpcID:                 strings.StringFromPointer(lb.VpcId),
-			RegionName:            region,
+			RegionName:            payload.Region,
 		}
-
 		lbs = append(lbs, modelLb)
 	}
 
-	_, err = clients.DB.NewInsert().
+	if len(lbs) == 0 {
+		return nil
+	}
+
+	out, err := clients.DB.NewInsert().
 		Model(&lbs).
 		On("CONFLICT (arn) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -120,9 +129,16 @@ func collectLoadBalancersForRegion(ctx context.Context, payload CollectLoadBalan
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert load balancer into db", "err", err)
+		slog.Error("could not insert load balancer into db", "region", payload.Region, "reason", err)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated aws load balancers", "region", payload.Region, "count", count)
 
 	return nil
 }
@@ -142,11 +158,7 @@ func collectLoadBalancers(ctx context.Context) error {
 
 	for _, r := range regions {
 		// Trigger Asynq task for each region
-		collectLoadBalancersForRegionPayload := CollectLoadBalancersForRegionPayload{
-			Region: r.Name,
-		}
-
-		lbTask, err := NewCollectLoadBalancersForRegionTask(collectLoadBalancersForRegionPayload)
+		lbTask, err := NewCollectLoadBalancersForRegionTask(r.Name)
 		if err != nil {
 			slog.Error("failed to create task", "reason", err)
 			continue
@@ -154,11 +166,22 @@ func collectLoadBalancers(ctx context.Context) error {
 
 		info, err := clients.Client.Enqueue(lbTask)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", lbTask.Type(), "err", err)
+			slog.Error(
+				"could not enqueue task",
+				"type", lbTask.Type(),
+				"region", r.Name,
+				"reason", err,
+			)
 			continue
 		}
 
-		slog.Info("enqueued task", "type", lbTask.Type(), "id", info.ID, "queue", info.Queue)
+		slog.Info(
+			"enqueued task",
+			"type", lbTask.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+		)
 	}
 
 	return nil
