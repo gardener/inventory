@@ -36,7 +36,7 @@ func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 
 	regionsOutput, err := clients.EC2.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
-		slog.Error("could not describe regions", "err", err)
+		slog.Error("could not describe regions", "reason", err)
 		return err
 	}
 
@@ -65,7 +65,7 @@ func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 		Returning("id").
 		Exec(ctx)
 	if err != nil {
-		slog.Error("could not insert regions into db", "err", err)
+		slog.Error("could not insert regions into db", "reason", err)
 		return err
 	}
 

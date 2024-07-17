@@ -177,7 +177,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 	regions := make([]models.Region, 0)
 	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
-		slog.Error("could not select regions from db", "err", err)
+		slog.Error("could not select regions from db", "reason", err)
 		return err
 	}
 
