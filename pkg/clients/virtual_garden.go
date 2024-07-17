@@ -59,16 +59,12 @@ func VirtualGardenClient() *gardenerversioned.Clientset {
 
 // SetGardenConfigs adds the rest.Configs to the gardenConfigs map, overwriting the existing ones
 func SetGardenConfigs(clients map[string]*rest.Config) {
-
 	if clients == nil {
 		return
 	}
 
 	for name, config := range clients {
-		gardenConfigs.Unregister(name)
-		if err := gardenConfigs.Register(name, config); err != nil {
-			slog.Error("Failed to set GardenConfigs", "error", err)
-		}
+		gardenConfigs.Overwrite(name, config)
 	}
 }
 
@@ -154,10 +150,8 @@ func createGardenConfig(name string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create rest config: %w", err)
 		}
-		gardenConfigs.Unregister(name)
-		if err = gardenConfigs.Register(name, restConfig); err != nil {
-			return fmt.Errorf("failed to register garden config: %w", err)
-		}
+
+		gardenConfigs.Overwrite(name, restConfig)
 
 		slog.Info("SeedClient created", slog.String("name", name))
 		return nil
