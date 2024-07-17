@@ -74,11 +74,6 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 
 	azs := make([]models.AvailabilityZone, 0, len(azsOutput.AvailabilityZones))
 	for _, az := range azsOutput.AvailabilityZones {
-		slog.Info(
-			"Availability Zone",
-			"name", strings.StringFromPointer(az.ZoneName),
-			"region", strings.StringFromPointer(az.RegionName),
-		)
 		modelAz := models.AvailabilityZone{
 			ZoneID:             strings.StringFromPointer(az.ZoneId),
 			ZoneType:           strings.StringFromPointer(az.ZoneType),
