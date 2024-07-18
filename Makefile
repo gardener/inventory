@@ -140,8 +140,7 @@ docker-compose-up:
 
 .PHONY: kustomize-build
 kustomize-build: $(KUSTOMIZE)
-	@$(KUSTOMIZE) build \
-		--load-restrictor LoadRestrictionsNone deployment/kustomize/$(KUSTOMIZE_OVERLAY)
+	@$(KUSTOMIZE) build deployment/kustomize/$(KUSTOMIZE_OVERLAY)
 
 .PHONY: minikube-up
 minikube-up: $(MINIKUBE)
