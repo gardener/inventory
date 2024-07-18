@@ -9,7 +9,6 @@ namespace: default
 generatorOptions:
   disableNameSuffixHash: true
 
-secretGenerator:
-  - name: inventory-config
-    files:
-      - secrets/config.yaml
+resources:
+  - deployment.yaml
+  - service.yaml

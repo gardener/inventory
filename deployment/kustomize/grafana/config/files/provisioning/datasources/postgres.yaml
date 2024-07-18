@@ -1,0 +1,22 @@
+---
+apiVersion: 1
+
+# See [1] for more details about the format and explanation of the fields.
+#
+# [1]: https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources
+datasources:
+  - name: gardener-inventory
+    type: postgres
+    uid: ds_gardener_inventory
+    url: postgres:5432
+    database: inventory
+    user: inventory
+    secureJsonData:
+      password: p4ssw0rd
+    jsonData:
+      sslmode: disable
+      maxOpenConns: 100
+      maxIdleConns: 10
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: false

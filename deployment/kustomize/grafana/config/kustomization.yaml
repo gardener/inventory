@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: inventory
+
+namespace: default
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: grafana-provisioning-dashboards
+    files:
+      - files/provisioning/dashboards/dashboard.yaml
+  - name: grafana-provisioning-datasources
+    files:
+      - files/provisioning/datasources/postgres.yaml
+  - name: grafana-dashboards
+    files:
+      - files/dashboards/inventory/inventory-aws.json
+      - files/dashboards/inventory/inventory-gardener.json
+      - files/dashboards/inventory/inventory-leaked-aws.json
