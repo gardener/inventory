@@ -9,17 +9,13 @@ namespace: inventory
 generatorOptions:
   disableNameSuffixHash: true
 
-secretGenerator:
-  - name: inventory-config
-    files:
-      - ../../../examples/config.yaml
-
 resources:
   - namespace.yaml
   - ../redis
   - ../postgres
   - ../grafana
   - ../prometheus
+  - ../config
   - ../scheduler
   - ../worker
   - ../dashboard
