@@ -15,7 +15,8 @@ resources:
   - ../postgres
   - ../grafana/base
   - ../grafana/config
-  - ../prometheus
+  - ../prometheus/base
+  - ../prometheus/config
   - ../config
   - ../scheduler
   - ../worker

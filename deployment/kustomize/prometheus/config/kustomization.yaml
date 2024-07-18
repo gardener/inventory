@@ -12,8 +12,4 @@ generatorOptions:
 configMapGenerator:
   - name: prometheus-config
     files:
-      - ../../../extra/prometheus/prometheus.yml
-
-resources:
-  - statefulset.yaml
-  - service.yaml
+      - files/prometheus.yml
