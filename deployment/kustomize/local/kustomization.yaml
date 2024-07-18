@@ -13,7 +13,8 @@ resources:
   - namespace.yaml
   - ../redis
   - ../postgres
-  - ../grafana
+  - ../grafana/base
+  - ../grafana/config
   - ../prometheus
   - ../config
   - ../scheduler
