@@ -23,6 +23,7 @@ spec:
       labels:
         app: worker
     spec:
+      serviceAccountName: worker
       initContainers:
         - name: init-db
           image: europe-docker.pkg.dev/gardener-project/releases/gardener/inventory:latest

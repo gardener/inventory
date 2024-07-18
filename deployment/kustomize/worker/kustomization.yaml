@@ -10,4 +10,5 @@ generatorOptions:
   disableNameSuffixHash: true
 
 resources:
+  - serviceaccount.yaml
   - deployment.yaml
