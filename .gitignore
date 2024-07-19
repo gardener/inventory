@@ -26,6 +26,7 @@ go.work.sum
 # Local Docker volumes
 dev/local/postgres
 dev/local/redis
+dev/local/prometheus
 
 # direnv
 .envrc
