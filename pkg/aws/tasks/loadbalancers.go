@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients"
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -164,7 +165,7 @@ func collectLoadBalancers(ctx context.Context) error {
 			continue
 		}
 
-		info, err := clients.Client.Enqueue(lbTask)
+		info, err := asynqclient.Client.Enqueue(lbTask)
 		if err != nil {
 			slog.Error(
 				"could not enqueue task",

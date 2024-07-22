@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/clients"
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/gardener/models"
 )
 
@@ -59,7 +60,7 @@ func collectMachines(ctx context.Context) error {
 			continue
 		}
 
-		info, err := clients.Client.Enqueue(machineTask)
+		info, err := asynqclient.Client.Enqueue(machineTask)
 		if err != nil {
 			slog.Error("could not enqueue task", "type", machineTask.Type(), "reason", err)
 			continue

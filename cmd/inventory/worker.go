@@ -17,6 +17,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/gardener/inventory/pkg/clients"
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
@@ -154,7 +155,7 @@ func NewWorkerCommand() *cli.Command {
 
 					// Initialize clients in workers
 					clients.SetDB(db)
-					clients.SetClient(client)
+					asynqclient.SetClient(client)
 					clients.SetGardenConfigs(gardenConfigs)
 					clients.SetEC2Client(ec2Client)
 					clients.SetELBClient(elbClient)

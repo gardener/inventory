@@ -11,7 +11,7 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/uptrace/bun"
 
-	"github.com/gardener/inventory/pkg/clients"
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 )
 
 // TaskConstructor is a function which creates and returns a new [asynq.Task].
@@ -21,7 +21,7 @@ type TaskConstructor func() *asynq.Task
 func Enqueue(items []TaskConstructor) error {
 	for _, fn := range items {
 		task := fn()
-		info, err := clients.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
 			slog.Error(
 				"failed to enqueue task",
