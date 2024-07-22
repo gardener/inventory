@@ -19,6 +19,7 @@ import (
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -112,7 +113,7 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		return nil
 	}
 
-	out, err := clients.DB.NewInsert().
+	out, err := db.DB.NewInsert().
 		Model(&subnets).
 		On("CONFLICT (subnet_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -151,7 +152,7 @@ func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 func collectSubnets(ctx context.Context) error {
 	// Collect regions from Db
 	regions := make([]models.Region, 0)
-	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
+	err := db.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
 		slog.Error("could not select regions from db", "reason", err)
 		return err

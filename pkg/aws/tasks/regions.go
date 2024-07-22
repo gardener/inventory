@@ -14,6 +14,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -55,7 +56,7 @@ func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	// Bulk insert regions into db
-	_, err = clients.DB.NewInsert().
+	_, err = db.DB.NewInsert().
 		Model(&regions).
 		On("CONFLICT (name) DO UPDATE").
 		Set("endpoint = EXCLUDED.endpoint").

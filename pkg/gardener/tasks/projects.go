@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -70,7 +71,7 @@ func collectProjects(ctx context.Context) error {
 	if len(projects) == 0 {
 		return nil
 	}
-	_, err = clients.DB.NewInsert().
+	_, err = db.DB.NewInsert().
 		Model(&projects).
 		On("CONFLICT (name) DO UPDATE").
 		Set("namespace = EXCLUDED.namespace").

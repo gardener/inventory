@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -70,7 +71,7 @@ func collectSeeds(ctx context.Context) error {
 	if len(seeds) == 0 {
 		return nil
 	}
-	_, err = clients.DB.NewInsert().
+	_, err = db.DB.NewInsert().
 		Model(&seeds).
 		On("CONFLICT (name) DO UPDATE").
 		Set("kubernetes_version = EXCLUDED.kubernetes_version").

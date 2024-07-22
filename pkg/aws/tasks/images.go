@@ -19,6 +19,7 @@ import (
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -131,7 +132,7 @@ func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionP
 		return nil
 	}
 
-	out, err := clients.DB.NewInsert().
+	out, err := db.DB.NewInsert().
 		Model(&images).
 		On("CONFLICT (image_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -176,7 +177,7 @@ func HandleCollectImagesTask(ctx context.Context, t *asynq.Task) error {
 func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 	// Collect regions from Db
 	regions := make([]models.Region, 0)
-	err := clients.DB.NewSelect().Model(&regions).Scan(ctx)
+	err := db.DB.NewSelect().Model(&regions).Scan(ctx)
 	if err != nil {
 		slog.Error("could not select regions from db", "reason", err)
 		return err
