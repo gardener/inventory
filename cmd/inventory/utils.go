@@ -36,7 +36,7 @@ import (
 	"github.com/gardener/inventory/pkg/aws/stscreds/kubesatoken"
 	"github.com/gardener/inventory/pkg/aws/stscreds/provider"
 	"github.com/gardener/inventory/pkg/aws/stscreds/tokenfile"
-	"github.com/gardener/inventory/pkg/clients"
+	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
 )
 
@@ -434,7 +434,7 @@ func newGardenConfigs(conf *config.Config) (map[string]*rest.Config, error) {
 			}
 			configs[contextName] = restConfig
 		}
-		if _, found := configs[clients.VIRTUAL_GARDEN]; !found {
+		if _, found := configs[gardenerclient.VIRTUAL_GARDEN]; !found {
 			return nil, fmt.Errorf("no context found for the virtual garden in the kubeconfig")
 		}
 		return configs, nil
@@ -446,7 +446,7 @@ func newGardenConfigs(conf *config.Config) (map[string]*rest.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create in-cluster config: %w", err)
 	}
-	configs[clients.VIRTUAL_GARDEN] = inClusterConfig
+	configs[gardenerclient.VIRTUAL_GARDEN] = inClusterConfig
 	return configs, nil
 
 }
@@ -472,7 +472,7 @@ func constructGardenConfigWithToken(conf *config.Config) (map[string]*rest.Confi
 		Host:            fmt.Sprintf("https://api.%s.gardener.cloud.sap", conf.VirtualGarden.Environment),
 		BearerTokenFile: conf.VirtualGarden.TokenPath,
 	}
-	configs[clients.VIRTUAL_GARDEN] = restConfig
+	configs[gardenerclient.VIRTUAL_GARDEN] = restConfig
 	return configs, nil
 }
 

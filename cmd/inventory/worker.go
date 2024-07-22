@@ -16,10 +16,10 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
 
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	dbclient "github.com/gardener/inventory/pkg/clients/db"
+	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
@@ -158,7 +158,7 @@ func NewWorkerCommand() *cli.Command {
 					// Initialize clients in workers
 					dbclient.SetDB(db)
 					asynqclient.SetClient(client)
-					clients.SetGardenConfigs(gardenConfigs)
+					gardenerclient.SetGardenConfigs(gardenConfigs)
 					awsclient.SetEC2Client(ec2Client)
 					awsclient.SetELBClient(elbClient)
 

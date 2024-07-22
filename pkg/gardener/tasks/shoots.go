@@ -16,8 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
 
-	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/clients/db"
+	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	utils "github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -39,7 +39,7 @@ func HandleGardenerCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 }
 
 func collectShoots(ctx context.Context) error {
-	gardenClient := clients.VirtualGardenClient()
+	gardenClient := gardenerclient.VirtualGardenClient()
 	if gardenClient == nil {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}
@@ -47,7 +47,7 @@ func collectShoots(ctx context.Context) error {
 	shoots := make([]models.Shoot, 0, 100)
 	err := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return clients.VirtualGardenClient().CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
+			return gardenerclient.VirtualGardenClient().CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
 		}),
 	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 		s, ok := obj.(*v1beta1.Shoot)

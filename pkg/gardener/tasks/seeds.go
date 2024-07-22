@@ -16,8 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
 
-	"github.com/gardener/inventory/pkg/clients"
 	"github.com/gardener/inventory/pkg/clients/db"
+	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -41,7 +41,7 @@ func HandleGardenerCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 }
 
 func collectSeeds(ctx context.Context) error {
-	gardenClient := clients.VirtualGardenClient()
+	gardenClient := gardenerclient.VirtualGardenClient()
 	if gardenClient == nil {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}

@@ -16,9 +16,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
 
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
+	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
 )
 
@@ -99,7 +99,7 @@ func HandleGardenerCollectMachinesForSeedTask(ctx context.Context, t *asynq.Task
 func collectMachinesForSeed(ctx context.Context, seed string) error {
 	slog.Info("Collecting Gardener machines for seed", "seed", seed)
 
-	gardenClient := clients.SeedClient(seed)
+	gardenClient := gardenerclient.SeedClient(seed)
 	if gardenClient == nil {
 		return fmt.Errorf("could not get garden client for seed %q: %w", seed, asynq.SkipRetry)
 	}
