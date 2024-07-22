@@ -13,7 +13,7 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/clients"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -35,7 +35,7 @@ func NewCollectRegionsTask() *asynq.Task {
 func HandleAwsCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	slog.Info("Collecting AWS regions")
 
-	regionsOutput, err := clients.EC2.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
+	regionsOutput, err := awsclient.EC2.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
 		slog.Error("could not describe regions", "reason", err)
 		return err

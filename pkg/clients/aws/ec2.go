@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package clients
+package aws
 
 import "github.com/aws/aws-sdk-go-v2/service/ec2"
 

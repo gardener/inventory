@@ -17,8 +17,8 @@ import (
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -67,7 +67,7 @@ func HandleCollectSubnetsForRegionTask(ctx context.Context, t *asynq.Task) error
 func collectSubnetsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS subnets", "region", region)
 	paginator := ec2.NewDescribeSubnetsPaginator(
-		clients.EC2,
+		awsclient.EC2,
 		&ec2.DescribeSubnetsInput{},
 		func(params *ec2.DescribeSubnetsPaginatorOptions) {
 			params.Limit = int32(constants.PageSize)

@@ -16,8 +16,8 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -72,7 +72,7 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 
 	pageSize := int32(constants.PageSize)
 	paginator := elb.NewDescribeLoadBalancersPaginator(
-		clients.ELB,
+		awsclient.ELB,
 		&elb.DescribeLoadBalancersInput{PageSize: &pageSize},
 		func(params *elb.DescribeLoadBalancersPaginatorOptions) {
 			params.StopOnDuplicateToken = true
