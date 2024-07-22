@@ -38,13 +38,13 @@ func HandleGardenerCollectProjectsTask(ctx context.Context, t *asynq.Task) error
 }
 
 func collectProjects(ctx context.Context) error {
-	gardenClient := gardenerclient.VirtualGardenClient()
-	if gardenClient == nil {
+	gardenClient, err := gardenerclient.VirtualGardenClient()
+	if err != nil {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}
 
 	projects := make([]models.Project, 0, 100)
-	err := pager.New(
+	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return gardenClient.CoreV1beta1().Projects().List(ctx, opts)
 		}),

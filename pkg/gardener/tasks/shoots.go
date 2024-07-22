@@ -39,15 +39,15 @@ func HandleGardenerCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 }
 
 func collectShoots(ctx context.Context) error {
-	gardenClient := gardenerclient.VirtualGardenClient()
-	if gardenClient == nil {
+	gardenClient, err := gardenerclient.VirtualGardenClient()
+	if err != nil {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}
 
 	shoots := make([]models.Shoot, 0, 100)
-	err := pager.New(
+	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return gardenerclient.VirtualGardenClient().CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
+			return gardenClient.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
 		}),
 	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 		s, ok := obj.(*v1beta1.Shoot)

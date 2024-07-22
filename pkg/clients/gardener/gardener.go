@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -17,16 +18,31 @@ import (
 	"time"
 
 	"github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	machineversioned "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 )
+
+// ErrClientNotFound is returned when attempting to get a client, which does not
+// exist in the registry.
+var ErrClientNotFound = errors.New("client not found")
+
+// ErrNoShoots is returned when there are no shoots registered in the
+// virtual garden cluster.
+var ErrNoShoots = errors.New("no shoots found")
+
+// ErrShootNotFound is an error, which is returned when a given shoot is not
+// found in the virtual garden cluster.
+var ErrShootNotFound = errors.New("shoot not found")
 
 const (
 	// VIRTUAL_GARDEN is the name of the virtual garden
@@ -40,141 +56,203 @@ const (
 	EXPIRATION_SECONDS = `{"spec":{"expirationSeconds":86400}}` // 24h
 )
 
-var gardenConfigs = registry.New[string, *rest.Config]()
+// Client provides the Gardener clients.
+type Client struct {
+	// restConfigs contains the [rest.Config] items for the various
+	// contexts.
+	restConfigs *registry.Registry[string, *rest.Config]
+}
 
-// VirtualGardenClient returns a gardener versioned clientset for the virtual garden cluster
-func VirtualGardenClient() *gardenerversioned.Clientset {
-	config, found := gardenConfigs.Get(VIRTUAL_GARDEN)
-	if !found || config == nil {
-		slog.Error("VirtualGardenClient not found", slog.String("name", VIRTUAL_GARDEN))
-		return nil
+// DefaultClient is the default client for interacting with the Gardener APIs.
+var DefaultClient *Client
+
+// SetDefaultClient sets the [DefaultClient] to the specified [Client].
+func SetDefaultClient(c *Client) {
+	DefaultClient = c
+}
+
+// Option is a function, which configures the [Client].
+type Option func(c *Client)
+
+// New creates a new [Client].
+func New(opts ...Option) *Client {
+	c := &Client{
+		restConfigs: registry.New[string, *rest.Config](),
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
+}
+
+// WithRestConfigs an [Option], which configures the [Client] with the specified
+// map of [*rest.Config] items.
+func WithRestConfigs(items map[string]*rest.Config) Option {
+	opt := func(c *Client) {
+		if items == nil {
+			return
+		}
+
+		for name, config := range items {
+			c.restConfigs.Overwrite(name, config)
+		}
+	}
+
+	return opt
+}
+
+// VirtualGarden returns a versioned clientset for the Virtual Garden cluster
+func (c *Client) VirtualGardenClient() (*gardenerversioned.Clientset, error) {
+	config, found := c.restConfigs.Get(VIRTUAL_GARDEN)
+	if !found || config == nil {
+		return nil, fmt.Errorf("%w: %s", ErrClientNotFound, VIRTUAL_GARDEN)
+	}
+
 	client, err := gardenerversioned.NewForConfig(config)
 	if err != nil {
-		slog.Error("Failed to create VirtualGardenClient", "error", err)
+		return nil, err
+	}
+
+	return client, nil
+}
+
+// VirtualGardenClient returns the Virtual Garden cluster client using the
+// [DefaultClient].
+func VirtualGardenClient() (*gardenerversioned.Clientset, error) {
+	return DefaultClient.VirtualGardenClient()
+}
+
+// Shoots returns the list of shoots registered in the Virtual Garden cluster.
+func (c *Client) Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
+	client, err := c.VirtualGardenClient()
+	if err != nil {
+		return nil, err
+	}
+
+	shoots := make([]*v1beta1.Shoot, 100)
+	err = pager.New(
+		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
+			return client.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
+		}),
+	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
+		s, ok := obj.(*v1beta1.Shoot)
+		if !ok {
+			return fmt.Errorf("unexpected object type: %T", obj)
+		}
+		shoots = append(shoots, s)
 		return nil
-	}
-	return client
+	})
+
+	return shoots, nil
 }
 
-// SetGardenConfigs adds the rest.Configs to the gardenConfigs map, overwriting the existing ones
-func SetGardenConfigs(clients map[string]*rest.Config) {
-	if clients == nil {
-		return
-	}
-
-	for name, config := range clients {
-		gardenConfigs.Overwrite(name, config)
-	}
+// Shoots returns the list of shoots registered in the Virtual Garden cluster
+// using the [DefaultClient].
+func Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
+	return DefaultClient.Shoots(ctx)
 }
 
-// SeedClient returns a machine versioned clientset for the given seed
-func SeedClient(name string) *machineversioned.Clientset {
-
-	log := slog.With("name", name)
-	// check to see if there is a rest.Config with such name
-	_, found := gardenConfigs.Get(name)
+// MCMClient returns a machine versioned clientset for the given seed name
+func (c *Client) MCMClient(name string) (*machineversioned.Clientset, error) {
+	// Check to see if there is a rest.Config with such name, and create
+	// config for it, if that's the first time we see it.
+	config, found := c.restConfigs.Get(name)
 	if !found {
-		log.Info("SeedClient not found, creating ...")
-		if err := createGardenConfig(name); err != nil {
-			log.Error("SeedClient not found", "error", err)
-			return nil
+		config, err := c.createGardenConfig(name)
+		if err != nil {
+			return nil, err
 		}
+		c.restConfigs.Overwrite(name, config)
+		return machineversioned.NewForConfig(config)
 	}
 
-	config, _ := gardenConfigs.Get(name)
+	// Make sure our config has not expired
 	if goneIn60Seconds(config) {
-		log.Info("auth is to expire in 60 seconds, refreshing ...")
-		if err := createGardenConfig(name); err != nil {
-			log.Error("SeedClient not found", "error", err)
-			return nil
+		config, err := c.createGardenConfig(name)
+		if err != nil {
+			return nil, err
 		}
+		c.restConfigs.Overwrite(name, config)
+		return machineversioned.NewForConfig(config)
 	}
 
-	client, err := machineversioned.NewForConfig(config)
-	if err != nil {
-		log.Error("Failed to create SeedClient", "error", err)
-		return nil
-	}
-
-	return client
+	// If we reach this far, we still have a valid config
+	return machineversioned.NewForConfig(config)
 }
 
-// createGardenConfig creates a rest.Config for the given seed name and adds it to the gardenConfigs map
-func createGardenConfig(name string) error {
-	var (
-		c   *gardenerversioned.Clientset
-		err error
-	)
+// MCMClient returns a machine versioned clientset for the given seed name using
+// the [DefaultClient].
+func MCMClient(name string) (*machineversioned.Clientset, error) {
+	return DefaultClient.MCMClient(name)
+}
 
-	gardenConfig, found := gardenConfigs.Get(VIRTUAL_GARDEN)
-	if !found || gardenConfig == nil {
-		return fmt.Errorf("garden config not found")
-	}
-
-	if c, err = gardenerversioned.NewForConfig(gardenConfig); err != nil {
-		return fmt.Errorf("failed to create VirtualGardenClient: %w", err)
-	}
-	shoots, err := c.CoreV1beta1().Shoots("").List(context.Background(), metav1.ListOptions{})
+// createGardenConfig creates a [*rest.Config] for the given seed name and
+// returns it.
+func (c *Client) createGardenConfig(name string) (*rest.Config, error) {
+	shoots, err := c.Shoots(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to list shoots: %w", err)
+		return nil, fmt.Errorf("failed to list shoots: %w", err)
 	}
-	if shoots == nil {
-		return fmt.Errorf("no shoots found")
+
+	if len(shoots) == 0 {
+		return nil, ErrNoShoots
 	}
-	for _, shoot := range shoots.Items {
+
+	for _, shoot := range shoots {
 		if shoot.Name != name {
 			continue
 		}
+
 		// send a http request to the viewerkubeconfig subresources
-		kubeconfigStr, err := fetchSeedKubeconfig(name)
+		kubeconfigStr, err := c.fetchSeedKubeconfig(name)
 		if err != nil {
-			return fmt.Errorf("failed to fetch kubeconfig: %w", err)
+			return nil, fmt.Errorf("failed to fetch kubeconfig: %w", err)
 		}
 		// Shall we add more checks?
 		if kubeconfigStr == "" {
-			return fmt.Errorf("kubeconfig is empty")
+			return nil, fmt.Errorf("kubeconfig is empty")
 		}
 
 		apiConfig, err := clientcmd.Load([]byte(kubeconfigStr))
 		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
+			return nil, fmt.Errorf("failed to load config: %w", err)
 		}
 		if apiConfig == nil {
-			return fmt.Errorf("config is nil")
+			return nil, fmt.Errorf("config is nil")
 		}
 
 		clientConfig := clientcmd.NewNonInteractiveClientConfig(*apiConfig, "garden--"+name+"-external",
 			&clientcmd.ConfigOverrides{}, nil)
+
 		restConfig, err := clientConfig.ClientConfig()
 		if err != nil {
-			return fmt.Errorf("failed to create rest config: %w", err)
+			return nil, fmt.Errorf("failed to create rest config: %w", err)
 		}
 
-		gardenConfigs.Overwrite(name, restConfig)
-
-		slog.Info("SeedClient created", slog.String("name", name))
-		return nil
+		return restConfig, nil
 	}
-	return fmt.Errorf("shoot not found")
+
+	return nil, fmt.Errorf("%w: %s", ErrShootNotFound, name)
 }
 
-// fetchSeedKubeconfig sends a http request to the viewerkubeconfig subresource of a shoot
-func fetchSeedKubeconfig(name string) (string, error) {
-
-	gardenConfig, found := gardenConfigs.Get(VIRTUAL_GARDEN)
-	if !found || gardenConfig == nil {
+// fetchSeedKubeconfig sends a http request to the viewerkubeconfig subresource
+// of a shoot
+func (c *Client) fetchSeedKubeconfig(name string) (string, error) {
+	config, found := c.restConfigs.Get(VIRTUAL_GARDEN)
+	if !found || config == nil {
 		return "", fmt.Errorf("garden config not found")
 	}
 
-	if gardenConfig.ContentConfig.GroupVersion == nil {
-		gardenConfig.ContentConfig = rest.ContentConfig{
+	if config.ContentConfig.GroupVersion == nil {
+		config.ContentConfig = rest.ContentConfig{
 			GroupVersion:         &v1alpha1.SchemeGroupVersion,
 			NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 		}
 	}
 
-	client, err := rest.RESTClientFor(gardenConfig)
+	client, err := rest.RESTClientFor(config)
 	if err != nil {
 		return "", fmt.Errorf("failed to create rest client: %w", err)
 	}
@@ -197,13 +275,13 @@ func fetchSeedKubeconfig(name string) (string, error) {
 	if err = result.Into(request); err != nil {
 		return "", fmt.Errorf("failed to unmarshal viewerkubeconfigrequest response: %w", err)
 	}
+
 	return string(request.Status.Kubeconfig), nil
 }
 
 // goneIn60Seconds checks the expiration time of the ClientCertificate or the BearerToken if present
 // otherwise returns false
 func goneIn60Seconds(config *rest.Config) bool {
-
 	if config == nil {
 		return false
 	}

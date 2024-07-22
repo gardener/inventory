@@ -99,13 +99,13 @@ func HandleGardenerCollectMachinesForSeedTask(ctx context.Context, t *asynq.Task
 func collectMachinesForSeed(ctx context.Context, seed string) error {
 	slog.Info("Collecting Gardener machines for seed", "seed", seed)
 
-	gardenClient := gardenerclient.SeedClient(seed)
-	if gardenClient == nil {
+	gardenClient, err := gardenerclient.MCMClient(seed)
+	if err != nil {
 		return fmt.Errorf("could not get garden client for seed %q: %w", seed, asynq.SkipRetry)
 	}
 
 	machines := make([]models.Machine, 0, 100)
-	err := pager.New(
+	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return gardenClient.MachineV1alpha1().Machines("").List(ctx, opts)
 		}),
