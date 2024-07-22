@@ -17,8 +17,8 @@ import (
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -66,7 +66,7 @@ func HandleCollectInstancesForRegionTask(ctx context.Context, t *asynq.Task) err
 func collectInstancesForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS instances ", "region", region)
 	paginator := ec2.NewDescribeInstancesPaginator(
-		clients.EC2,
+		awsclient.EC2,
 		&ec2.DescribeInstancesInput{},
 		func(params *ec2.DescribeInstancesPaginatorOptions) {
 			params.Limit = int32(constants.PageSize)

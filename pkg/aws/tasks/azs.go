@@ -15,8 +15,8 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -60,7 +60,7 @@ func HandleCollectAzsForRegionTask(ctx context.Context, t *asynq.Task) error {
 func collectAzsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS availability zones", "region", region)
 
-	azsOutput, err := clients.EC2.DescribeAvailabilityZones(ctx,
+	azsOutput, err := awsclient.EC2.DescribeAvailabilityZones(ctx,
 		&ec2.DescribeAvailabilityZonesInput{
 			AllAvailabilityZones: ptr.Bool(false),
 		},

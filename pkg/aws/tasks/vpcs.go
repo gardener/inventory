@@ -17,8 +17,8 @@ import (
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -112,7 +112,7 @@ func HandleCollectVpcsForRegionTask(ctx context.Context, t *asynq.Task) error {
 func collectVpcsForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS VPCs", "region", region)
 	paginator := ec2.NewDescribeVpcsPaginator(
-		clients.EC2,
+		awsclient.EC2,
 		&ec2.DescribeVpcsInput{},
 		func(params *ec2.DescribeVpcsPaginatorOptions) {
 			params.Limit = int32(constants.PageSize)

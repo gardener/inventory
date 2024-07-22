@@ -17,8 +17,8 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -87,7 +87,7 @@ func collectImagesForRegion(ctx context.Context, payload CollectImagesForRegionP
 	region := payload.Region
 	slog.Info("Collecting AWS AMI ", "region", region)
 	paginator := ec2.NewDescribeImagesPaginator(
-		clients.EC2,
+		awsclient.EC2,
 		&ec2.DescribeImagesInput{
 			Owners: payload.ImageOwners,
 		},
