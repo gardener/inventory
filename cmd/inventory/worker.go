@@ -158,7 +158,9 @@ func NewWorkerCommand() *cli.Command {
 					// Initialize clients in workers
 					dbclient.SetDB(db)
 					asynqclient.SetClient(client)
-					gardenerclient.SetGardenConfigs(gardenConfigs)
+					gardenerclient.SetDefaultClient(
+						gardenerclient.New(gardenerclient.WithRestConfigs(gardenConfigs)),
+					)
 					awsclient.SetEC2Client(ec2Client)
 					awsclient.SetELBClient(elbClient)
 

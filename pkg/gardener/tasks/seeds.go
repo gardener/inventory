@@ -41,13 +41,13 @@ func HandleGardenerCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 }
 
 func collectSeeds(ctx context.Context) error {
-	gardenClient := gardenerclient.VirtualGardenClient()
-	if gardenClient == nil {
+	gardenClient, err := gardenerclient.VirtualGardenClient()
+	if err != nil {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}
 
 	seeds := make([]models.Seed, 0, 100)
-	err := pager.New(
+	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return gardenClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
 		}),
