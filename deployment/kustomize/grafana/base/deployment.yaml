@@ -69,8 +69,8 @@ spec:
           configMap:
             name: grafana-provisioning-dashboards
         - name: provisioning-datasources-vol
-          configMap:
-            name: grafana-provisioning-datasources
+          secret:
+            secretName: grafana-provisioning-datasources
         - name: dashboards-vol
           configMap:
             name: grafana-dashboards
