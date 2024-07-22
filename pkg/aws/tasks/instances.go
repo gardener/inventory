@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
 	"github.com/gardener/inventory/pkg/clients"
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -165,7 +166,7 @@ func collectInstances(ctx context.Context) error {
 			continue
 		}
 
-		info, err := clients.Client.Enqueue(instanceTask)
+		info, err := asynqclient.Client.Enqueue(instanceTask)
 		if err != nil {
 			slog.Error(
 				"could not enqueue task",
