@@ -13,7 +13,7 @@ import (
 	"github.com/hibiken/asynq"
 	"gopkg.in/yaml.v3"
 
-	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
@@ -66,7 +66,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 
 		now := time.Now()
 		past := now.Add(-item.Duration)
-		out, err := clients.DB.NewDelete().
+		out, err := db.DB.NewDelete().
 			Model(model).
 			Where("date_part('epoch', updated_at) < ?", past.Unix()).
 			Exec(ctx)

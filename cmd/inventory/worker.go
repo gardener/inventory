@@ -18,6 +18,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	dbclient "github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
@@ -154,7 +155,7 @@ func NewWorkerCommand() *cli.Command {
 					elbClient := elb.NewFromConfig(awsConfig)
 
 					// Initialize clients in workers
-					clients.SetDB(db)
+					dbclient.SetDB(db)
 					asynqclient.SetClient(client)
 					clients.SetGardenConfigs(gardenConfigs)
 					clients.SetEC2Client(ec2Client)

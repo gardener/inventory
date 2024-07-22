@@ -18,6 +18,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/clients"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
 )
 
@@ -47,7 +48,7 @@ func HandleGardenerCollectMachinesTask(ctx context.Context, t *asynq.Task) error
 func collectMachines(ctx context.Context) error {
 	slog.Info("Collecting Gardener Machines")
 	seeds := make([]models.Seed, 0)
-	err := clients.DB.NewSelect().Model(&seeds).Scan(ctx)
+	err := db.DB.NewSelect().Model(&seeds).Scan(ctx)
 	if err != nil {
 		slog.Error("could not select seeds from db", "err", err)
 		return err
@@ -129,7 +130,7 @@ func collectMachinesForSeed(ctx context.Context, seed string) error {
 	if len(machines) == 0 {
 		return nil
 	}
-	_, err = clients.DB.NewInsert().
+	_, err = db.DB.NewInsert().
 		Model(&machines).
 		On("CONFLICT (name, namespace) DO UPDATE").
 		Set("status = EXCLUDED.status").

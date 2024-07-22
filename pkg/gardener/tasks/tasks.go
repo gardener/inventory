@@ -9,7 +9,7 @@ import (
 
 	"github.com/hibiken/asynq"
 
-	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/common/utils"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
@@ -47,7 +47,7 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 		LinkMachineWithShoot,
 	}
 
-	return utils.LinkObjects(ctx, clients.DB, linkFns)
+	return utils.LinkObjects(ctx, db.DB, linkFns)
 }
 
 func init() {

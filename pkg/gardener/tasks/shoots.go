@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/clients"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	utils "github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -77,7 +78,7 @@ func collectShoots(ctx context.Context) error {
 	if len(shoots) == 0 {
 		return nil
 	}
-	_, err = clients.DB.NewInsert().
+	_, err = db.DB.NewInsert().
 		Model(&shoots).
 		On("CONFLICT (technical_id) DO UPDATE").
 		Set("name = EXCLUDED.name").

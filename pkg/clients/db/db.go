@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package clients
+package db
 
 import "github.com/uptrace/bun"
 
