@@ -150,7 +150,7 @@ func (c *Client) Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
 		return nil, err
 	}
 
-	shoots := make([]*v1beta1.Shoot, 100)
+	shoots := make([]*v1beta1.Shoot, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return client.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
@@ -160,6 +160,7 @@ func (c *Client) Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
+
 		shoots = append(shoots, s)
 		return nil
 	})

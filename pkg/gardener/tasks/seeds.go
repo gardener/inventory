@@ -46,7 +46,7 @@ func collectSeeds(ctx context.Context) error {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}
 
-	seeds := make([]models.Seed, 0, 100)
+	seeds := make([]models.Seed, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return gardenClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})

@@ -43,7 +43,7 @@ func collectProjects(ctx context.Context) error {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
 	}
 
-	projects := make([]models.Project, 0, 100)
+	projects := make([]models.Project, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return gardenClient.CoreV1beta1().Projects().List(ctx, opts)
