@@ -101,7 +101,7 @@ func collectMachinesForSeed(ctx context.Context, seed string) error {
 
 	gardenClient, err := gardenerclient.MCMClient(seed)
 	if err != nil {
-		return fmt.Errorf("could not get garden client for seed %q: %w", seed, asynq.SkipRetry)
+		return fmt.Errorf("could not get garden client for seed %q: %s: %w", seed, err, asynq.SkipRetry)
 	}
 
 	machines := make([]models.Machine, 0)
