@@ -218,6 +218,9 @@ type VirtualGardenConfig struct {
 	Kubeconfig string `yaml:"kubeconfig"`
 	// Environment is the environment of the running Garden
 	Environment string `yaml:"environment"`
+	// ExcludedSeeds is a list of seed cluster names, from which collection
+	// will be skipped.
+	ExcludedSeeds []string `yaml:"excluded_seeds"`
 }
 
 // DashboardConfig provides the Dashboard service configuration.
