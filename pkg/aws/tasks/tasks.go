@@ -35,6 +35,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectSubnetsTask,
 		NewCollectInstancesTask,
 		NewCollectLoadBalancersTask,
+		NewCollectBucketsTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -48,10 +49,10 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkInstanceWithRegion,
 		LinkInstanceWithSubnet,
 		LinkInstanceWithVPC,
+		LinkInstanceWithImage,
 		LinkRegionWithVPC,
 		LinkSubnetWithAZ,
 		LinkSubnetWithVPC,
-		LinkInstanceWithImage,
 		LinkImageWithRegion,
 		LinkLoadBalancerWithVpc,
 		LinkLoadBalancerWithRegion,
@@ -76,6 +77,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectImagesForRegion, asynq.HandlerFunc(HandleCollectImagesForRegionTask))
 	registry.TaskRegistry.MustRegister(TaskCollectLoadBalancersForRegion, asynq.HandlerFunc(HandleCollectLoadBalancersForRegionTask))
 	registry.TaskRegistry.MustRegister(TaskCollectLoadBalancers, asynq.HandlerFunc(HandleCollectLoadBalancersTask))
+	registry.TaskRegistry.MustRegister(TaskCollectBuckets, asynq.HandlerFunc(HandleCollectBucketsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }

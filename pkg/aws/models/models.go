@@ -5,6 +5,7 @@
 package models
 
 import (
+	"time"
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -232,6 +233,17 @@ type LoadBalancerToRegion struct {
 	RegionID       uint64 `bun:"region_id,notnull,unique:l_aws_lb_to_region_key"`
 }
 
+// Bucket represents an AWS S3 bucket
+type Bucket struct {
+	bun.BaseModel `bun:"table:aws_bucket"`
+	coremodels.Model
+
+	Name         string     `bun:"name,notnull,unique"`
+	CreationDate *time.Time `bun:"creation_date,notnull"`
+	RegionName   string     `bun:"region_name,notnull"`
+	Region       *Region    `bun:"rel:has-one,join:region_name=name"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("aws:model:region", &Region{})
@@ -241,6 +253,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:instance", &Instance{})
 	registry.ModelRegistry.MustRegister("aws:model:image", &Image{})
 	registry.ModelRegistry.MustRegister("aws:model:lb", &LoadBalancer{})
+	registry.ModelRegistry.MustRegister("aws:model:bucket", &Bucket{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("aws:model:link_region_to_az", &RegionToAZ{})
