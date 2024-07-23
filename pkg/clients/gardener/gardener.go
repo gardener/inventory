@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -44,6 +45,10 @@ var ErrNoShoots = errors.New("no shoots found")
 // found in the virtual garden cluster.
 var ErrShootNotFound = errors.New("shoot not found")
 
+// ErrSeedIsExcluded is an error, which is returned when attempting to get a
+// [*rest.Config] for a seed cluster, which is excluded in the configuration.
+var ErrSeedIsExcluded = errors.New("seed is excluded")
+
 const (
 	// VIRTUAL_GARDEN is the name of the virtual garden
 	VIRTUAL_GARDEN = "virtual-garden"
@@ -61,10 +66,14 @@ type Client struct {
 	// restConfigs contains the [rest.Config] items for the various
 	// contexts.
 	restConfigs *registry.Registry[string, *rest.Config]
+
+	// excludedSeeds represents a list of seed cluster names, from which
+	// collection will be skipped and no client config is created for.
+	excludedSeeds []string
 }
 
 // DefaultClient is the default client for interacting with the Gardener APIs.
-var DefaultClient *Client
+var DefaultClient = New()
 
 // SetDefaultClient sets the [DefaultClient] to the specified [Client].
 func SetDefaultClient(c *Client) {
@@ -87,8 +96,8 @@ func New(opts ...Option) *Client {
 	return c
 }
 
-// WithRestConfigs an [Option], which configures the [Client] with the specified
-// map of [*rest.Config] items.
+// WithRestConfigs is an [Option], which configures the [Client] with the
+// specified map of [*rest.Config] items.
 func WithRestConfigs(items map[string]*rest.Config) Option {
 	opt := func(c *Client) {
 		if items == nil {
@@ -98,6 +107,16 @@ func WithRestConfigs(items map[string]*rest.Config) Option {
 		for name, config := range items {
 			c.restConfigs.Overwrite(name, config)
 		}
+	}
+
+	return opt
+}
+
+// WithExcludedSeeds is an [Option], which configures the [Client] to skip
+// collection from the specified seed cluster names.
+func WithExcludedSeeds(seeds []string) Option {
+	opt := func(c *Client) {
+		c.excludedSeeds = seeds
 	}
 
 	return opt
@@ -156,6 +175,10 @@ func Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
 
 // MCMClient returns a machine versioned clientset for the given seed name
 func (c *Client) MCMClient(name string) (*machineversioned.Clientset, error) {
+	if slices.Contains(c.excludedSeeds, name) {
+		return nil, fmt.Errorf("%w: %s", ErrSeedIsExcluded, name)
+	}
+
 	// Check to see if there is a rest.Config with such name, and create
 	// config for it, if that's the first time we see it.
 	config, found := c.restConfigs.Get(name)
