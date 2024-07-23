@@ -127,3 +127,9 @@ virtual_garden:
 
   # Environment type (dev, staging, canary, live)
   environment: dev
+
+  # The list of excluded seeds specifies seed cluster names, from which
+  # collection will be skipped.
+  excluded_seeds:
+    - seed-a
+    - seed-b
