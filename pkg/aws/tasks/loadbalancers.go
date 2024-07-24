@@ -102,7 +102,7 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
 			DNSName:               strings.StringFromPointer(lb.DNSName),
 			IpAddressType:         string(lb.IpAddressType),
-			CanonicalHostedZoneId: strings.StringFromPointer(lb.CanonicalHostedZoneId),
+			CanonicalHostedZoneID: strings.StringFromPointer(lb.CanonicalHostedZoneId),
 			State:                 string(lb.State.Code),
 			Scheme:                string(lb.Scheme),
 			VpcID:                 strings.StringFromPointer(lb.VpcId),

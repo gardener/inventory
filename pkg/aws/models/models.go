@@ -205,7 +205,7 @@ type LoadBalancer struct {
 	Name                  string  `bun:"name,notnull"`
 	DNSName               string  `bun:"dns_name,notnull"`
 	IpAddressType         string  `bun:"ip_address_type,notnull"`
-	CanonicalHostedZoneId string  `bun:"canonical_hosted_zone_id,notnull"`
+	CanonicalHostedZoneID string  `bun:"canonical_hosted_zone_id,notnull"`
 	State                 string  `bun:"state,notnull"`
 	Scheme                string  `bun:"scheme,notnull"`
 	VpcID                 string  `bun:"vpc_id,notnull"`
@@ -219,7 +219,7 @@ type LoadBalancerToVPC struct {
 	bun.BaseModel `bun:"table:l_aws_lb_to_vpc"`
 	coremodels.Model
 
-	LoadBalancerId uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_vpc_key"`
+	LoadBalancerID uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_vpc_key"`
 	VpcID          uint64 `bun:"vpc_id,notnull,unique:l_aws_lb_to_vpc_key"`
 }
 
@@ -228,7 +228,7 @@ type LoadBalancerToRegion struct {
 	bun.BaseModel `bun:"table:l_aws_lb_to_region"`
 	coremodels.Model
 
-	LoadBalancerId uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_region_key"`
+	LoadBalancerID uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_region_key"`
 	RegionID       uint64 `bun:"region_id,notnull,unique:l_aws_lb_to_region_key"`
 }
 

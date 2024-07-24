@@ -295,7 +295,7 @@ func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 
 	for _, item := range items {
 		id := na
-		groupId := na
+		groupID := na
 		migratedAt := na
 
 		if item.ID > 0 {
@@ -303,7 +303,7 @@ func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 		}
 
 		if item.GroupID > 0 {
-			groupId = strconv.FormatInt(item.GroupID, 10)
+			groupID = strconv.FormatInt(item.GroupID, 10)
 		}
 
 		if !item.MigratedAt.IsZero() {
@@ -314,7 +314,7 @@ func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 			id,
 			item.Name,
 			item.Comment,
-			groupId,
+			groupID,
 			migratedAt,
 		}
 		table.Append(row)
