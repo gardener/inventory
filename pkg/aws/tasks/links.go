@@ -405,7 +405,7 @@ func LinkLoadBalancerWithVpc(ctx context.Context, db *bun.DB) error {
 	links := make([]models.LoadBalancerToVPC, 0, len(lbs))
 	for _, lb := range lbs {
 		link := models.LoadBalancerToVPC{
-			LoadBalancerId: lb.ID,
+			LoadBalancerID: lb.ID,
 			VpcID:          lb.VPC.ID,
 		}
 		links = append(links, link)
@@ -452,7 +452,7 @@ func LinkLoadBalancerWithRegion(ctx context.Context, db *bun.DB) error {
 	links := make([]models.LoadBalancerToRegion, 0, len(lbs))
 	for _, lb := range lbs {
 		link := models.LoadBalancerToRegion{
-			LoadBalancerId: lb.ID,
+			LoadBalancerID: lb.ID,
 			RegionID:       lb.Region.ID,
 		}
 		links = append(links, link)
