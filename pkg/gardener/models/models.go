@@ -99,7 +99,7 @@ type BackupBucket struct {
 	coremodels.Model
 
 	Name       string `bun:"name,notnull,unique"`
-	ProviderId string `bun:"provider_id,notnull"`
+	ProviderID string `bun:"provider_id,notnull"`
 	RegionName string `bun:"region_name,notnull"`
 	SeedName   string `bun:"seed_name,notnull"`
 	Seed       *Seed  `bun:"rel:has-one,join:seed_name=name"`
