@@ -165,6 +165,10 @@ func (c *Client) Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
 		return nil
 	})
 
+	if err != nil {
+		return nil, fmt.Errorf("could not list shoots: %w", err)
+	}
+
 	return shoots, nil
 }
 
