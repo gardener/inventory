@@ -93,12 +93,25 @@ type Machine struct {
 	Shoot      *Shoot `bun:"rel:has-one,join:namespace=technical_id"`
 }
 
+// BackupBucket represents a Gardener BackupBucket resource
+type BackupBucket struct {
+	bun.BaseModel `bun:"table:g_backup_bucket"`
+	coremodels.Model
+
+	Name       string `bun:"name,notnull,unique"`
+	ProviderId string `bun:"provider_id,notnull"`
+	RegionName string `bun:"region_name,notnull"`
+	SeedName   string `bun:"seed_name,notnull"`
+	Seed       *Seed  `bun:"rel:has-one,join:seed_name=name"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("g:model:project", &Project{})
 	registry.ModelRegistry.MustRegister("g:model:seed", &Seed{})
 	registry.ModelRegistry.MustRegister("g:model:shoot", &Shoot{})
 	registry.ModelRegistry.MustRegister("g:model:machine", &Machine{})
+	registry.ModelRegistry.MustRegister("g:model:backup_bucket", &BackupBucket{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})
