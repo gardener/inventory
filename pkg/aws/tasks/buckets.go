@@ -60,6 +60,8 @@ func collectBuckets(ctx context.Context) error {
 				"reason", err)
 		}
 
+		bucketName := strings.StringFromPointer(bucket.Name)
+
 		region := string(locationOutput.LocationConstraint)
 		// Look at the LocationConstraint (field above) documentation.
 		// us-east-1 returns a nil value (empty string), so I have to
@@ -68,9 +70,14 @@ func collectBuckets(ctx context.Context) error {
 			region = "us-east-1"
 		}
 
+		if bucket.CreationDate == nil {
+			slog.Error("bucket without creation date found", "name", bucketName)
+			continue
+		}
+
 		bucketModel := models.Bucket{
-			Name:         strings.StringFromPointer(bucket.Name),
-			CreationDate: bucket.CreationDate,
+			Name:         bucketName,
+			CreationDate: *bucket.CreationDate,
 			RegionName:   region,
 		}
 		buckets = append(buckets, bucketModel)

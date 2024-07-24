@@ -239,10 +239,10 @@ type Bucket struct {
 	bun.BaseModel `bun:"table:aws_bucket"`
 	coremodels.Model
 
-	Name         string     `bun:"name,notnull,unique"`
-	CreationDate *time.Time `bun:"creation_date,notnull"`
-	RegionName   string     `bun:"region_name,notnull"`
-	Region       *Region    `bun:"rel:has-one,join:region_name=name"`
+	Name         string    `bun:"name,notnull,unique"`
+	CreationDate time.Time `bun:"creation_date,notnull"`
+	RegionName   string    `bun:"region_name,notnull"`
+	Region       *Region   `bun:"rel:has-one,join:region_name=name"`
 }
 
 func init() {
