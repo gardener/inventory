@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	// GardenerCollectAllTaskType is a meta task, which enqueues all
+	// TaskCollectAll is a meta task, which enqueues all
 	// relevant Gardener tasks.
-	GardenerCollectAllTaskType = "g:task:collect-all"
+	TaskCollectAll = "g:task:collect-all"
 
-	// GardenerLinkAllTaskType is the task type for linking all Gardener
+	// TaskLinkAll is the task type for linking all Gardener
 	// related objects.
-	GardenerLinkAllTaskType = "g:task:link-all"
+	TaskLinkAll = "g:task:link-all"
 )
 
 // HandleCollectAllTask is the handler, which enqueues tasks for collecting all
@@ -52,11 +52,11 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 
 func init() {
 	// Task handlers
-	registry.TaskRegistry.MustRegister(GARDENER_COLLECT_PROJECTS_TYPE, asynq.HandlerFunc(HandleGardenerCollectProjectsTask))
-	registry.TaskRegistry.MustRegister(GARDENER_COLLECT_SEEDS_TYPE, asynq.HandlerFunc(HandleGardenerCollectSeedsTask))
-	registry.TaskRegistry.MustRegister(GARDENER_COLLECT_SHOOTS_TYPE, asynq.HandlerFunc(HandleGardenerCollectShootsTask))
-	registry.TaskRegistry.MustRegister(GARDENER_COLLECT_MACHINES_TYPE, asynq.HandlerFunc(HandleGardenerCollectMachinesTask))
-	registry.TaskRegistry.MustRegister(GARDENER_COLLECT_MACHINES_SEED_TYPE, asynq.HandlerFunc(HandleGardenerCollectMachinesForSeedTask))
-	registry.TaskRegistry.MustRegister(GardenerCollectAllTaskType, asynq.HandlerFunc(HandleCollectAllTask))
-	registry.TaskRegistry.MustRegister(GardenerLinkAllTaskType, asynq.HandlerFunc(HandleLinkAllTask))
+	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleGardenerCollectProjectsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectSeeds, asynq.HandlerFunc(HandleGardenerCollectSeedsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectShoots, asynq.HandlerFunc(HandleGardenerCollectShootsTask))
+	registry.TaskRegistry.MustRegister(TasksCollectMachines, asynq.HandlerFunc(HandleGardenerCollectMachinesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectMachinesSeed, asynq.HandlerFunc(HandleGardenerCollectMachinesForSeedTask))
+	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
+	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }

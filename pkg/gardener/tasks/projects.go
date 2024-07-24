@@ -22,13 +22,13 @@ import (
 )
 
 const (
-	// GARDENER_COLLECT_PROJECTS_TYPE is the type of the task that collects Gardener projects.
-	GARDENER_COLLECT_PROJECTS_TYPE = "g:task:collect-projects"
+	// TaskCollectProjects is the type of the task that collects Gardener projects.
+	TaskCollectProjects = "g:task:collect-projects"
 )
 
 // NewGardenerCollectProjectsTask creates a new task for collecting Gardener projects.
 func NewGardenerCollectProjectsTask() *asynq.Task {
-	return asynq.NewTask(GARDENER_COLLECT_PROJECTS_TYPE, nil)
+	return asynq.NewTask(TaskCollectProjects, nil)
 }
 
 // HandleGardenerCollectProjectsTask is a handler function that collects Gardener projects.

@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_IMAGES_TYPE        = "aws:task:collect-images"
-	AWS_COLLECT_IMAGES_REGION_TYPE = "aws:task:collect-images-region"
+	TaskCollectImages       = "aws:task:collect-images"
+	TaskCollectImagesRegion = "aws:task:collect-images-region"
 )
 
 // ErrMissingOwners is returned when expected owner names are missing.
@@ -43,7 +43,7 @@ type CollectImagesForRegionPayload struct {
 // NewCollectImagesTask creates a new task for collecting AMI Images from
 // all AWS Regions.
 func NewCollectImagesTask() *asynq.Task {
-	return asynq.NewTask(AWS_COLLECT_IMAGES_TYPE, nil)
+	return asynq.NewTask(TaskCollectImages, nil)
 }
 
 // NewCollectImagesForRegionTask creates a new task for collecting AMI
@@ -62,7 +62,7 @@ func NewCollectImagesForRegionTask(payload CollectImagesForRegionPayload) (*asyn
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, rawPayload), nil
+	return asynq.NewTask(TaskCollectImagesRegion, rawPayload), nil
 }
 
 // HandleCollectImagesForRegionTask collects EC2 Images for a specific Region.

@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_VPC_TYPE        = "aws:task:collect-vpcs"
-	AWS_COLLECT_VPC_REGION_TYPE = "aws:task:collect-vpcs-region"
+	TaskCollectVPCs       = "aws:task:collect-vpcs"
+	TaskCollectVPCsRegion = "aws:task:collect-vpcs-region"
 )
 
 // CollectVpcsPayload is the payload for collecting VPCs for a given AWS Region.
@@ -36,7 +36,7 @@ type CollectVpcsPayload struct {
 // NewCollectVpcsTask creates a new task for collecting all VPCs for all
 // Regions.
 func NewCollectVpcsTask() *asynq.Task {
-	return asynq.NewTask(AWS_COLLECT_VPC_TYPE, nil)
+	return asynq.NewTask(TaskCollectVPCs, nil)
 }
 
 // HandleCollectVpcsTask handles the task, which collects all VPCs for all known
@@ -95,7 +95,7 @@ func NewCollectVpcsForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_VPC_REGION_TYPE, payload), nil
+	return asynq.NewTask(TaskCollectVPCsRegion, payload), nil
 }
 
 // HandleCollectVpcsForRegionTask handles the task for collecting VPCs for a

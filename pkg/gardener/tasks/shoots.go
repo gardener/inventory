@@ -23,13 +23,13 @@ import (
 )
 
 const (
-	// GARDENER_COLLECT_SHOOTS_TYPE is the type of the task that collects Gardener shoots.
-	GARDENER_COLLECT_SHOOTS_TYPE = "g:task:collect-shoots"
+	// TaskCollectShoots is the type of the task that collects Gardener shoots.
+	TaskCollectShoots = "g:task:collect-shoots"
 )
 
 // NewGardenerCollectShootsTask creates a new task for collecting Gardener shoots.
 func NewGardenerCollectShootsTask() *asynq.Task {
-	return asynq.NewTask(GARDENER_COLLECT_SHOOTS_TYPE, nil)
+	return asynq.NewTask(TaskCollectShoots, nil)
 }
 
 // HandleGardenerCollectShootsTask is a handler function that collects Gardener shoots.

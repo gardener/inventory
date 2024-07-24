@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_INSTANCES_TYPE        = "aws:task:collect-instances"
-	AWS_COLLECT_INSTANCES_REGION_TYPE = "aws:task:collect-instances-region"
+	TaskCollectInstances       = "aws:task:collect-instances"
+	TaskCollectInstancesRegion = "aws:task:collect-instances-region"
 )
 
 type CollectInstancesPayload struct {
@@ -35,7 +35,7 @@ type CollectInstancesPayload struct {
 // NewCollectInstancesTask creates a new task for collecting EC2 Instances from
 // all AWS Regions.
 func NewCollectInstancesTask() *asynq.Task {
-	return asynq.NewTask(AWS_COLLECT_INSTANCES_TYPE, nil)
+	return asynq.NewTask(TaskCollectInstances, nil)
 }
 
 // NewCollectInstancesForRegionTask creates a new task for collecting EC2
@@ -50,7 +50,7 @@ func NewCollectInstancesForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_INSTANCES_REGION_TYPE, payload), nil
+	return asynq.NewTask(TaskCollectInstancesRegion, payload), nil
 }
 
 // HandleCollectInstancesForRegionTask collects EC2 Instances for a specific Region.
