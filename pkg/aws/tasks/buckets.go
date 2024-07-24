@@ -12,7 +12,8 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/clients"
+	awsClients "github.com/gardener/inventory/pkg/clients/aws"
+	dbClient "github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -30,7 +31,7 @@ func collectBuckets(ctx context.Context) error {
 	slog.Info("Collecting AWS S3 buckets")
 
 	//TODO: look into more pagination options
-	bucketsOutput, err := clients.S3.ListBuckets(ctx,
+	bucketsOutput, err := awsClients.S3.ListBuckets(ctx,
 		&s3.ListBucketsInput{},
 	)
 
@@ -49,7 +50,7 @@ func collectBuckets(ctx context.Context) error {
 	buckets := make([]models.Bucket, 0, count)
 
 	for _, bucket := range bucketsOutput.Buckets {
-		locationOutput, err := clients.S3.GetBucketLocation(ctx,
+		locationOutput, err := awsClients.S3.GetBucketLocation(ctx,
 			&s3.GetBucketLocationInput{
 				Bucket: bucket.Name,
 			})
@@ -75,7 +76,7 @@ func collectBuckets(ctx context.Context) error {
 		buckets = append(buckets, bucketModel)
 	}
 
-	_, err = clients.DB.NewInsert().
+	_, err = dbClient.DB.NewInsert().
 		Model(&buckets).
 		On("CONFLICT (name) DO UPDATE").
 		Set("creation_date = EXCLUDED.creation_date").
