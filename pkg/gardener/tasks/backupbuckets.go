@@ -58,7 +58,7 @@ func collectBackupBuckets(ctx context.Context) error {
 		backupBucket := models.BackupBucket{
 			Name:       b.GetName(),
 			SeedName:   *b.Spec.SeedName,
-			ProviderId: b.Spec.Provider.Type,
+			ProviderID: b.Spec.Provider.Type,
 			RegionName: b.Spec.Provider.Region,
 		}
 		backupBuckets = append(backupBuckets, backupBucket)
