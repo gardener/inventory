@@ -13,7 +13,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	awsClients "github.com/gardener/inventory/pkg/clients/aws"
-	dbClient "github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -28,7 +28,7 @@ func NewCollectBucketsTask() *asynq.Task {
 }
 
 func collectBuckets(ctx context.Context) error {
-	slog.Info("Collecting AWS S3 buckets")
+	slog.Info("collecting AWS S3 buckets")
 
 	//TODO: look into more pagination options
 	bucketsOutput, err := awsClients.S3.ListBuckets(ctx,
@@ -36,18 +36,17 @@ func collectBuckets(ctx context.Context) error {
 	)
 
 	if err != nil {
-		slog.Error("could not list buckets", "err", err)
+		slog.Error("could not list buckets", "reason", err)
 		return err
 	}
 
-	count := len(bucketsOutput.Buckets)
-	slog.Info("found buckets", "count", count)
+	bucketCount := len(bucketsOutput.Buckets)
 
-	if count == 0 {
+	if bucketCount == 0 {
 		return nil
 	}
 
-	buckets := make([]models.Bucket, 0, count)
+	buckets := make([]models.Bucket, 0, bucketCount)
 
 	for _, bucket := range bucketsOutput.Buckets {
 		locationOutput, err := awsClients.S3.GetBucketLocation(ctx,
@@ -55,7 +54,10 @@ func collectBuckets(ctx context.Context) error {
 				Bucket: bucket.Name,
 			})
 		if err != nil {
-			slog.Error("Unable to get bucket location", "bucket", *bucket.Name, "err", err)
+			slog.Error(
+				"could not get bucket location",
+				"bucket", *bucket.Name,
+				"reason", err)
 		}
 
 		region := string(locationOutput.LocationConstraint)
@@ -66,8 +68,6 @@ func collectBuckets(ctx context.Context) error {
 			region = "us-east-1"
 		}
 
-		slog.Info("Mapped bucket to region", "bucket", *bucket.Name, "region", region)
-
 		bucketModel := models.Bucket{
 			Name:         strings.StringFromPointer(bucket.Name),
 			CreationDate: bucket.CreationDate,
@@ -76,7 +76,7 @@ func collectBuckets(ctx context.Context) error {
 		buckets = append(buckets, bucketModel)
 	}
 
-	_, err = dbClient.DB.NewInsert().
+	out, err := db.DB.NewInsert().
 		Model(&buckets).
 		On("CONFLICT (name) DO UPDATE").
 		Set("creation_date = EXCLUDED.creation_date").
@@ -84,10 +84,18 @@ func collectBuckets(ctx context.Context) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert S3 bucket into db", "err", err)
+		slog.Error("could not insert S3 buckets into db", "err", err)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated aws s3 buckets", "count", count)
 
 	return nil
 }

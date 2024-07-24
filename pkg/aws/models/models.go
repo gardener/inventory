@@ -6,6 +6,7 @@ package models
 
 import (
 	"time"
+
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
