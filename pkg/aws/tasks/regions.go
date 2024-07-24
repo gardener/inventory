@@ -23,12 +23,12 @@ var ErrMissingRegion = errors.New("missing region name")
 
 const (
 	// Asynq task type for collecting AWS regions
-	AWS_COLLECT_REGIONS_TYPE = "aws:task:collect-regions"
+	TaskCollectRegions = "aws:task:collect-regions"
 )
 
 // NewAwsCollectRegionsTask creates a new task for collecting AWS regions.
 func NewCollectRegionsTask() *asynq.Task {
-	return asynq.NewTask(AWS_COLLECT_REGIONS_TYPE, nil)
+	return asynq.NewTask(TaskCollectRegions, nil)
 }
 
 // HandleAwsCollectRegionsTask is a handler function that collects AWS regions.

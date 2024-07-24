@@ -8,8 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TODO: This will have to be enabled after payloads for the collect-all task are implemented in the future.
-
 func TestNewCollectImagesForRegionTaskCorrectPath(t *testing.T) {
 	payload := CollectImagesForRegionPayload{
 		//Test must catch this.
@@ -68,7 +66,7 @@ func TestNewCollectImagesForRegionTaskValidatesInput(t *testing.T) {
 }
 
 func TestHandleCollectImagesForRegionTaskValidatesNilPayload(t *testing.T) {
-	testTask := asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, nil)
+	testTask := asynq.NewTask(TaskCollectImagesRegion, nil)
 
 	if testTask == nil {
 		t.Errorf("Task creation failed.")
@@ -88,7 +86,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testTask := asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, rawPayload)
+	testTask := asynq.NewTask(TaskCollectImagesRegion, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
 	if err == nil {
@@ -105,7 +103,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testTask = asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, rawPayload)
+	testTask = asynq.NewTask(TaskCollectImagesRegion, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
 	if err == nil {
@@ -121,7 +119,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testTask = asynq.NewTask(AWS_COLLECT_IMAGES_REGION_TYPE, rawPayload)
+	testTask = asynq.NewTask(TaskCollectImagesRegion, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
 
@@ -137,7 +135,7 @@ func TestHandleCollectImagesTaskValidatesPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testTask := asynq.NewTask(AWS_COLLECT_IMAGES_TYPE, rawPayload)
+	testTask := asynq.NewTask(TaskCollectImages, rawPayload)
 
 	err = HandleCollectImagesTask(context.Background(), testTask)
 	if err == nil {
@@ -152,7 +150,7 @@ func TestHandleCollectImagesTaskValidatesPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testTask = asynq.NewTask(AWS_COLLECT_IMAGES_TYPE, rawPayload)
+	testTask = asynq.NewTask(TaskCollectImages, rawPayload)
 
 	err = HandleCollectImagesTask(context.Background(), testTask)
 

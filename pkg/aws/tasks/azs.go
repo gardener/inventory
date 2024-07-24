@@ -23,8 +23,8 @@ import (
 
 const (
 	// Asynq task type for collecting AWS regions
-	AWS_COLLECT_AZS_REGION_TYPE = "aws:task:collect-azs-region"
-	AWS_COLLECT_AZS_TYPE        = "aws:task:collect-azs"
+	TaskCollectAZsRegion         = "aws:task:collect-azs-region"
+	TaskCollectAvailabilityZones = "aws:task:collect-azs"
 )
 
 type CollectAzsPayload struct {
@@ -43,7 +43,7 @@ func NewCollectAzsForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_AZS_REGION_TYPE, payload), nil
+	return asynq.NewTask(TaskCollectAZsRegion, payload), nil
 }
 
 // HandleCollectAzsForRegionTask is the task handler which collects Availability
@@ -116,7 +116,7 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 // NewCollectAzsTask creates a new task for collecting AWS availability zones without specifying a region.
 // It fetches the reqions from the database and triggers an aws:collect-azs-region task for each region.
 func NewCollectAzsTask() *asynq.Task {
-	return asynq.NewTask(AWS_COLLECT_AZS_TYPE, nil)
+	return asynq.NewTask(TaskCollectAvailabilityZones, nil)
 }
 
 // HandleCollectAzsTask handles the task for collecting all AZs for all Regions.

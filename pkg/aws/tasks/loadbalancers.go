@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_LOADBALANCERS_TYPE        = "aws:task:collect-lbs"
-	AWS_COLLECT_LOADBALANCERS_REGION_TYPE = "aws:task:collect-lbs-region"
+	TaskCollectLoadBalancers       = "aws:task:collect-lbs"
+	TaskCollectLoadBalancersRegion = "aws:task:collect-lbs-region"
 )
 
 // CollectLoadBalancersForRegionPayload is the payload needed for aws:task:collect-lbs-region
@@ -35,7 +35,7 @@ type CollectLoadBalancersForRegionPayload struct {
 // NewCollectLoadBalancersnTask creates a new task for collecting load balancers from
 // all AWS Regions.
 func NewCollectLoadBalancersTask() *asynq.Task {
-	return asynq.NewTask(AWS_COLLECT_LOADBALANCERS_TYPE, nil)
+	return asynq.NewTask(TaskCollectLoadBalancers, nil)
 }
 
 // NewCollectLoadbalancersForRegionTask creates a new task for collecting load balancers
@@ -50,7 +50,7 @@ func NewCollectLoadBalancersForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_LOADBALANCERS_REGION_TYPE, payload), nil
+	return asynq.NewTask(TaskCollectLoadBalancersRegion, payload), nil
 }
 
 // HandleCollectLoadBalancersForRegionTask collects load balancers for a specific Region.

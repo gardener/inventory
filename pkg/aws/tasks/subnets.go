@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	AWS_COLLECT_SUBNETS_TYPE        = "aws:task:collect-subnets"
-	AWS_COLLECT_SUBNETS_REGION_TYPE = "aws:task:collect-subnets-region"
+	TaskCollectSubnets       = "aws:task:collect-subnets"
+	TaskCollectSubnetsRegion = "aws:task:collect-subnets-region"
 )
 
 type CollectSubnetsPayload struct {
@@ -35,7 +35,7 @@ type CollectSubnetsPayload struct {
 // NewCollectSubnetTask creates a new task for collecting all Subnets from all
 // Regions.
 func NewCollectSubnetsTask() *asynq.Task {
-	return asynq.NewTask(AWS_COLLECT_SUBNETS_TYPE, nil)
+	return asynq.NewTask(TaskCollectSubnets, nil)
 }
 
 // NewCollectSubnetsForRegionTask creates a task for collecting Subnets from a
@@ -50,7 +50,7 @@ func NewCollectSubnetsForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(AWS_COLLECT_SUBNETS_REGION_TYPE, payload), nil
+	return asynq.NewTask(TaskCollectSubnetsRegion, payload), nil
 }
 
 // HandleCollectSubnetsForRegionTask collects the Subnets from a specific

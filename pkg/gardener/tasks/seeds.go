@@ -23,15 +23,15 @@ import (
 )
 
 const (
-	// GARDENER_COLLECT_SEEDS_TYPE is the type of the task that collects Gardener seeds.
-	GARDENER_COLLECT_SEEDS_TYPE = "g:task:collect-seeds"
+	// TaskCollectSeeds is the type of the task that collects Gardener seeds.
+	TaskCollectSeeds = "g:task:collect-seeds"
 )
 
 var ErrMissingSeed = errors.New("missing seed name")
 
 // NewGardenerCollectSeedsTask creates a new task for collecting Gardener seeds.
 func NewGardenerCollectSeedsTask() *asynq.Task {
-	return asynq.NewTask(GARDENER_COLLECT_SEEDS_TYPE, nil)
+	return asynq.NewTask(TaskCollectSeeds, nil)
 }
 
 // HandleGardenerCollectSeedsTask is a handler function that collects Gardener seeds.
