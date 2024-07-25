@@ -63,6 +63,9 @@ type Config struct {
 
 	// AWS represents the AWS specific configuration settings.
 	AWS AWSConfig `yaml:"aws"`
+
+	// GCP represents the GCP specific configuration settings.
+	GCP GCPConfig `yaml:"gcp"`
 }
 
 // AWSConfig provides AWS specific configuration settings.
@@ -78,6 +81,12 @@ type AWSConfig struct {
 
 	// Credentials specifies the AWS credentials configuration.
 	Credentials AWSCredentialsConfig `yaml:"credentials"`
+}
+
+// GCPConfig provides GCP specific configuration settings.
+type GCPConfig struct {
+	// The Kubernetes API server URL of the GCP regional soil cluster.
+	SoilRegionalHost string `yaml:"soil_regional_host"`
 }
 
 // AWSCredentialsConfig provides credentials specific configuration for the AWS
