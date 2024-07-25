@@ -66,7 +66,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectRegions, asynq.HandlerFunc(HandleAwsCollectRegionsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAvailabilityZones, asynq.HandlerFunc(HandleCollectAzsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAvailabilityZonesForRegion, asynq.HandlerFunc(HandleCollectAzsForRegionTask))
-	registry.TaskRegistry.MustRegister(TaskCollectVPCsForRegion, asynq.HandlerFunc(HandleCollectVpcsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectVPCs, asynq.HandlerFunc(HandleCollectVpcsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectVPCsForRegion, asynq.HandlerFunc(HandleCollectVpcsForRegionTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSubnetsForRegion, asynq.HandlerFunc(HandleCollectSubnetsForRegionTask))
