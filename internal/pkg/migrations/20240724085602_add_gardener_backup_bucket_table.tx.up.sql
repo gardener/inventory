@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "g_backup_bucket" (
     "name" VARCHAR UNIQUE NOT NULL,
-    "provider_id" VARCHAR NOT NULL,
+    "provider_type" VARCHAR NOT NULL,
     "region_name" VARCHAR NOT NULL,
     "seed_name" VARCHAR NOT NULL,
 
