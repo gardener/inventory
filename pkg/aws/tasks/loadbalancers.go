@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	TaskCollectLoadBalancers       = "aws:task:collect-lbs"
-	TaskCollectLoadBalancersRegion = "aws:task:collect-lbs-region"
+	TaskCollectLoadBalancers          = "aws:task:collect-lbs"
+	TaskCollectLoadBalancersForRegion = "aws:task:collect-lbs-region"
 )
 
 // CollectLoadBalancersForRegionPayload is the payload needed for aws:task:collect-lbs-region
@@ -50,7 +50,7 @@ func NewCollectLoadBalancersForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(TaskCollectLoadBalancersRegion, payload), nil
+	return asynq.NewTask(TaskCollectLoadBalancersForRegion, payload), nil
 }
 
 // HandleCollectLoadBalancersForRegionTask collects load balancers for a specific Region.

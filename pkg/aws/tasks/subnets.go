@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	TaskCollectSubnets       = "aws:task:collect-subnets"
-	TaskCollectSubnetsRegion = "aws:task:collect-subnets-region"
+	TaskCollectSubnets          = "aws:task:collect-subnets"
+	TaskCollectSubnetsForRegion = "aws:task:collect-subnets-region"
 )
 
 type CollectSubnetsPayload struct {
@@ -50,7 +50,7 @@ func NewCollectSubnetsForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(TaskCollectSubnetsRegion, payload), nil
+	return asynq.NewTask(TaskCollectSubnetsForRegion, payload), nil
 }
 
 // HandleCollectSubnetsForRegionTask collects the Subnets from a specific

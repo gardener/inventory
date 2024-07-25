@@ -56,7 +56,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectSeeds, asynq.HandlerFunc(HandleGardenerCollectSeedsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectShoots, asynq.HandlerFunc(HandleGardenerCollectShootsTask))
 	registry.TaskRegistry.MustRegister(TasksCollectMachines, asynq.HandlerFunc(HandleGardenerCollectMachinesTask))
-	registry.TaskRegistry.MustRegister(TaskCollectMachinesSeed, asynq.HandlerFunc(HandleGardenerCollectMachinesForSeedTask))
+	registry.TaskRegistry.MustRegister(TaskCollectMachinesForSeed, asynq.HandlerFunc(HandleGardenerCollectMachinesForSeedTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }

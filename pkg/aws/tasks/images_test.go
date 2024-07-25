@@ -66,7 +66,7 @@ func TestNewCollectImagesForRegionTaskValidatesInput(t *testing.T) {
 }
 
 func TestHandleCollectImagesForRegionTaskValidatesNilPayload(t *testing.T) {
-	testTask := asynq.NewTask(TaskCollectImagesRegion, nil)
+	testTask := asynq.NewTask(TaskCollectImagesForRegion, nil)
 
 	if testTask == nil {
 		t.Errorf("Task creation failed.")
@@ -86,7 +86,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testTask := asynq.NewTask(TaskCollectImagesRegion, rawPayload)
+	testTask := asynq.NewTask(TaskCollectImagesForRegion, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
 	if err == nil {
@@ -103,7 +103,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testTask = asynq.NewTask(TaskCollectImagesRegion, rawPayload)
+	testTask = asynq.NewTask(TaskCollectImagesForRegion, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
 	if err == nil {
@@ -119,7 +119,7 @@ func TestHandleCollectImagesForRegionTaskValidatesPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testTask = asynq.NewTask(TaskCollectImagesRegion, rawPayload)
+	testTask = asynq.NewTask(TaskCollectImagesForRegion, rawPayload)
 
 	err = HandleCollectImagesForRegionTask(context.Background(), testTask)
 

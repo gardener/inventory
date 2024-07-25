@@ -26,8 +26,8 @@ const (
 	// TasksCollectMachines is the type of the task that collects Gardener machines.
 	TasksCollectMachines = "g:task:collect-machines"
 
-	// TaskCollectMachinesSeed is the type of the task that collects Gardener machines for a given seed.
-	TaskCollectMachinesSeed = "g:task:collect-machines-seed"
+	// TaskCollectMachinesForSeed is the type of the task that collects Gardener machines for a given seed.
+	TaskCollectMachinesForSeed = "g:task:collect-machines-seed"
 )
 
 // CollectMachinesPayload is the payload for collecting Machines for a given Gardener seed.
@@ -83,7 +83,7 @@ func NewGardenerCollectMachinesForSeed(seed string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(TaskCollectMachinesSeed, payload), nil
+	return asynq.NewTask(TaskCollectMachinesForSeed, payload), nil
 }
 
 // HandleGardenerCollectMachinesForSeedTask is a handler function that collects Gardener machines for a given seed.

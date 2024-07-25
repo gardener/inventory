@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	TaskCollectVPCs       = "aws:task:collect-vpcs"
-	TaskCollectVPCsRegion = "aws:task:collect-vpcs-region"
+	TaskCollectVPCs          = "aws:task:collect-vpcs"
+	TaskCollectVPCsForRegion = "aws:task:collect-vpcs-region"
 )
 
 // CollectVpcsPayload is the payload for collecting VPCs for a given AWS Region.
@@ -95,7 +95,7 @@ func NewCollectVpcsForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(TaskCollectVPCsRegion, payload), nil
+	return asynq.NewTask(TaskCollectVPCsForRegion, payload), nil
 }
 
 // HandleCollectVpcsForRegionTask handles the task for collecting VPCs for a

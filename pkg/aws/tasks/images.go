@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	TaskCollectImages       = "aws:task:collect-images"
-	TaskCollectImagesRegion = "aws:task:collect-images-region"
+	TaskCollectImages          = "aws:task:collect-images"
+	TaskCollectImagesForRegion = "aws:task:collect-images-region"
 )
 
 // ErrMissingOwners is returned when expected owner names are missing.
@@ -62,7 +62,7 @@ func NewCollectImagesForRegionTask(payload CollectImagesForRegionPayload) (*asyn
 		return nil, err
 	}
 
-	return asynq.NewTask(TaskCollectImagesRegion, rawPayload), nil
+	return asynq.NewTask(TaskCollectImagesForRegion, rawPayload), nil
 }
 
 // HandleCollectImagesForRegionTask collects EC2 Images for a specific Region.
