@@ -166,7 +166,7 @@ func (c *Client) Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
 	}
 
 	shoots := make([]*v1beta1.Shoot, 0)
-	_ = pager.New(
+	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return client.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
 		}),
