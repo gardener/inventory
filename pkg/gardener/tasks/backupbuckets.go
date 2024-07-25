@@ -6,7 +6,6 @@ package tasks
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -22,15 +21,13 @@ import (
 )
 
 const (
-	// GardenerCollectBackupBucketsType is the type of the task that collects Gardener BackupBuckets.
-	GardenerCollectBackupBucketsType = "g:task:collect-backup-buckets"
+	// TaskCollectBackupBuckets is the type of the task that collects Gardener BackupBuckets.
+	TaskCollectBackupBuckets = "g:task:collect-backup-buckets"
 )
-
-var ErrMissingBackupBuckets = errors.New("missing BackupBucket name")
 
 // NewGardenerCollectBackupBucketsTask creates a new task for collecting Gardener BackupBuckets.
 func NewGardenerCollectBackupBucketsTask() *asynq.Task {
-	return asynq.NewTask(GardenerCollectBackupBucketsType, nil)
+	return asynq.NewTask(TaskCollectBackupBuckets, nil)
 }
 
 // HandleGardenerCollectBackupBucketsTask is a handler function that collects Gardener BackupBuckets.
