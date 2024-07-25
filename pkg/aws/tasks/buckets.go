@@ -12,7 +12,7 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/aws/models"
-	awsClients "github.com/gardener/inventory/pkg/clients/aws"
+	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -30,8 +30,7 @@ func NewCollectBucketsTask() *asynq.Task {
 func collectBuckets(ctx context.Context) error {
 	slog.Info("collecting AWS S3 buckets")
 
-	//TODO: look into more pagination options
-	bucketsOutput, err := awsClients.S3.ListBuckets(ctx,
+	bucketsOutput, err := awsclient.S3.ListBuckets(ctx,
 		&s3.ListBucketsInput{},
 	)
 
@@ -49,7 +48,7 @@ func collectBuckets(ctx context.Context) error {
 	buckets := make([]models.Bucket, 0, bucketCount)
 
 	for _, bucket := range bucketsOutput.Buckets {
-		locationOutput, err := awsClients.S3.GetBucketLocation(ctx,
+		locationOutput, err := awsclient.S3.GetBucketLocation(ctx,
 			&s3.GetBucketLocationInput{
 				Bucket: bucket.Name,
 			})
