@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	TaskCollectInstances       = "aws:task:collect-instances"
-	TaskCollectInstancesRegion = "aws:task:collect-instances-region"
+	TaskCollectInstances          = "aws:task:collect-instances"
+	TaskCollectInstancesForRegion = "aws:task:collect-instances-region"
 )
 
 type CollectInstancesPayload struct {
@@ -50,7 +50,7 @@ func NewCollectInstancesForRegionTask(region string) (*asynq.Task, error) {
 		return nil, err
 	}
 
-	return asynq.NewTask(TaskCollectInstancesRegion, payload), nil
+	return asynq.NewTask(TaskCollectInstancesForRegion, payload), nil
 }
 
 // HandleCollectInstancesForRegionTask collects EC2 Instances for a specific Region.
