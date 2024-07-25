@@ -53,6 +53,9 @@ const (
 	// VIRTUAL_GARDEN is the name of the virtual garden
 	VIRTUAL_GARDEN = "virtual-garden"
 
+	// SOIL_GCP is the name of the GKE soil cluster, which requires Workload Identity Federation to perform OAuth2 token exchange
+	SOIL_GCP_REGIONAL = "soil-gcp-regional"
+
 	// VIEWERKUBECONFIG_SUBRESOURCE_PATH is the path to the viewerkubeconfig subresource of a shoot
 	// All managed seeds are registered as shoots resources in the virtual-garden in garden namespace
 	VIEWERKUBECONFIG_SUBRESOURCE_PATH = "/apis/core.gardener.cloud/v1beta1/namespaces/garden/shoots/%s/viewerkubeconfig"
@@ -70,6 +73,9 @@ type Client struct {
 	// excludedSeeds represents a list of seed cluster names, from which
 	// collection will be skipped and no client config is created for.
 	excludedSeeds []string
+
+	// soilRegionalHost is the host of the soil-gcp-regional cluster
+	soilRegionalHost string
 }
 
 // DefaultClient is the default client for interacting with the Gardener APIs.
@@ -117,6 +123,14 @@ func WithRestConfigs(items map[string]*rest.Config) Option {
 func WithExcludedSeeds(seeds []string) Option {
 	opt := func(c *Client) {
 		c.excludedSeeds = seeds
+	}
+
+	return opt
+}
+
+func WithSoilRegionalHost(host string) Option {
+	opt := func(c *Client) {
+		c.soilRegionalHost = host
 	}
 
 	return opt
