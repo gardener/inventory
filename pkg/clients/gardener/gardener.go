@@ -22,6 +22,7 @@ import (
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	machineversioned "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned"
+	"golang.org/x/oauth2/google"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -165,7 +166,7 @@ func (c *Client) Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
 	}
 
 	shoots := make([]*v1beta1.Shoot, 0)
-	err = pager.New(
+	_ = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return client.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
 		}),
@@ -196,6 +197,12 @@ func Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
 func (c *Client) MCMClient(name string) (*machineversioned.Clientset, error) {
 	if slices.Contains(c.excludedSeeds, name) {
 		return nil, fmt.Errorf("%w: %s", ErrSeedIsExcluded, name)
+	}
+
+	if name == SOIL_GCP_REGIONAL {
+		if _, found := c.restConfigs.Get(name); !found {
+			return c.fetchSoilGCPRegionalClient()
+		}
 	}
 
 	// Check to see if there is a rest.Config with such name, and create
@@ -395,4 +402,37 @@ func tokenIsAboutToExpire(token string) bool {
 	}
 
 	return (time.Now().UTC().Unix() + 60) > tokenPayload.Exp // gone in 60 seconds
+}
+
+func (c *Client) fetchSoilGCPRegionalClient() (*machineversioned.Clientset, error) {
+
+	// Load the credentials from the JSON configuration file
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	creds, err := google.FindDefaultCredentials(ctx,
+		"https://www.googleapis.com/auth/userinfo.email",
+		"https://www.googleapis.com/auth/cloud-platform",
+		"openid",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load credentials configuration: %w", err)
+	}
+
+	// Use the credentials to create a token source
+	tokenSource := creds.TokenSource
+
+	// Get an access token
+	token, err := tokenSource.Token()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch soil-gcp-regional token: %w", err)
+	}
+
+	config := &rest.Config{
+		Host:        c.soilRegionalHost,
+		BearerToken: token.AccessToken,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: true,
+		},
+	}
+	return machineversioned.NewForConfig(config)
 }
