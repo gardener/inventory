@@ -53,10 +53,10 @@ func collectBackupBuckets(ctx context.Context) error {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
 		backupBucket := models.BackupBucket{
-			Name:       b.GetName(),
-			SeedName:   *b.Spec.SeedName,
-			ProviderID: b.Spec.Provider.Type,
-			RegionName: b.Spec.Provider.Region,
+			Name:         b.GetName(),
+			SeedName:     *b.Spec.SeedName,
+			ProviderType: b.Spec.Provider.Type,
+			RegionName:   b.Spec.Provider.Region,
 		}
 		backupBuckets = append(backupBuckets, backupBucket)
 		return nil
@@ -72,7 +72,7 @@ func collectBackupBuckets(ctx context.Context) error {
 	_, err = db.DB.NewInsert().
 		Model(&backupBuckets).
 		On("CONFLICT (name) DO UPDATE").
-		Set("provider_id = EXCLUDED.provider_id").
+		Set("provider_type = EXCLUDED.provider_type").
 		Set("region_name = EXCLUDED.region_name").
 		Set("seed_name = EXCLUDED.seed_name").
 		Set("updated_at = EXCLUDED.updated_at").
