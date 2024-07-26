@@ -92,6 +92,9 @@ scheduler:
     - name: "g:task:collect-machines"
       spec: "@every 1h"
       desc: "Collect Gardener Machines"
+    - name: "g:task:collect-backup-buckets"
+      spec: "@every 1h"
+      desc: "Collect Gardener BackupBuckets"
     - name: "g:task:link-all"
       spec: "@every 30m"
       desc: "Link all Gardener models"
@@ -124,6 +127,8 @@ scheduler:
           - name: "g:model:shoot"
             duration: 24h
           - name: "g:model:machine"
+            duration: 24h
+          - name: "g:model:backup_bucket"
             duration: 24h
 
 virtual_garden:
