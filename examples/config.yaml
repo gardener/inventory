@@ -19,6 +19,7 @@ dashboard:
 
 gcp:
   soil_regional_host:
+  soil_regional_ca_path:
 
 aws:
   region: eu-central-1  # Frankfurt

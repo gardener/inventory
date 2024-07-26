@@ -166,6 +166,7 @@ func NewWorkerCommand() *cli.Command {
 						gardenerclient.WithRestConfigs(gardenConfigs),
 						gardenerclient.WithExcludedSeeds(conf.VirtualGarden.ExcludedSeeds),
 						gardenerclient.WithSoilRegionalHost(conf.GCP.SoilRegionalHost),
+						gardenerclient.WithSoilRegionalCAPath(conf.GCP.SoilRegionalCAPath),
 					)
 					gardenerclient.SetDefaultClient(gardenClient)
 

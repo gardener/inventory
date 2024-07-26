@@ -87,6 +87,9 @@ type AWSConfig struct {
 type GCPConfig struct {
 	// The Kubernetes API server URL of the GCP regional soil cluster.
 	SoilRegionalHost string `yaml:"soil_regional_host"`
+
+	// The path to the CA certificate of the GCP regional soil cluster.
+	SoilRegionalCAPath string `yaml:"soil_regional_ca_path"`
 }
 
 // AWSCredentialsConfig provides credentials specific configuration for the AWS

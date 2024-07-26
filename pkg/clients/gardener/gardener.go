@@ -77,6 +77,9 @@ type Client struct {
 
 	// soilRegionalHost is the host of the soil-gcp-regional cluster
 	soilRegionalHost string
+
+	// soilRegionalCAPath is the path to the CA certificate of the soil-gcp-regional cluster
+	soilRegionalCAPath string
 }
 
 // DefaultClient is the default client for interacting with the Gardener APIs.
@@ -132,6 +135,14 @@ func WithExcludedSeeds(seeds []string) Option {
 func WithSoilRegionalHost(host string) Option {
 	opt := func(c *Client) {
 		c.soilRegionalHost = host
+	}
+
+	return opt
+}
+
+func WithSoilRegionalCAPath(path string) Option {
+	opt := func(c *Client) {
+		c.soilRegionalCAPath = path
 	}
 
 	return opt
