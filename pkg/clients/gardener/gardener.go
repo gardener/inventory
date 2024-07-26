@@ -442,7 +442,8 @@ func (c *Client) fetchSoilGCPRegionalClient() (*machineversioned.Clientset, erro
 		Host:        c.soilRegionalHost,
 		BearerToken: token.AccessToken,
 		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: true,
+			Insecure: false,
+			CAFile:   c.soilRegionalCAPath,
 		},
 	}
 	return machineversioned.NewForConfig(config)
