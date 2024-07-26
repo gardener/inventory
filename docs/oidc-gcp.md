@@ -1,10 +1,11 @@
 # OpenID Connect Trust between GCP and Inventory
 
-Workload identity federation is a secure mechanism allowing access of GCP services withough service accounts key. The latter is unsecure and potentially dangarous authentication mechanism. Instead of using service account keys to authenticate, the requesting client presents an identity tokens which after a successfull validation on service side is exchanged to a short-lived access token.
+Workload identity federation is a secure mechanism allowing access of GCP services without service accounts key. The latter is unsecure and potentially dangerous authentication mechanism. Instead of using service account keys to authenticate, the requesting client presents an identity tokens which after a successful validation on service side is exchanged to a short-lived access token.
 
-In inventory case there is a need to establish trust between the inventory service account and GKE clusters using GCP "Workload Identity Federation" concepts and more concretly "Workload Identity Federation with Kubernetes". The concrete implementation is based on RFC 8693 OAuth 2.0 Token Exchange standard.
+In inventory case there is a need to establish trust between the inventory service account and GKE clusters using GCP "Workload Identity Federation" concepts and more concretely "Workload Identity Federation with Kubernetes". The concrete implementation is based on RFC 8693 OAuth 2.0 Token Exchange standard.
 
-Inventory identity when running in a K8S cluster is carried by OIDC identiy tokens issued by the K8S cluster. To allow trust between a GKE cluster and the inventory workload, the inventory service accoint tokens need to be excahnged with a short lived access tokens carrying an identity issued by GCP.
+Inventory identity when running in a K8S cluster is carried by OIDC identity tokens issued by the K8S cluster. To 
+allow trust between a GKE cluster and the inventory workload, the inventory service account tokens need to be exchanged with short lived access tokens carrying an identity issued by GCP.
 
 As an example here is a token of an inventory pod instance with subject "system:serviceaccount:namespace:inventory".
 
@@ -57,9 +58,9 @@ After successful verification it shall be replaced with a short lived access tok
 }
 ```
 
-The user denoted by such token is valid for GCP and can access services in accoring to the granted roles and permissions.
+The user denoted by such token is valid for GCP and can access services according to the granted roles and permissions.
 
-A key role in verifying the inventory token plays the "Provider" configuraiton attached to the "Workload Identity Federation Pool". In our example here, the Provider can enforce a number of conditions, additional to the token validition. For example,
+A key role in verifying the inventory token plays the "Provider" configuration attached to the "Workload Identity Federation Pool". In our example here, the Provider can enforce a number of conditions, additional to the token validation. For example,
 
 ```bash
 assertion.sub == system:serviceaccount:namespace:inventory && assertion['kubernetes.io']['namespace'] in ['namespace']"
