@@ -245,6 +245,42 @@ type Bucket struct {
 	Region       *Region   `bun:"rel:has-one,join:region_name=name"`
 }
 
+// NetworkInterface represents an AWS Elastic Network Interface (ENI)
+type NetworkInterface struct {
+	bun.BaseModel `bun:"table:aws_net_interface"`
+	coremodels.Model
+
+	AZ               string `bun:"az,notnull"`
+	Description      string `bun:"description,notnull"`
+	InterfaceType    string `bun:"interface_type,notnull"`
+	MacAddress       string `bun:"mac_address,notnull"`
+	InterfaceID      string `bun:"interface_id,notnull,unique"`
+	OwnerID          string `bun:"owner_id,notnull"`
+	PrivateDNSName   string `bun:"private_dns_name,notnull"`
+	PrivateIPAddress string `bun:"private_ip_address,notnull"`
+	RequesterID      string `bun:"requester_id,notnull"`
+	RequesterManaged bool   `bun:"requester_managed,notnull"`
+	SourceDestCheck  bool   `bun:"src_dst_check,notnull"`
+	Status           string `bun:"status,notnull"`
+	SubnetID         string `bun:"subnet_id,notnull"`
+	VpcID            string `bun:"vpc_id,notnull"`
+
+	// Association
+	AllocationID    string `bun:"allocation_id,notnull"`
+	AssociationID   string `bun:"association_id,notnull"`
+	IPOwnerID       string `bun:"ip_owner_id,notnull"`
+	PublicDNSName   string `bun:"public_dns_name,notnull"`
+	PublicIPAddress string `bun:"public_ip_address,notnull"`
+
+	// Attachment
+	AttachmentID        string `bun:"attachment_id,notnull"`
+	DeleteOnTermination bool   `bun:"delete_on_termination,notnull"`
+	DeviceIndex         int    `bun:"device_index,notnull"`
+	InstanceID          string `bun:"instance_id,notnull"`
+	InstanceOwnerID     string `bun:"instance_owner_id,notnull"`
+	AttachmentStatus    string `bun:"attachment_status,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("aws:model:region", &Region{})
@@ -255,6 +291,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:image", &Image{})
 	registry.ModelRegistry.MustRegister("aws:model:lb", &LoadBalancer{})
 	registry.ModelRegistry.MustRegister("aws:model:bucket", &Bucket{})
+	registry.ModelRegistry.MustRegister("aws:model:network_interface", &NetworkInterface{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("aws:model:link_region_to_az", &RegionToAZ{})
