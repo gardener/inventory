@@ -250,6 +250,7 @@ type NetworkInterface struct {
 	bun.BaseModel `bun:"table:aws_net_interface"`
 	coremodels.Model
 
+	RegionName       string `bun:"region_name,notnull"`
 	AZ               string `bun:"az,notnull"`
 	Description      string `bun:"description,notnull"`
 	InterfaceType    string `bun:"interface_type,notnull"`
