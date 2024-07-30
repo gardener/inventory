@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	v1types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hibiken/asynq"
 	"gopkg.in/yaml.v3"
@@ -23,11 +25,11 @@ import (
 )
 
 const (
-	TaskCollectLoadBalancers          = "aws:task:collect-lbs"
-	TaskCollectLoadBalancersForRegion = "aws:task:collect-lbs-region"
+	TaskCollectLoadBalancers          = "aws:task:collect-loadbalancers"
+	TaskCollectLoadBalancersForRegion = "aws:task:collect-loadbalancers-region"
 )
 
-// CollectLoadBalancersForRegionPayload is the payload needed for aws:task:collect-lbs-region
+// CollectLoadBalancersForRegionPayload is the payload needed for aws:task:collect-loadbalancers-region
 type CollectLoadBalancersForRegionPayload struct {
 	Region string `yaml:"region"`
 }
@@ -64,17 +66,24 @@ func HandleCollectLoadBalancersForRegionTask(ctx context.Context, t *asynq.Task)
 		return ErrMissingRegion
 	}
 
-	return collectLoadBalancersForRegion(ctx, payload.Region)
+	if err := collectLoadBalancersForRegion(ctx, payload.Region); err != nil {
+		return err
+	}
+
+	return collectClassicLoadBalancersForRegion(ctx, payload.Region)
 }
 
+// Handles collecting application, network and gateway AWS LoadBalancers for a region
 func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 	slog.Info("Collecting AWS LoadBalancers", "region", region)
 
 	pageSize := int32(constants.PageSize)
-	paginator := elb.NewDescribeLoadBalancersPaginator(
-		awsclient.ELB,
-		&elb.DescribeLoadBalancersInput{PageSize: &pageSize},
-		func(params *elb.DescribeLoadBalancersPaginatorOptions) {
+
+	// ELBs from V2 API
+	paginator := elbv2.NewDescribeLoadBalancersPaginator(
+		awsclient.ELBV2,
+		&elbv2.DescribeLoadBalancersInput{PageSize: &pageSize},
+		func(params *elbv2.DescribeLoadBalancersPaginatorOptions) {
 			params.StopOnDuplicateToken = true
 		},
 	)
@@ -84,7 +93,7 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(
 			ctx,
-			func(o *elb.Options) {
+			func(o *elbv2.Options) {
 				o.Region = region
 			},
 		)
@@ -98,13 +107,12 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 	lbs := make([]models.LoadBalancer, 0, len(items))
 	for _, lb := range items {
 		modelLb := models.LoadBalancer{
-			ARN:                   strings.StringFromPointer(lb.LoadBalancerArn),
 			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
 			DNSName:               strings.StringFromPointer(lb.DNSName),
-			IpAddressType:         string(lb.IpAddressType),
 			CanonicalHostedZoneID: strings.StringFromPointer(lb.CanonicalHostedZoneId),
 			State:                 string(lb.State.Code),
 			Scheme:                string(lb.Scheme),
+			Type:                  string(lb.Type),
 			VpcID:                 strings.StringFromPointer(lb.VpcId),
 			RegionName:            region,
 		}
@@ -117,13 +125,12 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 
 	out, err := db.DB.NewInsert().
 		Model(&lbs).
-		On("CONFLICT (arn) DO UPDATE").
-		Set("name = EXCLUDED.name").
+		On("CONFLICT (name) DO UPDATE").
 		Set("dns_name = EXCLUDED.dns_name").
-		Set("ip_address_type = EXCLUDED.ip_address_type").
 		Set("canonical_hosted_zone_id = EXCLUDED.canonical_hosted_zone_id").
 		Set("state = EXCLUDED.state").
 		Set("scheme = EXCLUDED.scheme").
+		Set("type = EXCLUDED.type").
 		Set("vpc_id = EXCLUDED.vpc_id").
 		Set("region_name = EXCLUDED.region_name").
 		Set("updated_at = EXCLUDED.updated_at").
@@ -143,6 +150,86 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 	slog.Info("populated aws load balancers", "region", region, "count", count)
 
 	return nil
+}
+
+// Handles collecting `classic` AWS LoadBalancers for a region
+func collectClassicLoadBalancersForRegion(ctx context.Context, region string) error {
+	slog.Info("Collecting AWS Classic LoadBalancers", "region", region)
+
+	pageSize := int32(constants.PageSize)
+
+	// classic LBs from V1 API
+	paginator := elb.NewDescribeLoadBalancersPaginator(
+		awsclient.ELB,
+		&elb.DescribeLoadBalancersInput{PageSize: &pageSize},
+		func(params *elb.DescribeLoadBalancersPaginatorOptions) {
+			params.StopOnDuplicateToken = true
+		},
+	)
+
+	// Fetch items from all pages
+	items := make([]v1types.LoadBalancerDescription, 0)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(
+			ctx,
+			func(o *elb.Options) {
+				o.Region = region
+			},
+		)
+		if err != nil {
+			slog.Error("could not describe classic load balancers", "region", region, "reason", err)
+			return err
+		}
+		items = append(items, page.LoadBalancerDescriptions...)
+	}
+
+	lbs := make([]models.LoadBalancer, 0, len(items))
+	for _, lb := range items {
+		modelLb := models.LoadBalancer{
+			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
+			DNSName:               strings.StringFromPointer(lb.DNSName),
+			CanonicalHostedZoneID: strings.StringFromPointer(lb.CanonicalHostedZoneNameID),
+			State:                 "N/A",
+			Scheme:                strings.StringFromPointer(lb.Scheme),
+			Type:                  "classic",
+			VpcID:                 strings.StringFromPointer(lb.VPCId),
+			RegionName:            region,
+		}
+		lbs = append(lbs, modelLb)
+	}
+
+	if len(lbs) == 0 {
+		return nil
+	}
+
+	out, err := db.DB.NewInsert().
+		Model(&lbs).
+		On("CONFLICT (name) DO UPDATE").
+		Set("dns_name = EXCLUDED.dns_name").
+		Set("canonical_hosted_zone_id = EXCLUDED.canonical_hosted_zone_id").
+		Set("state = EXCLUDED.state").
+		Set("scheme = EXCLUDED.scheme").
+		Set("type = EXCLUDED.type").
+		Set("vpc_id = EXCLUDED.vpc_id").
+		Set("region_name = EXCLUDED.region_name").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		slog.Error("could not insert classic load balancer into db", "region", region, "reason", err)
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated aws classic load balancers", "region", region, "count", count)
+
+	return nil
+
 }
 
 // HandleCollectLoadBalancersTask collects load balancers for all known regions

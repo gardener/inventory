@@ -12,7 +12,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
@@ -156,6 +157,7 @@ func NewWorkerCommand() *cli.Command {
 
 					ec2Client := ec2.NewFromConfig(awsConfig)
 					elbClient := elb.NewFromConfig(awsConfig)
+					elbv2Client := elbv2.NewFromConfig(awsConfig)
 					s3Client := s3.NewFromConfig(awsConfig)
 
 					// Initialize clients in workers
@@ -172,6 +174,7 @@ func NewWorkerCommand() *cli.Command {
 
 					awsclient.SetEC2Client(ec2Client)
 					awsclient.SetELBClient(elbClient)
+					awsclient.SetELBV2Client(elbv2Client)
 					awsclient.SetS3Client(s3Client)
 
 					// Register our task handlers

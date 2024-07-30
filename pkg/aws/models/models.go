@@ -203,13 +203,12 @@ type LoadBalancer struct {
 	bun.BaseModel `bun:"table:aws_loadbalancer"`
 	coremodels.Model
 
-	ARN                   string  `bun:"arn,notnull,unique"`
-	Name                  string  `bun:"name,notnull"`
+	Name                  string  `bun:"name,notnull,unique"`
 	DNSName               string  `bun:"dns_name,notnull"`
-	IpAddressType         string  `bun:"ip_address_type,notnull"`
 	CanonicalHostedZoneID string  `bun:"canonical_hosted_zone_id,notnull"`
 	State                 string  `bun:"state,notnull"`
 	Scheme                string  `bun:"scheme,notnull"`
+	Type                  string  `bun:"type,notnull"`
 	VpcID                 string  `bun:"vpc_id,notnull"`
 	VPC                   *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id"`
 	RegionName            string  `bun:"region_name,notnull"`
@@ -253,7 +252,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("aws:model:instance", &Instance{})
 	registry.ModelRegistry.MustRegister("aws:model:image", &Image{})
-	registry.ModelRegistry.MustRegister("aws:model:lb", &LoadBalancer{})
+	registry.ModelRegistry.MustRegister("aws:model:loadbalancer", &LoadBalancer{})
 	registry.ModelRegistry.MustRegister("aws:model:bucket", &Bucket{})
 
 	// Link tables
