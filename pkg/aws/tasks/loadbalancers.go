@@ -125,8 +125,8 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 
 	out, err := db.DB.NewInsert().
 		Model(&lbs).
-		On("CONFLICT (name) DO UPDATE").
-		Set("dns_name = EXCLUDED.dns_name").
+		On("CONFLICT (dns_name) DO UPDATE").
+		Set("name = EXCLUDED.name").
 		Set("canonical_hosted_zone_id = EXCLUDED.canonical_hosted_zone_id").
 		Set("state = EXCLUDED.state").
 		Set("scheme = EXCLUDED.scheme").
@@ -204,8 +204,8 @@ func collectClassicLoadBalancersForRegion(ctx context.Context, region string) er
 
 	out, err := db.DB.NewInsert().
 		Model(&lbs).
-		On("CONFLICT (name) DO UPDATE").
-		Set("dns_name = EXCLUDED.dns_name").
+		On("CONFLICT (dns_name) DO UPDATE").
+		Set("name = EXCLUDED.name").
 		Set("canonical_hosted_zone_id = EXCLUDED.canonical_hosted_zone_id").
 		Set("state = EXCLUDED.state").
 		Set("scheme = EXCLUDED.scheme").
