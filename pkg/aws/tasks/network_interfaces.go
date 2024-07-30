@@ -173,6 +173,7 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 			netInterface.AttachmentID = strings.StringFromPointer(item.Attachment.AttachmentId)
 			netInterface.DeleteOnTermination = ptr.Value(item.Attachment.DeleteOnTermination, false)
 			netInterface.DeviceIndex = int(ptr.Value(item.Attachment.DeviceIndex, 0))
+			netInterface.InstanceID = strings.StringFromPointer(item.Attachment.InstanceId)
 			netInterface.InstanceOwnerID = strings.StringFromPointer(item.Attachment.InstanceOwnerId)
 			netInterface.AttachmentStatus = string(item.Attachment.Status)
 		}
