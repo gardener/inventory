@@ -99,12 +99,15 @@ type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
 	coremodels.Model
 
-	Name        string              `bun:"name,notnull,unique"`
-	Endpoint    string              `bun:"endpoint,notnull"`
-	OptInStatus string              `bun:"opt_in_status,notnull"`
-	Zones       []*AvailabilityZone `bun:"rel:has-many,join:name=region_name"`
-	VPCs        []*VPC              `bun:"rel:has-many,join:name=region_name"`
-	Instances   []*Instance         `bun:"rel:has-many,join:name=region_name"`
+	Name              string              `bun:"name,notnull,unique"`
+	Endpoint          string              `bun:"endpoint,notnull"`
+	OptInStatus       string              `bun:"opt_in_status,notnull"`
+	Zones             []*AvailabilityZone `bun:"rel:has-many,join:name=region_name"`
+	VPCs              []*VPC              `bun:"rel:has-many,join:name=region_name"`
+	Instances         []*Instance         `bun:"rel:has-many,join:name=region_name"`
+	LoadBalancers     []*LoadBalancer     `bun:"rel:has-many,join:name=region_name"`
+	Images            []*Image            `bun:"rel:has-many,join:name=region_name"`
+	NetworkInterfaces []*NetworkInterface `bun:"rel:has-many,join:name=region_name"`
 }
 
 // AvailabilityZone represents an AWS Availability Zone.
