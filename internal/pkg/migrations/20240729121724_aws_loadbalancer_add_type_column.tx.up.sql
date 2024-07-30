@@ -1,0 +1,1 @@
+ALTER TABLE aws_loadbalancer ADD COLUMN type VARCHAR NOT NULL DEFAULT '';
