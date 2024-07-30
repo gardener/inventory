@@ -115,15 +115,16 @@ type AvailabilityZone struct {
 	bun.BaseModel `bun:"table:aws_az"`
 	coremodels.Model
 
-	ZoneID             string  `bun:"zone_id,notnull,unique"`
-	ZoneType           string  `bun:"zone_type,notnull"`
-	Name               string  `bun:"name,notnull"`
-	OptInStatus        string  `bun:"opt_in_status,notnull"`
-	State              string  `bun:"state,notnull"`
-	RegionName         string  `bun:"region_name,notnull"`
-	GroupName          string  `bun:"group_name,notnull"`
-	NetworkBorderGroup string  `bun:"network_border_group,notnull"`
-	Region             *Region `bun:"rel:has-one,join:region_name=name"`
+	ZoneID             string              `bun:"zone_id,notnull,unique"`
+	ZoneType           string              `bun:"zone_type,notnull"`
+	Name               string              `bun:"name,notnull"`
+	OptInStatus        string              `bun:"opt_in_status,notnull"`
+	State              string              `bun:"state,notnull"`
+	RegionName         string              `bun:"region_name,notnull"`
+	GroupName          string              `bun:"group_name,notnull"`
+	NetworkBorderGroup string              `bun:"network_border_group,notnull"`
+	Region             *Region             `bun:"rel:has-one,join:region_name=name"`
+	NetworkInterfaces  []*NetworkInterface `bun:"rel:has-many,join:name=az"`
 }
 
 // VPC represents an AWS VPC
@@ -131,17 +132,18 @@ type VPC struct {
 	bun.BaseModel `bun:"table:aws_vpc"`
 	coremodels.Model
 
-	Name       string      `bun:"name,notnull"`
-	VpcID      string      `bun:"vpc_id,notnull,unique"`
-	State      string      `bun:"state,notnull"`
-	IPv4CIDR   string      `bun:"ipv4_cidr,notnull"`
-	IPv6CIDR   string      `bun:"ipv6_cidr,nullzero"`
-	IsDefault  bool        `bun:"is_default,notnull"`
-	OwnerID    string      `bun:"owner_id,notnull"`
-	RegionName string      `bun:"region_name,notnull"`
-	Region     *Region     `bun:"rel:has-one,join:region_name=name"`
-	Subnets    []*Subnet   `bun:"rel:has-many,join:vpc_id=vpc_id"`
-	Instances  []*Instance `bun:"rel:has-many,join:vpc_id=vpc_id"`
+	Name              string              `bun:"name,notnull"`
+	VpcID             string              `bun:"vpc_id,notnull,unique"`
+	State             string              `bun:"state,notnull"`
+	IPv4CIDR          string              `bun:"ipv4_cidr,notnull"`
+	IPv6CIDR          string              `bun:"ipv6_cidr,nullzero"`
+	IsDefault         bool                `bun:"is_default,notnull"`
+	OwnerID           string              `bun:"owner_id,notnull"`
+	RegionName        string              `bun:"region_name,notnull"`
+	Region            *Region             `bun:"rel:has-one,join:region_name=name"`
+	Subnets           []*Subnet           `bun:"rel:has-many,join:vpc_id=vpc_id"`
+	Instances         []*Instance         `bun:"rel:has-many,join:vpc_id=vpc_id"`
+	NetworkInterfaces []*NetworkInterface `bun:"rel:has-many,join:vpc_id=vpc_id"`
 }
 
 // Subnet represents an AWS Subnet
@@ -149,19 +151,20 @@ type Subnet struct {
 	bun.BaseModel `bun:"table:aws_subnet"`
 	coremodels.Model
 
-	Name                   string            `bun:"name,notnull"`
-	SubnetID               string            `bun:"subnet_id,notnull,unique"`
-	SubnetArn              string            `bun:"subnet_arn,notnull"`
-	VpcID                  string            `bun:"vpc_id,notnull"`
-	State                  string            `bun:"state,notnull"`
-	AZ                     string            `bun:"az,notnull"`
-	AzID                   string            `bun:"az_id,notnull"`
-	AvailableIPv4Addresses int               `bun:"available_ipv4_addresses,notnull"`
-	IPv4CIDR               string            `bun:"ipv4_cidr,notnull"`
-	IPv6CIDR               string            `bun:"ipv6_cidr,nullzero"`
-	VPC                    *VPC              `bun:"rel:has-one,join:vpc_id=vpc_id"`
-	AvailabilityZone       *AvailabilityZone `bun:"rel:has-one,join:az_id=zone_id"`
-	Instances              []*Instance       `bun:"rel:has-many,join:subnet_id=subnet_id"`
+	Name                   string              `bun:"name,notnull"`
+	SubnetID               string              `bun:"subnet_id,notnull,unique"`
+	SubnetArn              string              `bun:"subnet_arn,notnull"`
+	VpcID                  string              `bun:"vpc_id,notnull"`
+	State                  string              `bun:"state,notnull"`
+	AZ                     string              `bun:"az,notnull"`
+	AzID                   string              `bun:"az_id,notnull"`
+	AvailableIPv4Addresses int                 `bun:"available_ipv4_addresses,notnull"`
+	IPv4CIDR               string              `bun:"ipv4_cidr,notnull"`
+	IPv6CIDR               string              `bun:"ipv6_cidr,nullzero"`
+	VPC                    *VPC                `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	AvailabilityZone       *AvailabilityZone   `bun:"rel:has-one,join:az_id=zone_id"`
+	Instances              []*Instance         `bun:"rel:has-many,join:subnet_id=subnet_id"`
+	NetworkInterfaces      []*NetworkInterface `bun:"rel:has-many,join:subnet_id=subnet_id"`
 }
 
 // Instance represents an AWS EC2 instance
