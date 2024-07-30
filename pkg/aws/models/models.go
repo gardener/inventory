@@ -188,6 +188,16 @@ type Instance struct {
 	Image        *Image  `bun:"rel:has-one,join:image_id=image_id"`
 }
 
+// InstanceToNetworkInterface represents a link table connecting the [Instance]
+// with [NetworkInterface]
+type InstanceToNetworkInterface struct {
+	bun.BaseModel `bun:"table:l_aws_instance_to_net_interface"`
+	coremodels.Model
+
+	InstanceID         uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_net_interface_key"`
+	NetworkInterfaceID uint64 `bun:"ni_id,notnull,unique:l_aws_instance_to_net_interface_key"`
+}
+
 // Image represents an AWS AMI
 type Image struct {
 	bun.BaseModel `bun:"table:aws_image"`
