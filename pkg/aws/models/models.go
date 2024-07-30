@@ -172,20 +172,21 @@ type Instance struct {
 	bun.BaseModel `bun:"table:aws_instance"`
 	coremodels.Model
 
-	Name         string  `bun:"name,notnull"`
-	Arch         string  `bun:"arch,notnull"`
-	InstanceID   string  `bun:"instance_id,notnull,unique"`
-	InstanceType string  `bun:"instance_type,notnull"`
-	State        string  `bun:"state,notnull"`
-	SubnetID     string  `bun:"subnet_id,notnull"`
-	VpcID        string  `bun:"vpc_id,notnull"`
-	Platform     string  `bun:"platform,notnull"`
-	RegionName   string  `bun:"region_name,notnull"`
-	ImageID      string  `bun:"image_id,notnull"`
-	Region       *Region `bun:"rel:has-one,join:region_name=name"`
-	VPC          *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id"`
-	Subnet       *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id"`
-	Image        *Image  `bun:"rel:has-one,join:image_id=image_id"`
+	Name              string              `bun:"name,notnull"`
+	Arch              string              `bun:"arch,notnull"`
+	InstanceID        string              `bun:"instance_id,notnull,unique"`
+	InstanceType      string              `bun:"instance_type,notnull"`
+	State             string              `bun:"state,notnull"`
+	SubnetID          string              `bun:"subnet_id,notnull"`
+	VpcID             string              `bun:"vpc_id,notnull"`
+	Platform          string              `bun:"platform,notnull"`
+	RegionName        string              `bun:"region_name,notnull"`
+	ImageID           string              `bun:"image_id,notnull"`
+	Region            *Region             `bun:"rel:has-one,join:region_name=name"`
+	VPC               *VPC                `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	Subnet            *Subnet             `bun:"rel:has-one,join:subnet_id=subnet_id"`
+	Image             *Image              `bun:"rel:has-one,join:image_id=image_id"`
+	NetworkInterfaces []*NetworkInterface `bun:"rel:has-many,join:instance_id=instance_id"`
 }
 
 // InstanceToNetworkInterface represents a link table connecting the [Instance]
