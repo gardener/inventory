@@ -255,21 +255,25 @@ type NetworkInterface struct {
 	bun.BaseModel `bun:"table:aws_net_interface"`
 	coremodels.Model
 
-	RegionName       string `bun:"region_name,notnull"`
-	AZ               string `bun:"az,notnull"`
-	Description      string `bun:"description,notnull"`
-	InterfaceType    string `bun:"interface_type,notnull"`
-	MacAddress       string `bun:"mac_address,notnull"`
-	InterfaceID      string `bun:"interface_id,notnull,unique"`
-	OwnerID          string `bun:"owner_id,notnull"`
-	PrivateDNSName   string `bun:"private_dns_name,notnull"`
-	PrivateIPAddress string `bun:"private_ip_address,notnull"`
-	RequesterID      string `bun:"requester_id,notnull"`
-	RequesterManaged bool   `bun:"requester_managed,notnull"`
-	SourceDestCheck  bool   `bun:"src_dst_check,notnull"`
-	Status           string `bun:"status,notnull"`
-	SubnetID         string `bun:"subnet_id,notnull"`
-	VpcID            string `bun:"vpc_id,notnull"`
+	Region           *Region           `bun:"rel:has-one,join:region_name=name"`
+	RegionName       string            `bun:"region_name,notnull"`
+	AZ               string            `bun:"az,notnull"`
+	AvailabilityZone *AvailabilityZone `bun:"rel:has-one,join:az=name"`
+	Description      string            `bun:"description,notnull"`
+	InterfaceType    string            `bun:"interface_type,notnull"`
+	MacAddress       string            `bun:"mac_address,notnull"`
+	InterfaceID      string            `bun:"interface_id,notnull,unique"`
+	OwnerID          string            `bun:"owner_id,notnull"`
+	PrivateDNSName   string            `bun:"private_dns_name,notnull"`
+	PrivateIPAddress string            `bun:"private_ip_address,notnull"`
+	RequesterID      string            `bun:"requester_id,notnull"`
+	RequesterManaged bool              `bun:"requester_managed,notnull"`
+	SourceDestCheck  bool              `bun:"src_dst_check,notnull"`
+	Status           string            `bun:"status,notnull"`
+	Subnet           *Subnet           `bun:"rel:has-one,join:subnet_id=subnet_id"`
+	SubnetID         string            `bun:"subnet_id,notnull"`
+	VPC              *VPC              `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	VpcID            string            `bun:"vpc_id,notnull"`
 
 	// Association
 	AllocationID    string `bun:"allocation_id,notnull"`
