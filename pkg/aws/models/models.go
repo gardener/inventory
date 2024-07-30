@@ -292,6 +292,16 @@ type NetworkInterface struct {
 	AttachmentStatus    string `bun:"attachment_status,notnull"`
 }
 
+// LoadBalancerToNetworkInterface represents a link table connecting the
+// [LoadBalancer] with [NetworkInterface].
+type LoadBalancerToNetworkInterface struct {
+	bun.BaseModel `bun:"table:l_aws_lb_to_net_interface"`
+	coremodels.Model
+
+	LoadBalancerID     uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_net_interface_key"`
+	NetworkInterfaceID uint64 `bun:"ni_id,notnull,unique:l_aws_lb_to_net_interface_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("aws:model:region", &Region{})
@@ -316,4 +326,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:link_image_to_region", &ImageToRegion{})
 	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_vpc", &LoadBalancerToVPC{})
 	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_region", &LoadBalancerToRegion{})
+	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_net_interface", &LoadBalancerToNetworkInterface{})
 }
