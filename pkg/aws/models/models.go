@@ -203,8 +203,8 @@ type LoadBalancer struct {
 	bun.BaseModel `bun:"table:aws_loadbalancer"`
 	coremodels.Model
 
-	Name                  string  `bun:"name,notnull,unique"`
-	DNSName               string  `bun:"dns_name,notnull"`
+	Name                  string  `bun:"name,notnull"`
+	DNSName               string  `bun:"dns_name,notnull,unique"`
 	CanonicalHostedZoneID string  `bun:"canonical_hosted_zone_id,notnull"`
 	State                 string  `bun:"state,notnull"`
 	Scheme                string  `bun:"scheme,notnull"`
