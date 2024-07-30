@@ -295,12 +295,13 @@ type NetworkInterface struct {
 	PublicIPAddress string `bun:"public_ip_address,notnull"`
 
 	// Attachment
-	AttachmentID        string `bun:"attachment_id,notnull"`
-	DeleteOnTermination bool   `bun:"delete_on_termination,notnull"`
-	DeviceIndex         int    `bun:"device_index,notnull"`
-	InstanceID          string `bun:"instance_id,notnull"`
-	InstanceOwnerID     string `bun:"instance_owner_id,notnull"`
-	AttachmentStatus    string `bun:"attachment_status,notnull"`
+	AttachmentID        string    `bun:"attachment_id,notnull"`
+	DeleteOnTermination bool      `bun:"delete_on_termination,notnull"`
+	DeviceIndex         int       `bun:"device_index,notnull"`
+	Instance            *Instance `bun:"rel:has-one,join:instance_id=instance_id"`
+	InstanceID          string    `bun:"instance_id,notnull"`
+	InstanceOwnerID     string    `bun:"instance_owner_id,notnull"`
+	AttachmentStatus    string    `bun:"attachment_status,notnull"`
 }
 
 // LoadBalancerToNetworkInterface represents a link table connecting the
