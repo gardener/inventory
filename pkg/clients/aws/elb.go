@@ -4,7 +4,7 @@
 
 package aws
 
-import elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+import elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 
 var ELB *elb.Client
 
