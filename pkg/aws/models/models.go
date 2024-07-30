@@ -336,4 +336,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_vpc", &LoadBalancerToVPC{})
 	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_region", &LoadBalancerToRegion{})
 	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_net_interface", &LoadBalancerToNetworkInterface{})
+	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_net_interface", &InstanceToNetworkInterface{})
 }
