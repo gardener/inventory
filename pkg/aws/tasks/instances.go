@@ -92,7 +92,6 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		}
 	}
 
-	// Parse reservations and add to instances
 	instances := make([]models.Instance, 0, len(items))
 	for _, instance := range items {
 		name := utils.FetchTag(instance.Tags, "Name")
