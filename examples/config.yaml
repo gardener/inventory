@@ -73,6 +73,9 @@ scheduler:
       payload: >-
         image_owners:
           - 544319711298
+    - name: "aws:task:collect-loadbalancers"
+      spec: "@every 24h"
+      desc: "Collect AWS LoadBalancers"
     - name: "aws:task:collect-buckets"
       spec: "@every 24h"
       desc: "Collect AWS S3 Buckets"
@@ -128,6 +131,8 @@ scheduler:
           - name: "g:model:shoot"
             duration: 24h
           - name: "g:model:machine"
+            duration: 24h
+          - name: "g:model:loadbalancer"
             duration: 24h
           - name: "g:model:backup_bucket"
             duration: 24h
