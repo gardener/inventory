@@ -200,7 +200,6 @@ func collectClassicLoadBalancersForRegion(ctx context.Context, region string) er
 			Name:                  stringutils.StringFromPointer(lb.LoadBalancerName),
 			DNSName:               stringutils.StringFromPointer(lb.DNSName),
 			CanonicalHostedZoneID: stringutils.StringFromPointer(lb.CanonicalHostedZoneNameID),
-			State:                 constants.LoadBalancerClassicState,
 			Scheme:                stringutils.StringFromPointer(lb.Scheme),
 			Type:                  constants.LoadBalancerClassicType,
 			VpcID:                 stringutils.StringFromPointer(lb.VPCId),
