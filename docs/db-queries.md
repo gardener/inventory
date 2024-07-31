@@ -122,12 +122,11 @@ The following query returns the total number of public IP addresses per AWS Regi
 
 ``` sql
 SELECT
-        v.region_name AS region_name,
-        COUNT(ni.id) AS public_ip_addresses
-FROM aws_net_interface AS ni
-INNER JOIN aws_vpc AS v ON ni.vpc_id = v.vpc_id
-WHERE ni.public_ip_address <> ''
-GROUP BY v.region_name ORDER BY public_ip_addresses DESC;
+        region_name,
+        COUNT(id) AS public_ip_addresses
+FROM aws_net_interface
+WHERE public_ip_address <> ''
+GROUP BY region_name ORDER BY public_ip_addresses DESC;
 ```
 
 Sample output:
