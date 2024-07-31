@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	v1types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
@@ -21,7 +22,7 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -106,14 +107,22 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 
 	lbs := make([]models.LoadBalancer, 0, len(items))
 	for _, lb := range items {
+		arn := stringutils.StringFromPointer(lb.LoadBalancerArn)
+
+		// Get the LoadBalancerID from the last component of the ARN
+		arnParts := strings.Split(arn, "/")
+		loadBalancerID := arnParts[len(arnParts)-1]
+
 		modelLb := models.LoadBalancer{
-			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
-			DNSName:               strings.StringFromPointer(lb.DNSName),
-			CanonicalHostedZoneID: strings.StringFromPointer(lb.CanonicalHostedZoneId),
+			Name:                  stringutils.StringFromPointer(lb.LoadBalancerName),
+			ARN:                   arn,
+			LoadBalancerID:        loadBalancerID,
+			DNSName:               stringutils.StringFromPointer(lb.DNSName),
+			CanonicalHostedZoneID: stringutils.StringFromPointer(lb.CanonicalHostedZoneId),
 			State:                 string(lb.State.Code),
 			Scheme:                string(lb.Scheme),
 			Type:                  string(lb.Type),
-			VpcID:                 strings.StringFromPointer(lb.VpcId),
+			VpcID:                 stringutils.StringFromPointer(lb.VpcId),
 			RegionName:            region,
 		}
 		lbs = append(lbs, modelLb)
@@ -127,6 +136,8 @@ func collectLoadBalancersForRegion(ctx context.Context, region string) error {
 		Model(&lbs).
 		On("CONFLICT (dns_name) DO UPDATE").
 		Set("name = EXCLUDED.name").
+		Set("arn = EXCLUDED.arn").
+		Set("load_balancer_id = EXCLUDED.load_balancer_id").
 		Set("canonical_hosted_zone_id = EXCLUDED.canonical_hosted_zone_id").
 		Set("state = EXCLUDED.state").
 		Set("scheme = EXCLUDED.scheme").
@@ -186,13 +197,13 @@ func collectClassicLoadBalancersForRegion(ctx context.Context, region string) er
 	lbs := make([]models.LoadBalancer, 0, len(items))
 	for _, lb := range items {
 		modelLb := models.LoadBalancer{
-			Name:                  strings.StringFromPointer(lb.LoadBalancerName),
-			DNSName:               strings.StringFromPointer(lb.DNSName),
-			CanonicalHostedZoneID: strings.StringFromPointer(lb.CanonicalHostedZoneNameID),
+			Name:                  stringutils.StringFromPointer(lb.LoadBalancerName),
+			DNSName:               stringutils.StringFromPointer(lb.DNSName),
+			CanonicalHostedZoneID: stringutils.StringFromPointer(lb.CanonicalHostedZoneNameID),
 			State:                 constants.LoadBalancerClassicState,
-			Scheme:                strings.StringFromPointer(lb.Scheme),
+			Scheme:                stringutils.StringFromPointer(lb.Scheme),
 			Type:                  constants.LoadBalancerClassicType,
-			VpcID:                 strings.StringFromPointer(lb.VPCId),
+			VpcID:                 stringutils.StringFromPointer(lb.VPCId),
 			RegionName:            region,
 		}
 		lbs = append(lbs, modelLb)
