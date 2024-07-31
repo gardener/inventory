@@ -529,3 +529,47 @@ func LinkInstanceWithImage(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkNetworkInterfaceWithInstance creates links between [models.Instance] and
+// [models.NetworkInterface].
+func LinkNetworkInterfaceWithInstance(ctx context.Context, db *bun.DB) error {
+	var items []models.NetworkInterface
+	err := db.NewSelect().
+		Model(&items).
+		Relation("Instance").
+		Where("instance.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.InstanceToNetworkInterface, 0, len(items))
+	for _, item := range items {
+		link := models.InstanceToNetworkInterface{
+			NetworkInterfaceID: item.ID,
+			InstanceID:         item.Instance.ID,
+		}
+		links = append(links, link)
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (instance_id, ni_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws instance with network interface", "count", count)
+
+	return nil
+}
