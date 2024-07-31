@@ -57,6 +57,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkImageWithRegion,
 		LinkLoadBalancerWithVpc,
 		LinkLoadBalancerWithRegion,
+		LinkNetworkInterfaceWithInstance,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
