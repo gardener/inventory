@@ -10,6 +10,5 @@ const (
 	PageSize = 100
 
 	// The value set for the type column of classic LBs.
-	LoadBalancerClassicType  = "classic"
-	LoadBalancerClassicState = "N/A"
+	LoadBalancerClassicType = "classic"
 )
