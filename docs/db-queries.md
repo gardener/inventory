@@ -116,6 +116,37 @@ Sample output:
 Time: 2.631 ms
 ```
 
+## AWS Public IP Addresses Per Region
+
+The following query returns the total number of public IP addresses per AWS Region.
+
+``` sql
+SELECT
+        v.region_name AS region_name,
+        COUNT(ni.id) AS public_ip_addresses
+FROM aws_net_interface AS ni
+INNER JOIN aws_vpc AS v ON ni.vpc_id = v.vpc_id
+WHERE ni.public_ip_address <> ''
+GROUP BY v.region_name ORDER BY public_ip_addresses DESC;
+```
+
+Sample output:
+
+``` text
+┌──────────────┬─────────────────────┐
+│ region_name  │ public_ip_addresses │
+├──────────────┼─────────────────────┤
+│ eu-west-1    │                 219 │
+│ eu-north-1   │                  13 │
+│ us-east-1    │                   7 │
+│ ap-south-1   │                   1 │
+│ eu-central-1 │                   1 │
+└──────────────┴─────────────────────┘
+(5 rows)
+
+Time: 3.136 ms
+```
+
 ## Shoots Grouped by Cloud Profile
 
 The following query will give you the shoots grouped by cloud profile.
