@@ -220,6 +220,15 @@ type LoadBalancer struct {
 	bun.BaseModel `bun:"table:aws_loadbalancer"`
 	coremodels.Model
 
+	// ARN specifies the ARN of the Load Balancer. ARN is available only for
+	// v2 Load Balancers.
+	ARN string `bun:"arn,notnull"`
+
+	// LoadBalancerID specifies the ID of the Load Balancer. The
+	// LoadBalancerID is extracted from the last component of the ARN and is
+	// only available for v2 LBs.
+	LoadBalancerID string `bun:"load_balancer_id,notnull"`
+
 	Name                  string  `bun:"name,notnull"`
 	DNSName               string  `bun:"dns_name,notnull,unique"`
 	CanonicalHostedZoneID string  `bun:"canonical_hosted_zone_id,notnull"`
