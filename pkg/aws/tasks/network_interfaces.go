@@ -217,7 +217,11 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert network interfaces into db", "region", payload.Region, "reason", err)
+		slog.Error(
+			"could not insert network interfaces into db",
+			"region", payload.Region,
+			"reason", err,
+		)
 		return err
 	}
 
@@ -226,7 +230,11 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 		return err
 	}
 
-	slog.Info("populated aws network interfaces", "region", payload.Region, "count", count)
+	slog.Info(
+		"populated aws network interfaces",
+		"region", payload.Region,
+		"count", count,
+	)
 
 	return nil
 }
