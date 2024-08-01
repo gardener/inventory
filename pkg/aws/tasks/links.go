@@ -6,10 +6,13 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/uptrace/bun"
 
+	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 )
 
@@ -553,6 +556,10 @@ func LinkNetworkInterfaceWithInstance(ctx context.Context, db *bun.DB) error {
 		links = append(links, link)
 	}
 
+	if len(links) == 0 {
+		return nil
+	}
+
 	out, err := db.NewInsert().
 		Model(&links).
 		On("CONFLICT (instance_id, ni_id) DO UPDATE").
@@ -570,6 +577,109 @@ func LinkNetworkInterfaceWithInstance(ctx context.Context, db *bun.DB) error {
 	}
 
 	slog.Info("linked aws instance with network interface", "count", count)
+
+	return nil
+}
+
+// getInterfacesForLoadBalancer retrieves the [models.NetworkInterface]s
+// associated with the given [models.LoadBalancer].
+func getInterfacesForLoadBalancer(ctx context.Context, db *bun.DB, lb models.LoadBalancer) ([]models.NetworkInterface, error) {
+	// In AWS we have a mixture of Load Balancers such as `classic',
+	// `network', `application' and `gateway'.
+	//
+	// In order to determine the Network Interfaces used by these Load
+	// Balancers we need to inspect the `description' of each Network
+	// Interface, which will be set to a specific value, depending on the
+	// type of Load Balancer with which it is associated.
+	//
+	// Interfaces associated with `classic' Load Balancers have a
+	// description set to "ELB <elb-name>".
+	//
+	// Interfaces associated with Application Load Balancers have a
+	// description set to "ELB app/load-balancer-name/load-balancer-id".
+	//
+	// Interfaces associated with Network Load Balancers have a description
+	// set to "ELB net/load-balancer-name/load-balancer-id".
+	//
+	// NAT Gateways are not covered by this utility function, since we can
+	// get the interfaces from the NAT Gateway itself.
+	//
+	// For more details, please refer to [1].
+	//
+	// [1]: https://repost.aws/knowledge-center/elb-find-load-balancer-ip
+
+	var description string
+	switch lb.Type {
+	case constants.LoadBalancerClassicType:
+		description = fmt.Sprintf("ELB %s", lb.Name)
+	case string(types.LoadBalancerTypeEnumApplication):
+		description = fmt.Sprintf("ELB app/%s/%s", lb.Name, lb.LoadBalancerID)
+	case string(types.LoadBalancerTypeEnumNetwork):
+		description = fmt.Sprintf("ELB net/%s/%s", lb.Name, lb.LoadBalancerID)
+	}
+
+	if description == "" {
+		return nil, nil
+	}
+
+	var items []models.NetworkInterface
+	err := db.NewSelect().
+		Model(&items).
+		Where("description = ?", description).
+		Scan(ctx)
+
+	return items, err
+}
+
+// LinkNetworkInterfaceWithLoadBalancer creates links between
+// [models.NetworkInterface] and [models.LoadBalancer].
+func LinkNetworkInterfaceWithLoadBalancer(ctx context.Context, db *bun.DB) error {
+	loadBalancers := make([]models.LoadBalancer, 0)
+	err := db.NewSelect().
+		Model(&loadBalancers).
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.LoadBalancerToNetworkInterface, 0)
+	for _, lb := range loadBalancers {
+		interfaces, err := getInterfacesForLoadBalancer(ctx, db, lb)
+		if err != nil {
+			return err
+		}
+
+		for _, item := range interfaces {
+			link := models.LoadBalancerToNetworkInterface{
+				NetworkInterfaceID: item.ID,
+				LoadBalancerID:     lb.ID,
+			}
+			links = append(links, link)
+		}
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (lb_id, ni_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked aws load balancer with network interface", "count", count)
 
 	return nil
 }
