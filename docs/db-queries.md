@@ -146,6 +146,25 @@ Sample output:
 Time: 3.136 ms
 ```
 
+## AWS Load Balancers and Network Interfaces
+
+The following query will return the Elastic Load Balancers, along with their
+private and public IPv4 addresses, by joining the ELB and NetworkInterface using
+the link table.
+
+``` sql
+SELECT
+        lb.id AS lb_id,
+        lb.dns_name AS dns,
+        lb.region_name AS region,
+        lb.type AS lb_type,
+        ni.private_ip_address AS priv_ip_addr,
+        ni.public_ip_address AS pub_ip_addr
+FROM aws_loadbalancer AS lb
+INNER JOIN l_aws_lb_to_net_interface AS link ON lb.id = link.lb_id
+INNER JOIN aws_net_interface AS ni ON ni.id = link.ni_id;
+```
+
 ## Shoots Grouped by Cloud Profile
 
 The following query will give you the shoots grouped by cloud profile.
