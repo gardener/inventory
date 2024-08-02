@@ -1,0 +1,1 @@
+ALTER TABLE "aws_instance" ADD COLUMN "launch_time" TIMESTAMP WITH TIME ZONE;
