@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -20,6 +21,7 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 	"github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -106,6 +108,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 			Platform:     strings.StringFromPointer(instance.PlatformDetails),
 			RegionName:   region,
 			ImageID:      strings.StringFromPointer(instance.ImageId),
+			LaunchTime:   ptr.Value(instance.LaunchTime, time.Time{}),
 		}
 		instances = append(instances, modelInstance)
 	}
@@ -126,6 +129,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		Set("platform = EXCLUDED.platform").
 		Set("region_name = EXCLUDED.region_name").
 		Set("image_id = EXCLUDED.image_id").
+		Set("launch_time = EXCLUDED.launch_time").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
