@@ -182,6 +182,7 @@ type Instance struct {
 	Platform          string              `bun:"platform,notnull"`
 	RegionName        string              `bun:"region_name,notnull"`
 	ImageID           string              `bun:"image_id,notnull"`
+	LaunchTime        time.Time           `bun:"launch_time,nullzero"`
 	Region            *Region             `bun:"rel:has-one,join:region_name=name"`
 	VPC               *VPC                `bun:"rel:has-one,join:vpc_id=vpc_id"`
 	Subnet            *Subnet             `bun:"rel:has-one,join:subnet_id=subnet_id"`
