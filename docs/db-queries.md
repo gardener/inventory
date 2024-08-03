@@ -116,6 +116,15 @@ Sample output:
 Time: 2.631 ms
 ```
 
+## AWS EC2 Instances Uptime
+
+Filter out EC2 instances with an uptime of more than 30 days.
+
+
+``` sql
+SELECT * FROM aws_instance WHERE launch_time < NOW() - INTERVAL '30 days';
+```
+
 ## AWS Public IP Addresses Per Region
 
 The following query returns the total number of public IP addresses per AWS Region.
