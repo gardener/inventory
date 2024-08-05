@@ -248,24 +248,39 @@ type DashboardConfig struct {
 	PrometheusEndpoint string `yaml:"prometheus_endpoint"`
 }
 
-// Parse parses the config from the given path.
-func Parse(path string) (*Config, error) {
-	var conf Config
+// parseFile parses the configuration from the given path and unmarshals it into
+// the specified [Config].
+func parseFile(path string, conf *Config) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := yaml.Unmarshal(data, &conf); err != nil {
-		return nil, err
+		return err
 	}
 
 	if conf.Version == "" {
-		return nil, ErrNoConfigVersion
+		return ErrNoConfigVersion
 	}
 
 	if conf.Version != ConfigFormatVersion {
-		return nil, fmt.Errorf("%w: %s", ErrUnsupportedVersion, conf.Version)
+		return fmt.Errorf("%w: %s", ErrUnsupportedVersion, conf.Version)
+	}
+
+	return nil
+}
+
+// Parse parses the configs from the given paths in-order. Configuration
+// settings provided later in the sequence of paths will override settings from
+// previous config paths.
+func Parse(paths []string) (*Config, error) {
+	var conf Config
+
+	for _, path := range paths {
+		if err := parseFile(path, &conf); err != nil {
+			return nil, err
+		}
 	}
 
 	// Worker defaults
@@ -285,9 +300,10 @@ func Parse(path string) (*Config, error) {
 	return &conf, nil
 }
 
-// MustParse parses the config from the given path, or panics in case of errors.
-func MustParse(path string) *Config {
-	config, err := Parse(path)
+// MustParse parses the configs from the given paths, or panics in case of
+// errors.
+func MustParse(paths []string) *Config {
+	config, err := Parse(paths)
 	if err != nil {
 		panic(err)
 	}
