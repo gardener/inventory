@@ -32,11 +32,11 @@ func NewGardenerCollectBackupBucketsTask() *asynq.Task {
 
 // HandleGardenerCollectBackupBucketsTask is a handler function that collects Gardener BackupBuckets.
 func HandleGardenerCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
-	slog.Info("Collecting Gardener backup buckets")
 	return collectBackupBuckets(ctx)
 }
 
 func collectBackupBuckets(ctx context.Context) error {
+	slog.Info("Collecting Gardener backup buckets")
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
 		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
