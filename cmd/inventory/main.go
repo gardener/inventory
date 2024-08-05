@@ -28,7 +28,7 @@ func main() {
 				Usage: "enables debug mode, if set",
 				Value: false,
 			},
-			&cli.StringFlag{
+			&cli.StringSliceFlag{
 				Name:     "config",
 				Usage:    "path to config file",
 				Required: true,
@@ -53,7 +53,7 @@ func main() {
 			},
 		},
 		Before: func(ctx *cli.Context) error {
-			configFile := ctx.String("config")
+			configFile := ctx.StringSlice("config")
 			conf, err := config.Parse(configFile)
 			if err != nil {
 				return fmt.Errorf("Cannot parse config: %w", err)
