@@ -388,6 +388,15 @@ You can use the [examples/config.yaml](../examples/config.yaml) file as a
 starting point. The configuration file can be specified via the
 `INVENTORY_CONFIG` env var as well.
 
+The `inventory` CLI app accepts multiple configuration files via the
+`--config|--file <path>` options. This allows to separate configuration into
+multiple files, if needed. When specifying multiple configuration files via the
+`INVENTORY_CONFIG` env var you need to separate the files using a comma, e.g.
+
+``` shell
+env INVENTORY_CONFIG=foo.yaml,bar.yaml,baz.yaml inventory ...
+```
+
 In order to make development easier it is recommended to use
 [direnv](https://direnv.net/) along with a `.envrc` file.
 
