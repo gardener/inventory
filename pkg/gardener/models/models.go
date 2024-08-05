@@ -105,6 +105,31 @@ type BackupBucket struct {
 	Seed         *Seed  `bun:"rel:has-one,join:seed_name=name"`
 }
 
+// CloudProfile represents a Gardener CloudProfile resource
+type CloudProfile struct {
+	bun.BaseModel `bun:"table:g_cloud_profile"`
+	coremodels.Model
+
+	Name string `bun:"name,notnull,unique"`
+	Type string `bun:"type,notnull"`
+}
+
+// CloudProfileAWSImage represents an AWS Machine Image collected from a CloudProfile.
+// It is a separate resource to AMIs in the aws package, as we must match between
+// what is required (this) and what is (AMIs)
+type CloudProfileAWSImage struct {
+	bun.BaseModel `bun:"table:g_cloud_profile_aws_image"`
+	coremodels.Model
+
+	Name             string        `bun:"name,notnull,unique:g_cloud_profile_aws_image_key"`
+	Version          string        `bun:"version,notnull,unique:g_cloud_profile_aws_image_key"`
+	RegionName       string        `bun:"region_name,notnull,unique:g_cloud_profile_aws_image_key"`
+	AMI              string        `bun:"ami,notnull,unique:g_cloud_profile_aws_image_key"`
+	Architecture     string        `bun:"architecture,notnull"`
+	CloudProfileName string        `bun:"cloud_profile_name,notnull"`
+	CloudProfile     *CloudProfile `bun:"rel:has-one,join:cloud_profile_name=name"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("g:model:project", &Project{})
@@ -112,6 +137,8 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:shoot", &Shoot{})
 	registry.ModelRegistry.MustRegister("g:model:machine", &Machine{})
 	registry.ModelRegistry.MustRegister("g:model:backup_bucket", &BackupBucket{})
+	registry.ModelRegistry.MustRegister("g:model:cloud_profile", &CloudProfile{})
+	registry.ModelRegistry.MustRegister("g:model:cloud_profile_aws_image", &CloudProfileAWSImage{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})

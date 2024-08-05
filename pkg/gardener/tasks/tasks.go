@@ -34,6 +34,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewGardenerCollectShootsTask,
 		NewGardenerCollectMachinesTask,
 		NewGardenerCollectBackupBucketsTask,
+		NewGardenerCollectCloudProfilesTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -59,6 +60,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TasksCollectMachines, asynq.HandlerFunc(HandleGardenerCollectMachinesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectMachinesForSeed, asynq.HandlerFunc(HandleGardenerCollectMachinesForSeedTask))
 	registry.TaskRegistry.MustRegister(TaskCollectBackupBuckets, asynq.HandlerFunc(HandleGardenerCollectBackupBucketsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectCloudProfiles, asynq.HandlerFunc(HandleGardenerCollectCloudProfilesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
