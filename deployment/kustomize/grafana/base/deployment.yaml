@@ -26,6 +26,17 @@ spec:
     spec:
       containers:
       - name: grafana
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_USERS_VIEWERS_CAN_EDIT
+          value: "true"
+        - name: GF_DATE_FORMATS_DEFAULT_TIMEZONE
+          value: UTC
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
+          value: "true"
+        - name: GF_AUTH_DISABLE_SIGNOUT_MENU
+          value: "true"
         ports:
           - containerPort: 3000
         securityContext:
