@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/component: grafana
     app.kubernetes.io/part-of: inventory
     app.kubernetes.io/managed-by: kustomize
+    oidc-apps.gardener.cloud/name: grafana
   name: grafana
 spec:
   replicas: 1
@@ -21,6 +22,7 @@ spec:
     metadata:
       labels:
         app: grafana
+        oidc-apps.gardener.cloud/name: grafana
     spec:
       containers:
       - name: grafana
