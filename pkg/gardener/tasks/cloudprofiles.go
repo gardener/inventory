@@ -27,9 +27,6 @@ const (
 	TaskCollectCloudProfiles = "g:task:collect-cloud-profiles"
 )
 
-// cannot use const on slices/arrays, so this is just package private
-var allowedProviderTypes = []string{"aws", "alicloud", "gcp", "azure", "openstack", "ironcore"}
-
 // NewGardenerCollectCloudProfilesTask creates a new task for collecting Gardener CloudProfiles.
 func NewGardenerCollectCloudProfilesTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectCloudProfiles, nil)
