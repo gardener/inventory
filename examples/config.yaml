@@ -144,6 +144,8 @@ scheduler:
             duration: 24h
           - name: "g:model:backup_bucket"
             duration: 24h
+          - name: "g:model:cloud_profile"
+            duration: 24h
 
 virtual_garden:
   # Path to token for Virtual Garden cluster authentication
