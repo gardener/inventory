@@ -51,9 +51,7 @@ func HandleProviderConfig(ctx context.Context, rawProviderConfig []byte, cloudPr
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert gardener aws cloud profile images into db",
-			"reason",
-			err)
+		slog.Error("could not insert gardener aws cloud profile images into db", "reason", err)
 		return err
 	}
 

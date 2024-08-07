@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS "g_cloud_profile_aws_image" (
     "name" VARCHAR NOT NULL,
     "version" VARCHAR NOT NULL,
     "region_name" VARCHAR NOT NULL,
-    "ami" VARCHAR NOT NULL UNIQUE,
+    "ami" VARCHAR NOT NULL,
     "architecture" VARCHAR NOT NULL,
     "cloud_profile_name" VARCHAR NOT NULL,
 

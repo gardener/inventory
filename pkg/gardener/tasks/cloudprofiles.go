@@ -27,6 +27,10 @@ const (
 	TaskCollectCloudProfiles = "g:task:collect-cloud-profiles"
 )
 
+const (
+	TypeAWS = "aws"
+)
+
 // NewGardenerCollectCloudProfilesTask creates a new task for collecting Gardener CloudProfiles.
 func NewGardenerCollectCloudProfilesTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectCloudProfiles, nil)
@@ -60,7 +64,8 @@ func collectCloudProfiles(ctx context.Context) error {
 
 		providerConfig := cp.Spec.ProviderConfig
 		if providerConfig == nil {
-			return fmt.Errorf("providerConfig not provided for CloudProfile %v", cp.Name)
+			slog.Error("providerConfig not provided for CloudProfile", "CloudProfile name", cp.Name, "type", providerType)
+			return nil
 		}
 
 		cloudProfile := models.CloudProfile{
@@ -70,7 +75,7 @@ func collectCloudProfiles(ctx context.Context) error {
 		cloudProfiles = append(cloudProfiles, cloudProfile)
 
 		switch providerType {
-		case "aws":
+		case TypeAWS:
 			if err := aws.HandleProviderConfig(ctx, providerConfig.Raw, cloudProfile); err != nil {
 				return err
 			}
