@@ -11,6 +11,7 @@ import (
 
 	gardenerv1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/hibiken/asynq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,7 +20,6 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
-	aws "github.com/gardener/inventory/pkg/gardener/tasks/cloudprofiles/aws"
 )
 
 const (
@@ -28,8 +28,15 @@ const (
 )
 
 const (
-	TypeAWS = "aws"
+	providerTypeAWS = "aws"
 )
+
+// CollectMachineImagesPayload is the payload needed for g:task:collect-<provider>-machine-images.
+// It is generic for all providers, since the ProviderConfig is originally presented as a []byte.
+type CollectMachineImagesPayload struct {
+	ProviderConfig   []byte `json:"providerConfig"`
+	CloudProfileName string `json:"cloudProfileName"`
+}
 
 // NewGardenerCollectCloudProfilesTask creates a new task for collecting Gardener CloudProfiles.
 func NewGardenerCollectCloudProfilesTask() *asynq.Task {
@@ -74,11 +81,14 @@ func collectCloudProfiles(ctx context.Context) error {
 		}
 		cloudProfiles = append(cloudProfiles, cloudProfile)
 
+		payload := CollectMachineImagesPayload{
+			CloudProfileName: cloudProfile.Name,
+			ProviderConfig:   providerConfig.Raw,
+		}
+
 		switch providerType {
-		case TypeAWS:
-			if err := aws.HandleProviderConfig(ctx, providerConfig.Raw, cloudProfile); err != nil {
-				return err
-			}
+		case providerTypeAWS:
+			enqueueAWSMachineImagesTask(payload)
 			//TODO:
 		// case "alicloud":
 		// case "gcp":
@@ -120,4 +130,33 @@ func collectCloudProfiles(ctx context.Context) error {
 	slog.Info("populated gardener cloud profiles", "count", count)
 
 	return nil
+}
+
+func enqueueAWSMachineImagesTask(payload CollectMachineImagesPayload) {
+	slog.Info("creating task for collecting gardener machine images for AWS")
+	t, err := NewCollectAWSMachineImagesTask(payload)
+	if err != nil {
+		slog.Error("Could not create task for collecting AWS machine images", "err", err)
+		return
+	}
+
+	slog.Info("enqueueing task for collecting gardener machine images for AWS")
+	info, err := asynqclient.Client.Enqueue(t)
+	if err != nil {
+		slog.Error(
+			"could not enqueue task",
+			"type", t.Type(),
+			"cloud profile", payload.CloudProfileName,
+			"reason", err,
+		)
+		return
+	}
+
+	slog.Info(
+		"enqueued task",
+		"type", t.Type(),
+		"id", info.ID,
+		"queue", info.Queue,
+		"cloud profile", payload.CloudProfileName,
+	)
 }
