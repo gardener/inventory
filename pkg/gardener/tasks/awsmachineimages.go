@@ -61,10 +61,10 @@ func HandleCollectAWSMachineImagesTask(ctx context.Context, t *asynq.Task) error
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
-	return collectMachineImages(ctx, p)
+	return collectAWSMachineImages(ctx, p)
 }
 
-func collectMachineImages(ctx context.Context, p CollectMachineImagesPayload) error {
+func collectAWSMachineImages(ctx context.Context, p CollectMachineImagesPayload) error {
 	slog.Info("Collecting Gardener AWS machine images")
 
 	images, err := getAWSMachineImages(p.ProviderConfig)

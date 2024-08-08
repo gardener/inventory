@@ -70,16 +70,17 @@ func collectCloudProfiles(ctx context.Context) error {
 		providerType := cp.Spec.Type
 
 		providerConfig := cp.Spec.ProviderConfig
-		if providerConfig == nil {
-			slog.Error("providerConfig not provided for CloudProfile", "CloudProfile name", cp.Name, "type", providerType)
-			return nil
-		}
 
 		cloudProfile := models.CloudProfile{
 			Name: cp.GetName(),
 			Type: providerType,
 		}
 		cloudProfiles = append(cloudProfiles, cloudProfile)
+
+		if providerConfig == nil {
+			slog.Error("providerConfig not provided for CloudProfile", "CloudProfile name", cp.Name, "type", providerType)
+			return nil
+		}
 
 		payload := CollectMachineImagesPayload{
 			CloudProfileName: cloudProfile.Name,
@@ -96,7 +97,7 @@ func collectCloudProfiles(ctx context.Context) error {
 		// case "openstack":
 		// case "ironcore":
 		default:
-			slog.Error("received CloudProfile with invalid provider type", "profile", cp.Name, "type", providerType)
+			slog.Warn("task for collecting machine images does not exist for cloud profile type", "profile", cp.Name, "type", providerType)
 			return nil
 		}
 
@@ -133,14 +134,13 @@ func collectCloudProfiles(ctx context.Context) error {
 }
 
 func enqueueAWSMachineImagesTask(payload CollectMachineImagesPayload) {
-	slog.Info("creating task for collecting gardener machine images for AWS")
 	t, err := NewCollectAWSMachineImagesTask(payload)
 	if err != nil {
-		slog.Error("Could not create task for collecting AWS machine images", "err", err)
+		slog.Error("could not create task for collecting AWS machine images", "err", err)
 		return
 	}
 
-	slog.Info("enqueueing task for collecting gardener machine images for AWS")
+	slog.Info("enqueueing task for collecting gardener machine images for AWS", "cloud profile", payload.CloudProfileName)
 	info, err := asynqclient.Client.Enqueue(t)
 	if err != nil {
 		slog.Error(
