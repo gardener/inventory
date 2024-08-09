@@ -65,8 +65,8 @@ aws:
         duration: 30m
         audiences:
           - iaas-aws-dev
-          role_arn: arn:aws:iam::account:role/gardener-inventory-dev
-          role_session_name: gardener-inventory-worker
+        role_arn: arn:aws:iam::account:role/gardener-inventory-dev
+        role_session_name: gardener-inventory-worker
 
     token-file:
       # Example configuration for `token_file' retriever. When using this token
