@@ -68,6 +68,15 @@ type Config struct {
 	GCP GCPConfig `yaml:"gcp"`
 }
 
+// GCPConfig provides GCP specific configuration settings.
+type GCPConfig struct {
+	// The Kubernetes API server URL of the GCP regional soil cluster.
+	SoilRegionalHost string `yaml:"soil_regional_host"`
+
+	// The path to the CA certificate of the GCP regional soil cluster.
+	SoilRegionalCAPath string `yaml:"soil_regional_ca_path"`
+}
+
 // AWSConfig provides AWS specific configuration settings.
 type AWSConfig struct {
 	// Region is the region to use when initializing the AWS client.
@@ -79,17 +88,35 @@ type AWSConfig struct {
 	// AppID is an optional application specific identifier.
 	AppID string `yaml:"app_id"`
 
-	// Credentials specifies the AWS credentials configuration.
-	Credentials AWSCredentialsConfig `yaml:"credentials"`
+	// Services provides AWS service-specific configuration,
+	// e.g. credentials to use when accessing a given AWS service.
+	Services AWSServices `yaml:"services"`
+
+	// Credentials specifies the AWS credentials configuration, which is
+	// used by the various AWS services.
+	Credentials map[string]AWSCredentialsConfig `yaml:"credentials"`
 }
 
-// GCPConfig provides GCP specific configuration settings.
-type GCPConfig struct {
-	// The Kubernetes API server URL of the GCP regional soil cluster.
-	SoilRegionalHost string `yaml:"soil_regional_host"`
+// AWSServices provides service-specific configuration for the AWS services.
+type AWSServices struct {
+	// EC2 contains EC2-specific service configuration
+	EC2 AWSServiceConfig `yaml:"ec2"`
 
-	// The path to the CA certificate of the GCP regional soil cluster.
-	SoilRegionalCAPath string `yaml:"soil_regional_ca_path"`
+	// ELB contains ELBv1-specific service configuration
+	ELB AWSServiceConfig `yaml:"elb"`
+
+	// ELBv2 contains ELBv2-specific service configuration
+	ELBv2 AWSServiceConfig `yaml:"elbv2"`
+
+	// S3 provides S3-specific service configuration
+	S3 AWSServiceConfig `yaml:"s3"`
+}
+
+// AWSServiceConfig prvides service-specific configuration for an AWS service.
+type AWSServiceConfig struct {
+	// UseCredentials specifies the name of the credentials to use for a
+	// given AWS Service.
+	UseCredentials string `yaml:"use_credentials"`
 }
 
 // AWSCredentialsConfig provides credentials specific configuration for the AWS
@@ -291,10 +318,6 @@ func Parse(paths []string) (*Config, error) {
 	// AWS defaults
 	if conf.AWS.AppID == "" {
 		conf.AWS.AppID = DefaultAWSAppID
-	}
-
-	if conf.AWS.Credentials.TokenRetriever == "" {
-		conf.AWS.Credentials.TokenRetriever = DefaultAWSTokenRetriever
 	}
 
 	return &conf, nil
