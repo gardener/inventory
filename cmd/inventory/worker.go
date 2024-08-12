@@ -193,6 +193,17 @@ func NewWorkerCommand() *cli.Command {
 					awsclient.SetELBV2Client(elbv2Client)
 					awsclient.SetS3Client(s3Client)
 
+					awsServiceCreds := map[string]string{
+						"ec2":   conf.AWS.Services.EC2.UseCredentials,
+						"elb":   conf.AWS.Services.ELB.UseCredentials,
+						"elbv2": conf.AWS.Services.ELBv2.UseCredentials,
+						"s3":    conf.AWS.Services.S3.UseCredentials,
+					}
+
+					for svc, namedCreds := range awsServiceCreds {
+						slog.Info("configured AWS client", "service", svc, "credentials", namedCreds)
+					}
+
 					// Register our task handlers
 					mux := asynq.NewServeMux()
 					mux.Use(newLoggingMiddleware())
