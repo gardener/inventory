@@ -93,7 +93,7 @@ func collectAWSMachineImages(ctx context.Context, p CollectMachineImagesPayload)
 
 	out, err := db.DB.NewInsert().
 		Model(&modelImages).
-		On("CONFLICT (name, ami, version, region_name) DO UPDATE").
+		On("CONFLICT (name, ami, version, region_name, cloud_profile_name) DO UPDATE").
 		Set("architecture = EXCLUDED.architecture").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
