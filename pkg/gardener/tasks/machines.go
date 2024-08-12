@@ -7,6 +7,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -101,6 +102,12 @@ func collectMachinesForSeed(ctx context.Context, seed string) error {
 
 	gardenClient, err := gardenerclient.MCMClient(seed)
 	if err != nil {
+		if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
+			// Don't treat excluded seeds as errors, in order to
+			// avoid accumulating archived tasks
+			slog.Warn("seed is excluded", "seed", seed)
+			return nil
+		}
 		return fmt.Errorf("could not get garden client for seed %q: %s: %w", seed, err, asynq.SkipRetry)
 	}
 
