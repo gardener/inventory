@@ -53,11 +53,21 @@ func collectBackupBuckets(ctx context.Context) error {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
+
+		var state string
+		var stateProgress int
+		if b.Status.LastOperation != nil {
+			state = string(b.Status.LastOperation.State)
+			stateProgress = int(b.Status.LastOperation.Progress)
+		}
+
 		backupBucket := models.BackupBucket{
-			Name:         b.GetName(),
-			SeedName:     stringutils.StringFromPointer(b.Spec.SeedName),
-			ProviderType: b.Spec.Provider.Type,
-			RegionName:   b.Spec.Provider.Region,
+			Name:          b.GetName(),
+			SeedName:      stringutils.StringFromPointer(b.Spec.SeedName),
+			ProviderType:  b.Spec.Provider.Type,
+			RegionName:    b.Spec.Provider.Region,
+			State:         state,
+			StateProgress: stateProgress,
 		}
 		backupBuckets = append(backupBuckets, backupBucket)
 		return nil
@@ -76,6 +86,8 @@ func collectBackupBuckets(ctx context.Context) error {
 		Set("provider_type = EXCLUDED.provider_type").
 		Set("region_name = EXCLUDED.region_name").
 		Set("seed_name = EXCLUDED.seed_name").
+		Set("state = EXCLUDED.state").
+		Set("state_progress = EXCLUDED.state_progress").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
