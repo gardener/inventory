@@ -126,7 +126,7 @@ type CloudProfileAWSImage struct {
 	RegionName       string        `bun:"region_name,notnull,unique:g_cloud_profile_aws_image_key"`
 	AMI              string        `bun:"ami,notnull,unique:g_cloud_profile_aws_image_key"`
 	Architecture     string        `bun:"architecture,notnull"`
-	CloudProfileName string        `bun:"cloud_profile_name,notnull"`
+	CloudProfileName string        `bun:"cloud_profile_name,notnull,unique:g_cloud_profile_aws_image_key"`
 	CloudProfile     *CloudProfile `bun:"rel:has-one,join:cloud_profile_name=name"`
 }
 
