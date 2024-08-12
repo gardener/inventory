@@ -74,6 +74,14 @@ var errNoAWSTokenRetriever = errors.New("no AWS token retriever specified")
 // unknown/unsupported identity token retriever.
 var errUnknownAWSTokenRetriever = errors.New("unknown AWS token retriever specified")
 
+// errNoAWSServiceCredentials is an error, which is returned when an AWS service
+// (e.g. EC2, ELBv2, etc.) does not have any named credentials configured.
+var errNoAWSServiceCredentials = errors.New("no credentials specified for service")
+
+// errUnknownAWSNamedCredentials is an error which is returned when a service is
+// using an unknown AWS named credentials.
+var errUnknownAWSNamedCredentials = errors.New("unknown AWS named credentials")
+
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
 	conf := ctx.Context.Value(configKey{}).(*config.Config)
@@ -91,22 +99,53 @@ func validateDBConfig(conf *config.Config) error {
 
 // validateAWSConfig validates the AWS configuration settings.
 func validateAWSConfig(conf *config.Config) error {
+	// Region or default region must be specified
 	if conf.AWS.Region == "" && conf.AWS.DefaultRegion == "" {
 		return errNoAWSRegion
 	}
 
-	if conf.AWS.Credentials.TokenRetriever == "" {
-		return errNoAWSTokenRetriever
+	// Make sure that services have configured named credentials
+	if conf.AWS.Services.EC2.UseCredentials == "" {
+		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "ec2")
+	}
+	if conf.AWS.Services.ELB.UseCredentials == "" {
+		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "elb")
+	}
+	if conf.AWS.Services.ELBv2.UseCredentials == "" {
+		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "elbv2")
+	}
+	if conf.AWS.Services.S3.UseCredentials == "" {
+		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "s3")
 	}
 
+	// Each named credential must use a valid token retriever
 	supportedTokenRetrievers := []string{
 		config.DefaultAWSTokenRetriever,
 		kubesatoken.TokenRetrieverName,
 		tokenfile.TokenRetrieverName,
 	}
+	for name, creds := range conf.AWS.Credentials {
+		if creds.TokenRetriever == "" {
+			return fmt.Errorf("%w: %s", errNoAWSTokenRetriever, name)
+		}
 
-	if !slices.Contains(supportedTokenRetrievers, conf.AWS.Credentials.TokenRetriever) {
-		return fmt.Errorf("%w: %s", errUnknownAWSTokenRetriever, conf.AWS.Credentials.TokenRetriever)
+		if !slices.Contains(supportedTokenRetrievers, creds.TokenRetriever) {
+			return fmt.Errorf("%w: %s", errUnknownAWSTokenRetriever, creds.TokenRetriever)
+		}
+	}
+
+	// Validate that the named credentials used by the services are actually
+	// configured.
+	namedCredentials := []string{
+		conf.AWS.Services.EC2.UseCredentials,
+		conf.AWS.Services.ELB.UseCredentials,
+		conf.AWS.Services.ELBv2.UseCredentials,
+		conf.AWS.Services.S3.UseCredentials,
+	}
+	for _, nc := range namedCredentials {
+		if _, ok := conf.AWS.Credentials[nc]; !ok {
+			return fmt.Errorf("%w: %s", errUnknownAWSNamedCredentials, nc)
+		}
 	}
 
 	return nil
@@ -154,14 +193,15 @@ func newAWSSTSClient(conf *config.Config) *sts.Client {
 
 // newKubeSATokenCredentialsProvider creates a new [aws.CredentialsProvider],
 // which uses Kubernetes Service Account Tokens for exchanging them with
-// temporary security credentials when accessing AWS resources.
-func newKubeSATokenCredentialsProvider(conf *config.Config) (aws.CredentialsProvider, error) {
+// temporary security credentials when accessing AWS resources.  The token
+// retriever is configured based on the provided [config.AWSCredentialsConfig].
+func newKubeSATokenCredentialsProvider(conf *config.Config, creds config.AWSCredentialsConfig) (aws.CredentialsProvider, error) {
 	tokenRetriever, err := kubesatoken.NewTokenRetriever(
-		kubesatoken.WithKubeconfig(conf.AWS.Credentials.KubeSATokenRetriever.Kubeconfig),
-		kubesatoken.WithServiceAccount(conf.AWS.Credentials.KubeSATokenRetriever.ServiceAccount),
-		kubesatoken.WithNamespace(conf.AWS.Credentials.KubeSATokenRetriever.Namespace),
-		kubesatoken.WithAudiences(conf.AWS.Credentials.KubeSATokenRetriever.Audiences),
-		kubesatoken.WithTokenExpiration(conf.AWS.Credentials.KubeSATokenRetriever.Duration),
+		kubesatoken.WithKubeconfig(creds.KubeSATokenRetriever.Kubeconfig),
+		kubesatoken.WithServiceAccount(creds.KubeSATokenRetriever.ServiceAccount),
+		kubesatoken.WithNamespace(creds.KubeSATokenRetriever.Namespace),
+		kubesatoken.WithAudiences(creds.KubeSATokenRetriever.Audiences),
+		kubesatoken.WithTokenExpiration(creds.KubeSATokenRetriever.Duration),
 	)
 
 	if err != nil {
@@ -170,9 +210,9 @@ func newKubeSATokenCredentialsProvider(conf *config.Config) (aws.CredentialsProv
 
 	providerSpec := &provider.Spec{
 		Client:          newAWSSTSClient(conf),
-		RoleARN:         conf.AWS.Credentials.KubeSATokenRetriever.RoleARN,
-		RoleSessionName: conf.AWS.Credentials.KubeSATokenRetriever.RoleSessionName,
-		Duration:        conf.AWS.Credentials.KubeSATokenRetriever.Duration,
+		RoleARN:         creds.KubeSATokenRetriever.RoleARN,
+		RoleSessionName: creds.KubeSATokenRetriever.RoleSessionName,
+		Duration:        creds.KubeSATokenRetriever.Duration,
 		TokenRetriever:  tokenRetriever,
 	}
 
@@ -181,10 +221,11 @@ func newKubeSATokenCredentialsProvider(conf *config.Config) (aws.CredentialsProv
 
 // newTokenFileCredentialsProvider creates a new [aws.CredentialsProvider],
 // which reads a JWT token from a specified path and exchanges the token for
-// temporary security credentials when accessing AWS resources.
-func newTokenFileCredentialsProvider(conf *config.Config) (aws.CredentialsProvider, error) {
+// temporary security credentials when accessing AWS resources.  The token
+// retriever is configured based on the provided [config.AWSCredentialsConfig].
+func newTokenFileCredentialsProvider(conf *config.Config, creds config.AWSCredentialsConfig) (aws.CredentialsProvider, error) {
 	tokenRetriever, err := tokenfile.NewTokenRetriever(
-		tokenfile.WithPath(conf.AWS.Credentials.TokenFileRetriever.Path),
+		tokenfile.WithPath(creds.TokenFileRetriever.Path),
 	)
 
 	if err != nil {
@@ -193,35 +234,41 @@ func newTokenFileCredentialsProvider(conf *config.Config) (aws.CredentialsProvid
 
 	providerSpec := &provider.Spec{
 		Client:          newAWSSTSClient(conf),
-		RoleARN:         conf.AWS.Credentials.TokenFileRetriever.RoleARN,
-		RoleSessionName: conf.AWS.Credentials.TokenFileRetriever.RoleSessionName,
-		Duration:        conf.AWS.Credentials.TokenFileRetriever.Duration,
+		RoleARN:         creds.TokenFileRetriever.RoleARN,
+		RoleSessionName: creds.TokenFileRetriever.RoleSessionName,
+		Duration:        creds.TokenFileRetriever.Duration,
 		TokenRetriever:  tokenRetriever,
 	}
 
 	return provider.New(providerSpec)
 }
 
-// loadAWSDefaultConfig loads the AWS configurations and returns it.
-func loadAWSDefaultConfig(ctx context.Context, conf *config.Config) (aws.Config, error) {
+// loadAWSConfig loads the AWS configurations for the given named credentials.
+func loadAWSConfig(ctx context.Context, conf *config.Config, namedCredentials string) (aws.Config, error) {
+	creds, ok := conf.AWS.Credentials[namedCredentials]
+	if !ok {
+		return aws.Config{}, fmt.Errorf("%w: %s", errUnknownAWSNamedCredentials, namedCredentials)
+	}
+
+	// Default set of options
 	opts := []func(o *awsconfig.LoadOptions) error{
 		awsconfig.WithRegion(conf.AWS.Region),
 		awsconfig.WithDefaultRegion(conf.AWS.DefaultRegion),
 		awsconfig.WithAppID(conf.AWS.AppID),
 	}
 
-	switch conf.AWS.Credentials.TokenRetriever {
+	switch creds.TokenRetriever {
 	case config.DefaultAWSTokenRetriever:
 		// Load shared credentials config only
 		break
 	case kubesatoken.TokenRetrieverName:
-		credsProvider, err := newKubeSATokenCredentialsProvider(conf)
+		credsProvider, err := newKubeSATokenCredentialsProvider(conf, creds)
 		if err != nil {
 			return aws.Config{}, err
 		}
 		opts = append(opts, awsconfig.WithCredentialsProvider(credsProvider))
 	case tokenfile.TokenRetrieverName:
-		credsProvider, err := newTokenFileCredentialsProvider(conf)
+		credsProvider, err := newTokenFileCredentialsProvider(conf, creds)
 		if err != nil {
 			return aws.Config{}, err
 		}

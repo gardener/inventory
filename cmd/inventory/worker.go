@@ -150,15 +150,31 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 
-					awsConfig, err := loadAWSDefaultConfig(ctx.Context, conf)
+					// Load AWS service-specific configurations
+					ec2Config, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.EC2.UseCredentials)
 					if err != nil {
 						return err
 					}
 
-					ec2Client := ec2.NewFromConfig(awsConfig)
-					elbClient := elb.NewFromConfig(awsConfig)
-					elbv2Client := elbv2.NewFromConfig(awsConfig)
-					s3Client := s3.NewFromConfig(awsConfig)
+					elbConfig, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.ELB.UseCredentials)
+					if err != nil {
+						return err
+					}
+
+					elbv2Config, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.ELBv2.UseCredentials)
+					if err != nil {
+						return err
+					}
+
+					s3Config, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.S3.UseCredentials)
+					if err != nil {
+						return err
+					}
+
+					ec2Client := ec2.NewFromConfig(ec2Config)
+					elbClient := elb.NewFromConfig(elbConfig)
+					elbv2Client := elbv2.NewFromConfig(elbv2Config)
+					s3Client := s3.NewFromConfig(s3Config)
 
 					// Initialize clients in workers
 					dbclient.SetDB(db)
