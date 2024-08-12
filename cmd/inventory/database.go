@@ -77,7 +77,7 @@ func NewDatabaseCommand() *cli.Command {
 					}
 
 					if group.IsZero() {
-						fmt.Printf("database is up to date")
+						fmt.Printf("database is up to date\n")
 						return nil
 					}
 
@@ -115,7 +115,7 @@ func NewDatabaseCommand() *cli.Command {
 					}
 
 					if group.IsZero() {
-						fmt.Printf("there are no migration groups for rollback")
+						fmt.Printf("there are no migration groups for rollback\n")
 						return nil
 					}
 
