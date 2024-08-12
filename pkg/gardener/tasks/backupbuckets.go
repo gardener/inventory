@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -54,7 +55,7 @@ func collectBackupBuckets(ctx context.Context) error {
 		}
 		backupBucket := models.BackupBucket{
 			Name:         b.GetName(),
-			SeedName:     *b.Spec.SeedName,
+			SeedName:     stringutils.StringFromPointer(b.Spec.SeedName),
 			ProviderType: b.Spec.Provider.Type,
 			RegionName:   b.Spec.Provider.Region,
 		}
