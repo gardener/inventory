@@ -80,12 +80,81 @@ file](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html), or via
 credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html)
 by using the AWS STS service.
 
-When using temporary security credentials a signed [JWT](https://jwt.io/) token
-is exchanged for short-lived security credentials. The way the JWT token is
-retrived is configured via a _token retriever_.
+The `aws.credentials` config section provides the _named_ credentials, which
+will be used when accessing the various AWS services (e.g. EC2, S3, etc.).
 
-The currently supported token retrievers, which can be set in the configuration
-file are:
+The `aws.services` config section provides service-specific configuration,
+e.g. we can configure which named credentials to be used when accessing the
+various AWS services from Inventory.
+
+The following example configures three named credentials - `default`,
+`kubernetes-sa-token` and `token-file`, and also configures the `ec2`, `elb`,
+`elbv2` and `s3` services to use the respective named credentials.
+
+``` yaml
+# AWS configuration
+aws:
+  # This section provides configuration specific to each AWS service and which
+  # named credentials are used for each service. This allows the Inventory to
+  # connect to different AWS accounts based on the named credentials which are
+  # used.
+  services:
+    ec2:
+      use_credentials: default
+    elb:
+      use_credentials: default
+    elbv2:
+      use_credentials: default
+    s3:
+      use_credentials: default
+
+  # The `credentials' section provides named credentials, which are used by the
+  # various AWS services. The currently supported token retrievers are `none',
+  # `kube_sa_token' and `token_file'.
+  credentials:
+    default:
+      # When using `none' as the token retriever, only the shared AWS
+      # credentials file is used.
+      token_retriever: none
+
+    kubernetes-sa-token:
+      # Example configuration for `kube_sa_token' retriever. When using this
+      # token retriever the Inventory will request a Kubernetes Service Account
+      # token using the specified kubeconfig, which is then exchanged for
+      # temporary security credentials via the AWS STS service.  It is expected
+      # that OIDC Trust is already established between Inventory and AWS when
+      # using this token retriever.
+      token_retriever: kube_sa_token
+      kube_sa_token:
+        kubeconfig: /path/to/kubeconfig
+        namespace: inventory
+        service_account: worker
+        duration: 30m
+        audiences:
+          - iaas-aws-dev
+        role_arn: arn:aws:iam::account:role/gardener-inventory-dev
+        role_session_name: gardener-inventory-worker
+
+    token-file:
+      # Example configuration for `token_file' retriever. When using this token
+      # retriever the Inventory will exchange the token contained within the
+      # specified file for temporary security credentials via the AWS STS
+      # service. It is expected that OIDC Trust is already established between
+      # Inventory and AWS when using this token retriever.
+      token_retriever: token_file
+      token_file:
+        path: /path/to/identity/token
+        duration: 30m
+        role_arn: arn:aws:iam::account:role/name
+        role_session_name: gardener-inventory-worker
+```
+
+When using a token retriever such as `kube_sa_token` or `token_file`, the
+Inventory system will exchange a signed [JWT](https://jwt.io/) token for
+temporary security credentials via the AWS STS service.
+
+The currently supported token retrievers, which can be configured for named
+credentials are:
 
 - `none`
 - `kube_sa_token`
@@ -102,50 +171,14 @@ service account token. The Kubernetes service account token will be issued for
 the specified user and audiences and with the set expiry duration for the STS
 credentials.
 
-This service account token is then exchanged for temporary security credentials
-when accessing AWS services.
-
-Example configuration with `kube_sa_token` looks like this.
-
-``` yaml
-aws:
-  region: eu-central-1  # Frankfurt
-  default_region: eu-central-1  # Frankfurt
-  app_id: gardener-inventory  # Optional application specific identifier
-  credentials:
-    token_retriever: kube_sa_token
-    kube_sa_token:
-      kubeconfig: /path/to/kubeconfig
-      namespace: inventory
-      service_account: worker
-      duration: 30m
-      audiences:
-        - gardener-inventory-playground
-      role_arn: arn:aws:iam::account:role/name
-      role_session_name: gardener-inventory-worker
-```
-
 When using the `token_file` retriever the AWS client is initialized using a Web
-Identity Credentials Provider, which reads JWT tokens from a specified path.
+Identity Credentials Provider, which reads JWT tokens from a specified path and
+then exchanges the token for temporary security credentials via the AWS STS,
+similarly to the way `kube_sa_token` works.
 
 Examples where `token_file` retriever is useful is with [service account token
-projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#launch-a-pod-using-service-account-token-projection).
-
-Example configuration which uses `token_file` looks like this.
-
-``` yaml
-aws:
-  region: eu-central-1  # Frankfurt
-  default_region: eu-central-1  # Frankfurt
-  app_id: gardener-inventory  # Optional application specific identifier
-  credentials:
-    token_retriever: token_file
-    token_file:
-      path: /path/to/identity/token
-      duration: 30m
-      role_arn: arn:aws:iam::account:role/name
-      role_session_name: gardener-inventory-worker
-```
+projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#launch-a-pod-using-service-account-token-projection)
+when you are running the Inventory system in Kubernetes.
 
 # References
 
