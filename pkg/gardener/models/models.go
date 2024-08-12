@@ -98,11 +98,13 @@ type BackupBucket struct {
 	bun.BaseModel `bun:"table:g_backup_bucket"`
 	coremodels.Model
 
-	Name         string `bun:"name,notnull,unique"`
-	ProviderType string `bun:"provider_type,notnull"`
-	RegionName   string `bun:"region_name,notnull"`
-	SeedName     string `bun:"seed_name,notnull"`
-	Seed         *Seed  `bun:"rel:has-one,join:seed_name=name"`
+	Name          string `bun:"name,notnull,unique"`
+	ProviderType  string `bun:"provider_type,notnull"`
+	RegionName    string `bun:"region_name,notnull"`
+	State         string `bun:"state,nullzero"`
+	StateProgress int    `bun:"state_progress,nullzero"`
+	SeedName      string `bun:"seed_name,notnull"`
+	Seed          *Seed  `bun:"rel:has-one,join:seed_name=name"`
 }
 
 // CloudProfile represents a Gardener CloudProfile resource
