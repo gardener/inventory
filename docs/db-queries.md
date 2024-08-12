@@ -401,3 +401,17 @@ LEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id
 LEFT JOIN g_shoot AS s ON v.name = s.technical_id
 WHERE i.state <> 'terminated' AND m.name IS NULL;
 ```
+
+## Find Leaked AWS S3 Buckets
+
+The following query will report AWS S3 buckets which do not have a corresponding
+Gardener `BackupBucket`.
+
+``` sql
+SELECT
+        b.name,
+        b.region_name
+FROM aws_bucket AS b
+LEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name
+WHERE gbb.name IS NULL;
+```
