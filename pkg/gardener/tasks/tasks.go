@@ -47,6 +47,7 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 		LinkShootWithProject,
 		LinkShootWithSeed,
 		LinkMachineWithShoot,
+		LinkAWSImageWithCloudProfile,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
