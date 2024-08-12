@@ -174,6 +174,21 @@ INNER JOIN l_aws_lb_to_net_interface AS link ON lb.id = link.lb_id
 INNER JOIN aws_net_interface AS ni ON ni.id = link.ni_id;
 ```
 
+## AWS EC2 Instances with Network Interfaces
+
+The following query will join the EC2 instances with the Elastic Network
+Interfaces.
+
+``` sql
+SELECT
+        i.*,
+        ni.private_ip_address,
+        ni.public_ip_address,
+        ni.mac_address
+FROM aws_instance AS i
+INNER JOIN aws_net_interface AS ni ON i.instance_id = ni.instance_id;
+```
+
 ## Shoots Grouped by Cloud Profile
 
 The following query will give you the shoots grouped by cloud profile.
