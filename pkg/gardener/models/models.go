@@ -130,6 +130,15 @@ type CloudProfileAWSImage struct {
 	CloudProfile     *CloudProfile `bun:"rel:has-one,join:cloud_profile_name=name"`
 }
 
+// AWSImageToCloudProfile represents a link table connecting the CloudProfileAWSImage with CloudProfile.
+type AWSImageToCloudProfile struct {
+	bun.BaseModel `bun:"table:l_g_aws_image_to_cloud_profile"`
+	coremodels.Model
+
+	AWSImageID     uint64 `bun:"aws_image_id,notnull,unique:l_g_aws_image_to_cloud_profile_key"`
+	CloudProfileID uint64 `bun:"cloud_profile_id,notnull,unique:l_g_aws_image_to_cloud_profile_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("g:model:project", &Project{})
@@ -144,4 +153,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_seed", &ShootToSeed{})
 	registry.ModelRegistry.MustRegister("g:model:link_machine_to_shoot", &MachineToShoot{})
+	registry.ModelRegistry.MustRegister("g:model:link_aws_image_to_cloud_profile", &AWSImageToCloudProfile{})
 }

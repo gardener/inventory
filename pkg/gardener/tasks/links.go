@@ -154,3 +154,50 @@ func LinkMachineWithShoot(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkAWSImageWithCloudProfile creates the relationship between the CloudProfileAWSImage and CloudProfile
+func LinkAWSImageWithCloudProfile(ctx context.Context, db *bun.DB) error {
+	var awsImages []models.CloudProfileAWSImage
+	err := db.NewSelect().
+		Model(&awsImages).
+		Relation("CloudProfile").
+		Where("cloud_profile.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.AWSImageToCloudProfile, 0, len(awsImages))
+	for _, image := range awsImages {
+		link := models.AWSImageToCloudProfile{
+			AWSImageID:     image.ID,
+			CloudProfileID: image.CloudProfile.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (aws_image_id, cloud_profile_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("linked gardener cloud profile aws image with cloud profile", "count", count)
+
+	return nil
+}
