@@ -189,6 +189,24 @@ FROM aws_instance AS i
 INNER JOIN aws_net_interface AS ni ON i.instance_id = ni.instance_id;
 ```
 
+## AWS EC2 Instances which are using unknown CloudProfile image
+
+The following query will return the set of EC2 instances, which are using
+images, which are not defined in the respective CloudProfile for the shoot they
+belong to.
+
+``` sql
+SELECT DISTINCT
+       i.*,
+       s.name AS shoot_name,
+       s.project_name AS project_name
+FROM aws_instance AS i
+INNER JOIN g_machine AS m ON i.name = m.name
+INNER JOIN g_shoot AS s ON m.namespace = s.technical_id
+LEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami
+WHERE cpaw.ami IS NULL;
+```
+
 ## Shoots Grouped by Cloud Profile
 
 The following query will give you the shoots grouped by cloud profile.
