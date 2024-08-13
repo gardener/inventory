@@ -49,8 +49,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 6,
+        "h": 8,
+        "w": 4,
         "x": 0,
         "y": 0
       },
@@ -133,9 +133,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 5,
-        "x": 6,
+        "h": 8,
+        "w": 4,
+        "x": 4,
         "y": 0
       },
       "id": 4,
@@ -217,9 +217,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 11,
+        "h": 8,
+        "w": 5,
+        "x": 8,
         "y": 0
       },
       "id": 5,
@@ -301,9 +301,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 7,
-        "x": 17,
+        "h": 8,
+        "w": 5,
+        "x": 13,
         "y": 0
       },
       "id": 7,
@@ -362,6 +362,91 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
+      "description": "Unknown images which are not defined in the respective CloudProfile",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(i.id)\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Unknown EC2 Instance Images",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -393,7 +478,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 8
       },
       "id": 1,
       "options": {
@@ -499,7 +584,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 21
       },
       "id": 6,
       "options": {
@@ -576,7 +661,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -591,7 +677,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 34
       },
       "id": 3,
       "options": {
@@ -640,6 +726,107 @@
       ],
       "title": "Leaked AWS VPCs",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 335
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 45
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT\n       i.*,\n       s.name AS shoot_name,\n       s.project_name AS project_name\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "List of Unknown EC2 Instance Images",
+      "type": "table"
     }
   ],
   "schemaVersion": 39,
@@ -656,6 +843,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked AWS Resources",
   "uid": "ddod4l1vde680a",
-  "version": 8,
+  "version": 12,
   "weekStart": ""
 }
