@@ -20,6 +20,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
@@ -36,6 +40,7 @@ import (
 	"github.com/gardener/inventory/pkg/aws/stscreds/kubesatoken"
 	"github.com/gardener/inventory/pkg/aws/stscreds/provider"
 	"github.com/gardener/inventory/pkg/aws/stscreds/tokenfile"
+	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
 )
@@ -105,17 +110,27 @@ func validateAWSConfig(conf *config.Config) error {
 	}
 
 	// Make sure that services have configured named credentials
-	if conf.AWS.Services.EC2.UseCredentials == "" {
-		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "ec2")
+	services := map[string][]string{
+		"ec2":   conf.AWS.Services.EC2.UseCredentials,
+		"elb":   conf.AWS.Services.ELB.UseCredentials,
+		"elbv2": conf.AWS.Services.ELBv2.UseCredentials,
+		"s3":    conf.AWS.Services.S3.UseCredentials,
 	}
-	if conf.AWS.Services.ELB.UseCredentials == "" {
-		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "elb")
-	}
-	if conf.AWS.Services.ELBv2.UseCredentials == "" {
-		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "elbv2")
-	}
-	if conf.AWS.Services.S3.UseCredentials == "" {
-		return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, "s3")
+
+	for service, namedCredentials := range services {
+		// We expect at least one named credential to be present per
+		// service
+		if len(namedCredentials) == 0 {
+			return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, service)
+		}
+
+		// Validate that the named credentials used by the services are
+		// actually configured.
+		for _, nc := range namedCredentials {
+			if _, ok := conf.AWS.Credentials[nc]; !ok {
+				return fmt.Errorf("%w: service %s refers %s", errUnknownAWSNamedCredentials, service, nc)
+			}
+		}
 	}
 
 	// Each named credential must use a valid token retriever
@@ -131,20 +146,6 @@ func validateAWSConfig(conf *config.Config) error {
 
 		if !slices.Contains(supportedTokenRetrievers, creds.TokenRetriever) {
 			return fmt.Errorf("%w: %s", errUnknownAWSTokenRetriever, creds.TokenRetriever)
-		}
-	}
-
-	// Validate that the named credentials used by the services are actually
-	// configured.
-	namedCredentials := []string{
-		conf.AWS.Services.EC2.UseCredentials,
-		conf.AWS.Services.ELB.UseCredentials,
-		conf.AWS.Services.ELBv2.UseCredentials,
-		conf.AWS.Services.S3.UseCredentials,
-	}
-	for _, nc := range namedCredentials {
-		if _, ok := conf.AWS.Credentials[nc]; !ok {
-			return fmt.Errorf("%w: %s", errUnknownAWSNamedCredentials, nc)
 		}
 	}
 
@@ -278,6 +279,56 @@ func loadAWSConfig(ctx context.Context, conf *config.Config, namedCredentials st
 	}
 
 	return awsconfig.LoadDefaultConfig(ctx, opts...)
+}
+
+// configureAWSClients creates the AWS clients for the supported by Inventory
+// AWS services and registers them.
+func configureAWSClients(ctx context.Context, conf *config.Config) error {
+	// EC2 clients
+	for _, namedCreds := range conf.AWS.Services.EC2.UseCredentials {
+		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
+		if err != nil {
+			return err
+		}
+		client := ec2.NewFromConfig(awsConf)
+		awsclients.EC2Clients.Overwrite(namedCreds, client)
+		slog.Info("configured AWS client", "service", "ec2", "credentials", namedCreds)
+	}
+
+	// ELB clients
+	for _, namedCreds := range conf.AWS.Services.ELB.UseCredentials {
+		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
+		if err != nil {
+			return err
+		}
+		client := elb.NewFromConfig(awsConf)
+		awsclients.ELBClients.Overwrite(namedCreds, client)
+		slog.Info("configured AWS client", "service", "elb", "credentials", namedCreds)
+	}
+
+	// ELBv2 clients
+	for _, namedCreds := range conf.AWS.Services.ELBv2.UseCredentials {
+		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
+		if err != nil {
+			return err
+		}
+		client := elbv2.NewFromConfig(awsConf)
+		awsclients.ELBv2Clients.Overwrite(namedCreds, client)
+		slog.Info("configured AWS client", "service", "elbv2", "credentials", namedCreds)
+	}
+
+	// S3 clients
+	for _, namedCreds := range conf.AWS.Services.S3.UseCredentials {
+		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
+		if err != nil {
+			return err
+		}
+		client := s3.NewFromConfig(awsConf)
+		awsclients.S3Clients.Overwrite(namedCreds, client)
+		slog.Info("configured AWS client", "service", "s3", "credentials", namedCreds)
+	}
+
+	return nil
 }
 
 // newRedisClientOpt returns a new [asynq.RedisClientOpt] from the given config.

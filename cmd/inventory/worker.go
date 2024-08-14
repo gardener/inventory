@@ -11,15 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
-	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
-	awsclient "github.com/gardener/inventory/pkg/clients/aws"
 	dbclient "github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
@@ -145,40 +140,11 @@ func NewWorkerCommand() *cli.Command {
 					client := newClient(conf)
 					server := newServer(conf)
 
+					// Gardener client configs
 					gardenConfigs, err := newGardenConfigs(conf)
 					if err != nil {
 						return err
 					}
-
-					// Load AWS service-specific configurations
-					ec2Config, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.EC2.UseCredentials)
-					if err != nil {
-						return err
-					}
-
-					elbConfig, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.ELB.UseCredentials)
-					if err != nil {
-						return err
-					}
-
-					elbv2Config, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.ELBv2.UseCredentials)
-					if err != nil {
-						return err
-					}
-
-					s3Config, err := loadAWSConfig(ctx.Context, conf, conf.AWS.Services.S3.UseCredentials)
-					if err != nil {
-						return err
-					}
-
-					ec2Client := ec2.NewFromConfig(ec2Config)
-					elbClient := elb.NewFromConfig(elbConfig)
-					elbv2Client := elbv2.NewFromConfig(elbv2Config)
-					s3Client := s3.NewFromConfig(s3Config)
-
-					// Initialize clients in workers
-					dbclient.SetDB(db)
-					asynqclient.SetClient(client)
 
 					gardenClient := gardenerclient.New(
 						gardenerclient.WithRestConfigs(gardenConfigs),
@@ -188,20 +154,13 @@ func NewWorkerCommand() *cli.Command {
 					)
 					gardenerclient.SetDefaultClient(gardenClient)
 
-					awsclient.SetEC2Client(ec2Client)
-					awsclient.SetELBClient(elbClient)
-					awsclient.SetELBV2Client(elbv2Client)
-					awsclient.SetS3Client(s3Client)
+					// Initialize DB and asynq client
+					dbclient.SetDB(db)
+					asynqclient.SetClient(client)
 
-					awsServiceCreds := map[string]string{
-						"ec2":   conf.AWS.Services.EC2.UseCredentials,
-						"elb":   conf.AWS.Services.ELB.UseCredentials,
-						"elbv2": conf.AWS.Services.ELBv2.UseCredentials,
-						"s3":    conf.AWS.Services.S3.UseCredentials,
-					}
-
-					for svc, namedCreds := range awsServiceCreds {
-						slog.Info("configured AWS client", "service", svc, "credentials", namedCreds)
+					// AWS clients config
+					if err := configureAWSClients(ctx.Context, conf); err != nil {
+						return err
 					}
 
 					// Register our task handlers
