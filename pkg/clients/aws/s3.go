@@ -4,11 +4,11 @@
 
 package aws
 
-import "github.com/aws/aws-sdk-go-v2/service/s3"
+import (
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 
-var S3 *s3.Client
+	"github.com/gardener/inventory/pkg/core/registry"
+)
 
-// SetS3Client sets the AWS S3 client to be used by workers.
-func SetS3Client(client *s3.Client) {
-	S3 = client
-}
+// S3Clients provides the registry of [*s3.Client] clients.
+var S3Clients = registry.New[string, *s3.Client]()

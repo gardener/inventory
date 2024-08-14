@@ -4,11 +4,11 @@
 
 package aws
 
-import elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+import (
+	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 
-var ELB *elb.Client
+	"github.com/gardener/inventory/pkg/core/registry"
+)
 
-// SetELBClient sets the AWS ELB client to be used by workers.
-func SetELBClient(client *elb.Client) {
-	ELB = client
-}
+// ELBClients provides the registry of [*elb.Client] clients.
+var ELBClients = registry.New[string, *elb.Client]()

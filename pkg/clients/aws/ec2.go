@@ -4,11 +4,11 @@
 
 package aws
 
-import "github.com/aws/aws-sdk-go-v2/service/ec2"
+import (
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-var EC2 *ec2.Client
+	"github.com/gardener/inventory/pkg/core/registry"
+)
 
-// SetEC2Client sets the AWS EC2 client to be used by workers.
-func SetEC2Client(client *ec2.Client) {
-	EC2 = client
-}
+// EC2Clients provides the registry of [*ec2.Client] clients.
+var EC2Clients = registry.New[string, *ec2.Client]()
