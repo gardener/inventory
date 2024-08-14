@@ -29,17 +29,26 @@ aws:
 
   # This section provides configuration specific to each AWS service and which
   # named credentials are used for each service. This allows the Inventory to
-  # connect to different AWS accounts based on the named credentials which are
-  # used.
+  # connect to multiple AWS accounts based on the named credentials which are
+  # used. Inventory will connet to all configured named credentials (accounts)
+  # during collection from the respective AWS service.
   services:
     ec2:
-      use_credentials: default
+      use_credentials:
+        - default
+        - account-foo
+        - account-bar
     elb:
-      use_credentials: default
+      use_credentials:
+        - default
+        - account-foo
     elbv2:
-      use_credentials: default
+      use_credentials:
+        - default
     s3:
-      use_credentials: default
+      use_credentials:
+        - default
+        - account-bar
 
   # The `credentials' section provides named credentials, which are used by the
   # various AWS services. The currently supported token retrievers are `none',
@@ -50,7 +59,7 @@ aws:
       # credentials file is used.
       token_retriever: none
 
-    kubernetes-sa-token:
+    account-foo:
       # Example configuration for `kube_sa_token' retriever. When using this
       # token retriever the Inventory will request a Kubernetes Service Account
       # token using the specified kubeconfig, which is then exchanged for
@@ -68,7 +77,7 @@ aws:
         role_arn: arn:aws:iam::account:role/gardener-inventory-dev
         role_session_name: gardener-inventory-worker
 
-    token-file:
+    account-bar:
       # Example configuration for `token_file' retriever. When using this token
       # retriever the Inventory will exchange the token contained within the
       # specified file for temporary security credentials via the AWS STS
