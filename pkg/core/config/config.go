@@ -116,7 +116,7 @@ type AWSServices struct {
 type AWSServiceConfig struct {
 	// UseCredentials specifies the name of the credentials to use for a
 	// given AWS Service.
-	UseCredentials string `yaml:"use_credentials"`
+	UseCredentials []string `yaml:"use_credentials"`
 }
 
 // AWSCredentialsConfig provides credentials specific configuration for the AWS
