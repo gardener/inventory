@@ -18,6 +18,10 @@ var ErrKeyAlreadyRegistered = errors.New("key is already registered")
 // registry.
 var ErrStopIteration = errors.New("stop iteration")
 
+// ErrContinue is a no-op error, which is used to signal [Registry.Range] to
+// continue the iteration.
+var ErrContinue = errors.New("continue")
+
 // Registry is a concurrent-safe registry.
 type Registry[K comparable, V any] struct {
 	sync.Mutex
@@ -104,7 +108,7 @@ func (r *Registry[K, V]) Range(f RangeFunc[K, V]) error {
 	for k, v := range r.items {
 		err := f(k, v)
 		switch err {
-		case nil:
+		case nil, ErrContinue:
 			continue
 		case ErrStopIteration:
 			return nil
