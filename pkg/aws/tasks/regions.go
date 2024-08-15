@@ -112,11 +112,15 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info("collecting AWS regions", "account_id", client.AccountID)
+	slog.Info("collecting AWS regions", "account_id", payload.AccountID)
 	result, err := client.Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 
 	if err != nil {
-		slog.Error("could not describe regions", "account_id", client.AccountID, "reason", err)
+		slog.Error(
+			"could not describe regions",
+			"account_id", payload.AccountID,
+			"reason", err,
+		)
 		return err
 	}
 
@@ -124,7 +128,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	for _, region := range result.Regions {
 		item := models.Region{
 			Name:        stringutils.StringFromPointer(region.RegionName),
-			AccountID:   client.AccountID,
+			AccountID:   payload.AccountID,
 			Endpoint:    stringutils.StringFromPointer(region.Endpoint),
 			OptInStatus: stringutils.StringFromPointer(region.OptInStatus),
 		}
@@ -146,7 +150,11 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert regions into db", "account_id", client.AccountID, "reason", err)
+		slog.Error(
+			"could not insert regions into db",
+			"account_id", payload.AccountID,
+			"reason", err,
+		)
 		return err
 	}
 
@@ -155,7 +163,11 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		return err
 	}
 
-	slog.Info("populated aws regions", "account_id", client.AccountID, "count", count)
+	slog.Info(
+		"populated aws regions",
+		"account_id", payload.AccountID,
+		"count", count,
+	)
 
 	return nil
 }

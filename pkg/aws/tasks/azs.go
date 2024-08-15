@@ -109,7 +109,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 	for _, item := range result.AvailabilityZones {
 		item := models.AvailabilityZone{
 			ZoneID:             stringutils.StringFromPointer(item.ZoneId),
-			AccountID:          client.AccountID,
+			AccountID:          payload.AccountID,
 			ZoneType:           stringutils.StringFromPointer(item.ZoneType),
 			Name:               stringutils.StringFromPointer(item.ZoneName),
 			OptInStatus:        string(item.OptInStatus),
