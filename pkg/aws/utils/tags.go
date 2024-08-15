@@ -5,9 +5,12 @@
 package utils
 
 import (
+	"context"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/gardener/inventory/pkg/aws/models"
+	"github.com/gardener/inventory/pkg/clients/db"
 )
 
 // FetchTag returns the value of the AWS tag with the key s or an empty string if the tag is not found.
@@ -18,4 +21,11 @@ func FetchTag(tags []types.Tag, key string) string {
 		}
 	}
 	return ""
+}
+
+// GetRegionsFromDB gets the AWS Regions from the database.
+func GetRegionsFromDB(ctx context.Context) ([]models.Region, error) {
+	items := make([]models.Region, 0)
+	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+	return items, err
 }

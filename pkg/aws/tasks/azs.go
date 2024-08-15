@@ -15,6 +15,7 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/aws/models"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -168,9 +169,9 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 // account.
 func enqueueCollectAvailabilityZones(ctx context.Context) error {
 	// Get the known regions
-	regions, err := GetRegionsFromDB(ctx)
+	regions, err := awsutils.GetRegionsFromDB(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get regions", "reason", err)
+		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
 	// Enqueue a task for each region
