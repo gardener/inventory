@@ -30,7 +30,7 @@ aws:
   # This section provides configuration specific to each AWS service and which
   # named credentials are used for each service. This allows the Inventory to
   # connect to multiple AWS accounts based on the named credentials which are
-  # used. Inventory will connet to all configured named credentials (accounts)
+  # used. Inventory will connect to all configured named credentials (accounts)
   # during collection from the respective AWS service.
   services:
     ec2:
