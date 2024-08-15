@@ -280,19 +280,19 @@ type DashboardConfig struct {
 func parseFile(path string, conf *Config) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %s", err, path)
 	}
 
 	if err := yaml.Unmarshal(data, &conf); err != nil {
-		return err
+		return fmt.Errorf("%w: %s", err, path)
 	}
 
 	if conf.Version == "" {
-		return ErrNoConfigVersion
+		return fmt.Errorf("%w: %s", ErrNoConfigVersion, path)
 	}
 
 	if conf.Version != ConfigFormatVersion {
-		return fmt.Errorf("%w: %s", ErrUnsupportedVersion, conf.Version)
+		return fmt.Errorf("%w: %s (%s)", ErrUnsupportedVersion, conf.Version, path)
 	}
 
 	return nil
