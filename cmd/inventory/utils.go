@@ -43,6 +43,7 @@ import (
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 // na is the const used to represent N/A values
@@ -281,51 +282,172 @@ func loadAWSConfig(ctx context.Context, conf *config.Config, namedCredentials st
 	return awsconfig.LoadDefaultConfig(ctx, opts...)
 }
 
-// configureAWSClients creates the AWS clients for the supported by Inventory
-// AWS services and registers them.
-func configureAWSClients(ctx context.Context, conf *config.Config) error {
-	// EC2 clients
+// configureEC2Clientset configures the [awsclients.EC2Clientset] registry.
+func configureEC2Clientset(ctx context.Context, conf *config.Config) error {
 	for _, namedCreds := range conf.AWS.Services.EC2.UseCredentials {
 		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
 		if err != nil {
 			return err
 		}
-		client := ec2.NewFromConfig(awsConf)
-		awsclients.EC2Clients.Overwrite(namedCreds, client)
-		slog.Info("configured AWS client", "service", "ec2", "credentials", namedCreds)
+
+		// Get the caller identity information associated with the named
+		// credentials which were used to create the client and register
+		// it.
+		awsClient := ec2.NewFromConfig(awsConf)
+		stsClient := sts.NewFromConfig(awsConf)
+		callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+		if err != nil {
+			return err
+		}
+		client := &awsclients.Client[*ec2.Client]{
+			NamedCredentials: namedCreds,
+			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
+			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
+			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			Client:           awsClient,
+		}
+		awsclients.EC2Clientset.Overwrite(client.AccountID, client)
+		slog.Info(
+			"configured AWS client",
+			"service", "ec2",
+			"credentials", client.NamedCredentials,
+			"account_id", client.AccountID,
+			"arn", client.ARN,
+			"user_id", client.UserID,
+		)
 	}
 
-	// ELB clients
+	return nil
+}
+
+// configureELBClientset configures the [awsclients.ELBClientset] registry.
+func configureELBClientset(ctx context.Context, conf *config.Config) error {
 	for _, namedCreds := range conf.AWS.Services.ELB.UseCredentials {
 		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
 		if err != nil {
 			return err
 		}
-		client := elb.NewFromConfig(awsConf)
-		awsclients.ELBClients.Overwrite(namedCreds, client)
-		slog.Info("configured AWS client", "service", "elb", "credentials", namedCreds)
+
+		// Get the caller identity information associated with the named
+		// credentials which were used to create the client and register
+		// it.
+		awsClient := elb.NewFromConfig(awsConf)
+		stsClient := sts.NewFromConfig(awsConf)
+		callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+		if err != nil {
+			return err
+		}
+		client := &awsclients.Client[*elb.Client]{
+			NamedCredentials: namedCreds,
+			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
+			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
+			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			Client:           awsClient,
+		}
+		awsclients.ELBClientset.Overwrite(client.AccountID, client)
+		slog.Info(
+			"configured AWS client",
+			"service", "elb",
+			"credentials", client.NamedCredentials,
+			"account_id", client.AccountID,
+			"arn", client.ARN,
+			"user_id", client.UserID,
+		)
 	}
 
-	// ELBv2 clients
+	return nil
+}
+
+// configureELBv2Clientset configures the [awsclients.ELBv2Clientset] registry.
+func configureELBv2Clientset(ctx context.Context, conf *config.Config) error {
 	for _, namedCreds := range conf.AWS.Services.ELBv2.UseCredentials {
 		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
 		if err != nil {
 			return err
 		}
-		client := elbv2.NewFromConfig(awsConf)
-		awsclients.ELBv2Clients.Overwrite(namedCreds, client)
-		slog.Info("configured AWS client", "service", "elbv2", "credentials", namedCreds)
+
+		// Get the caller identity information associated with the named
+		// credentials which were used to create the client and register
+		// it.
+		awsClient := elbv2.NewFromConfig(awsConf)
+		stsClient := sts.NewFromConfig(awsConf)
+		callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+		if err != nil {
+			return err
+		}
+		client := &awsclients.Client[*elbv2.Client]{
+			NamedCredentials: namedCreds,
+			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
+			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
+			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			Client:           awsClient,
+		}
+		awsclients.ELBv2Clientset.Overwrite(client.AccountID, client)
+		slog.Info(
+			"configured AWS client",
+			"service", "elbv2",
+			"credentials", client.NamedCredentials,
+			"account_id", client.AccountID,
+			"arn", client.ARN,
+			"user_id", client.UserID,
+		)
 	}
 
-	// S3 clients
+	return nil
+}
+
+// configureS3Clientset configures the [awsclients.S3Clientset] registry.
+func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 	for _, namedCreds := range conf.AWS.Services.S3.UseCredentials {
 		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
 		if err != nil {
 			return err
 		}
-		client := s3.NewFromConfig(awsConf)
-		awsclients.S3Clients.Overwrite(namedCreds, client)
-		slog.Info("configured AWS client", "service", "s3", "credentials", namedCreds)
+
+		// Get the caller identity information associated with the named
+		// credentials which were used to create the client and register
+		// it.
+		awsClient := s3.NewFromConfig(awsConf)
+		stsClient := sts.NewFromConfig(awsConf)
+		callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+		if err != nil {
+			return err
+		}
+		client := &awsclients.Client[*s3.Client]{
+			NamedCredentials: namedCreds,
+			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
+			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
+			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			Client:           awsClient,
+		}
+		awsclients.S3Clientset.Overwrite(client.AccountID, client)
+		slog.Info(
+			"configured AWS client",
+			"service", "s3",
+			"credentials", client.NamedCredentials,
+			"account_id", client.AccountID,
+			"arn", client.ARN,
+			"user_id", client.UserID,
+		)
+	}
+
+	return nil
+}
+
+// configureAWSClients creates the AWS clients for the supported by Inventory
+// AWS services and registers them.
+func configureAWSClients(ctx context.Context, conf *config.Config) error {
+	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
+		"ec2":   configureEC2Clientset,
+		"elb":   configureELBClientset,
+		"elbv2": configureELBv2Clientset,
+		"s3":    configureS3Clientset,
+	}
+
+	for svc, configFunc := range configFuncs {
+		if err := configFunc(ctx, conf); err != nil {
+			return fmt.Errorf("unable to configure AWS clients for %s: %w", svc, err)
+		}
 	}
 
 	return nil
