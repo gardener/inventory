@@ -141,6 +141,7 @@ func NewWorkerCommand() *cli.Command {
 					server := newServer(conf)
 
 					// Gardener client configs
+					slog.Info("configuring gardener clients")
 					gardenConfigs, err := newGardenConfigs(conf)
 					if err != nil {
 						return err
@@ -155,10 +156,14 @@ func NewWorkerCommand() *cli.Command {
 					gardenerclient.SetDefaultClient(gardenClient)
 
 					// Initialize DB and asynq client
+					slog.Info("configuring db client")
 					dbclient.SetDB(db)
+
+					slog.Info("configuring asynq client")
 					asynqclient.SetClient(client)
 
 					// AWS clients config
+					slog.Info("configuring AWS clients")
 					if err := configureAWSClients(ctx.Context, conf); err != nil {
 						return err
 					}
