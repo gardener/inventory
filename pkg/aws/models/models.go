@@ -99,7 +99,8 @@ type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
 	coremodels.Model
 
-	Name              string              `bun:"name,notnull,unique"`
+	Name              string              `bun:"name,notnull,unique:aws_region_key"`
+	AccountID         string              `bun:"account_id,notnull,unique:aws_region_key"`
 	Endpoint          string              `bun:"endpoint,notnull"`
 	OptInStatus       string              `bun:"opt_in_status,notnull"`
 	Zones             []*AvailabilityZone `bun:"rel:has-many,join:name=region_name"`
