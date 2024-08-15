@@ -104,7 +104,7 @@ type Region struct {
 	Endpoint          string              `bun:"endpoint,notnull"`
 	OptInStatus       string              `bun:"opt_in_status,notnull"`
 	Zones             []*AvailabilityZone `bun:"rel:has-many,join:name=region_name,join:account_id=account_id"`
-	VPCs              []*VPC              `bun:"rel:has-many,join:name=region_name"`
+	VPCs              []*VPC              `bun:"rel:has-many,join:name=region_name,join:account_id=account_id"`
 	Instances         []*Instance         `bun:"rel:has-many,join:name=region_name"`
 	LoadBalancers     []*LoadBalancer     `bun:"rel:has-many,join:name=region_name"`
 	Images            []*Image            `bun:"rel:has-many,join:name=region_name"`
@@ -135,14 +135,15 @@ type VPC struct {
 	coremodels.Model
 
 	Name              string              `bun:"name,notnull"`
-	VpcID             string              `bun:"vpc_id,notnull,unique"`
+	VpcID             string              `bun:"vpc_id,notnull,unique:aws_vpc_key"`
+	AccountID         string              `bun:"account_id,notnull,unique:aws_vpc_key"`
 	State             string              `bun:"state,notnull"`
 	IPv4CIDR          string              `bun:"ipv4_cidr,notnull"`
 	IPv6CIDR          string              `bun:"ipv6_cidr,nullzero"`
 	IsDefault         bool                `bun:"is_default,notnull"`
 	OwnerID           string              `bun:"owner_id,notnull"`
 	RegionName        string              `bun:"region_name,notnull"`
-	Region            *Region             `bun:"rel:has-one,join:region_name=name"`
+	Region            *Region             `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 	Subnets           []*Subnet           `bun:"rel:has-many,join:vpc_id=vpc_id"`
 	Instances         []*Instance         `bun:"rel:has-many,join:vpc_id=vpc_id"`
 	NetworkInterfaces []*NetworkInterface `bun:"rel:has-many,join:vpc_id=vpc_id"`
