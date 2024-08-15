@@ -20,7 +20,7 @@ var ErrStopIteration = errors.New("stop iteration")
 
 // ErrContinue is a no-op error, which is used to signal [Registry.Range] to
 // continue the iteration.
-var ErrContinue = errors.New("continue")
+var ErrContinue = errors.New("continue iteration")
 
 // Registry is a concurrent-safe registry.
 type Registry[K comparable, V any] struct {
