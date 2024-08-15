@@ -17,56 +17,94 @@ import (
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
-	awsclient "github.com/gardener/inventory/pkg/clients/aws"
+	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	"github.com/gardener/inventory/pkg/utils/ptr"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	TaskCollectVPCs          = "aws:task:collect-vpcs"
-	TaskCollectVPCsForRegion = "aws:task:collect-vpcs-region"
+	// TaskCollectVPCs is the name of the task for collecting AWS VPCs.
+	TaskCollectVPCs = "aws:task:collect-vpcs"
 )
 
-// CollectVpcsPayload is the payload for collecting VPCs for a given AWS Region.
-type CollectVpcsPayload struct {
-	Region string `json:"region"`
+// CollectVPCsPayload is the payload, which is used for collecting AWS VPCs.
+type CollectVPCsPayload struct {
+	// Region specifies the region from which to collect.
+	Region string `json:"region" yaml:"region"`
+
+	// AccountID specifies the AWS Account ID, which is associated with a
+	// registered client.
+	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NewCollectVpcsTask creates a new task for collecting all VPCs for all
-// Regions.
-func NewCollectVpcsTask() *asynq.Task {
+// NewCollectVPCsTask creates a new [asynq.Task] for collecting AWS VPCs without
+// specifying a payload.
+func NewCollectVPCsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectVPCs, nil)
 }
 
-// HandleCollectVpcsTask handles the task, which collects all VPCs for all known
-// AWS Regions.
-func HandleCollectVpcsTask(ctx context.Context, t *asynq.Task) error {
-	return collectVpcs(ctx)
+// HandleCollectVPCsTask handles the task for collecting AWS VPCs.
+func HandleCollectVPCsTask(ctx context.Context, t *asynq.Task) error {
+	// If we were called without a payload, then we enqueue tasks for
+	// collecting VPCs for all known regions.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectVPCs(ctx)
+	}
+
+	var payload CollectVPCsPayload
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(fmt.Errorf("cannot unmarshal payload: %w", err))
+	}
+
+	if payload.AccountID == "" {
+		return asynqutils.SkipRetry(ErrNoAccountID)
+	}
+
+	if payload.Region == "" {
+		return asynqutils.SkipRetry(ErrNoRegion)
+	}
+
+	return collectVPCs(ctx, payload)
 }
 
-func collectVpcs(ctx context.Context) error {
-	slog.Info("Collecting AWS VPCs")
-	regions := make([]models.Region, 0)
-	err := db.DB.NewSelect().Model(&regions).Scan(ctx)
+// enqueueCollectVPCs enqueues tasks for collecting AWS VPCs from all known
+// regions by creating payload with the respective region and account id.
+func enqueueCollectVPCs(ctx context.Context) error {
+	regions, err := awsutils.GetRegionsFromDB(ctx)
 	if err != nil {
-		slog.Error("could not select regions from db", "reason", err)
-		return err
+		return fmt.Errorf("failed to get regions: %w", err)
 	}
+
+	// Enqueue task for each region
 	for _, r := range regions {
-		// Trigger Asynq task for each region
-		vpcsTask, err := NewCollectVpcsForRegionTask(r.Name)
+		payload := CollectVPCsPayload{
+			Region:    r.Name,
+			AccountID: r.AccountID,
+		}
+		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error("failed to create task", "reason", err)
+			slog.Error(
+				"failed to marshal payload for AWS VPC",
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
 			continue
 		}
 
-		info, err := asynqclient.Client.Enqueue(vpcsTask)
+		task := asynq.NewTask(TaskCollectVPCs, data)
+		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
 			slog.Error(
-				"could not enqueue task",
-				"type", vpcsTask.Type(),
+				"failed to enqueue task",
+				"type", task.Type(),
 				"region", r.Name,
+				"account_id", r.AccountID,
 				"reason", err,
 			)
 			continue
@@ -74,45 +112,33 @@ func collectVpcs(ctx context.Context) error {
 
 		slog.Info(
 			"enqueued task",
-			"type", vpcsTask.Type(),
+			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
 			"region", r.Name,
+			"account_id", r.AccountID,
 		)
 	}
+
 	return nil
 }
 
-// NewCollectVpcsForRegionTask creates a new task for collecting VPCs for a
-// given region.
-func NewCollectVpcsForRegionTask(region string) (*asynq.Task, error) {
-	if region == "" {
-		return nil, ErrMissingRegion
+// collectVPCs collects the AWS VPCs from the specified payload region using the
+// client associated with the specified AccountID.
+func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
+	client, ok := awsclients.EC2Clientset.Get(payload.AccountID)
+	if !ok {
+		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	payload, err := json.Marshal(CollectVpcsPayload{Region: region})
-	if err != nil {
-		return nil, err
-	}
+	slog.Info(
+		"collecting AWS VPCs",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+	)
 
-	return asynq.NewTask(TaskCollectVPCsForRegion, payload), nil
-}
-
-// HandleCollectVpcsForRegionTask handles the task for collecting VPCs for a
-// given AWS Region.
-func HandleCollectVpcsForRegionTask(ctx context.Context, t *asynq.Task) error {
-	var p CollectVpcsPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
-	}
-
-	return collectVpcsForRegion(ctx, p.Region)
-}
-
-func collectVpcsForRegion(ctx context.Context, region string) error {
-	slog.Info("Collecting AWS VPCs", "region", region)
 	paginator := ec2.NewDescribeVpcsPaginator(
-		awsclient.EC2,
+		client.Client,
 		&ec2.DescribeVpcsInput{},
 		func(params *ec2.DescribeVpcsPaginatorOptions) {
 			params.Limit = int32(constants.PageSize)
@@ -126,11 +152,17 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 		page, err := paginator.NextPage(
 			ctx,
 			func(o *ec2.Options) {
-				o.Region = region
+				o.Region = payload.Region
 			},
 		)
+
 		if err != nil {
-			slog.Error("could not describe VPCs", "region", region, "reason", err)
+			slog.Error(
+				"could not describe VPCs",
+				"region", payload.Region,
+				"account_id", payload.AccountID,
+				"reason", err,
+			)
 			return err
 		}
 		items = append(items, page.Vpcs...)
@@ -139,17 +171,18 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 	vpcs := make([]models.VPC, 0, len(items))
 	for _, vpc := range items {
 		name := utils.FetchTag(vpc.Tags, "Name")
-		vpcModel := models.VPC{
+		item := models.VPC{
 			Name:       name,
-			VpcID:      strings.StringFromPointer(vpc.VpcId),
+			AccountID:  payload.AccountID,
+			VpcID:      stringutils.StringFromPointer(vpc.VpcId),
 			State:      string(vpc.State),
-			IPv4CIDR:   strings.StringFromPointer(vpc.CidrBlock),
+			IPv4CIDR:   stringutils.StringFromPointer(vpc.CidrBlock),
 			IPv6CIDR:   "", //TODO: fetch IPv6 CIDR
-			IsDefault:  *vpc.IsDefault,
-			OwnerID:    strings.StringFromPointer(vpc.OwnerId),
-			RegionName: region,
+			IsDefault:  ptr.Value(vpc.IsDefault, false),
+			OwnerID:    stringutils.StringFromPointer(vpc.OwnerId),
+			RegionName: payload.Region,
 		}
-		vpcs = append(vpcs, vpcModel)
+		vpcs = append(vpcs, item)
 	}
 
 	if len(vpcs) == 0 {
@@ -158,7 +191,7 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 
 	out, err := db.DB.NewInsert().
 		Model(&vpcs).
-		On("CONFLICT (vpc_id) DO UPDATE").
+		On("CONFLICT (vpc_id, account_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
 		Set("state = EXCLUDED.state").
 		Set("ipv4_cidr = EXCLUDED.ipv4_cidr").
@@ -171,7 +204,12 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert VPCs into db", "region", region, "reason", err)
+		slog.Error(
+			"could not insert VPCs into db",
+			"region", payload.Region,
+			"account_id", payload.AccountID,
+			"reason", err,
+		)
 		return err
 	}
 
@@ -180,7 +218,12 @@ func collectVpcsForRegion(ctx context.Context, region string) error {
 		return err
 	}
 
-	slog.Info("populated aws vpcs", "region", region, "count", count)
+	slog.Info(
+		"populated aws vpcs",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+		"count", count,
+	)
 
 	return nil
 }

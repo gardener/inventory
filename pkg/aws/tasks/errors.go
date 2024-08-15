@@ -7,8 +7,6 @@ package tasks
 import (
 	"errors"
 	"fmt"
-
-	"github.com/hibiken/asynq"
 )
 
 // ErrNoRegion is an error, which is returned when an expected region name is
@@ -22,12 +20,6 @@ var ErrNoAccountID = errors.New("no account id specified")
 // ErrClientNotFound is an error which is returned when an AWS client was not
 // found in the clientset registries.
 var ErrClientNotFound = errors.New("client not found")
-
-// SkipRetry wraps the provided error with [asynq.SkipRetry] in order to signal
-// asynq that the task should not retried.
-func SkipRetry(err error) error {
-	return fmt.Errorf("%w (%w)", err, asynq.SkipRetry)
-}
 
 // ClientNotFound wraps [ErrClientNotFound] with the given name.
 func ClientNotFound(name string) error {
