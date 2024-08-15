@@ -18,7 +18,8 @@ import (
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -53,11 +54,11 @@ func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	// the payload.
 	var payload CollectRegionsPayload
 	if err := json.Unmarshal(data, &payload); err != nil {
-		return SkipRetry(fmt.Errorf("cannot unmarshal payload: %w", err))
+		return asynqutils.SkipRetry(fmt.Errorf("cannot unmarshal payload: %w", err))
 	}
 
 	if payload.AccountID == "" {
-		return SkipRetry(ErrNoAccountID)
+		return asynqutils.SkipRetry(ErrNoAccountID)
 	}
 
 	return collectRegions(ctx, payload)
@@ -108,11 +109,12 @@ func enqueueCollectRegionsForAllClients() error {
 func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	client, ok := awsclients.EC2Clientset.Get(payload.AccountID)
 	if !ok {
-		return SkipRetry(fmt.Errorf("%w: %s", ErrClientNotFound, payload.AccountID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info("Collecting AWS regions", "account_id", client.AccountID)
+	slog.Info("collecting AWS regions", "account_id", client.AccountID)
 	result, err := client.Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
+
 	if err != nil {
 		slog.Error("could not describe regions", "account_id", client.AccountID, "reason", err)
 		return err
@@ -121,10 +123,10 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	regions := make([]models.Region, 0, len(result.Regions))
 	for _, region := range result.Regions {
 		item := models.Region{
-			Name:        strings.StringFromPointer(region.RegionName),
+			Name:        stringutils.StringFromPointer(region.RegionName),
 			AccountID:   client.AccountID,
-			Endpoint:    strings.StringFromPointer(region.Endpoint),
-			OptInStatus: strings.StringFromPointer(region.OptInStatus),
+			Endpoint:    stringutils.StringFromPointer(region.Endpoint),
+			OptInStatus: stringutils.StringFromPointer(region.OptInStatus),
 		}
 		regions = append(regions, item)
 	}
