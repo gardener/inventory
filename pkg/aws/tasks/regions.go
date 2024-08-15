@@ -47,7 +47,7 @@ func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	// collecting regions for all configured clients.
 	data := t.Payload()
 	if data == nil {
-		return enqueueCollectRegionsForAllClients()
+		return enqueueCollectRegions()
 	}
 
 	// Collect regions using the client associated with the Account ID from
@@ -64,9 +64,9 @@ func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	return collectRegions(ctx, payload)
 }
 
-// enqueueCollectRegionsForAllClients enqueues tasks for collecting AWS Regions
+// enqueueCollectRegions enqueues tasks for collecting AWS Regions
 // for all configured AWS EC2 clients.
-func enqueueCollectRegionsForAllClients() error {
+func enqueueCollectRegions() error {
 	awsclients.EC2Clientset.Range(func(accountID string, _ *awsclients.Client[*ec2.Client]) error {
 		p := &CollectRegionsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)
