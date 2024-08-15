@@ -10,5 +10,5 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
-// S3Clients provides the registry of [*s3.Client] clients.
-var S3Clients = registry.New[string, *s3.Client]()
+// S3Clientset provides the registry of S3 clients.
+var S3Clientset = registry.New[string, *Client[*s3.Client]]()
