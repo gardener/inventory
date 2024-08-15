@@ -57,8 +57,8 @@ func HandleCollectAvailabilityZonesTask(ctx context.Context, t *asynq.Task) erro
 
 	// Collect the AZs from the specified region using the specified account
 	var payload CollectAvailabilityZonesPayload
-	if err := json.Unmarshal(data, &payload); err != nil {
-		return asynqutils.SkipRetry(fmt.Errorf("cannot unmarshal payload: %w", err))
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
 	}
 
 	if payload.Region == "" {

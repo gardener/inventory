@@ -57,8 +57,8 @@ func HandleCollectVPCsTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	var payload CollectVPCsPayload
-	if err := json.Unmarshal(data, &payload); err != nil {
-		return asynqutils.SkipRetry(fmt.Errorf("cannot unmarshal payload: %w", err))
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
 	}
 
 	if payload.AccountID == "" {
