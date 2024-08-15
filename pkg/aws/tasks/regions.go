@@ -28,7 +28,7 @@ const (
 )
 
 // NewAwsCollectRegionsTask creates a new [asynq.Task] task for collecting AWS
-// regions.
+// regions without specifying a payload.
 func NewCollectRegionsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectRegions, nil)
 }
@@ -42,8 +42,6 @@ type CollectRegionsPayload struct {
 
 // HandleCollectRegionsTask is the handler, which collects AWS Regions.
 func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
-	slog.Info("Collecting AWS regions")
-
 	// If we were called without a payload, then we will enqueue tasks for
 	// collecting regions for all configured clients.
 	data := t.Payload()
@@ -55,11 +53,11 @@ func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	// the payload.
 	var payload CollectRegionsPayload
 	if err := json.Unmarshal(data, &payload); err != nil {
-		return err
+		return SkipRetry(fmt.Errorf("cannot unmarshal payload: %w", err))
 	}
 
 	if payload.AccountID == "" {
-		return fmt.Errorf("%w: %w", ErrNoAccountID, asynq.SkipRetry)
+		return SkipRetry(ErrNoAccountID)
 	}
 
 	return collectRegions(ctx, payload)
@@ -110,9 +108,10 @@ func enqueueCollectRegionsForAllClients() error {
 func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	client, ok := awsclients.EC2Clientset.Get(payload.AccountID)
 	if !ok {
-		return fmt.Errorf("%w: %s (%w)", ErrClientNotFound, payload.AccountID, asynq.SkipRetry)
+		return SkipRetry(fmt.Errorf("%w: %s", ErrClientNotFound, payload.AccountID))
 	}
 
+	slog.Info("Collecting AWS regions", "account_id", client.AccountID)
 	result, err := client.Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
 		slog.Error("could not describe regions", "account_id", client.AccountID, "reason", err)
