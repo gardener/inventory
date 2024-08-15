@@ -28,3 +28,8 @@ var ErrClientNotFound = errors.New("client not found")
 func SkipRetry(err error) error {
 	return fmt.Errorf("%w (%w)", err, asynq.SkipRetry)
 }
+
+// ClientNotFound wraps [ErrClientNotFound] with the given name.
+func ClientNotFound(name string) error {
+	return fmt.Errorf("%w: %s", ErrClientNotFound, name)
+}
