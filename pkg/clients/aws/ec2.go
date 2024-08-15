@@ -10,5 +10,5 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
-// EC2Clients provides the registry of [*ec2.Client] clients.
-var EC2Clients = registry.New[string, *ec2.Client]()
+// EC2Clientset provides the registry of EC2 clients.
+var EC2Clientset = registry.New[string, *Client[*ec2.Client]]()

@@ -10,5 +10,5 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
-// ELBv2Clients provides the registry of [*elbv2.Client] clients.
-var ELBv2Clients = registry.New[string, *elbv2.Client]()
+// ELBv2Clientset provides the registry of ELB v2 clients.
+var ELBv2Clientset = registry.New[string, *Client[*elbv2.Client]]()
