@@ -123,6 +123,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	for _, region := range result.Regions {
 		item := models.Region{
 			Name:        strings.StringFromPointer(region.RegionName),
+			AccountID:   client.AccountID,
 			Endpoint:    strings.StringFromPointer(region.Endpoint),
 			OptInStatus: strings.StringFromPointer(region.OptInStatus),
 		}
@@ -136,7 +137,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	// Bulk insert regions into db
 	out, err := db.DB.NewInsert().
 		Model(&regions).
-		On("CONFLICT (name) DO UPDATE").
+		On("CONFLICT (name, account_id) DO UPDATE").
 		Set("endpoint = EXCLUDED.endpoint").
 		Set("opt_in_status = EXCLUDED.opt_in_status").
 		Set("updated_at = EXCLUDED.updated_at").
