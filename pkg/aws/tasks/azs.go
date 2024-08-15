@@ -16,85 +16,117 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
-	awsclient "github.com/gardener/inventory/pkg/clients/aws"
+	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	// Asynq task type for collecting AWS regions
-	TaskCollectAvailabilityZonesForRegion = "aws:task:collect-azs-region"
-	TaskCollectAvailabilityZones          = "aws:task:collect-azs"
+	// TaskCollectAvailabilityZones is the name of the task for collecting
+	// AWS AZs.
+	TaskCollectAvailabilityZones = "aws:task:collect-azs"
 )
 
-type CollectAzsPayload struct {
-	Region string `json:"region"`
+// CollectAvailabilityZonesPayload is the payload, which is used for collecting
+// AWS AZs.
+type CollectAvailabilityZonesPayload struct {
+	// Region is the region from which to collect.
+	Region string `json:"region" yaml:"region"`
+
+	// AccountID specifies the AWS Account ID, which is associated with a
+	// registered client.
+	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NewCollectAzsForRegionTask creates a new task for collecting AWS Availability
-// Zones for a given region.
-func NewCollectAzsForRegionTask(region string) (*asynq.Task, error) {
-	if region == "" {
-		return nil, ErrMissingRegion
-	}
-
-	payload, err := json.Marshal(CollectAzsPayload{Region: region})
-	if err != nil {
-		return nil, err
-	}
-
-	return asynq.NewTask(TaskCollectAvailabilityZonesForRegion, payload), nil
+// NewCollectAvailabilityZonesTask creates a new [asynq.Task] for collecting AWS
+// Availability Zones without specifying a payload.
+func NewCollectAvailabilityZonesTask() *asynq.Task {
+	return asynq.NewTask(TaskCollectAvailabilityZones, nil)
 }
 
-// HandleCollectAzsForRegionTask is the task handler which collects Availability
-// Zones for a given region.
-func HandleCollectAzsForRegionTask(ctx context.Context, t *asynq.Task) error {
-	var p CollectAzsPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+// HandleCollectAvailabilityZonesTask handles the task for collecting AWS AZs.
+func HandleCollectAvailabilityZonesTask(ctx context.Context, t *asynq.Task) error {
+	// If we were called without a payload, then we enqueue tasks for
+	// collecting the Availability Zones for all known regions.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectAvailabilityZones(ctx)
 	}
-	return collectAzsForRegion(ctx, p.Region)
+
+	// Collect the AZs from the specified region using the specified account
+	var payload CollectAvailabilityZonesPayload
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(fmt.Errorf("cannot unmarshal payload: %w", err))
+	}
+
+	if payload.Region == "" {
+		return asynqutils.SkipRetry(ErrNoRegion)
+	}
+
+	if payload.AccountID == "" {
+		return asynqutils.SkipRetry(ErrNoAccountID)
+	}
+
+	return collectAvailabilityZones(ctx, payload)
 }
 
-// Collect AWS availability zones for a given region.
-func collectAzsForRegion(ctx context.Context, region string) error {
-	slog.Info("Collecting AWS availability zones", "region", region)
+// collectAvailabilityZones collects the AWS AZs for the specified region in the
+// payload, using the respective client associated with the given Account ID.
+func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZonesPayload) error {
+	client, ok := awsclients.EC2Clientset.Get(payload.AccountID)
+	if !ok {
+		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
+	}
 
-	azsOutput, err := awsclient.EC2.DescribeAvailabilityZones(ctx,
+	slog.Info(
+		"collecting AWS availability zones",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+	)
+
+	result, err := client.Client.DescribeAvailabilityZones(ctx,
 		&ec2.DescribeAvailabilityZonesInput{
 			AllAvailabilityZones: ptr.Bool(false),
 		},
 		func(o *ec2.Options) {
-			o.Region = region
+			o.Region = payload.Region
 		},
 	)
 
 	if err != nil {
-		slog.Error("could not describe availability zones", "reason", err)
+		slog.Error(
+			"could not describe availability zones",
+			"region", payload.Region,
+			"account_id", payload.AccountID,
+			"reason", err,
+		)
 		return err
 	}
 
-	azs := make([]models.AvailabilityZone, 0, len(azsOutput.AvailabilityZones))
-	for _, az := range azsOutput.AvailabilityZones {
-		modelAz := models.AvailabilityZone{
-			ZoneID:             strings.StringFromPointer(az.ZoneId),
-			ZoneType:           strings.StringFromPointer(az.ZoneType),
-			Name:               strings.StringFromPointer(az.ZoneName),
-			OptInStatus:        string(az.OptInStatus),
-			State:              string(az.State),
-			RegionName:         strings.StringFromPointer(az.RegionName),
-			GroupName:          strings.StringFromPointer(az.GroupName),
-			NetworkBorderGroup: strings.StringFromPointer(az.NetworkBorderGroup),
+	items := make([]models.AvailabilityZone, 0, len(result.AvailabilityZones))
+	for _, item := range result.AvailabilityZones {
+		item := models.AvailabilityZone{
+			ZoneID:             stringutils.StringFromPointer(item.ZoneId),
+			AccountID:          client.AccountID,
+			ZoneType:           stringutils.StringFromPointer(item.ZoneType),
+			Name:               stringutils.StringFromPointer(item.ZoneName),
+			OptInStatus:        string(item.OptInStatus),
+			State:              string(item.State),
+			RegionName:         stringutils.StringFromPointer(item.RegionName),
+			GroupName:          stringutils.StringFromPointer(item.GroupName),
+			NetworkBorderGroup: stringutils.StringFromPointer(item.NetworkBorderGroup),
 		}
-		azs = append(azs, modelAz)
+		items = append(items, item)
 	}
 
-	if len(azs) == 0 {
+	if len(items) == 0 {
 		return nil
 	}
-	_, err = db.DB.NewInsert().
-		Model(&azs).
-		On("CONFLICT (zone_id) DO UPDATE").
+
+	out, err := db.DB.NewInsert().
+		Model(&items).
+		On("CONFLICT (zone_id, account_id) DO UPDATE").
 		Set("zone_type = EXCLUDED.zone_type").
 		Set("name = EXCLUDED.name").
 		Set("opt_in_status = EXCLUDED.opt_in_status").
@@ -105,49 +137,80 @@ func collectAzsForRegion(ctx context.Context, region string) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert availability zones into db", "region", region, "reason", err)
+		slog.Error(
+			"could not insert availability zones into db",
+			"region", payload.Region,
+			"account_id", payload.AccountID,
+			"reason", err,
+		)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info(
+		"populated aws availability zones",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+		"count", count,
+	)
 
 	return nil
 }
 
-// NewCollectAzsTask creates a new task for collecting AWS availability zones without specifying a region.
-// It fetches the reqions from the database and triggers an aws:collect-azs-region task for each region.
-func NewCollectAzsTask() *asynq.Task {
-	return asynq.NewTask(TaskCollectAvailabilityZones, nil)
-}
-
-// HandleCollectAzsTask handles the task for collecting all AZs for all Regions.
-func HandleCollectAzsTask(ctx context.Context, t *asynq.Task) error {
-	return collectAzs(ctx)
-}
-
-func collectAzs(ctx context.Context) error {
-	// Collect regions from Db
-	regions := make([]models.Region, 0)
-	err := db.DB.NewSelect().Model(&regions).Scan(ctx)
+// enqueueCollectAvailabilityZones enqueues tasks for collecting AWS AZs for all
+// known regions by specifying the respective payload for each region and
+// account.
+func enqueueCollectAvailabilityZones(ctx context.Context) error {
+	// Get the known regions
+	regions, err := GetRegionsFromDB(ctx)
 	if err != nil {
-		slog.Error("could not select regions from db", "reason", err)
-		return err
+		return fmt.Errorf("failed to get regions", "reason", err)
 	}
 
+	// Enqueue a task for each region
 	for _, r := range regions {
-		// Trigger Asynq task for each region
-		azsTask, err := NewCollectAzsForRegionTask(r.Name)
+		payload := CollectAvailabilityZonesPayload{
+			Region:    r.Name,
+			AccountID: r.AccountID,
+		}
+		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error("failed to create task", "reason", err)
+			slog.Error(
+				"failed to marshal payload for AWS availability zone",
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
 			continue
 		}
 
-		info, err := asynqclient.Client.Enqueue(azsTask)
+		task := asynq.NewTask(TaskCollectAvailabilityZones, data)
+		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", azsTask.Type(), "reason", err)
+			slog.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
 			continue
 		}
 
-		slog.Info("enqueued task", "type", azsTask.Type(), "id", info.ID, "queue", info.Queue)
+		slog.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+			"account_id", r.AccountID,
+		)
 	}
 
 	return nil

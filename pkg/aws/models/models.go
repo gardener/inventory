@@ -103,7 +103,7 @@ type Region struct {
 	AccountID         string              `bun:"account_id,notnull,unique:aws_region_key"`
 	Endpoint          string              `bun:"endpoint,notnull"`
 	OptInStatus       string              `bun:"opt_in_status,notnull"`
-	Zones             []*AvailabilityZone `bun:"rel:has-many,join:name=region_name,account_id=account_id"`
+	Zones             []*AvailabilityZone `bun:"rel:has-many,join:name=region_name,join:account_id=account_id"`
 	VPCs              []*VPC              `bun:"rel:has-many,join:name=region_name"`
 	Instances         []*Instance         `bun:"rel:has-many,join:name=region_name"`
 	LoadBalancers     []*LoadBalancer     `bun:"rel:has-many,join:name=region_name"`
@@ -125,7 +125,7 @@ type AvailabilityZone struct {
 	RegionName         string              `bun:"region_name,notnull"`
 	GroupName          string              `bun:"group_name,notnull"`
 	NetworkBorderGroup string              `bun:"network_border_group,notnull"`
-	Region             *Region             `bun:"rel:has-one,join:region_name=name,account_id=account_id"`
+	Region             *Region             `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 	NetworkInterfaces  []*NetworkInterface `bun:"rel:has-many,join:name=az"`
 }
 
