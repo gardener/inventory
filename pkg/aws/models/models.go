@@ -226,16 +226,16 @@ type LoadBalancer struct {
 	// present only for v2 Load Balancers.
 	State string `bun:"state,notnull"`
 
-	Name                  string `bun:"name,notnull"`
-	DNSName               string `bun:"dns_name,notnull,unique"`
-	CanonicalHostedZoneID string `bun:"canonical_hosted_zone_id,notnull"`
-
-	Scheme     string  `bun:"scheme,notnull"`
-	Type       string  `bun:"type,notnull"`
-	VpcID      string  `bun:"vpc_id,notnull"`
-	VPC        *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id,join:account_id=account_id"`
-	RegionName string  `bun:"region_name,notnull"`
-	Region     *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
+	Name                  string  `bun:"name,notnull"`
+	DNSName               string  `bun:"dns_name,notnull,unique:aws_loadbalancer_key"`
+	AccountID             string  `bun:"account_id,notnull,unique:aws_loadbalancer_key"`
+	CanonicalHostedZoneID string  `bun:"canonical_hosted_zone_id,notnull"`
+	Scheme                string  `bun:"scheme,notnull"`
+	Type                  string  `bun:"type,notnull"`
+	VpcID                 string  `bun:"vpc_id,notnull"`
+	VPC                   *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id,join:account_id=account_id"`
+	RegionName            string  `bun:"region_name,notnull"`
+	Region                *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // LoadBalancerToVPC represents a link table connecting the LoadBalancer with VPC.
