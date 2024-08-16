@@ -17,57 +17,127 @@ import (
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/aws/utils"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
-	awsclient "github.com/gardener/inventory/pkg/clients/aws"
+	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	"github.com/gardener/inventory/pkg/utils/ptr"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	TaskCollectSubnets          = "aws:task:collect-subnets"
-	TaskCollectSubnetsForRegion = "aws:task:collect-subnets-region"
+	// TaskCollectSubnets is the name of the task for collecting AWS
+	// Subnets.
+	TaskCollectSubnets = "aws:task:collect-subnets"
 )
 
+// CollectSubnetsPayload is the payload, which is used to collect AWS subnets.
 type CollectSubnetsPayload struct {
-	Region string `json:"region"`
+	// Region is the region from which to collect.
+	Region string `json:"region" yaml:"region"`
+
+	// AccountID specifies the AWS Account ID, which is associated with a
+	// registered client.
+	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NewCollectSubnetTask creates a new task for collecting all Subnets from all
-// Regions.
+// NewCollectSubnetTask creates a new [asynq.Task] for collecting AWS Subnets,
+// without specifying a payload.
 func NewCollectSubnetsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectSubnets, nil)
 }
 
-// NewCollectSubnetsForRegionTask creates a task for collecting Subnets from a
-// given Region.
-func NewCollectSubnetsForRegionTask(region string) (*asynq.Task, error) {
-	if region == "" {
-		return nil, ErrMissingRegion
+// HandleCollectSubnetsTask collects handles the task for collecting AWS
+// Subnets.
+func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
+	// If we were called without a payload, then we enqueue tasks for
+	// collecting the subnets for all known regions.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectSubnets(ctx)
 	}
 
-	payload, err := json.Marshal(CollectSubnetsPayload{Region: region})
+	var payload CollectSubnetsPayload
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if payload.Region == "" {
+		return asynqutils.SkipRetry(ErrNoRegion)
+	}
+
+	if payload.AccountID == "" {
+		return asynqutils.SkipRetry(ErrNoAccountID)
+	}
+
+	return collectSubnets(ctx, payload)
+}
+
+func enqueueCollectSubnets(ctx context.Context) error {
+	// Get the known regions and enqueue a task for each
+	regions, err := awsutils.GetRegionsFromDB(ctx)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
-	return asynq.NewTask(TaskCollectSubnetsForRegion, payload), nil
-}
+	for _, r := range regions {
+		payload := CollectSubnetsPayload{
+			Region:    r.Name,
+			AccountID: r.AccountID,
+		}
+		data, err := json.Marshal(payload)
+		if err != nil {
+			slog.Error(
+				"failed to marshal payload for AWS subnets",
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
+			continue
+		}
+		task := asynq.NewTask(TaskCollectSubnets, data)
+		info, err := asynqclient.Client.Enqueue(task)
+		if err != nil {
+			slog.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
+			continue
+		}
 
-// HandleCollectSubnetsForRegionTask collects the Subnets from a specific
-// Region, provided as part of the task payload.
-func HandleCollectSubnetsForRegionTask(ctx context.Context, t *asynq.Task) error {
-	var p CollectSubnetsPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		slog.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+			"account_id", r.AccountID,
+		)
 	}
 
-	return collectSubnetsForRegion(ctx, p.Region)
+	return nil
 }
 
-func collectSubnetsForRegion(ctx context.Context, region string) error {
-	slog.Info("Collecting AWS subnets", "region", region)
+// collectSubnets collects the AWS Subnets for the specified region and using
+// the client associated with the given account id from the payload.
+func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
+	client, ok := awsclients.EC2Clientset.Get(payload.AccountID)
+	if !ok {
+		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
+	}
+
+	slog.Info(
+		"collecting AWS subnets",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+	)
+
 	paginator := ec2.NewDescribeSubnetsPaginator(
-		awsclient.EC2,
+		client.Client,
 		&ec2.DescribeSubnetsInput{},
 		func(params *ec2.DescribeSubnetsPaginatorOptions) {
 			params.Limit = int32(constants.PageSize)
@@ -81,11 +151,16 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		page, err := paginator.NextPage(
 			ctx,
 			func(o *ec2.Options) {
-				o.Region = region
+				o.Region = payload.Region
 			},
 		)
 		if err != nil {
-			slog.Error("could not describe subnets", "region", region, "reason", err)
+			slog.Error(
+				"could not describe subnets",
+				"region", payload.Region,
+				"account_id", payload.AccountID,
+				"reason", err,
+			)
 			return err
 		}
 		items = append(items, page.Subnets...)
@@ -94,19 +169,20 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 	subnets := make([]models.Subnet, 0, len(items))
 	for _, s := range items {
 		name := utils.FetchTag(s.Tags, "Name")
-		modelSubnet := models.Subnet{
+		item := models.Subnet{
 			Name:                   name,
-			SubnetID:               strings.StringFromPointer(s.SubnetId),
-			SubnetArn:              strings.StringFromPointer(s.SubnetArn),
-			VpcID:                  strings.StringFromPointer(s.VpcId),
+			SubnetID:               stringutils.StringFromPointer(s.SubnetId),
+			AccountID:              payload.AccountID,
+			SubnetArn:              stringutils.StringFromPointer(s.SubnetArn),
+			VpcID:                  stringutils.StringFromPointer(s.VpcId),
 			State:                  string(s.State),
-			AZ:                     strings.StringFromPointer(s.AvailabilityZone),
-			AzID:                   strings.StringFromPointer(s.AvailabilityZoneId),
-			AvailableIPv4Addresses: int(*s.AvailableIpAddressCount),
-			IPv4CIDR:               strings.StringFromPointer(s.CidrBlock),
+			AZ:                     stringutils.StringFromPointer(s.AvailabilityZone),
+			AzID:                   stringutils.StringFromPointer(s.AvailabilityZoneId),
+			AvailableIPv4Addresses: int(ptr.Value(s.AvailableIpAddressCount, 0)),
+			IPv4CIDR:               stringutils.StringFromPointer(s.CidrBlock),
 			IPv6CIDR:               "", //TODO: fetch IPv6 CIDR
 		}
-		subnets = append(subnets, modelSubnet)
+		subnets = append(subnets, item)
 	}
 
 	if len(subnets) == 0 {
@@ -115,7 +191,7 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 
 	out, err := db.DB.NewInsert().
 		Model(&subnets).
-		On("CONFLICT (subnet_id) DO UPDATE").
+		On("CONFLICT (subnet_id, account_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
 		Set("subnet_arn = EXCLUDED.subnet_arn").
 		Set("vpc_id = EXCLUDED.vpc_id").
@@ -130,7 +206,12 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert Subnets into db", "region", region, "reason", err)
+		slog.Error(
+			"could not insert aws subnets into db",
+			"region", payload.Region,
+			"account_id", payload.AccountID,
+			"reason", err,
+		)
 		return err
 	}
 
@@ -139,51 +220,12 @@ func collectSubnetsForRegion(ctx context.Context, region string) error {
 		return err
 	}
 
-	slog.Info("populated aws subnets", "region", region, "count", count)
+	slog.Info(
+		"populated aws subnets",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+		"count", count,
+	)
 
-	return nil
-}
-
-// HandleCollectSubnetsTask collects all AWS Subnets from all AWS Regions.
-func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
-	return collectSubnets(ctx)
-}
-
-func collectSubnets(ctx context.Context) error {
-	// Collect regions from Db
-	regions := make([]models.Region, 0)
-	err := db.DB.NewSelect().Model(&regions).Scan(ctx)
-	if err != nil {
-		slog.Error("could not select regions from db", "reason", err)
-		return err
-	}
-
-	for _, r := range regions {
-		// Trigger Asynq task for each region
-		subnetTask, err := NewCollectSubnetsForRegionTask(r.Name)
-		if err != nil {
-			slog.Error("failed to create task", "reason", err)
-			continue
-		}
-
-		info, err := asynqclient.Client.Enqueue(subnetTask)
-		if err != nil {
-			slog.Error(
-				"could not enqueue task",
-				"type", subnetTask.Type(),
-				"region", r.Name,
-				"reason", err,
-			)
-			continue
-		}
-
-		slog.Info(
-			"enqueued task",
-			"type", subnetTask.Type(),
-			"id", info.ID,
-			"queue", info.Queue,
-			"region", r.Name,
-		)
-	}
 	return nil
 }
