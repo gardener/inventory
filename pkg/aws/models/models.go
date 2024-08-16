@@ -197,7 +197,8 @@ type Image struct {
 	bun.BaseModel `bun:"table:aws_image"`
 	coremodels.Model
 
-	ImageID        string  `bun:"image_id,notnull,unique"`
+	ImageID        string  `bun:"image_id,notnull,unique:aws_image_key"`
+	AccountID      string  `bun:"account_id,notnull,unique:aws_image_key"`
 	Name           string  `bun:"name,notnull"`
 	OwnerID        string  `bun:"owner_id,notnull"`
 	ImageType      string  `bun:"image_type,notnull"`
