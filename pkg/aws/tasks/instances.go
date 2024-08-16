@@ -174,7 +174,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 	instances := make([]models.Instance, 0, len(items))
 	for _, instance := range items {
 		name := awsutils.FetchTag(instance.Tags, "Name")
-		modelInstance := models.Instance{
+		item := models.Instance{
 			Name:         name,
 			Arch:         string(instance.Architecture),
 			InstanceID:   stringutils.StringFromPointer(instance.InstanceId),
@@ -188,7 +188,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 			ImageID:      stringutils.StringFromPointer(instance.ImageId),
 			LaunchTime:   ptr.Value(instance.LaunchTime, time.Time{}),
 		}
-		instances = append(instances, modelInstance)
+		instances = append(instances, item)
 	}
 
 	if len(instances) == 0 {
