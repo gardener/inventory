@@ -43,6 +43,12 @@ type CollectImagesPayload struct {
 	Owners []string `json:"owners" yaml:"owners"`
 }
 
+// NewCollectImagesTask creates a new [asynq.Task] for collecting AWS AMIs
+// without specifying a payload.
+func NewCollectImagesTask() *asynq.Task {
+	return asynq.NewTask(TaskCollectImages, nil)
+}
+
 // HandleCollectImagesTask handles the task for collecting AWS AMIs.
 func HandleCollectImagesTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a specified region and account id, then we
