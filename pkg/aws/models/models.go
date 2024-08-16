@@ -99,16 +99,10 @@ type Region struct {
 	bun.BaseModel `bun:"table:aws_region"`
 	coremodels.Model
 
-	Name              string              `bun:"name,notnull,unique:aws_region_key"`
-	AccountID         string              `bun:"account_id,notnull,unique:aws_region_key"`
-	Endpoint          string              `bun:"endpoint,notnull"`
-	OptInStatus       string              `bun:"opt_in_status,notnull"`
-	Zones             []*AvailabilityZone `bun:"rel:has-many,join:name=region_name,join:account_id=account_id"`
-	VPCs              []*VPC              `bun:"rel:has-many,join:name=region_name,join:account_id=account_id"`
-	Instances         []*Instance         `bun:"rel:has-many,join:name=region_name"`
-	LoadBalancers     []*LoadBalancer     `bun:"rel:has-many,join:name=region_name"`
-	Images            []*Image            `bun:"rel:has-many,join:name=region_name"`
-	NetworkInterfaces []*NetworkInterface `bun:"rel:has-many,join:name=region_name"`
+	Name        string `bun:"name,notnull,unique:aws_region_key"`
+	AccountID   string `bun:"account_id,notnull,unique:aws_region_key"`
+	Endpoint    string `bun:"endpoint,notnull"`
+	OptInStatus string `bun:"opt_in_status,notnull"`
 }
 
 // AvailabilityZone represents an AWS Availability Zone.
@@ -116,17 +110,16 @@ type AvailabilityZone struct {
 	bun.BaseModel `bun:"table:aws_az"`
 	coremodels.Model
 
-	ZoneID             string              `bun:"zone_id,notnull,unique:aws_az_key"`
-	AccountID          string              `bun:"account_id,notnull,unique:aws_az_key"`
-	ZoneType           string              `bun:"zone_type,notnull"`
-	Name               string              `bun:"name,notnull"`
-	OptInStatus        string              `bun:"opt_in_status,notnull"`
-	State              string              `bun:"state,notnull"`
-	RegionName         string              `bun:"region_name,notnull"`
-	GroupName          string              `bun:"group_name,notnull"`
-	NetworkBorderGroup string              `bun:"network_border_group,notnull"`
-	Region             *Region             `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
-	NetworkInterfaces  []*NetworkInterface `bun:"rel:has-many,join:name=az"`
+	ZoneID             string  `bun:"zone_id,notnull,unique:aws_az_key"`
+	AccountID          string  `bun:"account_id,notnull,unique:aws_az_key"`
+	ZoneType           string  `bun:"zone_type,notnull"`
+	Name               string  `bun:"name,notnull"`
+	OptInStatus        string  `bun:"opt_in_status,notnull"`
+	State              string  `bun:"state,notnull"`
+	RegionName         string  `bun:"region_name,notnull"`
+	GroupName          string  `bun:"group_name,notnull"`
+	NetworkBorderGroup string  `bun:"network_border_group,notnull"`
+	Region             *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // VPC represents an AWS VPC
@@ -134,19 +127,16 @@ type VPC struct {
 	bun.BaseModel `bun:"table:aws_vpc"`
 	coremodels.Model
 
-	Name              string              `bun:"name,notnull"`
-	VpcID             string              `bun:"vpc_id,notnull,unique:aws_vpc_key"`
-	AccountID         string              `bun:"account_id,notnull,unique:aws_vpc_key"`
-	State             string              `bun:"state,notnull"`
-	IPv4CIDR          string              `bun:"ipv4_cidr,notnull"`
-	IPv6CIDR          string              `bun:"ipv6_cidr,nullzero"`
-	IsDefault         bool                `bun:"is_default,notnull"`
-	OwnerID           string              `bun:"owner_id,notnull"`
-	RegionName        string              `bun:"region_name,notnull"`
-	Region            *Region             `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
-	Subnets           []*Subnet           `bun:"rel:has-many,join:vpc_id=vpc_id"`
-	Instances         []*Instance         `bun:"rel:has-many,join:vpc_id=vpc_id"`
-	NetworkInterfaces []*NetworkInterface `bun:"rel:has-many,join:vpc_id=vpc_id"`
+	Name       string  `bun:"name,notnull"`
+	VpcID      string  `bun:"vpc_id,notnull,unique:aws_vpc_key"`
+	AccountID  string  `bun:"account_id,notnull,unique:aws_vpc_key"`
+	State      string  `bun:"state,notnull"`
+	IPv4CIDR   string  `bun:"ipv4_cidr,notnull"`
+	IPv6CIDR   string  `bun:"ipv6_cidr,nullzero"`
+	IsDefault  bool    `bun:"is_default,notnull"`
+	OwnerID    string  `bun:"owner_id,notnull"`
+	RegionName string  `bun:"region_name,notnull"`
+	Region     *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // Subnet represents an AWS Subnet
@@ -154,20 +144,19 @@ type Subnet struct {
 	bun.BaseModel `bun:"table:aws_subnet"`
 	coremodels.Model
 
-	Name                   string              `bun:"name,notnull"`
-	SubnetID               string              `bun:"subnet_id,notnull,unique"`
-	SubnetArn              string              `bun:"subnet_arn,notnull"`
-	VpcID                  string              `bun:"vpc_id,notnull"`
-	State                  string              `bun:"state,notnull"`
-	AZ                     string              `bun:"az,notnull"`
-	AzID                   string              `bun:"az_id,notnull"`
-	AvailableIPv4Addresses int                 `bun:"available_ipv4_addresses,notnull"`
-	IPv4CIDR               string              `bun:"ipv4_cidr,notnull"`
-	IPv6CIDR               string              `bun:"ipv6_cidr,nullzero"`
-	VPC                    *VPC                `bun:"rel:has-one,join:vpc_id=vpc_id"`
-	AvailabilityZone       *AvailabilityZone   `bun:"rel:has-one,join:az_id=zone_id"`
-	Instances              []*Instance         `bun:"rel:has-many,join:subnet_id=subnet_id"`
-	NetworkInterfaces      []*NetworkInterface `bun:"rel:has-many,join:subnet_id=subnet_id"`
+	Name                   string            `bun:"name,notnull"`
+	SubnetID               string            `bun:"subnet_id,notnull,unique:aws_subnet_key"`
+	AccountID              string            `bun:"account_id,notnull,unique:aws_subnet_key"`
+	SubnetArn              string            `bun:"subnet_arn,notnull"`
+	VpcID                  string            `bun:"vpc_id,notnull"`
+	State                  string            `bun:"state,notnull"`
+	AZ                     string            `bun:"az,notnull"`
+	AzID                   string            `bun:"az_id,notnull"`
+	AvailableIPv4Addresses int               `bun:"available_ipv4_addresses,notnull"`
+	IPv4CIDR               string            `bun:"ipv4_cidr,notnull"`
+	IPv6CIDR               string            `bun:"ipv6_cidr,nullzero"`
+	VPC                    *VPC              `bun:"rel:has-one,join:vpc_id=vpc_id,join:account_id=account_id"`
+	AvailabilityZone       *AvailabilityZone `bun:"rel:has-one,join:az_id=zone_id,join:account_id=account_id"`
 }
 
 // Instance represents an AWS EC2 instance
@@ -175,22 +164,21 @@ type Instance struct {
 	bun.BaseModel `bun:"table:aws_instance"`
 	coremodels.Model
 
-	Name              string              `bun:"name,notnull"`
-	Arch              string              `bun:"arch,notnull"`
-	InstanceID        string              `bun:"instance_id,notnull,unique"`
-	InstanceType      string              `bun:"instance_type,notnull"`
-	State             string              `bun:"state,notnull"`
-	SubnetID          string              `bun:"subnet_id,notnull"`
-	VpcID             string              `bun:"vpc_id,notnull"`
-	Platform          string              `bun:"platform,notnull"`
-	RegionName        string              `bun:"region_name,notnull"`
-	ImageID           string              `bun:"image_id,notnull"`
-	LaunchTime        time.Time           `bun:"launch_time,nullzero"`
-	Region            *Region             `bun:"rel:has-one,join:region_name=name"`
-	VPC               *VPC                `bun:"rel:has-one,join:vpc_id=vpc_id"`
-	Subnet            *Subnet             `bun:"rel:has-one,join:subnet_id=subnet_id"`
-	Image             *Image              `bun:"rel:has-one,join:image_id=image_id"`
-	NetworkInterfaces []*NetworkInterface `bun:"rel:has-many,join:instance_id=instance_id"`
+	Name         string    `bun:"name,notnull"`
+	Arch         string    `bun:"arch,notnull"`
+	InstanceID   string    `bun:"instance_id,notnull,unique"`
+	InstanceType string    `bun:"instance_type,notnull"`
+	State        string    `bun:"state,notnull"`
+	SubnetID     string    `bun:"subnet_id,notnull"`
+	VpcID        string    `bun:"vpc_id,notnull"`
+	Platform     string    `bun:"platform,notnull"`
+	RegionName   string    `bun:"region_name,notnull"`
+	ImageID      string    `bun:"image_id,notnull"`
+	LaunchTime   time.Time `bun:"launch_time,nullzero"`
+	Region       *Region   `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
+	VPC          *VPC      `bun:"rel:has-one,join:vpc_id=vpc_id,join:account_id=account_id"`
+	Subnet       *Subnet   `bun:"rel:has-one,join:subnet_id=subnet_id,join:account_id=account_id"`
+	Image        *Image    `bun:"rel:has-one,join:image_id=image_id,join:account_id=account_id"`
 }
 
 // InstanceToNetworkInterface represents a link table connecting the [Instance]
@@ -208,15 +196,14 @@ type Image struct {
 	bun.BaseModel `bun:"table:aws_image"`
 	coremodels.Model
 
-	ImageID        string      `bun:"image_id,notnull,unique"`
-	Name           string      `bun:"name,notnull"`
-	OwnerID        string      `bun:"owner_id,notnull"`
-	ImageType      string      `bun:"image_type,notnull"`
-	RootDeviceType string      `bun:"root_device_type,notnull"`
-	Description    string      `bun:"description,notnull"`
-	RegionName     string      `bun:"region_name,notnull"`
-	Region         *Region     `bun:"rel:has-one,join:region_name=name"`
-	Instances      []*Instance `bun:"rel:has-many,join:image_id=image_id"`
+	ImageID        string  `bun:"image_id,notnull,unique"`
+	Name           string  `bun:"name,notnull"`
+	OwnerID        string  `bun:"owner_id,notnull"`
+	ImageType      string  `bun:"image_type,notnull"`
+	RootDeviceType string  `bun:"root_device_type,notnull"`
+	Description    string  `bun:"description,notnull"`
+	RegionName     string  `bun:"region_name,notnull"`
+	Region         *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // LoadBalancer represents an AWS load balancer
@@ -244,9 +231,9 @@ type LoadBalancer struct {
 	Scheme     string  `bun:"scheme,notnull"`
 	Type       string  `bun:"type,notnull"`
 	VpcID      string  `bun:"vpc_id,notnull"`
-	VPC        *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	VPC        *VPC    `bun:"rel:has-one,join:vpc_id=vpc_id,join:account_id=account_id"`
 	RegionName string  `bun:"region_name,notnull"`
-	Region     *Region `bun:"rel:has-one,join:region_name=name"`
+	Region     *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // LoadBalancerToVPC represents a link table connecting the LoadBalancer with VPC.
@@ -275,7 +262,7 @@ type Bucket struct {
 	Name         string    `bun:"name,notnull,unique"`
 	CreationDate time.Time `bun:"creation_date,notnull"`
 	RegionName   string    `bun:"region_name,notnull"`
-	Region       *Region   `bun:"rel:has-one,join:region_name=name"`
+	Region       *Region   `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // NetworkInterface represents an AWS Elastic Network Interface (ENI)
@@ -283,10 +270,10 @@ type NetworkInterface struct {
 	bun.BaseModel `bun:"table:aws_net_interface"`
 	coremodels.Model
 
-	Region           *Region           `bun:"rel:has-one,join:region_name=name"`
+	Region           *Region           `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 	RegionName       string            `bun:"region_name,notnull"`
 	AZ               string            `bun:"az,notnull"`
-	AvailabilityZone *AvailabilityZone `bun:"rel:has-one,join:az=name"`
+	AvailabilityZone *AvailabilityZone `bun:"rel:has-one,join:az=name,join:account_id=account_id"`
 	Description      string            `bun:"description,notnull"`
 	InterfaceType    string            `bun:"interface_type,notnull"`
 	MacAddress       string            `bun:"mac_address,notnull"`
@@ -298,9 +285,9 @@ type NetworkInterface struct {
 	RequesterManaged bool              `bun:"requester_managed,notnull"`
 	SourceDestCheck  bool              `bun:"src_dst_check,notnull"`
 	Status           string            `bun:"status,notnull"`
-	Subnet           *Subnet           `bun:"rel:has-one,join:subnet_id=subnet_id"`
+	Subnet           *Subnet           `bun:"rel:has-one,join:subnet_id=subnet_id,join:account_id=account_id"`
 	SubnetID         string            `bun:"subnet_id,notnull"`
-	VPC              *VPC              `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	VPC              *VPC              `bun:"rel:has-one,join:vpc_id=vpc_id,join:account_id=account_id"`
 	VpcID            string            `bun:"vpc_id,notnull"`
 
 	// Association
@@ -314,7 +301,7 @@ type NetworkInterface struct {
 	AttachmentID        string    `bun:"attachment_id,notnull"`
 	DeleteOnTermination bool      `bun:"delete_on_termination,notnull"`
 	DeviceIndex         int       `bun:"device_index,notnull"`
-	Instance            *Instance `bun:"rel:has-one,join:instance_id=instance_id"`
+	Instance            *Instance `bun:"rel:has-one,join:instance_id=instance_id,join:account_id=account_id"`
 	InstanceID          string    `bun:"instance_id,notnull"`
 	InstanceOwnerID     string    `bun:"instance_owner_id,notnull"`
 	AttachmentStatus    string    `bun:"attachment_status,notnull"`
