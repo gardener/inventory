@@ -166,7 +166,8 @@ type Instance struct {
 
 	Name         string    `bun:"name,notnull"`
 	Arch         string    `bun:"arch,notnull"`
-	InstanceID   string    `bun:"instance_id,notnull,unique"`
+	InstanceID   string    `bun:"instance_id,notnull,unique:aws_instance_key"`
+	AccountID    string    `bun:"account_id,notnull,unique:aws_instance_key"`
 	InstanceType string    `bun:"instance_type,notnull"`
 	State        string    `bun:"state,notnull"`
 	SubnetID     string    `bun:"subnet_id,notnull"`
