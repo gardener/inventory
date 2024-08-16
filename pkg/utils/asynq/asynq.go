@@ -23,10 +23,10 @@ func SkipRetry(err error) error {
 // using [json.Unmarshal], and if not successful then falls back to
 // [yaml.Unmarshal].
 func Unmarshal(data []byte, v any) error {
-	err := json.Unmarshal(data, &v)
+	err := json.Unmarshal(data, v)
 	if err == nil {
 		return nil
 	}
 
-	return yaml.Unmarshal(data, &v)
+	return yaml.Unmarshal(data, v)
 }
