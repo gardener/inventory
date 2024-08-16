@@ -17,58 +17,130 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/aws/utils"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
-	awsclient "github.com/gardener/inventory/pkg/clients/aws"
+	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	TaskCollectInstances          = "aws:task:collect-instances"
-	TaskCollectInstancesForRegion = "aws:task:collect-instances-region"
+	// TaskCollectInstances is the name of the task for collecting AWS EC2
+	// Instances.
+	TaskCollectInstances = "aws:task:collect-instances"
 )
 
+// CollectInstancesPayload represents the payload for collecting EC2 Instances.
 type CollectInstancesPayload struct {
-	Region string `json:"region"`
+	// Region specifies the region from which to collect.
+	Region string `json:"region" yaml:"region"`
+
+	// AccountID specifies the AWS Account ID, which is associated with a
+	// registered client.
+	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NewCollectInstancesTask creates a new task for collecting EC2 Instances from
-// all AWS Regions.
+// NewCollectInstancesTask creates a new [asynq.Task] for collecting EC2
+// Instances, without specifying a payload.
 func NewCollectInstancesTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectInstances, nil)
 }
 
-// NewCollectInstancesForRegionTask creates a new task for collecting EC2
-// Instances for a given AWS Region.
-func NewCollectInstancesForRegionTask(region string) (*asynq.Task, error) {
-	if region == "" {
-		return nil, ErrMissingRegion
+// HandleCollectInstancesTask handles the task for collecting EC2 Instances.
+func HandleCollectInstancesTask(ctx context.Context, t *asynq.Task) error {
+	// If we were called without a payload, then we enqueue tasks for
+	// collecting EC2 Instances from all known regions and accounts.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectInstances(ctx)
 	}
 
-	payload, err := json.Marshal(CollectInstancesPayload{Region: region})
+	var payload CollectInstancesPayload
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if payload.AccountID == "" {
+		return asynqutils.SkipRetry(ErrNoAccountID)
+	}
+
+	if payload.Region == "" {
+		return asynqutils.SkipRetry(ErrNoRegion)
+	}
+
+	return collectInstances(ctx, payload)
+}
+
+// enqueueCollectInstances enqueues tasks for collecting AWS EC2 Instances from
+// all known AWS Regions by creating a payload with the respective region and
+// Account ID.
+func enqueueCollectInstances(ctx context.Context) error {
+	regions, err := awsutils.GetRegionsFromDB(ctx)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
-	return asynq.NewTask(TaskCollectInstancesForRegion, payload), nil
-}
+	// Enqueue task for each known region and account id
+	for _, r := range regions {
+		payload := CollectInstancesPayload{
+			Region:    r.Name,
+			AccountID: r.AccountID,
+		}
+		data, err := json.Marshal(payload)
+		if err != nil {
+			slog.Error(
+				"failed to marshal payload for AWS EC2 instances",
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
+			continue
+		}
 
-// HandleCollectInstancesForRegionTask collects EC2 Instances for a specific Region.
-func HandleCollectInstancesForRegionTask(ctx context.Context, t *asynq.Task) error {
-	var p CollectInstancesPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		task := asynq.NewTask(TaskCollectInstances, data)
+		info, err := asynqclient.Client.Enqueue(task)
+		if err != nil {
+			slog.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
+			continue
+		}
+
+		slog.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"region", r.Name,
+			"account_id", r.AccountID,
+		)
 	}
 
-	return collectInstancesForRegion(ctx, p.Region)
+	return nil
 }
 
-func collectInstancesForRegion(ctx context.Context, region string) error {
-	slog.Info("Collecting AWS instances ", "region", region)
+// collectInstances collects the AWS EC2 instances from the specified region,
+// using the client associated with the AccountID in the given payload.
+func collectInstances(ctx context.Context, payload CollectInstancesPayload) error {
+	client, ok := awsclients.EC2Clientset.Get(payload.AccountID)
+	if !ok {
+		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
+	}
+
+	slog.Info(
+		"collecting AWS instances ",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+	)
+
 	paginator := ec2.NewDescribeInstancesPaginator(
-		awsclient.EC2,
+		client.Client,
 		&ec2.DescribeInstancesInput{},
 		func(params *ec2.DescribeInstancesPaginatorOptions) {
 			params.Limit = int32(constants.PageSize)
@@ -82,11 +154,16 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		page, err := paginator.NextPage(
 			ctx,
 			func(o *ec2.Options) {
-				o.Region = region
+				o.Region = payload.Region
 			},
 		)
 		if err != nil {
-			slog.Error("could not describe instances", "region", region, "reason", err)
+			slog.Error(
+				"could not describe instances",
+				"region", payload.Region,
+				"account_id", payload.AccountID,
+				"reason", err,
+			)
 			return err
 		}
 		for _, reservation := range page.Reservations {
@@ -96,18 +173,19 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 
 	instances := make([]models.Instance, 0, len(items))
 	for _, instance := range items {
-		name := utils.FetchTag(instance.Tags, "Name")
+		name := awsutils.FetchTag(instance.Tags, "Name")
 		modelInstance := models.Instance{
 			Name:         name,
 			Arch:         string(instance.Architecture),
-			InstanceID:   strings.StringFromPointer(instance.InstanceId),
+			InstanceID:   stringutils.StringFromPointer(instance.InstanceId),
+			AccountID:    payload.AccountID,
 			InstanceType: string(instance.InstanceType),
 			State:        string(instance.State.Name),
-			SubnetID:     strings.StringFromPointer(instance.SubnetId),
-			VpcID:        strings.StringFromPointer(instance.VpcId),
-			Platform:     strings.StringFromPointer(instance.PlatformDetails),
-			RegionName:   region,
-			ImageID:      strings.StringFromPointer(instance.ImageId),
+			SubnetID:     stringutils.StringFromPointer(instance.SubnetId),
+			VpcID:        stringutils.StringFromPointer(instance.VpcId),
+			Platform:     stringutils.StringFromPointer(instance.PlatformDetails),
+			RegionName:   payload.Region,
+			ImageID:      stringutils.StringFromPointer(instance.ImageId),
 			LaunchTime:   ptr.Value(instance.LaunchTime, time.Time{}),
 		}
 		instances = append(instances, modelInstance)
@@ -119,7 +197,7 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 
 	out, err := db.DB.NewInsert().
 		Model(&instances).
-		On("CONFLICT (instance_id) DO UPDATE").
+		On("CONFLICT (instance_id, account_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
 		Set("arch = EXCLUDED.arch").
 		Set("instance_type = EXCLUDED.instance_type").
@@ -135,7 +213,12 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert instances into db", "region", region, "reason", err)
+		slog.Error(
+			"could not insert instances into db",
+			"region", payload.Region,
+			"account_id", payload.AccountID,
+			"reason", err,
+		)
 		return err
 	}
 
@@ -144,51 +227,12 @@ func collectInstancesForRegion(ctx context.Context, region string) error {
 		return err
 	}
 
-	slog.Info("populated aws instances", "region", region, "count", count)
-
-	return nil
-}
-
-// HandleCollectInstancesTask collects the EC2 Instances from all known regions.
-func HandleCollectInstancesTask(ctx context.Context, t *asynq.Task) error {
-	return collectInstances(ctx)
-}
-
-func collectInstances(ctx context.Context) error {
-	// Collect regions from Db
-	regions := make([]models.Region, 0)
-	err := db.DB.NewSelect().Model(&regions).Scan(ctx)
-	if err != nil {
-		slog.Error("could not select regions from db", "reason", err)
-		return err
-	}
-	for _, r := range regions {
-		// Trigger Asynq task for each region
-		instanceTask, err := NewCollectInstancesForRegionTask(r.Name)
-		if err != nil {
-			slog.Error("failed to create task", "reason", err)
-			continue
-		}
-
-		info, err := asynqclient.Client.Enqueue(instanceTask)
-		if err != nil {
-			slog.Error(
-				"could not enqueue task",
-				"type", instanceTask.Type(),
-				"region", r.Name,
-				"reason", err,
-			)
-			continue
-		}
-
-		slog.Info(
-			"enqueued task",
-			"type", instanceTask.Type(),
-			"id", info.ID,
-			"queue", info.Queue,
-			"region", r.Name,
-		)
-	}
+	slog.Info(
+		"populated aws instances",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+		"count", count,
+	)
 
 	return nil
 }
