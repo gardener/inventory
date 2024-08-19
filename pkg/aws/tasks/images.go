@@ -83,6 +83,10 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 
 	// Enqueue task for each known region
 	for _, r := range regions {
+		if !awsclients.EC2Clientset.Exists(r.AccountID) {
+			continue
+		}
+
 		// By default we will specify the current account id as the
 		// image owner, unless specified as part of the payload.
 		owners := payload.Owners

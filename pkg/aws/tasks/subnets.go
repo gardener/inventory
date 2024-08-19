@@ -82,6 +82,10 @@ func enqueueCollectSubnets(ctx context.Context) error {
 	}
 
 	for _, r := range regions {
+		if !awsclients.EC2Clientset.Exists(r.AccountID) {
+			continue
+		}
+
 		payload := CollectSubnetsPayload{
 			Region:    r.Name,
 			AccountID: r.AccountID,

@@ -129,18 +129,23 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 // collectLoadBalancers collects the AWS ELBs from the specified region in the
 // payload.
 func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPayload) error {
-	collectors := map[string]func(ctx context.Context, payload CollectLoadBalancersPayload) error{
-		"elbv1": collectELBv1,
-		"elbv2": collectELBv2,
-	}
-
-	for service, collector := range collectors {
-		if err := collector(ctx, payload); err != nil {
+	if awsclients.ELBClientset.Exists(payload.AccountID) {
+		if err := collectELBv1(ctx, payload); err != nil {
 			slog.Error(
-				"failed to collect ELBs",
+				"failed to collect ELB v1",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
-				"service", service,
+				"reason", err,
+			)
+		}
+	}
+
+	if awsclients.ELBv2Clientset.Exists(payload.AccountID) {
+		if err := collectELBv2(ctx, payload); err != nil {
+			slog.Error(
+				"failed to collect ELB v2",
+				"region", payload.Region,
+				"account_id", payload.AccountID,
 				"reason", err,
 			)
 		}
