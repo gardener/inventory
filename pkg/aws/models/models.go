@@ -280,7 +280,8 @@ type NetworkInterface struct {
 	Description      string            `bun:"description,notnull"`
 	InterfaceType    string            `bun:"interface_type,notnull"`
 	MacAddress       string            `bun:"mac_address,notnull"`
-	InterfaceID      string            `bun:"interface_id,notnull,unique"`
+	InterfaceID      string            `bun:"interface_id,notnull,unique:aws_net_interface_key"`
+	AccountID        string            `bun:"account_id,notnull,unique:aws_net_interface_key"`
 	OwnerID          string            `bun:"owner_id,notnull"`
 	PrivateDNSName   string            `bun:"private_dns_name,notnull"`
 	PrivateIPAddress string            `bun:"private_ip_address,notnull"`
