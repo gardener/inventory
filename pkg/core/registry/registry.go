@@ -87,6 +87,16 @@ func (r *Registry[K, V]) Get(key K) (V, bool) {
 	return val, ok
 }
 
+// Exists returns a boolean indicating whether the given key exists in the
+// registry.
+func (r *Registry[K, V]) Exists(key K) bool {
+	r.Lock()
+	defer r.Unlock()
+
+	_, exists := r.items[key]
+	return exists
+}
+
 // Length returns the number of items in the registry.
 func (r *Registry[K, V]) Length() int {
 	r.Lock()
