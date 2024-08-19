@@ -88,36 +88,52 @@ e.g. we can configure which named credentials to be used when accessing the
 various AWS services from Inventory.
 
 The following example configures three named credentials - `default`,
-`kubernetes-sa-token` and `token-file`, and also configures the `ec2`, `elb`,
-`elbv2` and `s3` services to use the respective named credentials.
+`account-foo` and `account-bar`, and also configures the `ec2`, `elb`, `elbv2`
+and `s3` services to use the respective named credentials.
+
+Another thing to note in the configuration below is that Inventory supports
+connecting to multiple AWS accounts for each supported AWS service.
 
 ``` yaml
-# AWS configuration
+# AWS specific configuration
 aws:
+  region: eu-central-1  # Frankfurt
+  default_region: eu-central-1  # Frankfurt
+  app_id: gardener-inventory  # Optional application specific identifier
+
   # This section provides configuration specific to each AWS service and which
   # named credentials are used for each service. This allows the Inventory to
-  # connect to different AWS accounts based on the named credentials which are
-  # used.
+  # connect to multiple AWS accounts based on the named credentials which are
+  # used. Inventory will connect to all configured named credentials (accounts)
+  # during collection from the respective AWS service.
   services:
     ec2:
-      use_credentials: default
+      use_credentials:
+        - default
+        - account-foo
+        - account-bar
     elb:
-      use_credentials: default
+      use_credentials:
+        - default
+        - account-foo
     elbv2:
-      use_credentials: default
+      use_credentials:
+        - default
     s3:
-      use_credentials: default
+      use_credentials:
+        - default
+        - account-bar
 
   # The `credentials' section provides named credentials, which are used by the
   # various AWS services. The currently supported token retrievers are `none',
-  # `kube_sa_token' and `token_file'.
+  # `kube_sa_token' and `token_file'. See docs/oidc-aws.md for more details.
   credentials:
     default:
       # When using `none' as the token retriever, only the shared AWS
       # credentials file is used.
       token_retriever: none
 
-    kubernetes-sa-token:
+    account-foo:
       # Example configuration for `kube_sa_token' retriever. When using this
       # token retriever the Inventory will request a Kubernetes Service Account
       # token using the specified kubeconfig, which is then exchanged for
@@ -135,7 +151,7 @@ aws:
         role_arn: arn:aws:iam::account:role/gardener-inventory-dev
         role_session_name: gardener-inventory-worker
 
-    token-file:
+    account-bar:
       # Example configuration for `token_file' retriever. When using this token
       # retriever the Inventory will exchange the token contained within the
       # specified file for temporary security credentials via the AWS STS
