@@ -19,32 +19,33 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
-	utils "github.com/gardener/inventory/pkg/utils/strings"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	// TaskCollectShoots is the type of the task that collects Gardener shoots.
+	// TaskCollectShoots is the name of the task for collecting Shoots.
 	TaskCollectShoots = "g:task:collect-shoots"
+
+	// shootProjectPrefix is the prefix for the shoot project namespace
+	shootProjectPrefix = "garden-"
 )
 
-// NewGardenerCollectShootsTask creates a new task for collecting Gardener shoots.
+// NewGardenerCollectShootsTask creates a new [asynq.Task] for collecting
+// Gardener shoots, without specifying a payload.
 func NewGardenerCollectShootsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectShoots, nil)
 }
 
-// HandleGardenerCollectShootsTask is a handler function that collects Gardener shoots.
+// HandleGardenerCollectShootsTask is a handler that collects Gardener Shoots.
 func HandleGardenerCollectShootsTask(ctx context.Context, t *asynq.Task) error {
-	slog.Info("Collecting Gardener shoots")
-	return collectShoots(ctx)
-}
-
-func collectShoots(ctx context.Context) error {
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
-		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
+		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
-	shoots := make([]models.Shoot, 0, 100)
+	slog.Info("collecting Gardener shoots")
+	shoots := make([]models.Shoot, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return gardenClient.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
@@ -54,20 +55,20 @@ func collectShoots(ctx context.Context) error {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
-		projectName, _ := strings.CutPrefix(s.Namespace, "garden-")
-		shoot := models.Shoot{
+		projectName, _ := strings.CutPrefix(s.Namespace, shootProjectPrefix)
+		item := models.Shoot{
 			Name:         s.Name,
 			TechnicalId:  s.Status.TechnicalID,
 			Namespace:    s.Namespace,
 			ProjectName:  projectName,
 			CloudProfile: s.Spec.CloudProfileName,
-			Purpose:      utils.StringFromPointer((*string)(s.Spec.Purpose)),
-			SeedName:     utils.StringFromPointer(s.Spec.SeedName),
+			Purpose:      stringutils.StringFromPointer((*string)(s.Spec.Purpose)),
+			SeedName:     stringutils.StringFromPointer(s.Spec.SeedName),
 			Status:       s.Labels["shoot.gardener.cloud/status"],
 			IsHibernated: s.Status.IsHibernated,
 			CreatedBy:    s.Annotations["gardener.cloud/created-by"],
 		}
-		shoots = append(shoots, shoot)
+		shoots = append(shoots, item)
 		return nil
 	})
 
@@ -78,7 +79,8 @@ func collectShoots(ctx context.Context) error {
 	if len(shoots) == 0 {
 		return nil
 	}
-	_, err = db.DB.NewInsert().
+
+	out, err := db.DB.NewInsert().
 		Model(&shoots).
 		On("CONFLICT (technical_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -93,10 +95,21 @@ func collectShoots(ctx context.Context) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert gardener shoots into db", "err", err)
+		slog.Error(
+			"could not insert gardener shoots into db",
+			"reason", err,
+		)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated gardener shoots", "count", count)
 
 	return nil
 }
