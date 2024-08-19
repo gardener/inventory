@@ -19,6 +19,7 @@ import (
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 // NewWorkerCommand returns a new command for interfacing with the workers.
@@ -170,7 +171,7 @@ func NewWorkerCommand() *cli.Command {
 
 					// Register our task handlers
 					mux := asynq.NewServeMux()
-					mux.Use(newLoggingMiddleware())
+					mux.Use(asynqutils.NewLoggingMiddleware())
 
 					walker := func(name string, handler asynq.Handler) error {
 						slog.Info("registering task", "name", name)
