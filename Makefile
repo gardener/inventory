@@ -105,7 +105,8 @@ goimports-reviser: $(GOIMPORTS_REVISER)
 
 .PHONY: lint
 lint: $(GOLANGCI_LINT)
-	@for dir in $(SRC_DIRS); do \
+	@set -e && \
+	for dir in $(SRC_DIRS); do \
 		$(GOLANGCI_LINT) run --config=$(REPO_ROOT)/.golangci.yaml $$dir/ ; \
 	done
 
