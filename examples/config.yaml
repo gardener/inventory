@@ -113,7 +113,7 @@ scheduler:
       desc: "Collect AWS AMIs"
       # this ID was taken from the AWS Web UI as the owner of garden-linux images
       payload: >-
-        image_owners:
+        owners:
           - 544319711298
     - name: "aws:task:collect-loadbalancers"
       spec: "@every 24h"
