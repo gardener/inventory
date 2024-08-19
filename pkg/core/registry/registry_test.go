@@ -141,6 +141,11 @@ func TestRegistryRange(t *testing.T) {
 			walker:  func(k, v string) error { return nil },
 		},
 		{
+			desc:    "returns nil on ErrContinue",
+			wantErr: nil,
+			walker:  func(k, v string) error { return registry.ErrContinue },
+		},
+		{
 			desc:    "propagates error back to caller",
 			wantErr: dummyErr,
 			walker:  func(k, v string) error { return dummyErr },
