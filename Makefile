@@ -98,9 +98,10 @@ goimports: $(GOIMPORTS)
 
 .PHONY: goimports-reviser
 goimports-reviser: $(GOIMPORTS_REVISER)
-	@for dir in $(SRC_DIRS); do \
+	@set -e && \
+	for dir in $(SRC_DIRS); do \
 		GOIMPORTS_REVISER_OPTIONS="-imports-order std,project,general,company" \
-		$(GOIMPORTS_REVISER) -recursive $$dir/; \
+		$(GOIMPORTS_REVISER) -set-exit-status -recursive $$dir/; \
 	done
 
 .PHONY: lint
@@ -110,7 +111,7 @@ lint: $(GOLANGCI_LINT)
 		$(GOLANGCI_LINT) run --config=$(REPO_ROOT)/.golangci.yaml $$dir/ ; \
 	done
 
-$(BINARY): $(LOCAL_BIN) goimports lint
+$(BINARY): $(LOCAL_BIN)
 	go build \
 		-o $(BINARY) \
 		-ldflags="-X 'github.com/gardener/inventory/pkg/version.Version=${EFFECTIVE_VERSION}'" \
