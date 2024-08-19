@@ -16,7 +16,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -508,39 +507,6 @@ func newServer(conf *config.Config) *asynq.Server {
 	server := asynq.NewServer(redisClientOpt, config)
 
 	return server
-}
-
-// newLoggingMiddleware returns a new [asynq.MiddlewareFunc] which logs each
-// received task.
-func newLoggingMiddleware() asynq.MiddlewareFunc {
-	middleware := func(handler asynq.Handler) asynq.Handler {
-		mw := func(ctx context.Context, task *asynq.Task) error {
-			taskID, _ := asynq.GetTaskID(ctx)
-			queueName, _ := asynq.GetQueueName(ctx)
-			taskName := task.Type()
-			slog.Info(
-				"received task",
-				"id", taskID,
-				"queue", queueName,
-				"name", taskName,
-			)
-			start := time.Now()
-			err := handler.ProcessTask(ctx, task)
-			elapsed := time.Since(start)
-			slog.Info(
-				"task finished",
-				"id", taskID,
-				"queue", queueName,
-				"name", taskName,
-				"duration", elapsed,
-			)
-			return err
-		}
-
-		return asynq.HandlerFunc(mw)
-	}
-
-	return asynq.MiddlewareFunc(middleware)
 }
 
 // newDB returns a new [bun.DB] database from the given config.

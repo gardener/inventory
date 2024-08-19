@@ -6,8 +6,11 @@
 package asynq
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"gopkg.in/yaml.v3"
@@ -29,4 +32,37 @@ func Unmarshal(data []byte, v any) error {
 	}
 
 	return yaml.Unmarshal(data, v)
+}
+
+// NewLoggingMiddleware returns a new [asynq.MiddlewareFunc] which logs each
+// received task.
+func NewLoggingMiddleware() asynq.MiddlewareFunc {
+	middleware := func(handler asynq.Handler) asynq.Handler {
+		mw := func(ctx context.Context, task *asynq.Task) error {
+			taskID, _ := asynq.GetTaskID(ctx)
+			queueName, _ := asynq.GetQueueName(ctx)
+			taskName := task.Type()
+			slog.Info(
+				"received task",
+				"id", taskID,
+				"queue", queueName,
+				"name", taskName,
+			)
+			start := time.Now()
+			err := handler.ProcessTask(ctx, task)
+			elapsed := time.Since(start)
+			slog.Info(
+				"task finished",
+				"id", taskID,
+				"queue", queueName,
+				"name", taskName,
+				"duration", elapsed,
+			)
+			return err
+		}
+
+		return asynq.HandlerFunc(mw)
+	}
+
+	return asynq.MiddlewareFunc(middleware)
 }
