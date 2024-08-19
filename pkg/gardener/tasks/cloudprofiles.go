@@ -6,6 +6,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -20,46 +21,58 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 const (
-	// TaskCollectCloudProfiles is the type of the task that collects Gardener CloudProfiles.
+	// TaskCollectCloudProfiles is the name of the task for collecting
+	// Gardener Cloud Profiles.
 	TaskCollectCloudProfiles = "g:task:collect-cloud-profiles"
+
+	// providerTypeAWS is the name of the provider for AWS Cloud Profile
+	cpProviderTypeAWS = "aws"
 )
 
-const (
-	providerTypeAWS = "aws"
-)
+// CollectCPMachineImagesPayload is the payload for collecting the Machine
+// Images for a given Cloud Profile.
+type CollectCPMachineImagesPayload struct {
+	// ProviderConfig is the raw config, which is specific for each Cloud
+	// Profile.
+	ProviderConfig []byte `json:"provider_config" yaml:"provider_config"`
 
-// CollectMachineImagesPayload is the payload needed for g:task:collect-<provider>-machine-images.
-// It is generic for all providers, since the ProviderConfig is originally presented as a []byte.
-type CollectMachineImagesPayload struct {
-	ProviderConfig   []byte `json:"providerConfig"`
-	CloudProfileName string `json:"cloudProfileName"`
+	// CloudProfileName is the name of the Cloud Profile.
+	CloudProfileName string `json:"cloud_profile_name" yaml:"cloud_profile_name"`
 }
 
-// NewGardenerCollectCloudProfilesTask creates a new task for collecting Gardener CloudProfiles.
-func NewGardenerCollectCloudProfilesTask() *asynq.Task {
+// NewCollectCloudProfilesTask creates a new [asynq.Task] for collecting
+// Gardener Cloud Profiles., without specifying a payload.
+func NewCollectCloudProfilesTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectCloudProfiles, nil)
 }
 
-// HandleGardenerCollectCloudProfilesTask is a handler function that collects Gardener CloudProfiles.
-func HandleGardenerCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
-	return collectCloudProfiles(ctx)
-}
-
-func collectCloudProfiles(ctx context.Context) error {
-	slog.Info("Collecting Gardener cloud profiles")
-	gardenClient, err := gardenerclient.VirtualGardenClient()
-
-	if err != nil {
-		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
+// HandleCollectCloudProfilesTask is the handler for collecting Gardener Cloud
+// Profiles. This handler will also enqueue tasks for collecting and persisting
+// the machine images for each supported Cloud Profile type.
+func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
+	// After collecting the Cloud Profiles we will enqueue a separate task
+	// for persisting the Machine Images for each supported Cloud Profile
+	// type. The following is the mapping between the Cloud Profile type,
+	// and the task name responsible for decoding and persisting the Machine
+	// Images.
+	providerTypeToTask := map[string]string{
+		cpProviderTypeAWS: TaskCollectAWSMachineImages,
 	}
 
+	client, err := gardenerclient.VirtualGardenClient()
+	if err != nil {
+		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
+	}
+
+	slog.Info("collecting Gardener cloud profiles")
 	cloudProfiles := make([]models.CloudProfile, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return gardenClient.CoreV1beta1().CloudProfiles().List(ctx, metav1.ListOptions{})
+			return client.CoreV1beta1().CloudProfiles().List(ctx, metav1.ListOptions{})
 		}),
 	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 		cp, ok := obj.(*gardenerv1beta1.CloudProfile)
@@ -68,49 +81,82 @@ func collectCloudProfiles(ctx context.Context) error {
 		}
 
 		providerType := cp.Spec.Type
-
 		providerConfig := cp.Spec.ProviderConfig
-
-		cloudProfile := models.CloudProfile{
-			Name: cp.GetName(),
+		item := models.CloudProfile{
+			Name: cp.Name,
 			Type: providerType,
 		}
-		cloudProfiles = append(cloudProfiles, cloudProfile)
+		cloudProfiles = append(cloudProfiles, item)
 
+		// Enqueue a task for persisting the Cloud Profile Machine
+		// Images, only if we have any provider data.
 		if providerConfig == nil {
-			slog.Error("providerConfig not provided for CloudProfile", "CloudProfile name", cp.Name, "type", providerType)
+			slog.Error(
+				"no provider config data found",
+				"cloud_profile", cp.Name,
+				"provider_type", providerType,
+			)
 			return nil
 		}
 
-		payload := CollectMachineImagesPayload{
-			CloudProfileName: cloudProfile.Name,
+		miTaskName, ok := providerTypeToTask[providerType]
+		if !ok {
+			slog.Warn(
+				"will not collect machine images for unsupported cloud profile",
+				"cloud_profile", cp.Name,
+				"provider_type", providerType,
+			)
+			return nil
+		}
+
+		payload := CollectCPMachineImagesPayload{
+			CloudProfileName: cp.Name,
 			ProviderConfig:   providerConfig.Raw,
 		}
-
-		switch providerType {
-		case providerTypeAWS:
-			enqueueAWSMachineImagesTask(payload)
-			//TODO:
-		// case "alicloud":
-		// case "gcp":
-		// case "azure":
-		// case "openstack":
-		// case "ironcore":
-		default:
-			slog.Warn("task for collecting machine images does not exist for cloud profile type", "profile", cp.Name, "type", providerType)
+		data, err := json.Marshal(payload)
+		if err != nil {
+			slog.Error(
+				"failed to marshal payload for machine images",
+				"cloud_profile", cp.Name,
+				"provider_type", providerType,
+				"reason", err,
+			)
 			return nil
 		}
+
+		task := asynq.NewTask(miTaskName, data)
+		info, err := asynqclient.Client.Enqueue(task)
+		if err != nil {
+			slog.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"cloud_profile", cp.Name,
+				"provider_type", providerType,
+				"reason", err,
+			)
+			return nil
+		}
+
+		slog.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"cloud_profile", cp.Name,
+			"provider_type", providerType,
+		)
 
 		return nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not list CloudProfile resources: %w", err)
+		return fmt.Errorf("could not list Cloud Profile resources: %w", err)
 	}
 
 	if len(cloudProfiles) == 0 {
 		return nil
 	}
+
 	out, err := db.DB.NewInsert().
 		Model(&cloudProfiles).
 		On("CONFLICT (name) DO UPDATE").
@@ -118,8 +164,12 @@ func collectCloudProfiles(ctx context.Context) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert gardener cloud profiles into db", "err", err)
+		slog.Error(
+			"could not insert gardener cloud profiles into db",
+			"reason", err,
+		)
 		return err
 	}
 
@@ -131,32 +181,4 @@ func collectCloudProfiles(ctx context.Context) error {
 	slog.Info("populated gardener cloud profiles", "count", count)
 
 	return nil
-}
-
-func enqueueAWSMachineImagesTask(payload CollectMachineImagesPayload) {
-	t, err := NewCollectAWSMachineImagesTask(payload)
-	if err != nil {
-		slog.Error("could not create task for collecting AWS machine images", "err", err)
-		return
-	}
-
-	slog.Info("enqueueing task for collecting gardener machine images for AWS", "cloud profile", payload.CloudProfileName)
-	info, err := asynqclient.Client.Enqueue(t)
-	if err != nil {
-		slog.Error(
-			"could not enqueue task",
-			"type", t.Type(),
-			"cloud profile", payload.CloudProfileName,
-			"reason", err,
-		)
-		return
-	}
-
-	slog.Info(
-		"enqueued task",
-		"type", t.Type(),
-		"id", info.ID,
-		"queue", info.Queue,
-		"cloud profile", payload.CloudProfileName,
-	)
 }

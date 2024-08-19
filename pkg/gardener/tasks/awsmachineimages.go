@@ -6,93 +6,79 @@ package tasks
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 
-	"github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/gardener/models"
-	"github.com/gardener/inventory/pkg/utils/ptr"
-
+	aws "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws"
+	awsinstall "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/install"
 	"github.com/gardener/gardener/extensions/pkg/util"
-
 	"github.com/hibiken/asynq"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
-	aws "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws"
-	awsinstall "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/install"
+	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/gardener/models"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
-	// TaskCollectAWSMachineImages is the type of the task that collects Gardener CloudProfile machine images for AWS.
+	// TaskCollectAWSMachineImages is the name of the task for collecting
+	// Machine Images for AWS Cloud Profile type.
 	TaskCollectAWSMachineImages = "g:task:collect-aws-machine-images"
 )
 
-// ErrMissingProviderConfig is returned when an expected provider config is missing from the payload.
-var ErrMissingProviderConfig = errors.New("missing provider config in payload")
-
-// ErrMissingCloudProfileName is returned when an expected cloud profile name is missing from the payload.
-var ErrMissingCloudProfileName = errors.New("missing cloud profile name in payload")
-
-// NewCollectAWSMachineImagesTask creates a new task for collecting Gardener CloudProfile machine images for AWS.
-func NewCollectAWSMachineImagesTask(p CollectMachineImagesPayload) (*asynq.Task, error) {
-	if len(p.ProviderConfig) == 0 {
-		return nil, ErrMissingProviderConfig
-	}
-
-	if len(p.CloudProfileName) == 0 {
-		return nil, ErrMissingCloudProfileName
-	}
-
-	payload, err := json.Marshal(p)
-	if err != nil {
-		return nil, err
-	}
-
-	return asynq.NewTask(TaskCollectAWSMachineImages, payload), nil
-}
-
-// HandleCollectAWSMachineImagesTask is a handler function that collects Gardener CloudProfile AWS machine images.
+// HandleCollectAWSMachineImagesTask is the handler for collecting Machine
+// Images for AWS Cloud Profile type.
 func HandleCollectAWSMachineImagesTask(ctx context.Context, t *asynq.Task) error {
-	var p CollectMachineImagesPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	data := t.Payload()
+	if data == nil {
+		return asynqutils.SkipRetry(ErrNoPayload)
 	}
 
-	return collectAWSMachineImages(ctx, p)
+	var payload CollectCPMachineImagesPayload
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if payload.CloudProfileName == "" {
+		return asynqutils.SkipRetry(ErrNoCloudProfileName)
+	}
+
+	if payload.ProviderConfig == nil {
+		return asynqutils.SkipRetry(ErrNoProviderConfig)
+	}
+
+	return collectAWSMachineImages(ctx, payload)
 }
 
-func collectAWSMachineImages(ctx context.Context, p CollectMachineImagesPayload) error {
-	slog.Info("Collecting Gardener AWS machine images")
-
-	images, err := getAWSMachineImages(p.ProviderConfig)
+func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImagesPayload) error {
+	slog.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
+	images, err := getAWSMachineImages(payload.ProviderConfig)
 	if err != nil {
 		return err
 	}
 
-	modelImages := make([]models.CloudProfileAWSImage, 0)
-	// denormalizing all AWSMachineImage entries
+	items := make([]models.CloudProfileAWSImage, 0)
 	for _, image := range images {
 		for _, version := range image.Versions {
 			for _, region := range version.Regions {
-				modelImage := models.CloudProfileAWSImage{
+				item := models.CloudProfileAWSImage{
 					Name:             image.Name,
 					Version:          version.Version,
 					RegionName:       region.Name,
 					AMI:              region.AMI,
 					Architecture:     ptr.Value(region.Architecture, ""),
-					CloudProfileName: p.CloudProfileName,
+					CloudProfileName: payload.CloudProfileName,
 				}
 
-				modelImages = append(modelImages, modelImage)
+				items = append(items, item)
 			}
 		}
 	}
 
 	out, err := db.DB.NewInsert().
-		Model(&modelImages).
+		Model(&items).
 		On("CONFLICT (name, ami, version, region_name, cloud_profile_name) DO UPDATE").
 		Set("architecture = EXCLUDED.architecture").
 		Set("updated_at = EXCLUDED.updated_at").
@@ -100,7 +86,11 @@ func collectAWSMachineImages(ctx context.Context, p CollectMachineImagesPayload)
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error("could not insert gardener aws cloud profile images into db", "reason", err)
+		slog.Error(
+			"could not insert gardener aws cloud profile images into db",
+			"cloud_profile", payload.CloudProfileName,
+			"reason", err,
+		)
 		return err
 	}
 
@@ -109,7 +99,11 @@ func collectAWSMachineImages(ctx context.Context, p CollectMachineImagesPayload)
 		return err
 	}
 
-	slog.Info("populated gardener aws cloud profile images", "count", count, "cloudProfile", p.CloudProfileName)
+	slog.Info(
+		"populated gardener aws cloud profile images",
+		"cloud_profile", payload.CloudProfileName,
+		"count", count,
+	)
 
 	return nil
 }
