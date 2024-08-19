@@ -36,7 +36,7 @@ func NewCollectSeedsTask() *asynq.Task {
 
 // HandleCollectSeedsTask is the handler for collecting Gardener Seeds.
 func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
-	gardenClient, err := gardenerclient.VirtualGardenClient()
+	client, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
@@ -45,7 +45,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 	seeds := make([]models.Seed, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return gardenClient.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
+			return client.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
 		}),
 	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 		s, ok := obj.(*v1beta1.Seed)
