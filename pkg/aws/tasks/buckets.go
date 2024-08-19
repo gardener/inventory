@@ -66,7 +66,7 @@ func HandleCollectBucketsTask(ctx context.Context, t *asynq.Task) error {
 // enqueueCollectBuckets enqueues tasks for collecting AWS S3 Buckets for all
 // configured AWS S3 clients.
 func enqueueCollectBuckets() error {
-	awsclients.S3Clientset.Range(func(accountID string, _ *awsclients.Client[*s3.Client]) error {
+	err := awsclients.S3Clientset.Range(func(accountID string, _ *awsclients.Client[*s3.Client]) error {
 		p := CollectBucketsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)
 		if err != nil {
@@ -100,7 +100,7 @@ func enqueueCollectBuckets() error {
 		return nil
 	})
 
-	return nil
+	return err
 }
 
 // collectBuckets collects the S3 buckets for the specified account in the
