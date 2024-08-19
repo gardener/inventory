@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/uptrace/bun"
 
 	"github.com/gardener/inventory/pkg/aws/constants"
@@ -612,9 +612,9 @@ func getInterfacesForLoadBalancer(ctx context.Context, db *bun.DB, lb models.Loa
 	switch lb.Type {
 	case constants.LoadBalancerClassicType:
 		description = fmt.Sprintf("ELB %s", lb.Name)
-	case string(types.LoadBalancerTypeEnumApplication):
+	case string(elbv2types.LoadBalancerTypeEnumApplication):
 		description = fmt.Sprintf("ELB app/%s/%s", lb.Name, lb.LoadBalancerID)
-	case string(types.LoadBalancerTypeEnumNetwork):
+	case string(elbv2types.LoadBalancerTypeEnumNetwork):
 		description = fmt.Sprintf("ELB net/%s/%s", lb.Name, lb.LoadBalancerID)
 	}
 
