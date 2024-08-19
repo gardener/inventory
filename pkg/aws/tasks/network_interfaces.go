@@ -16,75 +16,101 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
-	awsclient "github.com/gardener/inventory/pkg/clients/aws"
+	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	TaskCollectNetworkInterfaces          = "aws:task:collect-net-interfaces"
-	TaskCollectNetworkInterfacesForRegion = "aws:task:collect-net-interfaces-region"
+	// TaskCollectNetworkInterfaces is the name of the task for collecting
+	// AWS ENIs.
+	TaskCollectNetworkInterfaces = "aws:task:collect-net-interfaces"
 )
 
 // CollectNetworkInterfacesPayload represents the payload for collecting AWS
 // Elastic Network Interfaces (ENI).
 type CollectNetworkInterfacesPayload struct {
 	// Region specifies the region from which to collect.
-	Region string
+	Region string `json:"region" yaml:"region"`
+
+	// AccountID specifies the AWS Account ID, which is associated with a
+	// registered client.
+	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NetCollectNetworkInterfacesTask creates a new [asynq.Task], which triggers
-// collection of AWS Elastic Network Interfaces (ENI) for all known regions.
+// NetCollectNetworkInterfacesTask creates a new [asynq.Task] for collecting AWS
+// ENIs, without specifying a payload.
 func NewCollectNetworkInterfacesTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectNetworkInterfaces, nil)
-}
-
-// NewCollectNetworkInterfacesForRegionTask creates a new [asynq.Task] for
-// collecting AWS Elastic Network Interfaces (ENI) from the specified region.
-func NewCollectNetworkInterfacesForRegionTask(region string) (*asynq.Task, error) {
-	if region == "" {
-		return nil, ErrMissingRegion
-	}
-
-	payload := CollectNetworkInterfacesPayload{
-		Region: region,
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	task := asynq.NewTask(TaskCollectNetworkInterfacesForRegion, data)
-
-	return task, nil
 }
 
 // HandleCollectNetworkInterfacesTask handles the task for collecting AWS
 // Elastic Network Interfaces (ENI).
 func HandleCollectNetworkInterfacesTask(ctx context.Context, t *asynq.Task) error {
-	// Trigger collection for each known region
-	regions := make([]models.Region, 0)
-	if err := db.DB.NewSelect().Model(&regions).Scan(ctx); err != nil {
-		slog.Error("could not select regions from db", "reason", err)
-		return err
+	// If we were called without a payload, then we enqueue tasks for
+	// collecting ENIs from all known regions and their respective accounts.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectENIs(ctx)
 	}
 
+	var payload CollectNetworkInterfacesPayload
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if payload.AccountID == "" {
+		return asynqutils.SkipRetry(ErrNoAccountID)
+	}
+
+	if payload.Region == "" {
+		return asynqutils.SkipRetry(ErrNoRegion)
+	}
+
+	return collectENIs(ctx, payload)
+}
+
+// enqueueCollectENIs enqueues tasks for collecting AWS ENIs for the known
+// regions and accounts.
+func enqueueCollectENIs(ctx context.Context) error {
+	regions, err := awsutils.GetRegionsFromDB(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get regions: %w", err)
+	}
+
+	// Enqueue ENI collection for each region
 	for _, r := range regions {
-		task, err := NewCollectNetworkInterfacesForRegionTask(r.Name)
-		if err != nil {
-			slog.Error("failed to create task", "reason", err)
+		if !awsclients.EC2Clientset.Exists(r.AccountID) {
 			continue
 		}
 
+		payload := CollectNetworkInterfacesPayload{
+			Region:    r.Name,
+			AccountID: r.AccountID,
+		}
+		data, err := json.Marshal(payload)
+		if err != nil {
+			slog.Error(
+				"failed to marshal payload for AWS ENIs",
+				"region", r.Name,
+				"account_id", r.AccountID,
+				"reason", err,
+			)
+			continue
+		}
+
+		task := asynq.NewTask(TaskCollectNetworkInterfaces, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
 			slog.Error(
-				"could not enqueue task",
-				"type", info.Type,
+				"failed to enqueue task",
+				"type", task.Type(),
 				"region", r.Name,
+				"account_id", r.AccountID,
 				"reason", err,
 			)
 			continue
@@ -92,27 +118,33 @@ func HandleCollectNetworkInterfacesTask(ctx context.Context, t *asynq.Task) erro
 
 		slog.Info(
 			"enqueued task",
-			"type", info.Type,
+			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
 			"region", r.Name,
+			"account_id", r.AccountID,
 		)
 	}
 
 	return nil
 }
 
-// HandleCollectNetworkInterfacesForRegionTask handles the task for collecting
-// AWS Elastic Network Interfaces (ENI) from a specified region.
-func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.Task) error {
-	var payload CollectNetworkInterfacesPayload
-	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+// collectENIs collects the AWS ENIs from the specified region using the client
+// associated with the given AccountID from the payload.
+func collectENIs(ctx context.Context, payload CollectNetworkInterfacesPayload) error {
+	client, ok := awsclients.EC2Clientset.Get(payload.AccountID)
+	if !ok {
+		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info("collecting AWS Elastic Network Interfaces", "region", payload.Region)
+	slog.Info(
+		"collecting AWS ENIs",
+		"region", payload.Region,
+		"account_id", payload.AccountID,
+	)
+
 	paginator := ec2.NewDescribeNetworkInterfacesPaginator(
-		awsclient.EC2,
+		client.Client,
 		&ec2.DescribeNetworkInterfacesInput{},
 		func(opts *ec2.DescribeNetworkInterfacesPaginatorOptions) {
 			opts.Limit = int32(constants.PageSize)
@@ -131,10 +163,14 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 		)
 
 		if err != nil {
-			slog.Error("could not describe network interfaces", "region", payload.Region, "reason", err)
+			slog.Error(
+				"could not describe network interfaces",
+				"region", payload.Region,
+				"account_id", payload.AccountID,
+				"reason", err,
+			)
 			return err
 		}
-
 		items = append(items, page.NetworkInterfaces...)
 	}
 
@@ -143,38 +179,39 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 	for _, item := range items {
 		netInterface := models.NetworkInterface{
 			RegionName:       payload.Region,
-			AZ:               strings.StringFromPointer(item.AvailabilityZone),
-			Description:      strings.StringFromPointer(item.Description),
+			AZ:               stringutils.StringFromPointer(item.AvailabilityZone),
+			Description:      stringutils.StringFromPointer(item.Description),
 			InterfaceType:    string(item.InterfaceType),
-			MacAddress:       strings.StringFromPointer(item.MacAddress),
-			InterfaceID:      strings.StringFromPointer(item.NetworkInterfaceId),
-			OwnerID:          strings.StringFromPointer(item.OwnerId),
-			PrivateDNSName:   strings.StringFromPointer(item.PrivateDnsName),
-			PrivateIPAddress: strings.StringFromPointer(item.PrivateIpAddress),
-			RequesterID:      strings.StringFromPointer(item.RequesterId),
+			AccountID:        payload.AccountID,
+			MacAddress:       stringutils.StringFromPointer(item.MacAddress),
+			InterfaceID:      stringutils.StringFromPointer(item.NetworkInterfaceId),
+			OwnerID:          stringutils.StringFromPointer(item.OwnerId),
+			PrivateDNSName:   stringutils.StringFromPointer(item.PrivateDnsName),
+			PrivateIPAddress: stringutils.StringFromPointer(item.PrivateIpAddress),
+			RequesterID:      stringutils.StringFromPointer(item.RequesterId),
 			RequesterManaged: ptr.Value(item.RequesterManaged, false),
 			SourceDestCheck:  ptr.Value(item.SourceDestCheck, false),
 			Status:           string(item.Status),
-			SubnetID:         strings.StringFromPointer(item.SubnetId),
-			VpcID:            strings.StringFromPointer(item.VpcId),
+			SubnetID:         stringutils.StringFromPointer(item.SubnetId),
+			VpcID:            stringutils.StringFromPointer(item.VpcId),
 		}
 
 		// Association
 		if item.Association != nil {
-			netInterface.AllocationID = strings.StringFromPointer(item.Association.AllocationId)
-			netInterface.AssociationID = strings.StringFromPointer(item.Association.AssociationId)
-			netInterface.IPOwnerID = strings.StringFromPointer(item.Association.IpOwnerId)
-			netInterface.PublicDNSName = strings.StringFromPointer(item.Association.PublicDnsName)
-			netInterface.PublicIPAddress = strings.StringFromPointer(item.Association.PublicIp)
+			netInterface.AllocationID = stringutils.StringFromPointer(item.Association.AllocationId)
+			netInterface.AssociationID = stringutils.StringFromPointer(item.Association.AssociationId)
+			netInterface.IPOwnerID = stringutils.StringFromPointer(item.Association.IpOwnerId)
+			netInterface.PublicDNSName = stringutils.StringFromPointer(item.Association.PublicDnsName)
+			netInterface.PublicIPAddress = stringutils.StringFromPointer(item.Association.PublicIp)
 		}
 
 		// Attachment
 		if item.Attachment != nil {
-			netInterface.AttachmentID = strings.StringFromPointer(item.Attachment.AttachmentId)
+			netInterface.AttachmentID = stringutils.StringFromPointer(item.Attachment.AttachmentId)
 			netInterface.DeleteOnTermination = ptr.Value(item.Attachment.DeleteOnTermination, false)
 			netInterface.DeviceIndex = int(ptr.Value(item.Attachment.DeviceIndex, 0))
-			netInterface.InstanceID = strings.StringFromPointer(item.Attachment.InstanceId)
-			netInterface.InstanceOwnerID = strings.StringFromPointer(item.Attachment.InstanceOwnerId)
+			netInterface.InstanceID = stringutils.StringFromPointer(item.Attachment.InstanceId)
+			netInterface.InstanceOwnerID = stringutils.StringFromPointer(item.Attachment.InstanceOwnerId)
 			netInterface.AttachmentStatus = string(item.Attachment.Status)
 		}
 
@@ -187,7 +224,7 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 
 	out, err := db.DB.NewInsert().
 		Model(&networkInterfaces).
-		On("CONFLICT (interface_id) DO UPDATE").
+		On("CONFLICT (interface_id, account_id) DO UPDATE").
 		Set("az = EXCLUDED.az").
 		Set("description = EXCLUDED.description").
 		Set("interface_type = EXCLUDED.interface_type").
@@ -220,6 +257,7 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 		slog.Error(
 			"could not insert network interfaces into db",
 			"region", payload.Region,
+			"account_id", payload.AccountID,
 			"reason", err,
 		)
 		return err
@@ -233,6 +271,7 @@ func HandleCollectNetworkInterfacesForRegionTask(ctx context.Context, t *asynq.T
 	slog.Info(
 		"populated aws network interfaces",
 		"region", payload.Region,
+		"account_id", payload.AccountID,
 		"count", count,
 	)
 
