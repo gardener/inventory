@@ -34,19 +34,15 @@ func NewGardenerCollectProjectsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectProjects, nil)
 }
 
-// HandleGardenerCollectProjectsTask is a handler function that collects Gardener projects.
+// HandleGardenerCollectProjectsTask is the handler that collects Gardener
+// projects.
 func HandleGardenerCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
-	slog.Info("Collecting Gardener projects")
-	return collectProjects(ctx)
-}
-
-// collectProjects collects the Gardener Projects.
-func collectProjects(ctx context.Context) error {
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
+	slog.Info("collecting Gardener projects")
 	projects := make([]models.Project, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {

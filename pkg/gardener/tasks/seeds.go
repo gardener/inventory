@@ -6,7 +6,6 @@ package tasks
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -19,33 +18,30 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	// TaskCollectSeeds is the type of the task that collects Gardener seeds.
+	// TaskCollectSeeds is the name of the task for collecting Gardener
+	// Seeds.
 	TaskCollectSeeds = "g:task:collect-seeds"
 )
 
-var ErrMissingSeed = errors.New("missing seed name")
-
-// NewGardenerCollectSeedsTask creates a new task for collecting Gardener seeds.
+// NewGardenerCollectSeedsTask creates a new [asynq.Task] for collecting
+// Gardener Seeds, without specifying a payload.
 func NewGardenerCollectSeedsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectSeeds, nil)
 }
 
-// HandleGardenerCollectSeedsTask is a handler function that collects Gardener seeds.
+// HandleGardenerCollectSeedsTask is the handler for collecting Gardener Seeds.
 func HandleGardenerCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
-	slog.Info("Collecting Gardener seeds")
-	return collectSeeds(ctx)
-}
-
-func collectSeeds(ctx context.Context) error {
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
-		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
+		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
+	slog.Info("collecting Gardener seeds")
 	seeds := make([]models.Seed, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -56,11 +52,11 @@ func collectSeeds(ctx context.Context) error {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
-		seed := models.Seed{
+		item := models.Seed{
 			Name:              s.Name,
-			KubernetesVersion: strings.StringFromPointer(s.Status.KubernetesVersion),
+			KubernetesVersion: stringutils.StringFromPointer(s.Status.KubernetesVersion),
 		}
-		seeds = append(seeds, seed)
+		seeds = append(seeds, item)
 		return nil
 	})
 
@@ -71,17 +67,29 @@ func collectSeeds(ctx context.Context) error {
 	if len(seeds) == 0 {
 		return nil
 	}
-	_, err = db.DB.NewInsert().
+
+	out, err := db.DB.NewInsert().
 		Model(&seeds).
 		On("CONFLICT (name) DO UPDATE").
 		Set("kubernetes_version = EXCLUDED.kubernetes_version").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert gardener seeds into db", "err", err)
+		slog.Error(
+			"could not insert gardener seeds into db",
+			"reason", err,
+		)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated gardener seeds", "count", count)
 
 	return nil
 }
