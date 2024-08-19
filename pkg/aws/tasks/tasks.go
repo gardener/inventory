@@ -30,10 +30,11 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
 	taskFns := []utils.TaskConstructor{
 		NewCollectRegionsTask,
-		NewCollectAzsTask,
-		NewCollectVpcsTask,
+		NewCollectAvailabilityZonesTask,
+		NewCollectVPCsTask,
 		NewCollectSubnetsTask,
 		NewCollectInstancesTask,
+		NewCollectImagesTask,
 		NewCollectLoadBalancersTask,
 		NewCollectBucketsTask,
 		NewCollectNetworkInterfacesTask,
@@ -67,22 +68,15 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 // init registers our task handlers and periodic tasks with the registries.
 func init() {
 	// Task handlers
-	registry.TaskRegistry.MustRegister(TaskCollectRegions, asynq.HandlerFunc(HandleAwsCollectRegionsTask))
-	registry.TaskRegistry.MustRegister(TaskCollectAvailabilityZones, asynq.HandlerFunc(HandleCollectAzsTask))
-	registry.TaskRegistry.MustRegister(TaskCollectAvailabilityZonesForRegion, asynq.HandlerFunc(HandleCollectAzsForRegionTask))
-	registry.TaskRegistry.MustRegister(TaskCollectVPCs, asynq.HandlerFunc(HandleCollectVpcsTask))
-	registry.TaskRegistry.MustRegister(TaskCollectVPCsForRegion, asynq.HandlerFunc(HandleCollectVpcsForRegionTask))
+	registry.TaskRegistry.MustRegister(TaskCollectRegions, asynq.HandlerFunc(HandleCollectRegionsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectAvailabilityZones, asynq.HandlerFunc(HandleCollectAvailabilityZonesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectVPCs, asynq.HandlerFunc(HandleCollectVPCsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
-	registry.TaskRegistry.MustRegister(TaskCollectSubnetsForRegion, asynq.HandlerFunc(HandleCollectSubnetsForRegionTask))
 	registry.TaskRegistry.MustRegister(TaskCollectInstances, asynq.HandlerFunc(HandleCollectInstancesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectImages, asynq.HandlerFunc(HandleCollectImagesTask))
-	registry.TaskRegistry.MustRegister(TaskCollectInstancesForRegion, asynq.HandlerFunc(HandleCollectInstancesForRegionTask))
-	registry.TaskRegistry.MustRegister(TaskCollectImagesForRegion, asynq.HandlerFunc(HandleCollectImagesForRegionTask))
-	registry.TaskRegistry.MustRegister(TaskCollectLoadBalancersForRegion, asynq.HandlerFunc(HandleCollectLoadBalancersForRegionTask))
 	registry.TaskRegistry.MustRegister(TaskCollectLoadBalancers, asynq.HandlerFunc(HandleCollectLoadBalancersTask))
 	registry.TaskRegistry.MustRegister(TaskCollectBuckets, asynq.HandlerFunc(HandleCollectBucketsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectNetworkInterfaces, asynq.HandlerFunc(HandleCollectNetworkInterfacesTask))
-	registry.TaskRegistry.MustRegister(TaskCollectNetworkInterfacesForRegion, asynq.HandlerFunc(HandleCollectNetworkInterfacesForRegionTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
