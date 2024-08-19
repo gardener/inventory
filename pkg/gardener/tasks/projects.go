@@ -18,15 +18,18 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
-	"github.com/gardener/inventory/pkg/utils/strings"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	// TaskCollectProjects is the type of the task that collects Gardener projects.
+	// TaskCollectProjects is the name of the task for collecting Gardener
+	// Projects.
 	TaskCollectProjects = "g:task:collect-projects"
 )
 
-// NewGardenerCollectProjectsTask creates a new task for collecting Gardener projects.
+// NewGardenerCollectProjectsTask creates a new [asynq.Task] for collecting
+// Gardener projects, without specifying a payload.
 func NewGardenerCollectProjectsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectProjects, nil)
 }
@@ -37,10 +40,11 @@ func HandleGardenerCollectProjectsTask(ctx context.Context, t *asynq.Task) error
 	return collectProjects(ctx)
 }
 
+// collectProjects collects the Gardener Projects.
 func collectProjects(ctx context.Context) error {
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
-		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
+		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
 	projects := make([]models.Project, 0)
@@ -53,14 +57,14 @@ func collectProjects(ctx context.Context) error {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
-		project := models.Project{
+		item := models.Project{
 			Name:      p.Name,
-			Namespace: strings.StringFromPointer(p.Spec.Namespace),
+			Namespace: stringutils.StringFromPointer(p.Spec.Namespace),
 			Status:    string(p.Status.Phase),
-			Purpose:   strings.StringFromPointer(p.Spec.Purpose),
+			Purpose:   stringutils.StringFromPointer(p.Spec.Purpose),
 			Owner:     p.Spec.Owner.Name,
 		}
-		projects = append(projects, project)
+		projects = append(projects, item)
 		return nil
 	})
 
@@ -71,7 +75,8 @@ func collectProjects(ctx context.Context) error {
 	if len(projects) == 0 {
 		return nil
 	}
-	_, err = db.DB.NewInsert().
+
+	out, err := db.DB.NewInsert().
 		Model(&projects).
 		On("CONFLICT (name) DO UPDATE").
 		Set("namespace = EXCLUDED.namespace").
@@ -81,10 +86,21 @@ func collectProjects(ctx context.Context) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert gardener projects into db", "err", err)
+		slog.Error(
+			"could not insert gardener projects into db",
+			"reason", err,
+		)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated gardener projects", "count", count)
 
 	return nil
 }
