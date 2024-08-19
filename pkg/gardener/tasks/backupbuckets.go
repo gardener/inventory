@@ -18,35 +18,34 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
-	// TaskCollectBackupBuckets is the type of the task that collects Gardener BackupBuckets.
+	// TaskCollectBackupBuckets is the name of the task for collecting
+	// Gardener BackupBuckets resources.
 	TaskCollectBackupBuckets = "g:task:collect-backup-buckets"
 )
 
-// NewGardenerCollectBackupBucketsTask creates a new task for collecting Gardener BackupBuckets.
-func NewGardenerCollectBackupBucketsTask() *asynq.Task {
+// NewCollectBackupBucketsTask creates a new [asynq.Task] for collecting
+// Gardener BackupBuckets, without specifying a payload.
+func NewCollectBackupBucketsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectBackupBuckets, nil)
 }
 
-// HandleGardenerCollectBackupBucketsTask is a handler function that collects Gardener BackupBuckets.
-func HandleGardenerCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
-	return collectBackupBuckets(ctx)
-}
-
-func collectBackupBuckets(ctx context.Context) error {
-	slog.Info("Collecting Gardener backup buckets")
-	gardenClient, err := gardenerclient.VirtualGardenClient()
+// HandleCollectBackupBucketsTask is the handler for collecting BackupBuckets.
+func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
+	client, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
-		return fmt.Errorf("could not get garden client: %w", asynq.SkipRetry)
+		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
-	backupBuckets := make([]models.BackupBucket, 0)
+	slog.Info("Collecting Gardener backup buckets")
+	buckets := make([]models.BackupBucket, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return gardenClient.CoreV1beta1().BackupBuckets().List(ctx, metav1.ListOptions{})
+			return client.CoreV1beta1().BackupBuckets().List(ctx, metav1.ListOptions{})
 		}),
 	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 		b, ok := obj.(*v1beta1.BackupBucket)
@@ -61,7 +60,7 @@ func collectBackupBuckets(ctx context.Context) error {
 			stateProgress = int(b.Status.LastOperation.Progress)
 		}
 
-		backupBucket := models.BackupBucket{
+		item := models.BackupBucket{
 			Name:          b.GetName(),
 			SeedName:      stringutils.StringFromPointer(b.Spec.SeedName),
 			ProviderType:  b.Spec.Provider.Type,
@@ -69,7 +68,7 @@ func collectBackupBuckets(ctx context.Context) error {
 			State:         state,
 			StateProgress: stateProgress,
 		}
-		backupBuckets = append(backupBuckets, backupBucket)
+		buckets = append(buckets, item)
 		return nil
 	})
 
@@ -77,11 +76,12 @@ func collectBackupBuckets(ctx context.Context) error {
 		return fmt.Errorf("could not list backup buckets: %w", err)
 	}
 
-	if len(backupBuckets) == 0 {
+	if len(buckets) == 0 {
 		return nil
 	}
-	_, err = db.DB.NewInsert().
-		Model(&backupBuckets).
+
+	out, err := db.DB.NewInsert().
+		Model(&buckets).
 		On("CONFLICT (name) DO UPDATE").
 		Set("provider_type = EXCLUDED.provider_type").
 		Set("region_name = EXCLUDED.region_name").
@@ -91,10 +91,21 @@ func collectBackupBuckets(ctx context.Context) error {
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert gardener backup buckets into db", "err", err)
+		slog.Error(
+			"could not insert gardener backup buckets into db",
+			"reason", err,
+		)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("populated gardener backup buckets", "count", count)
 
 	return nil
 }
