@@ -84,6 +84,10 @@ func enqueueCollectInstances(ctx context.Context) error {
 
 	// Enqueue task for each known region and account id
 	for _, r := range regions {
+		if !awsclients.EC2Clientset.Exists(r.AccountID) {
+			continue
+		}
+
 		payload := CollectInstancesPayload{
 			Region:    r.Name,
 			AccountID: r.AccountID,
