@@ -28,15 +28,15 @@ const (
 	TaskCollectProjects = "g:task:collect-projects"
 )
 
-// NewGardenerCollectProjectsTask creates a new [asynq.Task] for collecting
+// NewCollectProjectsTask creates a new [asynq.Task] for collecting
 // Gardener projects, without specifying a payload.
-func NewGardenerCollectProjectsTask() *asynq.Task {
+func NewCollectProjectsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectProjects, nil)
 }
 
-// HandleGardenerCollectProjectsTask is the handler that collects Gardener
+// HandleCollectProjectsTask is the handler that collects Gardener
 // projects.
-func HandleGardenerCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)

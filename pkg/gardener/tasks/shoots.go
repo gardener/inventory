@@ -31,14 +31,14 @@ const (
 	shootProjectPrefix = "garden-"
 )
 
-// NewGardenerCollectShootsTask creates a new [asynq.Task] for collecting
+// NewCollectShootsTask creates a new [asynq.Task] for collecting
 // Gardener shoots, without specifying a payload.
-func NewGardenerCollectShootsTask() *asynq.Task {
+func NewCollectShootsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectShoots, nil)
 }
 
-// HandleGardenerCollectShootsTask is a handler that collects Gardener Shoots.
-func HandleGardenerCollectShootsTask(ctx context.Context, t *asynq.Task) error {
+// HandleCollectShootsTask is a handler that collects Gardener Shoots.
+func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)

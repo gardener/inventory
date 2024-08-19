@@ -28,14 +28,14 @@ const (
 	TaskCollectSeeds = "g:task:collect-seeds"
 )
 
-// NewGardenerCollectSeedsTask creates a new [asynq.Task] for collecting
+// NewCollectSeedsTask creates a new [asynq.Task] for collecting
 // Gardener Seeds, without specifying a payload.
-func NewGardenerCollectSeedsTask() *asynq.Task {
+func NewCollectSeedsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectSeeds, nil)
 }
 
-// HandleGardenerCollectSeedsTask is the handler for collecting Gardener Seeds.
-func HandleGardenerCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
+// HandleCollectSeedsTask is the handler for collecting Gardener Seeds.
+func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 	gardenClient, err := gardenerclient.VirtualGardenClient()
 	if err != nil {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)

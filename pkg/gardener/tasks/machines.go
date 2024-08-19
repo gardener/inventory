@@ -21,133 +21,167 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	gutils "github.com/gardener/inventory/pkg/gardener/utils"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 const (
-	// TasksCollectMachines is the type of the task that collects Gardener machines.
+	// TasksCollectMachines is the name of the task for collecting Gardener
+	// Machines.
 	TasksCollectMachines = "g:task:collect-machines"
-
-	// TaskCollectMachinesForSeed is the type of the task that collects Gardener machines for a given seed.
-	TaskCollectMachinesForSeed = "g:task:collect-machines-seed"
 )
 
-// CollectMachinesPayload is the payload for collecting Machines for a given Gardener seed.
+// CollectMachinesPayload is the payload, which is used for collecting Gardener
+// Machines.
 type CollectMachinesPayload struct {
-	Seed string `json:"seed"`
+	// Seed is the name of the seed cluster from which to collect Gardener
+	// Machines.
+	Seed string `json:"seed" yaml:"seed"`
 }
 
-// NewGardenerCollectMachinesTask creates a new task for collecting Gardener machines.
-func NewGardenerCollectMachinesTask() *asynq.Task {
+// NewCollectMachinesTask creates a new [asynq.Task] for collecting Gardener
+// Machines, without specifying a payload.
+func NewCollectMachinesTask() *asynq.Task {
 	return asynq.NewTask(TasksCollectMachines, nil)
 }
 
-// HandleGardenerCollectMachinesTask is a handler function that collects Gardener machines.
-func HandleGardenerCollectMachinesTask(ctx context.Context, t *asynq.Task) error {
-	return collectMachines(ctx)
+// HandleCollectMachinesTask is the handler for collecting Gardener Machines.
+func HandleCollectMachinesTask(ctx context.Context, t *asynq.Task) error {
+	// If we were called without a payload, then we enqueue tasks for
+	// collecting Machines from all known Gardener Seed clusters.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectMachines(ctx)
+	}
+
+	var payload CollectMachinesPayload
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if payload.Seed == "" {
+		return asynqutils.SkipRetry(ErrNoSeedCluster)
+	}
+
+	return collectMachines(ctx, payload)
 }
 
-func collectMachines(ctx context.Context) error {
-	slog.Info("Collecting Gardener Machines")
-	seeds := make([]models.Seed, 0)
-	err := db.DB.NewSelect().Model(&seeds).Scan(ctx)
+// enqueueCollectMachines enqueues tasks for collecting Gardener Machines from
+// all known Seed Clusters.
+func enqueueCollectMachines(ctx context.Context) error {
+	seeds, err := gutils.GetSeedsFromDB(ctx)
 	if err != nil {
-		slog.Error("could not select seeds from db", "err", err)
-		return err
+		return fmt.Errorf("failed to get seeds from db: %w", err)
 	}
+
+	// Create a task for each known seed cluster
 	for _, s := range seeds {
-		// Trigger Asynq task for each region
-		machineTask, err := NewGardenerCollectMachinesForSeed(s.Name)
+		payload := CollectMachinesPayload{
+			Seed: s.Name,
+		}
+		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error("failed to create task", "reason", err)
+			slog.Error(
+				"failed to marshal payload for Gardener Machines",
+				"seed", s.Name,
+				"reason", err,
+			)
 			continue
 		}
 
-		info, err := asynqclient.Client.Enqueue(machineTask)
+		task := asynq.NewTask(TasksCollectMachines, data)
+		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error("could not enqueue task", "type", machineTask.Type(), "reason", err)
+			slog.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"seed", s.Name,
+				"reason", err,
+			)
 			continue
 		}
 
-		slog.Info("enqueued task", "type", machineTask.Type(), "id", info.ID, "queue", info.Queue)
+		slog.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"seed", s.Name,
+		)
 	}
 	return nil
 }
 
-// NewGardenerCollectMachinesForSeed creates a new task for collecting Gardener machines for a given seed.
-func NewGardenerCollectMachinesForSeed(seed string) (*asynq.Task, error) {
-	if seed == "" {
-		return nil, ErrMissingSeed
-	}
-
-	payload, err := json.Marshal(CollectMachinesPayload{Seed: seed})
-	if err != nil {
-		return nil, err
-	}
-
-	return asynq.NewTask(TaskCollectMachinesForSeed, payload), nil
-}
-
-// HandleGardenerCollectMachinesForSeedTask is a handler function that collects Gardener machines for a given seed.
-func HandleGardenerCollectMachinesForSeedTask(ctx context.Context, t *asynq.Task) error {
-	var p CollectMachinesPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
-	}
-
-	return collectMachinesForSeed(ctx, p.Seed)
-}
-
-func collectMachinesForSeed(ctx context.Context, seed string) error {
-	slog.Info("Collecting Gardener machines for seed", "seed", seed)
-
-	gardenClient, err := gardenerclient.MCMClient(seed)
+// collectMachines collects the Gardener Machines from the Seed Cluster
+// specified in the payload.
+func collectMachines(ctx context.Context, payload CollectMachinesPayload) error {
+	slog.Info("collecting Gardener machines", "seed", payload.Seed)
+	client, err := gardenerclient.MCMClient(payload.Seed)
 	if err != nil {
 		if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
 			// Don't treat excluded seeds as errors, in order to
 			// avoid accumulating archived tasks
-			slog.Warn("seed is excluded", "seed", seed)
+			slog.Warn("seed is excluded", "seed", payload.Seed)
 			return nil
 		}
-		return fmt.Errorf("could not get garden client for seed %q: %s: %w", seed, err, asynq.SkipRetry)
+		return asynqutils.SkipRetry(fmt.Errorf("cannot get garden client for %q: %s", payload.Seed, err))
 	}
 
 	machines := make([]models.Machine, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return gardenClient.MachineV1alpha1().Machines("").List(ctx, opts)
+			return client.MachineV1alpha1().Machines("").List(ctx, opts)
 		}),
 	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
 		m, ok := obj.(*v1alpha1.Machine)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
-		machine := models.Machine{
+		item := models.Machine{
 			Name:       m.Name,
 			Namespace:  m.Namespace,
 			ProviderId: m.Spec.ProviderID,
 			Status:     string(m.Status.CurrentStatus.Phase),
 		}
-		machines = append(machines, machine)
+		machines = append(machines, item)
 		return nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not list machines for seed %q: %w", seed, err)
+		return fmt.Errorf("could not list machines for seed %q: %w", payload.Seed, err)
 	}
+
 	if len(machines) == 0 {
 		return nil
 	}
-	_, err = db.DB.NewInsert().
+
+	out, err := db.DB.NewInsert().
 		Model(&machines).
 		On("CONFLICT (name, namespace) DO UPDATE").
 		Set("status = EXCLUDED.status").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
+
 	if err != nil {
-		slog.Error("could not insert gardener machines into db", "err", err)
+		slog.Error(
+			"could not insert gardener machines into db",
+			"seed", payload.Seed,
+			"reason", err,
+		)
 		return err
 	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	slog.Info(
+		"populated gardener machines",
+		"seed", payload.Seed,
+		"count", count,
+	)
 
 	return nil
 }
