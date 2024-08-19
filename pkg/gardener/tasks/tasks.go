@@ -29,12 +29,12 @@ const (
 func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
 	taskFns := []utils.TaskConstructor{
-		NewGardenerCollectProjectsTask,
-		NewGardenerCollectSeedsTask,
-		NewGardenerCollectShootsTask,
-		NewGardenerCollectMachinesTask,
-		NewGardenerCollectBackupBucketsTask,
-		NewGardenerCollectCloudProfilesTask,
+		NewCollectProjectsTask,
+		NewCollectSeedsTask,
+		NewCollectShootsTask,
+		NewCollectMachinesTask,
+		NewCollectBackupBucketsTask,
+		NewCollectCloudProfilesTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -55,13 +55,12 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 
 func init() {
 	// Task handlers
-	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleGardenerCollectProjectsTask))
-	registry.TaskRegistry.MustRegister(TaskCollectSeeds, asynq.HandlerFunc(HandleGardenerCollectSeedsTask))
-	registry.TaskRegistry.MustRegister(TaskCollectShoots, asynq.HandlerFunc(HandleGardenerCollectShootsTask))
-	registry.TaskRegistry.MustRegister(TasksCollectMachines, asynq.HandlerFunc(HandleGardenerCollectMachinesTask))
-	registry.TaskRegistry.MustRegister(TaskCollectMachinesForSeed, asynq.HandlerFunc(HandleGardenerCollectMachinesForSeedTask))
-	registry.TaskRegistry.MustRegister(TaskCollectBackupBuckets, asynq.HandlerFunc(HandleGardenerCollectBackupBucketsTask))
-	registry.TaskRegistry.MustRegister(TaskCollectCloudProfiles, asynq.HandlerFunc(HandleGardenerCollectCloudProfilesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectSeeds, asynq.HandlerFunc(HandleCollectSeedsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectShoots, asynq.HandlerFunc(HandleCollectShootsTask))
+	registry.TaskRegistry.MustRegister(TasksCollectMachines, asynq.HandlerFunc(HandleCollectMachinesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectBackupBuckets, asynq.HandlerFunc(HandleCollectBackupBucketsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectCloudProfiles, asynq.HandlerFunc(HandleCollectCloudProfilesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAWSMachineImages, asynq.HandlerFunc(HandleCollectAWSMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
