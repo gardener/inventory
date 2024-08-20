@@ -10,40 +10,11 @@ The following query will give you the number of VPCs per Region.
 ``` sql
 SELECT
         v.region_name AS region_name,
+        v.account_id AS account_id,
         COUNT(v.id) AS total
 FROM aws_vpc AS v
-GROUP BY v.region_name
+GROUP BY (v.region_name, v.account_id)
 ORDER BY total DESC;
-```
-
-Sample result.
-
-``` text
-┌────────────────┬───────┐
-│  region_name   │ total │
-├────────────────┼───────┤
-│ eu-west-1      │   117 │
-│ eu-north-1     │     6 │
-│ eu-central-1   │     4 │
-│ us-east-1      │     3 │
-│ us-west-1      │     2 │
-│ ap-southeast-2 │     2 │
-│ ap-south-1     │     2 │
-│ eu-west-3      │     1 │
-│ me-central-1   │     1 │
-│ ap-northeast-1 │     1 │
-│ ap-northeast-3 │     1 │
-│ sa-east-1      │     1 │
-│ ap-southeast-1 │     1 │
-│ eu-west-2      │     1 │
-│ us-east-2      │     1 │
-│ ca-central-1   │     1 │
-│ us-west-2      │     1 │
-│ ap-northeast-2 │     1 │
-└────────────────┴───────┘
-(18 rows)
-
-Time: 1.143 ms
 ```
 
 ## AWS Instances Grouped By Type
@@ -53,29 +24,10 @@ Returns the AWS instances grouped by type.
 ``` sql
 SELECT
         instance_type,
+        account_id,
         COUNT(id) AS total
 FROM aws_instance
-GROUP BY instance_type ORDER BY total DESC;
-```
-
-Sample result.
-
-``` text
-┌───────────────┬───────┐
-│ instance_type │ total │
-├───────────────┼───────┤
-│ m5.large      │    31 │
-│ m5.2xlarge    │    13 │
-│ m5.xlarge     │     7 │
-│ m5.4xlarge    │     5 │
-│ c4.4xlarge    │     4 │
-│ m4.xlarge     │     3 │
-│ c3.2xlarge    │     2 │
-│ t2.micro      │     1 │
-└───────────────┴───────┘
-(8 rows)
-
-Time: 1.089 ms
+GROUP BY (instance_type, account_id) ORDER BY total DESC;
 ```
 
 ## AWS Instances Grouped By Region and VPC
@@ -86,10 +38,11 @@ The following query returns the list of instances grouped by Region and VPC.
 SELECT
         v.name AS vpc_name,
         v.region_name AS region_name,
+        v.account_id AS account_id,
         COUNT(i.id) AS instances
 FROM aws_vpc AS v
 INNER JOIN aws_instance AS i ON v.vpc_id = i.vpc_id
-GROUP BY v.name, v.region_name
+GROUP BY (v.name, v.region_name, v.account_id)
 ORDER BY instances DESC;
 ```
 
@@ -120,7 +73,6 @@ Time: 2.631 ms
 
 Filter out EC2 instances with an uptime of more than 30 days.
 
-
 ``` sql
 SELECT * FROM aws_instance WHERE launch_time < NOW() - INTERVAL '30 days';
 ```
@@ -132,27 +84,11 @@ The following query returns the total number of public IP addresses per AWS Regi
 ``` sql
 SELECT
         region_name,
+        account_id,
         COUNT(id) AS public_ip_addresses
 FROM aws_net_interface
 WHERE public_ip_address <> ''
-GROUP BY region_name ORDER BY public_ip_addresses DESC;
-```
-
-Sample output:
-
-``` text
-┌──────────────┬─────────────────────┐
-│ region_name  │ public_ip_addresses │
-├──────────────┼─────────────────────┤
-│ eu-west-1    │                 219 │
-│ eu-north-1   │                  13 │
-│ us-east-1    │                   7 │
-│ ap-south-1   │                   1 │
-│ eu-central-1 │                   1 │
-└──────────────┴─────────────────────┘
-(5 rows)
-
-Time: 3.136 ms
+GROUP BY region_name, account_id ORDER BY public_ip_addresses DESC;
 ```
 
 ## AWS Load Balancers and Network Interfaces
@@ -166,6 +102,7 @@ SELECT
         lb.id AS lb_id,
         lb.dns_name AS dns,
         lb.region_name AS region,
+        lb.account_id AS account_id,
         lb.type AS lb_type,
         ni.private_ip_address AS priv_ip_addr,
         ni.public_ip_address AS pub_ip_addr
@@ -186,7 +123,7 @@ SELECT
         ni.public_ip_address,
         ni.mac_address
 FROM aws_instance AS i
-INNER JOIN aws_net_interface AS ni ON i.instance_id = ni.instance_id;
+INNER JOIN aws_net_interface AS ni ON i.instance_id = ni.instance_id AND i.account_id = ni.account_id
 ```
 
 ## AWS EC2 Instances which are using unknown CloudProfile image
@@ -319,6 +256,7 @@ SELECT
         s.project_name,
 
         v.vpc_id AS aws_vpc_id,
+        v.account_id AS aws_account_id,
         v.region_name AS aws_region
 FROM g_shoot AS s
 INNER JOIN aws_vpc AS v ON s.technical_id = v.name;
@@ -335,6 +273,7 @@ SELECT
         v.name AS vpc_name,
         v.region_name AS region_name,
         v.vpc_id AS vpc_id,
+        v.account_id AS account_id,
 
         s.name AS shoot_name,
         s.technical_id as shoot_tech_id
@@ -352,6 +291,7 @@ SELECT
         v.name AS vpc_name,
         v.region_name AS region_name,
         v.vpc_id AS vpc_id,
+        v.account_id AS account_id,
         v.is_default::text,
 
         s.name AS shoot_name,
@@ -375,6 +315,7 @@ SELECT
         i.instance_type AS instance_type,
         i.state AS instance_state,
         i.vpc_id AS vpc_id,
+        i.account_id AS account_id,
 
         m.name AS machine_name,
         m.provider_id AS machine_provider_id
@@ -390,6 +331,7 @@ SELECT
         i.instance_id AS inst_id,
         i.instance_type AS inst_type,
         i.state AS inst_state,
+        i.account_id AS account_id,
 
         m.name AS machine_name,
         m.provider_id AS provider_id,
@@ -402,7 +344,7 @@ SELECT
         s.project_name AS project
 FROM aws_instance AS i
 LEFT JOIN g_machine AS m ON i.name = m.name
-LEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id
+LEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id AND i.account_id = v.account_id
 LEFT JOIN g_shoot AS s ON v.name = s.technical_id;
 ```
 
@@ -418,6 +360,7 @@ SELECT
         i.instance_id AS inst_id,
         i.instance_type AS inst_type,
         i.state AS inst_state,
+        i.account_id,
 
         v.name AS vpc_name,
         v.vpc_id AS vpc_id,
@@ -430,7 +373,7 @@ SELECT
         s.project_name AS project
 FROM aws_instance AS i
 LEFT JOIN g_machine AS m ON i.name = m.name
-LEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id
+LEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id AND i.account_id = v.account_id
 LEFT JOIN g_shoot AS s ON v.name = s.technical_id
 WHERE i.state <> 'terminated' AND m.name IS NULL;
 ```
@@ -443,7 +386,8 @@ Gardener `BackupBucket`.
 ``` sql
 SELECT
         b.name,
-        b.region_name
+        b.region_name,
+        b.account_id
 FROM aws_bucket AS b
 LEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name
 WHERE gbb.name IS NULL;
