@@ -119,6 +119,7 @@ Interfaces.
 ``` sql
 SELECT
         i.*,
+        ni.id AS net_interface_id,
         ni.private_ip_address,
         ni.public_ip_address,
         ni.mac_address
