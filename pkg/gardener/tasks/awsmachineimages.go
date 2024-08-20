@@ -11,7 +11,6 @@ import (
 
 	aws "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws"
 	awsinstall "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/install"
-	"github.com/gardener/gardener/extensions/pkg/util"
 	"github.com/hibiken/asynq"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -19,6 +18,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	decodeutils "github.com/gardener/inventory/pkg/utils/decode"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
@@ -127,7 +127,7 @@ func decodeAWSProviderConfig(rawProviderConfig []byte) (*aws.CloudProfileConfig,
 	decoder := serializer.NewCodecFactory(scheme, serializer.EnableStrict).UniversalDecoder()
 	providerConfig := &aws.CloudProfileConfig{}
 
-	if err := util.Decode(decoder, rawProviderConfig, providerConfig); err != nil {
+	if err := decodeutils.Decode(decoder, rawProviderConfig, providerConfig); err != nil {
 		return nil, err
 	}
 
