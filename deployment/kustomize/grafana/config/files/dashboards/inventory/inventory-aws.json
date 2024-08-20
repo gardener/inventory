@@ -85,7 +85,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        v.region_name AS region_name,\n        COUNT(v.id) AS total\nFROM aws_vpc AS v\nGROUP BY v.region_name\nORDER BY total DESC;",
+          "rawSql": "SELECT\n        v.region_name AS region_name,\n        COUNT(v.id) AS total\nFROM aws_vpc AS v\nWHERE account_id IN ($aws_account)\nGROUP BY v.region_name\nORDER BY total DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -173,7 +173,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_vpc;",
+          "rawSql": "SELECT COUNT(id) FROM aws_vpc\nWHERE account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -285,7 +285,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_az \nGROUP BY region_name ORDER BY total DESC;\n",
+          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_az \nWHERE account_id IN ($aws_account)\nGROUP BY region_name ORDER BY total DESC;\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -329,7 +329,7 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 200
               }
             ]
           }
@@ -369,7 +369,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_az;",
+          "rawSql": "SELECT COUNT(id) FROM aws_az\nWHERE account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -457,7 +457,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        instance_type,\n        COUNT(id) AS total\nFROM aws_instance\nGROUP BY instance_type ORDER BY total DESC;",
+          "rawSql": "SELECT\n        instance_type,\n        COUNT(id) AS total\nFROM aws_instance\nWHERE account_id IN ($aws_account)\nGROUP BY instance_type ORDER BY total DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -541,7 +541,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_instance;",
+          "rawSql": "SELECT COUNT(id) FROM aws_instance\nWHERE account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -653,7 +653,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        v.region_name AS region_name,\n        COUNT(i.id) AS instances\nFROM aws_vpc AS v\nINNER JOIN aws_instance AS i ON v.vpc_id = i.vpc_id\nGROUP BY v.region_name\n",
+          "rawSql": "SELECT\n        v.region_name AS region_name,\n        COUNT(i.id) AS instances\nFROM aws_vpc AS v\nINNER JOIN aws_instance AS i ON v.vpc_id = i.vpc_id AND i.account_id = v.account_id\nWHERE i.account_id IN ($aws_account)\nGROUP BY v.region_name\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -742,7 +742,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        arch,\n        COUNT(id) AS total\nFROM aws_instance\nGROUP BY arch ORDER BY total DESC;",
+          "rawSql": "SELECT\n        arch,\n        COUNT(id) AS total\nFROM aws_instance\nWHERE account_id IN ($aws_account)\nGROUP BY arch ORDER BY total DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -826,7 +826,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        v.region_name AS region_name,\n        COUNT(s.id) AS subnets\nFROM aws_vpc AS v\nINNER JOIN aws_subnet AS s ON v.vpc_id = s.vpc_id\nGROUP BY v.region_name",
+          "rawSql": "SELECT\n        v.region_name AS region_name,\n        COUNT(s.id) AS subnets\nFROM aws_vpc AS v\nINNER JOIN aws_subnet AS s ON v.vpc_id = s.vpc_id AND v.account_id = s.account_id\nWHERE s.account_id IN ($aws_account)\nGROUP BY v.region_name",
           "refId": "A",
           "sql": {
             "columns": [
@@ -909,7 +909,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_subnet;",
+          "rawSql": "SELECT COUNT(id) FROM aws_subnet\nWHERE account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -993,7 +993,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        b.region_name AS region_name,\n        COUNT(b.id) AS buckets\nFROM aws_bucket AS b\nGROUP BY region_name\n",
+          "rawSql": "SELECT\n        b.region_name AS region_name,\n        COUNT(b.id) AS buckets\nFROM aws_bucket AS b\nWHERE b.account_id IN ($aws_account)\nGROUP BY region_name\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1076,7 +1076,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_bucket;",
+          "rawSql": "SELECT COUNT(id) FROM aws_bucket\nWHERE account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1165,7 +1165,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_image\nGROUP BY region_name",
+          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_image\nWHERE account_id IN ($aws_account)\nGROUP BY region_name",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1248,7 +1248,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_image;",
+          "rawSql": "SELECT COUNT(id) FROM aws_image\nWHERE account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1337,7 +1337,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        type,\n        COUNT(id) AS total\nFROM aws_loadbalancer\nGROUP BY type;",
+          "rawSql": "SELECT\n        type,\n        COUNT(id) AS total\nFROM aws_loadbalancer\nWHERE account_id IN ($aws_account)\nGROUP BY type;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1420,7 +1420,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_loadbalancer;",
+          "rawSql": "SELECT COUNT(id) FROM aws_loadbalancer\nWHERE account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1530,7 +1530,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_loadbalancer\nGROUP BY region_name;",
+          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_loadbalancer\nWHERE account_id IN ($aws_account)\nGROUP BY region_name;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1641,7 +1641,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_net_interface\nGROUP BY region_name\nORDER BY total DESC",
+          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_net_interface\nWHERE account_id IN ($aws_account)\nGROUP BY region_name\nORDER BY total DESC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1730,7 +1730,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        interface_type,\n        COUNT(id) AS total\nFROM aws_net_interface\nGROUP BY interface_type;",
+          "rawSql": "SELECT\n        interface_type,\n        COUNT(id) AS total\nFROM aws_net_interface\nWHERE account_id IN ($aws_account)\nGROUP BY interface_type;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1818,7 +1818,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_net_interface;\n",
+          "rawSql": "SELECT COUNT(id) FROM aws_net_interface\nWHERE account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1929,7 +1929,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_net_interface\nWHERE public_ip_address <> ''\nGROUP BY region_name\n",
+          "rawSql": "SELECT\n        region_name,\n        COUNT(id) AS total\nFROM aws_net_interface\nWHERE public_ip_address <> '' AND account_id IN ($aws_account)\nGROUP BY region_name\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -2017,7 +2017,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM aws_net_interface WHERE public_ip_address <> '';\n",
+          "rawSql": "SELECT COUNT(id) FROM aws_net_interface\nWHERE public_ip_address <> '' AND account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -2046,7 +2046,33 @@
   "schemaVersion": 39,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "997823283084",
+          "value": "997823283084"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "ds_gardener_inventory"
+        },
+        "definition": "SELECT DISTINCT(account_id) FROM aws_region",
+        "description": "AWS Account",
+        "hide": 0,
+        "includeAll": false,
+        "label": "AWS Account",
+        "multi": true,
+        "name": "aws_account",
+        "options": [],
+        "query": "SELECT DISTINCT(account_id) FROM aws_region",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
@@ -2057,6 +2083,6 @@
   "timezone": "browser",
   "title": "Inventory: AWS",
   "uid": "cdocdhl3623ggc",
-  "version": 9,
+  "version": 12,
   "weekStart": ""
 }

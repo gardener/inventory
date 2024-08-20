@@ -81,7 +81,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(i.name) AS total\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nWHERE i.state = 'running' AND m.name IS NULL;",
+          "rawSql": "SELECT\n        COUNT(i.name) AS total\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nWHERE i.state = 'running' AND m.name IS NULL AND account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -165,7 +165,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(v.name) AS total\nFROM aws_vpc AS v\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE s.technical_id is NULL;\n",
+          "rawSql": "SELECT\n        COUNT(v.name) AS total\nFROM aws_vpc AS v\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE s.technical_id is NULL AND account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -249,7 +249,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(i.name) AS total\nFROM aws_instance AS i\nWHERE launch_time < NOW() - INTERVAL '180 days';\n",
+          "rawSql": "SELECT\n        COUNT(i.name) AS total\nFROM aws_instance AS i\nWHERE launch_time < NOW() - INTERVAL '180 days' AND account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -333,7 +333,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(b.name)\nFROM aws_bucket AS b\nLEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name\nWHERE gbb.name IS NULL;",
+          "rawSql": "SELECT COUNT(b.name)\nFROM aws_bucket AS b\nLEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name\nWHERE gbb.name IS NULL AND account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -418,7 +418,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(i.id)\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL;\n",
+          "rawSql": "SELECT COUNT(i.id)\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL AND i.account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -510,7 +510,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        i.name AS instance_name,\n        i.instance_id AS instance_id,\n        i.instance_type AS type,\n        i.state AS state,\n\n        v.name AS vpc_name,\n        v.vpc_id AS vpc_id,\n        v.region_name AS region,\n\n        s.name AS shoot,\n        s.project_name AS project\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nLEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE i.state = 'running' AND m.name IS NULL;",
+          "rawSql": "SELECT\n        i.name AS instance_name,\n        i.instance_id AS instance_id,\n        i.instance_type AS type,\n        i.state AS state,\n        i.account_id AS account_id,\n\n        v.name AS vpc_name,\n        v.vpc_id AS vpc_id,\n        v.region_name AS region,\n\n        s.name AS shoot,\n        s.project_name AS project\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nLEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE i.state = 'running' AND m.name IS NULL AND i.account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -616,7 +616,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        i.name AS instance_name,\n        i.instance_id AS instance_id,\n        i.instance_type AS type,\n        i.state AS state,\n\n        v.name AS vpc_name,\n        v.vpc_id AS vpc_id,\n        v.region_name AS region,\n\n        s.name AS shoot,\n        s.project_name AS project\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nLEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE i.launch_time < NOW() - INTERVAL '180 days';",
+          "rawSql": "SELECT\n        i.name AS instance_name,\n        i.instance_id AS instance_id,\n        i.instance_type AS type,\n        i.state AS state,\n        i.account_id AS account_id,\n\n        v.name AS vpc_name,\n        v.vpc_id AS vpc_id,\n        v.region_name AS region,\n\n        s.name AS shoot,\n        s.project_name AS project\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nLEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE i.launch_time < NOW() - INTERVAL '180 days' AND i.account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -661,8 +661,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -703,7 +702,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        v.name AS vpc_name,\n        v.region_name AS region_name,\n        v.vpc_id AS vpc_id,\n        v.is_default::text\nFROM aws_vpc AS v\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE s.technical_id is NULL;\n",
+          "rawSql": "SELECT\n        v.name AS vpc_name,\n        v.region_name AS region_name,\n        v.vpc_id AS vpc_id,\n        v.account_id AS account_id,\n        v.is_default::text\nFROM aws_vpc AS v\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE s.technical_id is NULL AND account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -748,8 +747,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -804,7 +802,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT DISTINCT\n       i.*,\n       s.name AS shoot_name,\n       s.project_name AS project_name\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL;\n",
+          "rawSql": "SELECT DISTINCT\n       i.*,\n       s.name AS shoot_name,\n       s.project_name AS project_name\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL AND i.account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -827,12 +825,138 @@
       ],
       "title": "List of Unknown EC2 Instance Images",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 335
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": true,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT b.*\nFROM aws_bucket AS b\nLEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name\nWHERE gbb.name IS NULL AND account_id IN ($aws_account);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "List of Leaked S3 Buckets",
+      "type": "table"
     }
   ],
   "schemaVersion": 39,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "997823283084",
+          "value": "997823283084"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "ds_gardener_inventory"
+        },
+        "definition": "SELECT DISTINCT(account_id) FROM aws_region;",
+        "description": "AWS Account",
+        "hide": 0,
+        "includeAll": false,
+        "label": "AWS Account",
+        "multi": true,
+        "name": "aws_account",
+        "options": [],
+        "query": "SELECT DISTINCT(account_id) FROM aws_region;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-30m",
@@ -843,6 +967,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked AWS Resources",
   "uid": "ddod4l1vde680a",
-  "version": 12,
+  "version": 4,
   "weekStart": ""
 }
