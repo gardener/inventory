@@ -37,6 +37,17 @@ func Unmarshal(data []byte, v any) error {
 // loggerKey is the key used to store a [slog.Logger] in a [context.Context]
 type loggerKey struct{}
 
+// GetLogger returns the [slog.Logger] instance from the provided context, if
+// found, or [slog.DefaultLogger] otherwise.
+func GetLogger(ctx context.Context) *slog.Logger {
+	value := ctx.Value(loggerKey{})
+	logger, ok := value.(*slog.Logger)
+	if !ok {
+		return slog.Default()
+	}
+	return logger
+}
+
 // NewLoggerMiddleware returns a new [asynq.MiddlewareFunc], which embeds a
 // [slog.Logger] in the context provided to task handlers.
 func NewLoggerMiddleware(logger *slog.Logger) asynq.MiddlewareFunc {
