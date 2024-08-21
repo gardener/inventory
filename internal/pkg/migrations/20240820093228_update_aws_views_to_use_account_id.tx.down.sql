@@ -1,6 +1,7 @@
 --
 -- Load Balancers
 --
+DROP VIEW IF EXISTS "aws_loadbalancer_interface";
 CREATE OR REPLACE VIEW "aws_loadbalancer_interface" AS
 SELECT
         lb.id AS lb_id,

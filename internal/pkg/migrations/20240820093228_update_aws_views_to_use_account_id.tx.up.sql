@@ -1,6 +1,7 @@
 --
 -- Load Balancers
 --
+DROP VIEW "aws_loadbalancer_interface";
 CREATE OR REPLACE VIEW "aws_loadbalancer_interface" AS
 SELECT
         lb.id AS lb_id,
@@ -86,4 +87,4 @@ SELECT
         ni.public_ip_address,
         ni.mac_address
 FROM aws_instance AS i
-INNER JOIN aws_net_interface AS ni ON i.instance_id = ni.instance_id AND i.account_id = ni.account_id
+INNER JOIN aws_net_interface AS ni ON i.instance_id = ni.instance_id AND i.account_id = ni.account_id;
