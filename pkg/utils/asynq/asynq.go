@@ -84,25 +84,12 @@ func NewLoggerMiddleware(logger *slog.Logger) asynq.MiddlewareFunc {
 func NewMeasuringMiddleware() asynq.MiddlewareFunc {
 	middleware := func(handler asynq.Handler) asynq.Handler {
 		mw := func(ctx context.Context, task *asynq.Task) error {
-			taskID, _ := asynq.GetTaskID(ctx)
-			queueName, _ := asynq.GetQueueName(ctx)
-			taskName := task.Type()
-			slog.Info(
-				"received task",
-				"id", taskID,
-				"queue", queueName,
-				"name", taskName,
-			)
+			logger := GetLogger(ctx)
+			logger.Info("received task")
 			start := time.Now()
 			err := handler.ProcessTask(ctx, task)
 			elapsed := time.Since(start)
-			slog.Info(
-				"task finished",
-				"id", taskID,
-				"queue", queueName,
-				"name", taskName,
-				"duration", elapsed,
-			)
+			logger.Info("task finished", "duration", elapsed)
 			return err
 		}
 
