@@ -289,6 +289,10 @@ type LoggingConfig struct {
 
 	// Level specifies the logging level.
 	Level string `yaml:"level"`
+
+	// Attributes provides a default set of key/value pairs to be added to
+	// each log event.
+	Attributes map[string]string `yaml:"attributes"`
 }
 
 // parseFile parses the configuration from the given path and unmarshals it into
