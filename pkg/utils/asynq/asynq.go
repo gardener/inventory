@@ -63,7 +63,7 @@ func NewLoggerMiddleware(logger *slog.Logger) asynq.MiddlewareFunc {
 
 			queueName, ok := asynq.GetQueueName(ctx)
 			if ok {
-				attrs = append(attrs, slog.String("queue", queueName))
+				attrs = append(attrs, slog.String("task_queue", queueName))
 			}
 
 			taskName := task.Type()
