@@ -87,6 +87,14 @@ var errNoAWSServiceCredentials = errors.New("no credentials specified for servic
 // using an unknown AWS named credentials.
 var errUnknownAWSNamedCredentials = errors.New("unknown AWS named credentials")
 
+// errInvalidLogLevel is an error, which is returned when an invalid log level
+// has been configured.
+var errInvalidLogLevel = errors.New("invalid log level")
+
+// errInvalidLogFormat is an error, which is returned when an invalid log format
+// has been configured.
+var errInvalidLogFormat = errors.New("invalid log format")
+
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
 	conf := ctx.Context.Value(configKey{}).(*config.Config)
@@ -178,6 +186,67 @@ func validateRedisConfig(conf *config.Config) error {
 	}
 
 	return nil
+}
+
+// logLevel represents the log level
+type logLevel string
+
+var (
+	// The supported log levels
+	levelInfo  logLevel = "info"
+	levelWarn  logLevel = "warn"
+	levelError logLevel = "error"
+	levelDebug logLevel = "debug"
+)
+
+// logFormat represents the format of log events
+type logFormat string
+
+var (
+	// The supported log formats
+	logFormatText logFormat = "text"
+	logFormatJSON logFormat = "json"
+)
+
+// newLogger creates a new [slog.Logger] based on the provided [config.Config]
+// spec, which outputs to the given [io.Writer].
+func newLogger(w io.Writer, conf *config.Config) (*slog.Logger, error) {
+	// Supported log levels
+	levels := map[logLevel]slog.Level{
+		levelInfo:  slog.LevelInfo,
+		levelWarn:  slog.LevelWarn,
+		levelError: slog.LevelError,
+		levelDebug: slog.LevelDebug,
+	}
+
+	level, ok := levels[logLevel(conf.Logging.Level)]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", errInvalidLogLevel, string(conf.Logging.Level))
+	}
+
+	var handler slog.Handler
+	handlerOpts := &slog.HandlerOptions{
+		AddSource: conf.Logging.AddSource,
+		Level:     level,
+	}
+
+	switch logFormat(conf.Logging.Format) {
+	case logFormatText:
+		handler = slog.NewTextHandler(w, handlerOpts)
+	case logFormatJSON:
+		handler = slog.NewJSONHandler(w, handlerOpts)
+	default:
+		return nil, fmt.Errorf("%w: %s", errInvalidLogFormat, conf.Logging.Format)
+	}
+
+	// Add default attributes to the logger
+	attrs := make([]slog.Attr, 0)
+	for k, v := range conf.Logging.Attributes {
+		attrs = append(attrs, slog.Any(k, v))
+	}
+	logger := slog.New(handler.WithAttrs(attrs))
+
+	return logger, nil
 }
 
 // newAWSSTSClient creates a new [sts.Client] based on the provided
