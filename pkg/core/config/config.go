@@ -42,6 +42,9 @@ type Config struct {
 	// Debug configures debug mode, if set to true.
 	Debug bool `yaml:"debug"`
 
+	// Logging provides the logging config settings
+	Logging LoggingConfig `yaml:"logging"`
+
 	// Redis represents the Redis configuration
 	Redis RedisConfig `yaml:"redis"`
 
@@ -273,6 +276,19 @@ type DashboardConfig struct {
 	// PrometheusEndpoint specifies the Prometheus endpoint from which the
 	// Dashboard UI will read metrics.
 	PrometheusEndpoint string `yaml:"prometheus_endpoint"`
+}
+
+// LoggingConfig provides the logging-specific settings.
+type LoggingConfig struct {
+	// Format specifies the output format.
+	Format string `yaml:"format"`
+
+	// AddSource specifies whether to include source code position for the
+	// logging statements.
+	AddSource bool `yaml:"add_source"`
+
+	// Level specifies the logging level.
+	Level string `yaml:"level"`
 }
 
 // parseFile parses the configuration from the given path and unmarshals it into
