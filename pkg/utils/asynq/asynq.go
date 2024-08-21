@@ -34,9 +34,9 @@ func Unmarshal(data []byte, v any) error {
 	return yaml.Unmarshal(data, v)
 }
 
-// NewLoggingMiddleware returns a new [asynq.MiddlewareFunc] which logs each
-// received task.
-func NewLoggingMiddleware() asynq.MiddlewareFunc {
+// NewMeasuringMiddleware returns a new [asynq.MiddlewareFunc] which measures
+// the execution of tasks.
+func NewMeasuringMiddleware() asynq.MiddlewareFunc {
 	middleware := func(handler asynq.Handler) asynq.Handler {
 		mw := func(ctx context.Context, task *asynq.Task) error {
 			taskID, _ := asynq.GetTaskID(ctx)
