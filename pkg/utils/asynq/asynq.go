@@ -34,6 +34,40 @@ func Unmarshal(data []byte, v any) error {
 	return yaml.Unmarshal(data, v)
 }
 
+// loggerKey is the key used to store a [slog.Logger] in a [context.Context]
+type loggerKey struct{}
+
+// NewLoggerMiddleware returns a new [asynq.MiddlewareFunc], which embeds a
+// [slog.Logger] in the context provided to task handlers.
+func NewLoggerMiddleware(logger *slog.Logger) asynq.MiddlewareFunc {
+	middleware := func(handler asynq.Handler) asynq.Handler {
+		mw := func(ctx context.Context, task *asynq.Task) error {
+			// Add the task id, queue and task name as default
+			// attributes to each log event.
+			attrs := make([]slog.Attr, 0)
+			taskID, ok := asynq.GetTaskID(ctx)
+			if ok {
+				attrs = append(attrs, slog.String("task_id", taskID))
+			}
+
+			queueName, ok := asynq.GetQueueName(ctx)
+			if ok {
+				attrs = append(attrs, slog.String("queue", queueName))
+			}
+
+			taskName := task.Type()
+			attrs = append(attrs, slog.String("task_name", taskName))
+			logHandler := logger.Handler().WithAttrs(attrs)
+			newLogger := slog.New(logHandler)
+			newCtx := context.WithValue(ctx, loggerKey{}, newLogger)
+			return handler.ProcessTask(newCtx, task)
+		}
+		return asynq.HandlerFunc(mw)
+	}
+
+	return asynq.MiddlewareFunc(middleware)
+}
+
 // NewMeasuringMiddleware returns a new [asynq.MiddlewareFunc] which measures
 // the execution of tasks.
 func NewMeasuringMiddleware() asynq.MiddlewareFunc {
