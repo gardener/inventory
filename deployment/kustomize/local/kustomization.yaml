@@ -9,6 +9,9 @@ namespace: inventory
 generatorOptions:
   disableNameSuffixHash: true
 
+buildMetadata:
+  - originAnnotations
+
 resources:
   - namespace.yaml
   - ../redis
