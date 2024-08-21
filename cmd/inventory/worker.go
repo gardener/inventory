@@ -169,9 +169,20 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 
+					// Configure logging and middlewares
+					slog.Info("configuring logging and middlewares")
+					logger, err := newLogger(os.Stdout, conf)
+					if err != nil {
+						return err
+					}
+					middlewares := []asynq.MiddlewareFunc{
+						asynqutils.NewLoggerMiddleware(logger),
+						asynqutils.NewMeasuringMiddleware(),
+					}
+
 					// Register our task handlers
 					mux := asynq.NewServeMux()
-					mux.Use(asynqutils.NewMeasuringMiddleware())
+					mux.Use(middlewares...)
 
 					walker := func(name string, handler asynq.Handler) error {
 						slog.Info("registering task", "name", name)
