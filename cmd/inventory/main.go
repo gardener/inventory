@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -58,6 +59,12 @@ func main() {
 			if err != nil {
 				return fmt.Errorf("Cannot parse config: %w", err)
 			}
+
+			logger, err := newLogger(os.Stdout, conf)
+			if err != nil {
+				return err
+			}
+			slog.SetDefault(logger)
 
 			// Overrides from flags/options
 			if ctx.IsSet("debug") {
