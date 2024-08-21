@@ -171,7 +171,7 @@ func NewWorkerCommand() *cli.Command {
 
 					// Register our task handlers
 					mux := asynq.NewServeMux()
-					mux.Use(asynqutils.NewLoggingMiddleware())
+					mux.Use(asynqutils.NewMeasuringMiddleware())
 
 					walker := func(name string, handler asynq.Handler) error {
 						slog.Info("registering task", "name", name)
