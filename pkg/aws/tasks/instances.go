@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -82,6 +81,8 @@ func enqueueCollectInstances(ctx context.Context) error {
 		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
+
 	// Enqueue task for each known region and account id
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
@@ -94,7 +95,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS EC2 instances",
 				"region", r.Name,
 				"account_id", r.AccountID,
@@ -106,7 +107,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 		task := asynq.NewTask(TaskCollectInstances, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"region", r.Name,
@@ -116,7 +117,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 			continue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -137,7 +138,9 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info(
+	logger := asynqutils.GetLogger(ctx)
+
+	logger.Info(
 		"collecting AWS instances ",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -162,7 +165,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 			},
 		)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"could not describe instances",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -217,7 +220,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert instances into db",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -231,7 +234,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated aws instances",
 		"region", payload.Region,
 		"account_id", payload.AccountID,

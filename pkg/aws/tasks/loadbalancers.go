@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
@@ -83,6 +82,8 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
+
 	// Enqueue ELB collection tasks for each region
 	for _, r := range regions {
 		payload := CollectLoadBalancersPayload{
@@ -91,7 +92,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS ELBs",
 				"region", r.Name,
 				"account_id", r.AccountID,
@@ -103,7 +104,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 		task := asynq.NewTask(TaskCollectLoadBalancers, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"region", r.Name,
@@ -113,7 +114,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 			continue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -129,9 +130,10 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 // collectLoadBalancers collects the AWS ELBs from the specified region in the
 // payload.
 func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPayload) error {
+	logger := asynqutils.GetLogger(ctx)
 	if awsclients.ELBClientset.Exists(payload.AccountID) {
 		if err := collectELBv1(ctx, payload); err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to collect ELB v1",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -142,7 +144,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 
 	if awsclients.ELBv2Clientset.Exists(payload.AccountID) {
 		if err := collectELBv2(ctx, payload); err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to collect ELB v2",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -161,7 +163,8 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info(
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info(
 		"collecting AWS ELB v2",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -187,7 +190,7 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		)
 
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"could not describe AWS ELB v2",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -242,7 +245,7 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert AWS ELB v2 into db",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -256,7 +259,7 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated AWS ELB v2",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -273,7 +276,8 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info(
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info(
 		"collecting AWS ELB v1",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -299,7 +303,7 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		)
 
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"could not describe AWS ELB v1",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -344,7 +348,7 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert AWS ELB v1 into db",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -358,7 +362,7 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated AWS ELB v1",
 		"region", payload.Region,
 		"account_id", payload.AccountID,

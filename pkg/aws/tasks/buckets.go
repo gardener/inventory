@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -66,11 +65,12 @@ func HandleCollectBucketsTask(ctx context.Context, t *asynq.Task) error {
 // enqueueCollectBuckets enqueues tasks for collecting AWS S3 Buckets for all
 // configured AWS S3 clients.
 func enqueueCollectBuckets() error {
+	logger := asynqutils.GetLogger(ctx)
 	err := awsclients.S3Clientset.Range(func(accountID string, _ *awsclients.Client[*s3.Client]) error {
 		p := CollectBucketsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS buckets",
 				"account_id", accountID,
 				"reason", err,
@@ -81,7 +81,7 @@ func enqueueCollectBuckets() error {
 		task := asynq.NewTask(TaskCollectBuckets, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"account_id", accountID,
@@ -90,7 +90,7 @@ func enqueueCollectBuckets() error {
 			return registry.ErrContinue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -106,15 +106,16 @@ func enqueueCollectBuckets() error {
 // collectBuckets collects the S3 buckets for the specified account in the
 // payload.
 func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
+	logger := asynqutils.GetLogger(ctx)
 	client, ok := awsclients.S3Clientset.Get(payload.AccountID)
 	if !ok {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info("collecting AWS buckets", "account_id", payload.AccountID)
+	logger.Info("collecting AWS buckets", "account_id", payload.AccountID)
 	result, err := client.Client.ListBuckets(ctx, &s3.ListBucketsInput{})
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not list buckets",
 			"account_id", payload.AccountID,
 			"reason", err,
@@ -131,7 +132,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 			},
 		)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"could not get bucket location",
 				"account_id", payload.AccountID,
 				"bucket", stringutils.StringFromPointer(bucket.Name),
@@ -173,7 +174,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert S3 buckets into db",
 			"account_id", payload.AccountID,
 			"reason", err,
@@ -186,7 +187,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated aws s3 buckets",
 		"account_id", payload.AccountID,
 		"count", count,

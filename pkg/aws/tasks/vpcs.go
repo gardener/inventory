@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -80,6 +79,8 @@ func enqueueCollectVPCs(ctx context.Context) error {
 		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
+
 	// Enqueue task for each region
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
@@ -92,7 +93,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS VPC",
 				"region", r.Name,
 				"account_id", r.AccountID,
@@ -104,7 +105,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 		task := asynq.NewTask(TaskCollectVPCs, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"region", r.Name,
@@ -114,7 +115,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 			continue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -135,7 +136,8 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info(
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info(
 		"collecting AWS VPCs",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -161,7 +163,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		)
 
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"could not describe VPCs",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -208,7 +210,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert VPCs into db",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -222,7 +224,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated aws vpcs",
 		"region", payload.Region,
 		"account_id", payload.AccountID,

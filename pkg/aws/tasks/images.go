@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -81,6 +80,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
 	// Enqueue task for each known region
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
@@ -100,7 +100,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS AMIs",
 				"region", r.Name,
 				"account_id", r.AccountID,
@@ -112,7 +112,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 		task := asynq.NewTask(TaskCollectImages, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"region", r.Name,
@@ -122,7 +122,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 			continue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -150,6 +150,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
+	logger := asynqutils.GetLogger(ctx)
 	paginator := ec2.NewDescribeImagesPaginator(
 		client.Client,
 		&ec2.DescribeImagesInput{
@@ -172,7 +173,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		)
 
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"could not describe AMIs",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -217,7 +218,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert AMIs into db",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -231,7 +232,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated aws amis",
 		"region", payload.Region,
 		"account_id", payload.AccountID,

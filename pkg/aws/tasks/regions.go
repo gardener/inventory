@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
@@ -46,7 +45,7 @@ func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 	// collecting regions for all configured clients.
 	data := t.Payload()
 	if data == nil {
-		return enqueueCollectRegions()
+		return enqueueCollectRegions(ctx)
 	}
 
 	// Collect regions using the client associated with the Account ID from
@@ -65,12 +64,13 @@ func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 
 // enqueueCollectRegions enqueues tasks for collecting AWS Regions
 // for all configured AWS EC2 clients.
-func enqueueCollectRegions() error {
+func enqueueCollectRegions(ctx context.Context) error {
+	logger := asynqutils.GetLogger(ctx)
 	err := awsclients.EC2Clientset.Range(func(accountID string, _ *awsclients.Client[*ec2.Client]) error {
 		p := &CollectRegionsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS regions",
 				"account_id", accountID,
 				"reason", err,
@@ -81,7 +81,7 @@ func enqueueCollectRegions() error {
 		task := asynq.NewTask(TaskCollectRegions, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"account_id", accountID,
@@ -90,7 +90,7 @@ func enqueueCollectRegions() error {
 			return registry.ErrContinue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -111,11 +111,13 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info("collecting AWS regions", "account_id", payload.AccountID)
+	logger := asynqutils.GetLogger(ctx)
+
+	logger.Info("collecting AWS regions", "account_id", payload.AccountID)
 	result, err := client.Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not describe regions",
 			"account_id", payload.AccountID,
 			"reason", err,
@@ -149,7 +151,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert regions into db",
 			"account_id", payload.AccountID,
 			"reason", err,
@@ -162,7 +164,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated aws regions",
 		"account_id", payload.AccountID,
 		"count", count,

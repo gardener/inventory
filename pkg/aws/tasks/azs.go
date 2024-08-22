@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/smithy-go/ptr"
@@ -80,7 +79,8 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info(
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info(
 		"collecting AWS availability zones",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -96,7 +96,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 	)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not describe availability zones",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -140,7 +140,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert availability zones into db",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -154,7 +154,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated aws availability zones",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -174,6 +174,8 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
+
 	// Enqueue a task for each region
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
@@ -186,7 +188,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS availability zone",
 				"region", r.Name,
 				"account_id", r.AccountID,
@@ -198,7 +200,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 		task := asynq.NewTask(TaskCollectAvailabilityZones, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"region", r.Name,
@@ -208,7 +210,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 			continue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
