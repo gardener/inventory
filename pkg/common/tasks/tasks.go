@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 const (
@@ -56,11 +56,12 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		return fmt.Errorf("failed to unmarshal payload: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
 	for _, item := range payload.Retention {
 		// Look up the registry for the actual model type
 		model, ok := registry.ModelRegistry.Get(item.Name)
 		if !ok {
-			slog.Warn("model not found in registry", "name", item.Name)
+			logger.Warn("model not found in registry", "name", item.Name)
 			continue
 		}
 
@@ -75,14 +76,14 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		case nil:
 			count, err := out.RowsAffected()
 			if err != nil {
-				slog.Error("failed to get number of deleted rows", "name", item.Name, "reason", err)
+				logger.Error("failed to get number of deleted rows", "name", item.Name, "reason", err)
 				continue
 			}
-			slog.Info("deleted stale records", "name", item.Name, "count", count)
+			logger.Info("deleted stale records", "name", item.Name, "count", count)
 		default:
 			// Simply log the error here and keep going with the
 			// rest of the objects to cleanup
-			slog.Error("failed to delete stale records", "name", item.Name, "reason", err)
+			logger.Error("failed to delete stale records", "name", item.Name, "reason", err)
 		}
 	}
 
