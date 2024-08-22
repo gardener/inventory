@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -44,7 +43,8 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
-	slog.Info("collecting Gardener shoots")
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("collecting Gardener shoots")
 	shoots := make([]models.Shoot, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -97,7 +97,7 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert gardener shoots into db",
 			"reason", err,
 		)
@@ -109,7 +109,7 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
-	slog.Info("populated gardener shoots", "count", count)
+	logger.Info("populated gardener shoots", "count", count)
 
 	return nil
 }

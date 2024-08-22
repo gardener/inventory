@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	aws "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws"
 	awsinstall "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/install"
@@ -53,12 +52,13 @@ func HandleCollectAWSMachineImagesTask(ctx context.Context, t *asynq.Task) error
 }
 
 func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImagesPayload) error {
-	slog.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	images, err := getAWSMachineImages(payload.ProviderConfig)
 	if err != nil {
 		return err
 	}
 
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	items := make([]models.CloudProfileAWSImage, 0)
 	for _, image := range images {
 		for _, version := range image.Versions {
@@ -86,7 +86,7 @@ func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImages
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert gardener aws cloud profile images into db",
 			"cloud_profile", payload.CloudProfileName,
 			"reason", err,
@@ -99,7 +99,7 @@ func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImages
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated gardener aws cloud profile images",
 		"cloud_profile", payload.CloudProfileName,
 		"count", count,
