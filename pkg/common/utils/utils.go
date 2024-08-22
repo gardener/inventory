@@ -12,6 +12,7 @@ import (
 	"github.com/uptrace/bun"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 // TaskConstructor is a function which creates and returns a new [asynq.Task].
@@ -47,9 +48,10 @@ type LinkFunction func(ctx context.Context, db *bun.DB) error
 
 // LinkObjects links objects by using the provided [LinkFunction] items.
 func LinkObjects(ctx context.Context, db *bun.DB, items []LinkFunction) error {
+	logger := asynqutils.GetLogger(ctx)
 	for _, linkFunc := range items {
 		if err := linkFunc(ctx, db); err != nil {
-			slog.Error("failed to link objects", "reason", err)
+			logger.Error("failed to link objects", "reason", err)
 			continue
 		}
 	}
