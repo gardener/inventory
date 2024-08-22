@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 
 	gardenerv1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hibiken/asynq"
@@ -67,7 +66,8 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
-	slog.Info("collecting Gardener cloud profiles")
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("collecting Gardener cloud profiles")
 	cloudProfiles := make([]models.CloudProfile, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -90,7 +90,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		// Enqueue a task for persisting the Cloud Profile Machine
 		// Images, only if we have any provider data.
 		if providerConfig == nil {
-			slog.Error(
+			logger.Error(
 				"no provider config data found",
 				"cloud_profile", cp.Name,
 				"provider_type", providerType,
@@ -100,7 +100,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 
 		miTaskName, ok := providerTypeToTask[providerType]
 		if !ok {
-			slog.Warn(
+			logger.Warn(
 				"will not collect machine images for unsupported cloud profile",
 				"cloud_profile", cp.Name,
 				"provider_type", providerType,
@@ -114,7 +114,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for machine images",
 				"cloud_profile", cp.Name,
 				"provider_type", providerType,
@@ -126,7 +126,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		task := asynq.NewTask(miTaskName, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"cloud_profile", cp.Name,
@@ -136,7 +136,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 			return nil
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -165,7 +165,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert gardener cloud profiles into db",
 			"reason", err,
 		)
@@ -177,7 +177,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
-	slog.Info("populated gardener cloud profiles", "count", count)
+	logger.Info("populated gardener cloud profiles", "count", count)
 
 	return nil
 }

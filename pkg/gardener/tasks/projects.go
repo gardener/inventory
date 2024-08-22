@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hibiken/asynq"
@@ -42,7 +41,8 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
 	}
 
-	slog.Info("collecting Gardener projects")
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("collecting Gardener projects")
 	projects := make([]models.Project, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -84,7 +84,7 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert gardener projects into db",
 			"reason", err,
 		)
@@ -96,7 +96,7 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
-	slog.Info("populated gardener projects", "count", count)
+	logger.Info("populated gardener projects", "count", count)
 
 	return nil
 }

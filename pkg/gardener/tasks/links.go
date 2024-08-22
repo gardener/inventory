@@ -6,11 +6,11 @@ package tasks
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/uptrace/bun"
 
 	"github.com/gardener/inventory/pkg/gardener/models"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 // LinkShootWithProject creates the relationship between the Gardener Shoot and
@@ -56,7 +56,8 @@ func LinkShootWithProject(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked gardener shoot with project", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gardener shoot with project", "count", count)
 
 	return nil
 }
@@ -103,7 +104,8 @@ func LinkShootWithSeed(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked gardener shoot with seed", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gardener shoot with seed", "count", count)
 
 	return nil
 }
@@ -150,7 +152,8 @@ func LinkMachineWithShoot(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked gardener machine with shoot", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gardener machine with shoot", "count", count)
 
 	return nil
 }
@@ -197,7 +200,8 @@ func LinkAWSImageWithCloudProfile(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked gardener cloud profile aws image with cloud profile", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gardener cloud profile aws image with cloud profile", "count", count)
 
 	return nil
 }

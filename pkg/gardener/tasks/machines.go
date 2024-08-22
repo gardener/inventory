@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/hibiken/asynq"
@@ -74,6 +73,8 @@ func enqueueCollectMachines(ctx context.Context) error {
 		return fmt.Errorf("failed to get seeds from db: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
+
 	// Create a task for each known seed cluster
 	for _, s := range seeds {
 		payload := CollectMachinesPayload{
@@ -81,7 +82,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for Gardener Machines",
 				"seed", s.Name,
 				"reason", err,
@@ -92,7 +93,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 		task := asynq.NewTask(TasksCollectMachines, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"seed", s.Name,
@@ -101,7 +102,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 			continue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -115,13 +116,14 @@ func enqueueCollectMachines(ctx context.Context) error {
 // collectMachines collects the Gardener Machines from the Seed Cluster
 // specified in the payload.
 func collectMachines(ctx context.Context, payload CollectMachinesPayload) error {
-	slog.Info("collecting Gardener machines", "seed", payload.Seed)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("collecting Gardener machines", "seed", payload.Seed)
 	client, err := gardenerclient.MCMClient(payload.Seed)
 	if err != nil {
 		if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
 			// Don't treat excluded seeds as errors, in order to
 			// avoid accumulating archived tasks
-			slog.Warn("seed is excluded", "seed", payload.Seed)
+			logger.Warn("seed is excluded", "seed", payload.Seed)
 			return nil
 		}
 		return asynqutils.SkipRetry(fmt.Errorf("cannot get garden client for %q: %s", payload.Seed, err))
@@ -164,7 +166,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert gardener machines into db",
 			"seed", payload.Seed,
 			"reason", err,
@@ -177,7 +179,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated gardener machines",
 		"seed", payload.Seed,
 		"count", count,
