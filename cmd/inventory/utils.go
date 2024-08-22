@@ -211,6 +211,15 @@ var (
 // newLogger creates a new [slog.Logger] based on the provided [config.Config]
 // spec, which outputs to the given [io.Writer].
 func newLogger(w io.Writer, conf *config.Config) (*slog.Logger, error) {
+	// Defaults, if we don't have any logging settings
+	if conf.Logging.Level == "" {
+		conf.Logging.Level = string(levelInfo)
+	}
+
+	if conf.Logging.Format == "" {
+		conf.Logging.Format = string(logFormatText)
+	}
+
 	// Supported log levels
 	levels := map[logLevel]slog.Level{
 		levelInfo:  slog.LevelInfo,
