@@ -111,7 +111,7 @@ lint: $(GOLANGCI_LINT)
 		$(GOLANGCI_LINT) run --config=$(REPO_ROOT)/.golangci.yaml $$dir/ ; \
 	done
 
-$(BINARY): $(LOCAL_BIN)
+$(BINARY): $(SRC_DIRS) | $(LOCAL_BIN)
 	go build \
 		-o $(BINARY) \
 		-ldflags="-X 'github.com/gardener/inventory/pkg/version.Version=${EFFECTIVE_VERSION}'" \
