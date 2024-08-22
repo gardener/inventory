@@ -7,13 +7,13 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/uptrace/bun"
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 // LinkAvailabilityZoneWithRegion creates links between the AWS AZs and Regions
@@ -58,7 +58,8 @@ func LinkAvailabilityZoneWithRegion(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws region with az", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws region with az", "count", count)
 
 	return nil
 }
@@ -105,7 +106,8 @@ func LinkRegionWithVPC(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws region with vpc", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws region with vpc", "count", count)
 
 	return nil
 }
@@ -152,7 +154,8 @@ func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws subnet with vpc", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws subnet with vpc", "count", count)
 
 	return nil
 }
@@ -199,7 +202,8 @@ func LinkInstanceWithVPC(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws instance with vpc", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws instance with vpc", "count", count)
 
 	return nil
 }
@@ -246,7 +250,8 @@ func LinkSubnetWithAZ(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws subnet with az", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws subnet with az", "count", count)
 
 	return nil
 }
@@ -293,7 +298,8 @@ func LinkInstanceWithSubnet(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws instance with subnet", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws instance with subnet", "count", count)
 
 	return nil
 }
@@ -340,7 +346,8 @@ func LinkInstanceWithRegion(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws instance with region", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws instance with region", "count", count)
 
 	return nil
 }
@@ -387,7 +394,8 @@ func LinkImageWithRegion(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("Linked AWS images (AMIs) with region", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("Linked AWS images (AMIs) with region", "count", count)
 
 	return nil
 }
@@ -434,7 +442,8 @@ func LinkLoadBalancerWithVpc(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws load balancers with VPC", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws load balancers with VPC", "count", count)
 
 	return nil
 }
@@ -481,7 +490,8 @@ func LinkLoadBalancerWithRegion(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws load balancer with region", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws load balancer with region", "count", count)
 
 	return nil
 }
@@ -528,7 +538,8 @@ func LinkInstanceWithImage(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws instance with image", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws instance with image", "count", count)
 
 	return nil
 }
@@ -576,7 +587,8 @@ func LinkNetworkInterfaceWithInstance(ctx context.Context, db *bun.DB) error {
 		return err
 	}
 
-	slog.Info("linked aws instance with network interface", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws instance with network interface", "count", count)
 
 	return nil
 }
@@ -679,7 +691,8 @@ func LinkNetworkInterfaceWithLoadBalancer(ctx context.Context, db *bun.DB) error
 		return err
 	}
 
-	slog.Info("linked aws load balancer with network interface", "count", count)
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked aws load balancer with network interface", "count", count)
 
 	return nil
 }

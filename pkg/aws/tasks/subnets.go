@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -81,6 +80,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 		return fmt.Errorf("failed to get regions: %w", err)
 	}
 
+	logger := asynqutils.GetLogger(ctx)
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
 			continue
@@ -92,7 +92,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to marshal payload for AWS subnets",
 				"region", r.Name,
 				"account_id", r.AccountID,
@@ -103,7 +103,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 		task := asynq.NewTask(TaskCollectSubnets, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"region", r.Name,
@@ -113,7 +113,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			continue
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
@@ -134,7 +134,8 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	slog.Info(
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info(
 		"collecting AWS subnets",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
@@ -159,7 +160,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 			},
 		)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"could not describe subnets",
 				"region", payload.Region,
 				"account_id", payload.AccountID,
@@ -210,7 +211,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		Exec(ctx)
 
 	if err != nil {
-		slog.Error(
+		logger.Error(
 			"could not insert aws subnets into db",
 			"region", payload.Region,
 			"account_id", payload.AccountID,
@@ -224,7 +225,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		return err
 	}
 
-	slog.Info(
+	logger.Info(
 		"populated aws subnets",
 		"region", payload.Region,
 		"account_id", payload.AccountID,
