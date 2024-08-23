@@ -42,6 +42,7 @@ import (
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
@@ -562,24 +563,10 @@ func newServer(conf *config.Config) *asynq.Server {
 		logLevel = asynq.DebugLevel
 	}
 
-	errHandler := func(ctx context.Context, task *asynq.Task, err error) {
-		taskID, _ := asynq.GetTaskID(ctx)
-		taskName := task.Type()
-		queueName, _ := asynq.GetQueueName(ctx)
-		retried, _ := asynq.GetRetryCount(ctx)
-		slog.Error(
-			"task failed",
-			"id", taskID,
-			"name", taskName,
-			"queue", queueName,
-			"retry", retried,
-			"reason", err,
-		)
-	}
 	config := asynq.Config{
 		Concurrency:  conf.Worker.Concurrency,
 		LogLevel:     logLevel,
-		ErrorHandler: asynq.ErrorHandlerFunc(errHandler),
+		ErrorHandler: asynqutils.NewDefaultErrorHandler(),
 	}
 
 	server := asynq.NewServer(redisClientOpt, config)
