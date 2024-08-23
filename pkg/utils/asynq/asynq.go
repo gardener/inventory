@@ -103,10 +103,20 @@ func NewMeasuringMiddleware() asynq.MiddlewareFunc {
 // task and the reason why it has failed.
 func NewDefaultErrorHandler() asynq.ErrorHandlerFunc {
 	handler := func(ctx context.Context, task *asynq.Task, err error) {
+		// The context we get for the error handler will *not* contain
+		// our embedded logger, since it goes through a different path
+		// than the one used when enqueuing the task. That's why we need
+		// to extract the task id, queue, etc. from it.
 		logger := GetLogger(ctx)
+		taskID, _ := asynq.GetTaskID(ctx)
+		taskName := task.Type()
+		queueName, _ := asynq.GetQueueName(ctx)
 		retried, _ := asynq.GetRetryCount(ctx)
 		logger.Error(
 			"task failed",
+			"task_id", taskID,
+			"task_queue", queueName,
+			"task_name", taskName,
 			"retry", retried,
 			"reason", err,
 		)
