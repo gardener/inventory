@@ -98,3 +98,19 @@ func NewMeasuringMiddleware() asynq.MiddlewareFunc {
 
 	return asynq.MiddlewareFunc(middleware)
 }
+
+// NewDefaultErrorHandler returns an [asynq.ErrorHandlerFunc], which logs the
+// task and the reason why it has failed.
+func NewDefaultErrorHandler() asynq.ErrorHandlerFunc {
+	handler := func(ctx context.Context, task *asynq.Task, err error) {
+		logger := GetLogger(ctx)
+		retried, _ := asynq.GetRetryCount(ctx)
+		logger.Error(
+			"task failed",
+			"retry", retried,
+			"reason", err,
+		)
+	}
+
+	return asynq.ErrorHandlerFunc(handler)
+}
