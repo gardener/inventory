@@ -345,6 +345,12 @@ func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 // configureAWSClients creates the AWS clients for the supported by Inventory
 // AWS services and registers them.
 func configureAWSClients(ctx context.Context, conf *config.Config) error {
+	if !conf.AWS.IsEnabled {
+		slog.Warn("AWS is not enabled, will not create API clients")
+		return nil
+	}
+
+	slog.Info("configuring AWS clients")
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"ec2":   configureEC2Clientset,
 		"elb":   configureELBClientset,
