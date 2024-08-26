@@ -156,6 +156,12 @@ func configureGCPResourceManagerClientsets(ctx context.Context, conf *config.Con
 // configureGCPClients creates the GCP API clients from the specified
 // configuration.
 func configureGCPClients(ctx context.Context, conf *config.Config) error {
+	if !conf.GCP.IsEnabled {
+		slog.Warn("GCP is not enabled, will not create API clients")
+		return nil
+	}
+
+	slog.Info("configuring GCP clients")
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"resource_manager": configureGCPResourceManagerClientsets,
 	}
