@@ -84,6 +84,10 @@ type Config struct {
 
 // GCPConfig provides GCP specific configuration settings.
 type GCPConfig struct {
+	// IsEnabled specifies whether the GCP collection is enabled or not.
+	// Setting this to false will not create any GCP client.
+	IsEnabled bool `yaml:"is_enabled"`
+
 	// UserAgent is the User-Agent header to configure for the API clients.
 	UserAgent string `yaml:"user_agent"`
 
@@ -159,6 +163,10 @@ type GCPKeyFile struct {
 
 // AWSConfig provides AWS specific configuration settings.
 type AWSConfig struct {
+	// IsEnabled specifies whether the AWS collection is enabled or not.
+	// Setting this to false will not create any AWS client.
+	IsEnabled bool `yaml:"is_enabled"`
+
 	// Region is the region to use when initializing the AWS client.
 	Region string `yaml:"region"`
 
