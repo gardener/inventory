@@ -12,7 +12,7 @@ type Client[T any] struct {
 	// create the client.
 	NamedCredentials string
 
-	// Account is the AWS Account ID that owns or contains the calling
+	// AccountID is the AWS Account ID that owns or contains the calling
 	// entity.
 	AccountID string
 
