@@ -5,10 +5,16 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"google.golang.org/api/option"
+
+	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/version"
 )
@@ -20,6 +26,14 @@ var errNoGCPAuthenticationMethod = errors.New("no GCP authentication method spec
 // errUnknownGCPAuthenticationMethod is an error, which is returned when using
 // an unknown/unsupported GCP authentication method/strategy.
 var errUnknownGCPAuthenticationMethod = errors.New("unknown GCP authentication method specified")
+
+// errNoGCPKeyFile is an error, which is returned when no path to a service
+// account JSON Key File was specified for a named credential.
+var errNoGCPKeyFile = errors.New("no service account JSON key file specified")
+
+// errNoGCPProjects is an error, which is returned when named credentials are
+// configured without specifying associated projects.
+var errNoGCPProjects = errors.New("no GCP projects specified")
 
 // validateGCPConfig validates the GCP configuration settings.
 func validateGCPConfig(conf *config.Config) error {
@@ -42,7 +56,7 @@ func validateGCPConfig(conf *config.Config) error {
 		// Validate that the named credentials are actually defined.
 		for _, nc := range namedCredentials {
 			if _, ok := conf.GCP.Credentials[nc]; !ok {
-				return fmt.Errorf("gcp: %w service %s refers to %s", errUnknownNamedCredentials, service, nc)
+				return fmt.Errorf("gcp: %w: service %s refers to %s", errUnknownNamedCredentials, service, nc)
 			}
 		}
 	}
@@ -56,10 +70,99 @@ func validateGCPConfig(conf *config.Config) error {
 
 	for name, creds := range conf.GCP.Credentials {
 		if creds.Authentication == "" {
-			return fmt.Errorf("%w: %s", errNoGCPAuthenticationMethod, name)
+			return fmt.Errorf("gcp: %w: credentials %s", errNoGCPAuthenticationMethod, name)
 		}
 		if !slices.Contains(supportedAuthnMethods, creds.Authentication) {
-			return fmt.Errorf("%w: %s uses %s", errUnknownGCPAuthenticationMethod, name, creds.Authentication)
+			return fmt.Errorf("gcp: %w: %s uses %s", errUnknownGCPAuthenticationMethod, name, creds.Authentication)
+		}
+		if len(creds.Projects) == 0 {
+			return fmt.Errorf("gcp: %w: credentials %s", errNoGCPProjects, name)
+		}
+	}
+
+	return nil
+}
+
+// getGCPClientOptions returns the slice of [option.ClientOption], which are
+// derived from the configured named credentials settings.
+func getGCPClientOptions(conf *config.Config, namedCredentials string) ([]option.ClientOption, error) {
+	creds, ok := conf.GCP.Credentials[namedCredentials]
+	if !ok {
+		return nil, fmt.Errorf("gcp: %w: %s", errUnknownNamedCredentials, namedCredentials)
+	}
+
+	// Default set of options
+	opts := []option.ClientOption{
+		option.WithUserAgent(conf.GCP.UserAgent),
+	}
+
+	switch creds.Authentication {
+	case config.GCPAuthenticationMethodNone:
+		// Load Application Default Credentials only, nothing to be done
+		// from our side.
+		break
+	case config.GCPAuthenticationMethodKeyFile:
+		// JSON Key file authentication
+		if creds.KeyFile.Path == "" {
+			return nil, fmt.Errorf("gcp: %w: credentials %s", errNoGCPKeyFile, namedCredentials)
+		}
+		opts = append(opts, option.WithCredentialsFile(creds.KeyFile.Path))
+	default:
+		return nil, fmt.Errorf("gcp: %w: %s uses %s", errUnknownGCPAuthenticationMethod, namedCredentials, creds.Authentication)
+	}
+
+	return opts, nil
+}
+
+// configureGCPResourceManagerClientsets configures the GCP Resource Manager API
+// clientsets.
+func configureGCPResourceManagerClientsets(ctx context.Context, conf *config.Config) error {
+	for _, namedCreds := range conf.GCP.Services.ResourceManager.UseCredentials {
+		opts, err := getGCPClientOptions(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		nc, ok := conf.GCP.Credentials[namedCreds]
+		if !ok {
+			return fmt.Errorf("gcp: %w: %s", errUnknownNamedCredentials, namedCreds)
+		}
+
+		// Register the client for each specified GCP project
+		for _, project := range nc.Projects {
+			c, err := resourcemanager.NewProjectsRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create client for %s: %w", namedCreds, err)
+			}
+			client := &gcpclients.Client[*resourcemanager.ProjectsClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           c,
+			}
+			gcpclients.ProjectsClientset.Overwrite(project, client)
+			slog.Info(
+				"configured GCP client",
+				"service", "resource_manager",
+				"sub_service", "projects",
+				"credentials", client.NamedCredentials,
+				"project", project,
+			)
+		}
+	}
+
+	return nil
+}
+
+// configureGCPClients creates the GCP API clients from the specified
+// configuration.
+func configureGCPClients(ctx context.Context, conf *config.Config) error {
+	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
+		"resource_manager": configureGCPResourceManagerClientsets,
+	}
+
+	for svc, configFunc := range configFuncs {
+		if err := configFunc(ctx, conf); err != nil {
+			return fmt.Errorf("unable to configure GCP clients for %s: %w", svc, err)
 		}
 	}
 
