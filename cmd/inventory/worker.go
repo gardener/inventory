@@ -124,6 +124,7 @@ func NewWorkerCommand() *cli.Command {
 						validateWorkerConfig,
 						validateDBConfig,
 						validateAWSConfig,
+						validateGCPConfig,
 					}
 
 					for _, validator := range validatorFuncs {

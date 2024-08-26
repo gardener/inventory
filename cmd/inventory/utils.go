@@ -44,6 +44,7 @@ import (
 	"github.com/gardener/inventory/pkg/core/config"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/version"
 )
 
 // na is the const used to represent N/A values
@@ -80,14 +81,6 @@ var errNoAWSTokenRetriever = errors.New("no AWS token retriever specified")
 // unknown/unsupported identity token retriever.
 var errUnknownAWSTokenRetriever = errors.New("unknown AWS token retriever specified")
 
-// errNoAWSServiceCredentials is an error, which is returned when an AWS service
-// (e.g. EC2, ELBv2, etc.) does not have any named credentials configured.
-var errNoAWSServiceCredentials = errors.New("no credentials specified for service")
-
-// errUnknownAWSNamedCredentials is an error which is returned when a service is
-// using an unknown AWS named credentials.
-var errUnknownAWSNamedCredentials = errors.New("unknown AWS named credentials")
-
 // errInvalidLogLevel is an error, which is returned when an invalid log level
 // has been configured.
 var errInvalidLogLevel = errors.New("invalid log level")
@@ -95,6 +88,23 @@ var errInvalidLogLevel = errors.New("invalid log level")
 // errInvalidLogFormat is an error, which is returned when an invalid log format
 // has been configured.
 var errInvalidLogFormat = errors.New("invalid log format")
+
+// errNoServiceCredentials is an error, which is returned when an cloud provider
+// API service (e.g. AWS, GCP, etc.)  does not have any named credentials
+// configured.
+var errNoServiceCredentials = errors.New("no credentials specified for service")
+
+// errUnknownNamedCredentials is an error which is returned when a service is
+// using an unknown named credentials.
+var errUnknownNamedCredentials = errors.New("unknown named credentials")
+
+// errNoGCPAuthenticationMethod is an error, which is returned when using an
+// unknown/unsupported GCP authentication method.
+var errNoGCPAuthenticationMethod = errors.New("no GCP authentication method specified")
+
+// errUnknownGCPAuthenticationMethod is an error, which is returned when using
+// an unknown/unsupported GCP authentication method/strategy.
+var errUnknownGCPAuthenticationMethod = errors.New("unknown GCP authentication method specified")
 
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
@@ -106,6 +116,51 @@ func getConfig(ctx *cli.Context) *config.Config {
 func validateDBConfig(conf *config.Config) error {
 	if conf.Database.DSN == "" {
 		return errInvalidDSN
+	}
+
+	return nil
+}
+
+// validateGCPConfig validates the GCP configuration settings.
+func validateGCPConfig(conf *config.Config) error {
+	if conf.GCP.UserAgent == "" {
+		conf.GCP.UserAgent = fmt.Sprintf("gardener-inventory/%s", version.Version)
+	}
+
+	// Make sure that the GCP services have named credentials configured.
+	services := map[string][]string{
+		"resource_manager": conf.GCP.Services.ResourceManager.UseCredentials,
+		"compute":          conf.GCP.Services.Compute.UseCredentials,
+	}
+
+	for service, namedCredentials := range services {
+		// We expect named credentials to be specified explicitly
+		if len(namedCredentials) == 0 {
+			return fmt.Errorf("gcp: %w: %s", errNoServiceCredentials, service)
+		}
+
+		// Validate that the named credentials are actually defined.
+		for _, nc := range namedCredentials {
+			if _, ok := conf.GCP.Credentials[nc]; !ok {
+				return fmt.Errorf("gcp: %w service %s refers to %s", errUnknownNamedCredentials, service, nc)
+			}
+		}
+	}
+
+	// Validate the named credentials for using valid authentication
+	// methods/strategies.
+	supportedAuthnMethods := []string{
+		config.GCPAuthenticationMethodNone,
+		config.GCPAuthenticationMethodKeyFile,
+	}
+
+	for name, creds := range conf.GCP.Credentials {
+		if creds.Authentication == "" {
+			return fmt.Errorf("%w: %s", errNoGCPAuthenticationMethod, name)
+		}
+		if !slices.Contains(supportedAuthnMethods, creds.Authentication) {
+			return fmt.Errorf("%w: %s uses %s", errUnknownGCPAuthenticationMethod, name, creds.Authentication)
+		}
 	}
 
 	return nil
@@ -130,14 +185,14 @@ func validateAWSConfig(conf *config.Config) error {
 		// We expect at least one named credential to be present per
 		// service
 		if len(namedCredentials) == 0 {
-			return fmt.Errorf("%w: %s", errNoAWSServiceCredentials, service)
+			return fmt.Errorf("aws: %w: %s", errNoServiceCredentials, service)
 		}
 
 		// Validate that the named credentials used by the services are
 		// actually configured.
 		for _, nc := range namedCredentials {
 			if _, ok := conf.AWS.Credentials[nc]; !ok {
-				return fmt.Errorf("%w: service %s refers %s", errUnknownAWSNamedCredentials, service, nc)
+				return fmt.Errorf("aws: %w: service %s refers %s", errUnknownNamedCredentials, service, nc)
 			}
 		}
 	}
@@ -327,7 +382,7 @@ func newTokenFileCredentialsProvider(conf *config.Config, creds config.AWSCreden
 func loadAWSConfig(ctx context.Context, conf *config.Config, namedCredentials string) (aws.Config, error) {
 	creds, ok := conf.AWS.Credentials[namedCredentials]
 	if !ok {
-		return aws.Config{}, fmt.Errorf("%w: %s", errUnknownAWSNamedCredentials, namedCredentials)
+		return aws.Config{}, fmt.Errorf("%w: %s", errUnknownNamedCredentials, namedCredentials)
 	}
 
 	// Default set of options
@@ -659,7 +714,6 @@ func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
 }
 
 func newGardenConfigs(conf *config.Config) (map[string]*rest.Config, error) {
-
 	// 1. Check for token according the configuration
 	if conf.VirtualGarden.TokenPath != "" {
 		return constructGardenConfigWithToken(conf)
