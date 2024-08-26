@@ -21,6 +21,17 @@ const (
 
 	// DefaultAWSAppID is the name of the default AWS App ID.
 	DefaultAWSAppID = "gardener-inventory"
+
+	// GCPAuthenticationMethodNone is the name of the default authentication
+	// method/strategy to use when creating GCP API clients.  In this
+	// strategy Application Default Credentials (ADC) is used when
+	// configuring the API clients.
+	GCPAuthenticationMethodNone = "none"
+
+	// GCPAuthenticationMethodKeyFile is the name of the authentication
+	// method/strategy to use when creating API clients, which are
+	// authenticated using service account JSON key files.
+	GCPAuthenticationMethodKeyFile = "key_file"
 )
 
 // ErrNoConfigVersion error is returned when the configuration does not specify
@@ -73,11 +84,77 @@ type Config struct {
 
 // GCPConfig provides GCP specific configuration settings.
 type GCPConfig struct {
-	// The Kubernetes API server URL of the GCP regional soil cluster.
+	// UserAgent is the User-Agent header to configure for the API clients.
+	UserAgent string `yaml:"user_agent"`
+
+	// Services provides the GCP service-specific configuration.
+	Services GCPServices `yaml:"services"`
+
+	// Credentials specifies the GCP named credentials configuration, which
+	// is used by the various GCP services.
+	Credentials map[string]GCPCredentialsConfig `yaml:"credentials"`
+
+	// SoilRegionalHost is the Kubernetes API server URL of the GCP regional
+	// soil cluster.
 	SoilRegionalHost string `yaml:"soil_regional_host"`
 
-	// The path to the CA certificate of the GCP regional soil cluster.
+	// SoilRegionalCAPath is the path to the CA certificate of the GCP
+	// regional soil cluster.
 	SoilRegionalCAPath string `yaml:"soil_regional_ca_path"`
+}
+
+// GCPServices provides service-specific configuration for the GCP services.
+type GCPServices struct {
+	// ResourceManager contains the Resource Manager service configuration.
+	ResourceManager GCPServiceConfig `yaml:"resource_manager"`
+
+	// Compute contains the Compute Service configuration.
+	Compute GCPServiceConfig `yaml:"compute"`
+}
+
+// GCPServiceConfig provides service-specific configuration for a GCP service.
+type GCPServiceConfig struct {
+	// UseCredentials specifies the name of the credentials to use.
+	UseCredentials []string `yaml:"use_credentials"`
+}
+
+// GCPCredentialsConfig provides named credentials configuration for the GCP API
+// clients.
+type GCPCredentialsConfig struct {
+	// Authentication specifies the authentication method/strategy to use
+	// when creating GCP API clients.
+	//
+	// The currently supported authentication strategies are `none' and
+	// `key_file'.
+	//
+	// When using `none' as the authentication strategy the GCP API client
+	// will be initialized with Application Default Credentials (ADC) [1].
+	//
+	// When using `key_file' as the authentication strategy, the GCP API
+	// client will be configured to authenticate using the specified service
+	// account JSON key file [2].
+	//
+	// [1]: https://cloud.google.com/docs/authentication/application-default-credentials
+	// [2]: https://cloud.google.com/iam/docs/keys-create-delete
+	Authentication string `yaml:"authentication"`
+
+	// Projects specifies the list of projects the credentials are valid
+	// for.  When creating the respective GCP API clients collection will
+	// happen only against the specified projects.
+	Projects []string `yaml:"projects"`
+
+	// KeyFile provides the settings to use for authentication when using
+	// service account JSON Key File [1].
+	//
+	// [1]: https://cloud.google.com/iam/docs/keys-create-delete
+	KeyFile GCPKeyFile `yaml:"key_file"`
+}
+
+// GCPKeyFile provides the authentication settings for using service account
+// JSON Key File.
+type GCPKeyFile struct {
+	// Path specifies the path to the service account JSON key file.
+	Path string `yaml:"path"`
 }
 
 // AWSConfig provides AWS specific configuration settings.
