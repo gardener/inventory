@@ -33,6 +33,10 @@ dashboard:
 
 # GCP specific configuration
 gcp:
+  # Setting `is_enabled' to false would not create API clients for GCP, and as a
+  # result Inventory will not process any of the GCP collection tasks.
+  is_enabled: true
+
   # User-Agent to set for the API clients
   user_agent: gardener-inventory/0.1.0
 
@@ -92,6 +96,10 @@ gcp:
 
 # AWS specific configuration
 aws:
+  # Setting `is_enabled' to false would not create API clients for AWS, and as a
+  # result Inventory will not process any of the AWS collection tasks.
+  is_enabled: true
+
   region: eu-central-1  # Frankfurt
   default_region: eu-central-1  # Frankfurt
   app_id: gardener-inventory  # Optional application specific identifier
