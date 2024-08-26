@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"slices"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"google.golang.org/api/option"
 
@@ -153,6 +154,44 @@ func configureGCPResourceManagerClientsets(ctx context.Context, conf *config.Con
 	return nil
 }
 
+// configureGCPComputeClientsets configures the GCP Compute API clientsets.
+func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) error {
+	for _, namedCreds := range conf.GCP.Services.Compute.UseCredentials {
+		opts, err := getGCPClientOptions(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		nc, ok := conf.GCP.Credentials[namedCreds]
+		if !ok {
+			return fmt.Errorf("gcp: %w: %s", errUnknownNamedCredentials, namedCreds)
+		}
+
+		// Register the client for each specified GCP project
+		for _, project := range nc.Projects {
+			c, err := compute.NewInstancesRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create client for %s: %w", namedCreds, err)
+			}
+			client := &gcpclients.Client[*compute.InstancesClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           c,
+			}
+			gcpclients.InstancesClientset.Overwrite(project, client)
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "instances",
+				"credentials", client.NamedCredentials,
+				"project", project,
+			)
+		}
+	}
+
+	return nil
+}
+
 // configureGCPClients creates the GCP API clients from the specified
 // configuration.
 func configureGCPClients(ctx context.Context, conf *config.Config) error {
@@ -164,6 +203,7 @@ func configureGCPClients(ctx context.Context, conf *config.Config) error {
 	slog.Info("configuring GCP clients")
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"resource_manager": configureGCPResourceManagerClientsets,
+		"compute":          configureGCPComputeClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
