@@ -66,6 +66,11 @@ func HandleCollectBucketsTask(ctx context.Context, t *asynq.Task) error {
 // configured AWS S3 clients.
 func enqueueCollectBuckets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
+	if awsclients.S3Clientset.Length() == 0 {
+		logger.Warn("no AWS clients found")
+		return nil
+	}
+
 	err := awsclients.S3Clientset.Range(func(accountID string, _ *awsclients.Client[*s3.Client]) error {
 		p := CollectBucketsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)

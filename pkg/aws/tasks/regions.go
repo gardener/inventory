@@ -66,6 +66,11 @@ func HandleCollectRegionsTask(ctx context.Context, t *asynq.Task) error {
 // for all configured AWS EC2 clients.
 func enqueueCollectRegions(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
+	if awsclients.EC2Clientset.Length() == 0 {
+		logger.Warn("no AWS clients found")
+		return nil
+	}
+
 	err := awsclients.EC2Clientset.Range(func(accountID string, _ *awsclients.Client[*ec2.Client]) error {
 		p := &CollectRegionsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)
