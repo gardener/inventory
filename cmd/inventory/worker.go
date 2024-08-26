@@ -165,8 +165,11 @@ func NewWorkerCommand() *cli.Command {
 					asynqclient.SetClient(client)
 
 					// AWS clients config
-					slog.Info("configuring AWS clients")
 					if err := configureAWSClients(ctx.Context, conf); err != nil {
+						return err
+					}
+
+					if err := configureGCPClients(ctx.Context, conf); err != nil {
 						return err
 					}
 
