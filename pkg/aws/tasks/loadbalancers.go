@@ -140,6 +140,12 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 				"reason", err,
 			)
 		}
+	} else {
+		logger.Warn(
+			"AWS client not found",
+			"region", payload.Region,
+			"account_id", payload.AccountID,
+		)
 	}
 
 	if awsclients.ELBv2Clientset.Exists(payload.AccountID) {
@@ -151,6 +157,12 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 				"reason", err,
 			)
 		}
+	} else {
+		logger.Warn(
+			"AWS client not found",
+			"region", payload.Region,
+			"account_id", payload.AccountID,
+		)
 	}
 
 	return nil

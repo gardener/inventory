@@ -84,6 +84,11 @@ func enqueueCollectVPCs(ctx context.Context) error {
 	// Enqueue task for each region
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
+			logger.Warn(
+				"AWS client not found",
+				"region", r.Name,
+				"account_id", r.AccountID,
+			)
 			continue
 		}
 

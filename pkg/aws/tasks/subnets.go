@@ -83,6 +83,11 @@ func enqueueCollectSubnets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
+			logger.Warn(
+				"AWS client not found",
+				"region", r.Name,
+				"account_id", r.AccountID,
+			)
 			continue
 		}
 
