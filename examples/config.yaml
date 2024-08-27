@@ -169,7 +169,7 @@ aws:
 
 scheduler:
   jobs:
-    # AWS
+    # AWS tasks
     - name: "aws:task:collect-regions"
       spec: "@every 720h"  # 30 days
       desc: "Collect AWS Regions"
@@ -205,7 +205,7 @@ scheduler:
       spec: "@every 30m"
       desc: "Link all AWS models"
 
-    # Gardener
+    # Gardener tasks
     - name: "g:task:collect-projects"
       spec: "@every 1h"
       desc: "Collect Gardener Projects"
@@ -227,6 +227,14 @@ scheduler:
     - name: "g:task:link-all"
       spec: "@every 30m"
       desc: "Link all Gardener models"
+
+    # GCP tasks
+    - name: "gcp:task:collect-projects"
+      spec: "@every 1h"
+      desc: "Collect GCP Projects"
+    - name: "gcp:task:link-all"
+      spec: "@every 30m"
+      desc: "Link all GCP models"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
@@ -266,6 +274,9 @@ scheduler:
           - name: "g:model:cloud_profile"
             duration: 24h
           - name: "g:model:cloud_profile_aws_image"
+            duration: 24h
+          # GCP
+          - name: "gcp:model:project"
             duration: 24h
 
 virtual_garden:
