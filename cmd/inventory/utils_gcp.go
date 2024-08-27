@@ -169,21 +169,42 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 
 		// Register the client for each specified GCP project
 		for _, project := range nc.Projects {
-			c, err := compute.NewInstancesRESTClient(ctx, opts...)
+			instanceClient, err := compute.NewInstancesRESTClient(ctx, opts...)
 			if err != nil {
-				return fmt.Errorf("gcp: cannot create client for %s: %w", namedCreds, err)
+				return fmt.Errorf("gcp: cannot create instance client for %s: %w", namedCreds, err)
 			}
-			client := &gcpclients.Client[*compute.InstancesClient]{
+			instanceClientWrapper := &gcpclients.Client[*compute.InstancesClient]{
 				NamedCredentials: namedCreds,
 				ProjectID:        project,
-				Client:           c,
+				Client:           instanceClient,
 			}
-			gcpclients.InstancesClientset.Overwrite(project, client)
+			gcpclients.InstancesClientset.Overwrite(project, instanceClientWrapper)
+
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
 				"sub_service", "instances",
-				"credentials", client.NamedCredentials,
+				"credentials", namedCreds,
+				"project", project,
+			)
+
+			networkClient, err := compute.NewNetworksRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create network client for %s: %w", namedCreds, err)
+			}
+
+			networkClientWrapper := &gcpclients.Client[*compute.NetworksClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           networkClient,
+			}
+			gcpclients.NetworksClientset.Overwrite(project, networkClientWrapper)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "networks",
+				"credentials", namedCreds,
 				"project", project,
 			)
 		}

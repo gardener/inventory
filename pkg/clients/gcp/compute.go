@@ -13,3 +13,8 @@ import (
 // InstancesClientset provides the registry of GCP API clients for interfacing
 // with the Compute Instances API service.
 var InstancesClientset = registry.New[string, *Client[*compute.InstancesClient]]()
+
+// NetworksClientset provides the registry of GCP API clients for interfacing
+// with the networks API service.
+var NetworksClientset = registry.New[string, *Client[*compute.NetworksClient]]()
+
