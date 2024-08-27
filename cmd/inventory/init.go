@@ -10,4 +10,5 @@ import (
 	_ "github.com/gardener/inventory/pkg/common/tasks"
 	_ "github.com/gardener/inventory/pkg/gardener/models"
 	_ "github.com/gardener/inventory/pkg/gardener/tasks"
+	_ "github.com/gardener/inventory/pkg/gcp/tasks"
 )

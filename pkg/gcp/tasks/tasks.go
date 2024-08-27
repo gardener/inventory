@@ -26,7 +26,9 @@ const (
 // GCP objects.
 func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
-	taskFns := []utils.TaskConstructor{}
+	taskFns := []utils.TaskConstructor{
+		NewCollectProjectsTask,
+	}
 
 	return utils.Enqueue(taskFns)
 }
@@ -44,4 +46,5 @@ func init() {
 	// Task handlers
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
+	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
 }
