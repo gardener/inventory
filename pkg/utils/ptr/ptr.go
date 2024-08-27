@@ -13,3 +13,9 @@ func Value[T any](p *T, def T) T {
 
 	return def
 }
+
+// To returns a pointer to a copy of the given value.
+// One use case of this is to circumvent UnadressableOperand errors.
+func To[T any](v T) *T {
+	return &v
+}

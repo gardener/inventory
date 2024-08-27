@@ -29,6 +29,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	taskFns := []utils.TaskConstructor{
 		NewCollectProjectsTask,
 		NewCollectInstancesTask,
+		NewCollectVPCsTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -51,4 +52,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectInstances, asynq.HandlerFunc(HandleCollectInstancesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectVPCs, asynq.HandlerFunc(HandleCollectVPCsTask))
 }

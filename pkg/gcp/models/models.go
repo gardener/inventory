@@ -19,7 +19,7 @@ type Project struct {
 	coremodels.Model
 
 	// Name is the globally unique id of the project represented as
-	// "projects/<uin64>" value
+	// "projects/<uint64>" value
 	Name string `bun:"name,notnull,unique"`
 	// ProjectID is the user-defined globally unique project id.
 	ProjectID string `bun:"project_id,notnull,unique"`
@@ -71,10 +71,25 @@ type InstanceToProject struct {
 	InstanceID uint64 `bun:"instance_id,notnull,unique:l_gcp_instance_to_project_key"`
 }
 
+// VPC represents a GCP VPC
+type VPC struct {
+	bun.BaseModel `bun:"table:gcp_vpc"`
+	coremodels.Model
+
+	VPCID                uint64    `bun:"vpc_id,notnull,unique:gcp_vpc_key"`
+	ProjectID            string    `bun:"project_id,notnull,unique:gcp_vpc_key"`
+	Name                 string    `bun:"name,notnull,unique"`
+	VPCCreationTimestamp time.Time `bun:"vpc_creation_timestamp"`
+	Description          string    `bun:"description,nullzero"`
+	GatewayIPv4          string    `bun:"gateway_ipv4,nullzero"`
+	FirewallPolicy       string    `bun:"firewall_policy,nullzero"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
 	registry.ModelRegistry.MustRegister("gcp:model:instance", &Instance{})
+	registry.ModelRegistry.MustRegister("gcp:model:vpc", &VPC{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
