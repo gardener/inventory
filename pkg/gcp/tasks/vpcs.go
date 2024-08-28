@@ -82,6 +82,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 			"reason",
 			err,
 		)
+        return err
 	}
 
 	for _, project := range projects {
@@ -117,10 +118,9 @@ func enqueueCollectVPCs(ctx context.Context) error {
 			"queue", info.Queue,
 			"project_id", projectID,
 		)
-		return nil
 	}
 
-	return err
+	return nil
 }
 
 // collectVPCs collects the GCP VPCs using the client configuration
@@ -193,20 +193,17 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		return nil
 	}
 
-	logger.Info("Collected vpcs", "count", len(vpcs))
-
-		out, err := db.DB.NewInsert().
-			Model(&vpcs).
-			On("CONFLICT (vpc_id, project_id) DO UPDATE").
-			Set("name = EXCLUDED.name").
-			Set("vpc_creation_timestamp = EXCLUDED.vpc_creation_timestamp").
-			Set("description = EXCLUDED.description").
-			Set("gateway_ipv4 = EXCLUDED.gateway_ipv4").
-			Set("firewall_policy = EXCLUDED.firewall_policy").
-
-			Set("updated_at = EXCLUDED.updated_at").
-			Returning("id").
-			Exec(ctx)
+	out, err := db.DB.NewInsert().
+		Model(&vpcs).
+		On("CONFLICT (vpc_id, project_id) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("vpc_creation_timestamp = EXCLUDED.vpc_creation_timestamp").
+		Set("description = EXCLUDED.description").
+		Set("gateway_ipv4 = EXCLUDED.gateway_ipv4").
+		Set("firewall_policy = EXCLUDED.firewall_policy").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
 
 		if err != nil {
 			logger.Error(
