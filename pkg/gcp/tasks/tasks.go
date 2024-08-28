@@ -28,6 +28,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
 	taskFns := []utils.TaskConstructor{
 		NewCollectProjectsTask,
+		NewCollectInstancesTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -36,7 +37,9 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 // HandleLinkAllTask is a handler, which establishes links between the various
 // GCP models.
 func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
-	linkFns := []utils.LinkFunction{}
+	linkFns := []utils.LinkFunction{
+		LinkInstanceWithProject,
+	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
 }
@@ -47,4 +50,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectInstances, asynq.HandlerFunc(HandleCollectInstancesTask))
 }
