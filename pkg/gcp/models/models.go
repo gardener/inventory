@@ -18,9 +18,13 @@ type Project struct {
 	bun.BaseModel `bun:"table:gcp_project"`
 	coremodels.Model
 
-	Name              string    `bun:"name,notnull"`
+	// Name is the globally unique id of the project represented as
+	// "projects/<uin64>" value
+	Name string `bun:"name,notnull,unique"`
+	// ProjectID is the user-defined globally unique project id.
+	ProjectID string `bun:"project_id,notnull,unique"`
+
 	Parent            string    `bun:"parent,notnull"`
-	ProjectID         string    `bun:"project_id,notnull,unique"`
 	State             string    `bun:"state,notnull"`
 	DisplayName       string    `bun:"display_name,notnull"`
 	ProjectCreateTime time.Time `bun:"project_create_time,nullzero"`
