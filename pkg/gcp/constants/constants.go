@@ -9,6 +9,9 @@ const (
 	// during a paginated call.
 	PageSize = 100
 
-	// ProjectsPrefix is the prefix of project identifiers.
+	// ProjectsPrefix is the prefix for project identifiers.
 	ProjectsPrefix = "projects/"
+
+	// ZonesPrefix is the prefix for zone identifiers.
+	ZonesPrefix = "zones/"
 )
