@@ -61,10 +61,21 @@ type Instance struct {
 	Project              *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
+// InstanceToProject represents a link table connecting the [Project] with
+// [Instance] models.
+type InstanceToProject struct {
+	bun.BaseModel `bun:"table:l_gcp_instance_to_project"`
+	coremodels.Model
+
+	ProjectID  uint64 `bun:"project_id,notnull,unique:l_gcp_instance_to_project_key"`
+	InstanceID uint64 `bun:"instance_id,notnull,unique:l_gcp_instance_to_project_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
 	registry.ModelRegistry.MustRegister("gcp:model:instance", &Instance{})
 
 	// Link tables
+	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
 }
