@@ -78,7 +78,6 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	out, err := db.DB.NewInsert().
 		Model(&items).
 		On("CONFLICT (project_id) DO UPDATE").
-		Set("name = EXCLUDED.name").
 		Set("parent = EXCLUDED.parent").
 		Set("state = EXCLUDED.state").
 		Set("display_name = EXCLUDED.display_name").
