@@ -232,6 +232,9 @@ scheduler:
     - name: "gcp:task:collect-projects"
       spec: "@every 1h"
       desc: "Collect GCP Projects"
+    - name: "gcp:task:collect-instances"
+      spec: "@every 1h"
+      desc: "Collect GCP Instances"
     - name: "gcp:task:link-all"
       spec: "@every 30m"
       desc: "Link all GCP models"
@@ -277,6 +280,8 @@ scheduler:
             duration: 24h
           # GCP
           - name: "gcp:model:project"
+            duration: 24h
+          - name: "gcp:model:instance"
             duration: 24h
 
 virtual_garden:
