@@ -76,13 +76,14 @@ type VPC struct {
 	bun.BaseModel `bun:"table:gcp_vpc"`
 	coremodels.Model
 
-	VPCID                uint64    `bun:"vpc_id,notnull,unique:gcp_vpc_key"`
-	ProjectID            string    `bun:"project_id,notnull,unique:gcp_vpc_key"`
-	Name                 string    `bun:"name,notnull,unique"`
-	VPCCreationTimestamp time.Time `bun:"vpc_creation_timestamp"`
-	Description          string    `bun:"description,nullzero"`
-	GatewayIPv4          string    `bun:"gateway_ipv4,nullzero"`
-	FirewallPolicy       string    `bun:"firewall_policy,nullzero"`
+	VPCID                    uint64 `bun:"vpc_id,notnull,unique:gcp_vpc_to_project_key"`
+	ProjectID                string `bun:"project_id,notnull,unique:gcp_vpc_to_project_key"`
+	Name                     string `bun:"name,notnull,unique"`
+	VPCCreationTimestamp     string `bun:"vpc_creation_timestamp,nullzero"`
+	Description              string `bun:"description,notnull"`
+	GatewayIPv4              string `bun:"gateway_ipv4,notnull"`
+	FirewallPolicy           string `bun:"firewall_policy,notnull"`
+	MaxTransmissionUnitBytes int32  `bun:"max_transmission_units_bytes,notnull"`
 }
 
 func init() {

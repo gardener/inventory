@@ -8,9 +8,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"time"
 
+	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"github.com/hibiken/asynq"
+	"google.golang.org/api/iterator"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -19,13 +21,8 @@ import (
 	"github.com/gardener/inventory/pkg/core/tasks"
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
-	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
-
-	"google.golang.org/api/iterator"
 )
 
 const (
@@ -75,19 +72,7 @@ func HandleCollectVPCsTask(ctx context.Context, t *asynq.Task) error {
 func enqueueCollectVPCs(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	projects, err := gcputils.GetProjectsFromDB(ctx)
-	if err != nil {
-		logger.Error(
-			"unable to retrieve projects from db",
-			"reason",
-			err,
-		)
-        return err
-	}
-
-	for _, project := range projects {
-		projectID := project.ProjectID
-
+	err := gcpclients.ProjectsClientset.Range(func(projectID string, _ *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
 		p := &CollectVPCsPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
 		if err != nil {
@@ -118,9 +103,11 @@ func enqueueCollectVPCs(ctx context.Context) error {
 			"queue", info.Queue,
 			"project_id", projectID,
 		)
-	}
 
-	return nil
+		return nil
+	})
+
+	return err
 }
 
 // collectVPCs collects the GCP VPCs using the client configuration
@@ -136,7 +123,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 	logger.Info("collecting GCP VPCs", "project_id", payload.ProjectID)
 
 	req := computepb.ListNetworksRequest{
-		Project: payload.ProjectID,
+		Project:    payload.ProjectID,
 		MaxResults: ptr.To(constants.PageSize),
 	}
 
@@ -146,7 +133,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 
 	for {
 		vpc, err := vpcIter.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 
@@ -158,34 +145,16 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 			continue
 		}
 
-		if err := validateVPC(vpc); err != nil {
-			logger.Error("invalid vpc returned",
-				"project_id", payload.ProjectID,
-				"reason", err,
-			)
-			continue
-		}
-
-		creationTimestamp, err := time.Parse(time.RFC3339, *vpc.CreationTimestamp)
-		if err != nil {
-			logger.Error(
-				"invalid vpc creation timestamp",
-				"project_id", payload.ProjectID,
-				"reason", err,
-			)
-			continue
-		}
-
 		item := models.VPC{
-			VPCID:                *vpc.Id,
-			ProjectID:            payload.ProjectID,
-			Name:                 *vpc.Name,
-			VPCCreationTimestamp: creationTimestamp,
-			Description:          ptr.Value(vpc.Description, ""),
-			GatewayIPv4:          ptr.Value(vpc.GatewayIPv4, ""),
-			FirewallPolicy:       ptr.Value(vpc.FirewallPolicy, ""),
+			VPCID:                    vpc.GetId(),
+			ProjectID:                payload.ProjectID,
+			Name:                     vpc.GetName(),
+			VPCCreationTimestamp:     vpc.GetCreationTimestamp(),
+			Description:              vpc.GetDescription(),
+			GatewayIPv4:              vpc.GetGatewayIPv4(),
+			FirewallPolicy:           vpc.GetFirewallPolicy(),
+			MaxTransmissionUnitBytes: vpc.GetMtu(),
 		}
-
 		vpcs = append(vpcs, item)
 	}
 
@@ -201,47 +170,30 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		Set("description = EXCLUDED.description").
 		Set("gateway_ipv4 = EXCLUDED.gateway_ipv4").
 		Set("firewall_policy = EXCLUDED.firewall_policy").
+		Set("max_transmission_units_bytes = EXCLUDED.max_transmission_units_bytes").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
 
-		if err != nil {
-			logger.Error(
-				"could not insert vpcs into db",
-				"project_id", payload.ProjectID,
-				"reason", err,
-			)
-			return err
-		}
-
-		count, err := out.RowsAffected()
-		if err != nil {
-			return err
-		}
-
-		logger.Info(
-			"populated gcp vpcs",
+	if err != nil {
+		logger.Error(
+			"could not insert vpcs into db",
 			"project_id", payload.ProjectID,
-			"count", count,
+			"reason", err,
 		)
-
-	return nil
-}
-
-func validateVPC(vpc *computepb.Network) error {
-	if vpc == nil {
-		return errors.New("missing vpc")
-	}
-	if vpc.Name == nil {
-		return errors.New("missing vpc name")
+		return err
 	}
 
-	if vpc.Id == nil {
-		return errors.New("missing vpc id")
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
 	}
-	if vpc.CreationTimestamp == nil {
-		return errors.New("missing vpc creation timestamp")
-	}
+
+	logger.Info(
+		"populated gcp vpcs",
+		"project_id", payload.ProjectID,
+		"count", count,
+	)
 
 	return nil
 }
