@@ -6,7 +6,6 @@ package tasks
 
 import (
 	"context"
-	"fmt"
 
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	resourcemanagerpb "cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
@@ -16,6 +15,7 @@ import (
 	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gcp/models"
+	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -32,7 +32,7 @@ func NewCollectProjectsTask() *asynq.Task {
 func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	if gcpclients.ProjectsClientset.Length() == 0 {
-		logger.Warn("no GCP clients found")
+		logger.Warn("no GCP project clients found")
 		return nil
 	}
 
@@ -40,7 +40,7 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	err := gcpclients.ProjectsClientset.Range(func(projectID string, client *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
 		logger.Info("collecting GCP project", "project", projectID)
 		req := &resourcemanagerpb.GetProjectRequest{
-			Name: fmt.Sprintf("projects/%s", projectID),
+			Name: gcputils.ProjectFQN(projectID),
 		}
 		p, err := client.Client.GetProject(ctx, req)
 		if err != nil {
