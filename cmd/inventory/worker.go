@@ -40,6 +40,7 @@ func NewWorkerCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					servers, err := inspector.Servers()
 					if err != nil {
 						return err
@@ -94,6 +95,7 @@ func NewWorkerCommand() *cli.Command {
 					workerName := ctx.String("worker")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					servers, err := inspector.Servers()
 					if err != nil {
 						return err
@@ -140,6 +142,7 @@ func NewWorkerCommand() *cli.Command {
 					db := newDB(conf)
 					defer db.Close()
 					client := newClient(conf)
+					defer client.Close()
 					server := newServer(conf)
 
 					// Gardener client configs
@@ -172,6 +175,7 @@ func NewWorkerCommand() *cli.Command {
 					if err := configureGCPClients(ctx.Context, conf); err != nil {
 						return err
 					}
+					defer closeGCPClients()
 
 					// Configure logging and middlewares
 					slog.Info("configuring logging and middlewares")

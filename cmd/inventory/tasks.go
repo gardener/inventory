@@ -64,6 +64,7 @@ func NewTaskCommand() *cli.Command {
 					taskID := ctx.String("id")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					return inspector.CancelProcessing(taskID)
 				},
 			},
@@ -88,6 +89,7 @@ func NewTaskCommand() *cli.Command {
 					queue := ctx.String("queue")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					return inspector.DeleteTask(queue, taskID)
 				},
 			},
@@ -314,6 +316,7 @@ func NewTaskCommand() *cli.Command {
 					taskID := ctx.String("id")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					info, err := inspector.GetTaskInfo(queueName, taskID)
 					if err != nil {
 						return err
@@ -390,6 +393,7 @@ func printTasksInState(ctx *cli.Context, state asynq.TaskState) error {
 	queueName := ctx.String("queue")
 	conf := getConfig(ctx)
 	inspector := newInspector(conf)
+	defer inspector.Close()
 	headers := []string{
 		"ID",
 		"TYPE",

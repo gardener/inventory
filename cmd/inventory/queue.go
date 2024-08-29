@@ -29,6 +29,7 @@ func NewQueueCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					queues, err := inspector.Queues()
 					if err != nil {
 						return err
@@ -57,6 +58,7 @@ func NewQueueCommand() *cli.Command {
 					queueName := ctx.String("name")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					q, err := inspector.GetQueueInfo(queueName)
 					if err != nil {
 						return err
@@ -97,6 +99,7 @@ func NewQueueCommand() *cli.Command {
 					queueName := ctx.String("name")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					return inspector.PauseQueue(queueName)
 				},
 			},
@@ -116,6 +119,7 @@ func NewQueueCommand() *cli.Command {
 					queueName := ctx.String("name")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 					return inspector.UnpauseQueue(queueName)
 				},
 			},
@@ -142,6 +146,7 @@ func NewQueueCommand() *cli.Command {
 					messageType := ctx.String("type")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
+					defer inspector.Close()
 
 					typeToFunc := map[string]func(queue string) (int, error){
 						"scheduled": inspector.DeleteAllScheduledTasks,
