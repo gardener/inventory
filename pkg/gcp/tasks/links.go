@@ -61,3 +61,52 @@ func LinkInstanceWithProject(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkVPCWithProject creates links between the [models.VPC] and
+// [models.Project] models.
+func LinkVPCWithProject(ctx context.Context, db *bun.DB) error {
+	var items []models.VPC
+	err := db.NewSelect().
+		Model(&items).
+		Relation("Project").
+		Where("project.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.VPCToProject, 0, len(items))
+	for _, item := range items {
+		link := models.VPCToProject{
+			ProjectID: item.Project.ID,
+			VPCID:     item.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (project_id, vpc_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gcp vpc with project", "count", count)
+
+	return nil
+}
