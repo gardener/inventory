@@ -172,7 +172,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 			// Instances
 			instanceClient, err := compute.NewInstancesRESTClient(ctx, opts...)
 			if err != nil {
-				return fmt.Errorf("gcp: cannot create instance client for %s: %w", namedCreds, err)
+				return fmt.Errorf("gcp: cannot create gcp instance client for %s: %w", namedCreds, err)
 			}
 			instanceClientWrapper := &gcpclients.Client[*compute.InstancesClient]{
 				NamedCredentials: namedCreds,
@@ -192,7 +192,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 			// VPCs
 			networkClient, err := compute.NewNetworksRESTClient(ctx, opts...)
 			if err != nil {
-				return fmt.Errorf("gcp: cannot create network client for %s: %w", namedCreds, err)
+				return fmt.Errorf("gcp: cannot create gcp network client for %s: %w", namedCreds, err)
 			}
 
 			networkClientWrapper := &gcpclients.Client[*compute.NetworksClient]{
@@ -250,6 +250,27 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"credentials", namedCreds,
 				"project", project,
 			)
+
+
+			subnetClient, err := compute.NewSubnetworksRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create gcp subnet client for %s: %w", namedCreds, err)
+			}
+
+			subnetClientWrapper := &gcpclients.Client[*compute.SubnetworksClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           subnetClient,
+			}
+			gcpclients.SubnetworksClientset.Overwrite(project, subnetClientWrapper)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "subnetworks",
+				"credentials", namedCreds,
+				"project", project,
+			)
 		}
 	}
 
@@ -302,6 +323,11 @@ func closeGCPClients() {
 	})
 
 	_ = gcpclients.GlobalAddressesClientset.Range(func(_ string, client *gcpclients.Client[*compute.GlobalAddressesClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.SubnetworksClientset.Range(func(_ string, client *gcpclients.Client[*compute.SubnetworksClient]) error {
 		client.Client.Close()
 		return nil
 	})
