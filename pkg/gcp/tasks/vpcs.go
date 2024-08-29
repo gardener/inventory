@@ -18,11 +18,9 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
 	"github.com/gardener/inventory/pkg/core/registry"
-	"github.com/gardener/inventory/pkg/core/tasks"
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -115,16 +113,17 @@ func enqueueCollectVPCs(ctx context.Context) error {
 func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 	client, ok := gcpclients.NetworksClientset.Get(payload.ProjectID)
 	if !ok {
-		return asynqutils.SkipRetry(tasks.ClientNotFound(payload.ProjectID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
 
 	logger := asynqutils.GetLogger(ctx)
 
 	logger.Info("collecting GCP VPCs", "project_id", payload.ProjectID)
 
+	pageSize := uint32(constants.PageSize)
 	req := computepb.ListNetworksRequest{
 		Project:    payload.ProjectID,
-		MaxResults: ptr.To(constants.PageSize),
+		MaxResults: &pageSize,
 	}
 
 	vpcIter := client.Client.List(ctx, &req)
@@ -138,13 +137,18 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		}
 
 		if err != nil {
-			logger.Error("unable to iterate over GCP VPCs",
+			logger.Error("failed to get GCP VPCs",
 				"project_id", payload.ProjectID,
 				"reason", err,
 			)
-			continue
+			return err
 		}
 
+		logger.Info(
+			"mtu for vpc",
+			"vpc", vpc.GetName(),
+			"mtu", vpc.GetMtu(),
+		)
 		item := models.VPC{
 			VPCID:                    vpc.GetId(),
 			ProjectID:                payload.ProjectID,
