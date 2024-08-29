@@ -32,6 +32,7 @@ type Project struct {
 	ProjectDeleteTime time.Time   `bun:"project_delete_time,nullzero"`
 	Etag              string      `bun:"etag,notnull"`
 	Instances         []*Instance `bun:"rel:has-many,join:project_id=project_id"`
+	VPCs              []*VPC      `bun:"rel:has-many,join:project_id=project_id"`
 }
 
 // Instance represents a GCP Instance.
@@ -76,14 +77,25 @@ type VPC struct {
 	bun.BaseModel `bun:"table:gcp_vpc"`
 	coremodels.Model
 
-	VPCID                    uint64 `bun:"vpc_id,notnull,unique:gcp_vpc_to_project_key"`
-	ProjectID                string `bun:"project_id,notnull,unique:gcp_vpc_to_project_key"`
-	Name                     string `bun:"name,notnull,unique"`
-	VPCCreationTimestamp     string `bun:"vpc_creation_timestamp,nullzero"`
-	Description              string `bun:"description,notnull"`
-	GatewayIPv4              string `bun:"gateway_ipv4,notnull"`
-	FirewallPolicy           string `bun:"firewall_policy,notnull"`
-	MaxTransmissionUnitBytes int32  `bun:"max_transmission_units_bytes,notnull"`
+	VPCID             uint64   `bun:"vpc_id,notnull,unique:gcp_vpc_key"`
+	ProjectID         string   `bun:"project_id,notnull,unique:gcp_vpc_key"`
+	Name              string   `bun:"name,notnull"`
+	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
+	Description       string   `bun:"description,notnull"`
+	GatewayIPv4       string   `bun:"gateway_ipv4,notnull"`
+	FirewallPolicy    string   `bun:"firewall_policy,notnull"`
+	MTU               int32    `bun:"mtu,notnull"`
+	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
+}
+
+// VPCToProject represents a link table connecting the [Project] with
+// [VPC] models.
+type VPCToProject struct {
+	bun.BaseModel `bun:"table:l_gcp_vpc_to_project"`
+	coremodels.Model
+
+	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_vpc_to_project_key"`
+	VPCID     uint64 `bun:"vpc_id,notnull,unique:l_gcp_vpc_to_project_key"`
 }
 
 func init() {
@@ -94,4 +106,5 @@ func init() {
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_vpc_to_project", &VPCToProject{})
 }

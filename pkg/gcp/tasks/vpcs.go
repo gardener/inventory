@@ -9,8 +9,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
-	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"github.com/hibiken/asynq"
 	"google.golang.org/api/iterator"
 
@@ -20,6 +20,7 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
+	"github.com/gardener/inventory/pkg/gcp/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -70,13 +71,20 @@ func HandleCollectVPCsTask(ctx context.Context, t *asynq.Task) error {
 func enqueueCollectVPCs(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	err := gcpclients.ProjectsClientset.Range(func(projectID string, _ *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
+	if gcpclients.NetworksClientset.Length() == 0 {
+		logger.Warn(
+			"no gcp network clients configured. skipping task.",
+		)
+		return nil
+	}
+
+	err := gcpclients.NetworksClientset.Range(func(projectID string, _ *gcpclients.Client[*compute.NetworksClient]) error {
 		p := &CollectVPCsPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for GCP VPCs",
-				"project_id", projectID,
+				"project", projectID,
 				"reason", err,
 			)
 			return registry.ErrContinue
@@ -88,7 +96,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"project_id", projectID,
+				"project", projectID,
 				"reason", err,
 			)
 			return registry.ErrContinue
@@ -99,7 +107,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"project_id", projectID,
+			"project", projectID,
 		)
 
 		return nil
@@ -118,12 +126,14 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 
 	logger := asynqutils.GetLogger(ctx)
 
-	logger.Info("collecting GCP VPCs", "project_id", payload.ProjectID)
+	logger.Info("collecting GCP VPCs", "project", payload.ProjectID)
 
 	pageSize := uint32(constants.PageSize)
+	partialSuccess := true
 	req := computepb.ListNetworksRequest{
-		Project:    payload.ProjectID,
-		MaxResults: &pageSize,
+		Project:              utils.ProjectFQN(payload.ProjectID),
+		MaxResults:           &pageSize,
+		ReturnPartialSuccess: &partialSuccess,
 	}
 
 	vpcIter := client.Client.List(ctx, &req)
@@ -137,27 +147,23 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		}
 
 		if err != nil {
-			logger.Error("failed to get GCP VPCs",
-				"project_id", payload.ProjectID,
+			logger.Error(
+				"failed to get GCP VPCs",
+				"project", payload.ProjectID,
 				"reason", err,
 			)
 			return err
 		}
 
-		logger.Info(
-			"mtu for vpc",
-			"vpc", vpc.GetName(),
-			"mtu", vpc.GetMtu(),
-		)
 		item := models.VPC{
-			VPCID:                    vpc.GetId(),
-			ProjectID:                payload.ProjectID,
-			Name:                     vpc.GetName(),
-			VPCCreationTimestamp:     vpc.GetCreationTimestamp(),
-			Description:              vpc.GetDescription(),
-			GatewayIPv4:              vpc.GetGatewayIPv4(),
-			FirewallPolicy:           vpc.GetFirewallPolicy(),
-			MaxTransmissionUnitBytes: vpc.GetMtu(),
+			VPCID:             vpc.GetId(),
+			ProjectID:         payload.ProjectID,
+			Name:              vpc.GetName(),
+			CreationTimestamp: vpc.GetCreationTimestamp(),
+			Description:       vpc.GetDescription(),
+			GatewayIPv4:       vpc.GetGatewayIPv4(),
+			FirewallPolicy:    vpc.GetFirewallPolicy(),
+			MTU:               vpc.GetMtu(),
 		}
 		vpcs = append(vpcs, item)
 	}
@@ -170,11 +176,11 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		Model(&vpcs).
 		On("CONFLICT (vpc_id, project_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
-		Set("vpc_creation_timestamp = EXCLUDED.vpc_creation_timestamp").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("description = EXCLUDED.description").
 		Set("gateway_ipv4 = EXCLUDED.gateway_ipv4").
 		Set("firewall_policy = EXCLUDED.firewall_policy").
-		Set("max_transmission_units_bytes = EXCLUDED.max_transmission_units_bytes").
+		Set("mtu = EXCLUDED.mtu").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
@@ -182,7 +188,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 	if err != nil {
 		logger.Error(
 			"could not insert vpcs into db",
-			"project_id", payload.ProjectID,
+			"project", payload.ProjectID,
 			"reason", err,
 		)
 		return err
@@ -195,7 +201,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 
 	logger.Info(
 		"populated gcp vpcs",
-		"project_id", payload.ProjectID,
+		"project", payload.ProjectID,
 		"count", count,
 	)
 

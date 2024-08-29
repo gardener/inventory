@@ -285,6 +285,7 @@ scheduler:
           - name: "gcp:model:project"
             duration: 24h
           - name: "gcp:model:instance"
+            duration: 24h
           - name: "gcp:model:vpc"
             duration: 24h
 
