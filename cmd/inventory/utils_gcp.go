@@ -235,3 +235,21 @@ func configureGCPClients(ctx context.Context, conf *config.Config) error {
 
 	return nil
 }
+
+// closeGCPClients closes the existing GCP client connections
+func closeGCPClients() {
+	_ = gcpclients.ProjectsClientset.Range(func(projectID string, client *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.InstancesClientset.Range(func(projectID string, client *gcpclients.Client[*compute.InstancesClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.NetworksClientset.Range(func(projectID string, client *gcpclients.Client[*compute.NetworksClient]) error {
+		client.Client.Close()
+		return nil
+	})
+}
