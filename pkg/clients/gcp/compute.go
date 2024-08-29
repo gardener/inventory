@@ -25,3 +25,7 @@ var AddressesClientset = registry.New[string, *Client[*compute.AddressesClient]]
 // GlobalAddressesClientset provides the registry of GCP API clients for
 // interfacing with the Compute Global Addresses API service.
 var GlobalAddressesClientset = registry.New[string, *Client[*compute.GlobalAddressesClient]]()
+
+// SubnetworksClientset provides the registry of GCP API clients for interfacing
+// with the subnet API service.
+var SubnetworksClientset = registry.New[string, *Client[*compute.SubnetworksClient]]()
