@@ -26,6 +26,470 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "options": {
+        "basemap": {
+          "config": {
+            "server": "streets"
+          },
+          "name": "Layer 0",
+          "tooltip": false,
+          "type": "esri-xyz"
+        },
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": true,
+          "showZoom": true
+        },
+        "layers": [
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "blue"
+                },
+                "opacity": 0.7,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "field": "total",
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 5
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "Leaked VPCs Query"
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "VPCs",
+            "tooltip": true,
+            "type": "markers"
+          },
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "green"
+                },
+                "opacity": 0.7,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "field": "total",
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 5
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "Leaked Instances Query"
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "EC2 Instances",
+            "tooltip": true,
+            "type": "markers"
+          },
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "orange"
+                },
+                "opacity": 0.7,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "field": "total",
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 5
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "Leaked Buckets Query"
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "S3 Buckets",
+            "tooltip": true,
+            "type": "markers"
+          },
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "purple"
+                },
+                "opacity": 0.7,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "field": "total",
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 5
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "Unknown Machine Images Query"
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "Unknown Images",
+            "tooltip": true,
+            "type": "markers"
+          },
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "red"
+                },
+                "opacity": 0.7,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "field": "total",
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 5
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "Long Running Instances Query"
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "Long Running Instances",
+            "tooltip": true,
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "coords",
+          "lat": 44.462958,
+          "lon": -37.212241,
+          "zoom": 1.29
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n        i.region_name AS region,\n        COUNT(i.id) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nWHERE i.state = 'running' AND i.account_id IN ($aws_account)\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude);",
+          "refId": "Leaked Instances Query",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\n        v.region_name AS region,\n        COUNT(v.id) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_vpc AS v\nINNER JOIN aws_geodata AS gd ON v.region_name = gd.region_name\nWHERE v.account_id IN ($aws_account)\nGROUP BY (v.region_name, gd.city, gd.latitude, gd.longitude);",
+          "refId": "Leaked VPCs Query",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\n        b.region_name AS region,\n        COUNT(b.id) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_bucket AS b\nINNER JOIN aws_geodata AS gd ON b.region_name = gd.region_name\nWHERE b.account_id IN ($aws_account)\nGROUP BY (b.region_name, gd.city, gd.latitude, gd.longitude)\n",
+          "refId": "Leaked Buckets Query",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT\n       i.region_name AS region,\n       COUNT(i.id) AS total,\n       gd.latitude AS lat,\n       gd.longitude AS lon,\n       gd.city AS city\nFROM aws_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE i.account_id IN ($aws_account) AND cpaw.ami IS NULL\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude)\n",
+          "refId": "Unknown Machine Images Query",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\n        i.region_name AS region,\n        COUNT(i.name) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nWHERE i.launch_time < NOW() - INTERVAL '180 days' AND i.account_id IN ($aws_account)\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude);\n",
+          "refId": "Long Running Instances Query",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Leaked Resources Map",
+      "transparent": true,
+      "type": "geomap"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -52,7 +516,7 @@
         "h": 8,
         "w": 4,
         "x": 0,
-        "y": 0
+        "y": 13
       },
       "id": 2,
       "options": {
@@ -136,7 +600,7 @@
         "h": 8,
         "w": 4,
         "x": 4,
-        "y": 0
+        "y": 13
       },
       "id": 4,
       "options": {
@@ -220,7 +684,7 @@
         "h": 8,
         "w": 5,
         "x": 8,
-        "y": 0
+        "y": 13
       },
       "id": 5,
       "options": {
@@ -304,7 +768,7 @@
         "h": 8,
         "w": 5,
         "x": 13,
-        "y": 0
+        "y": 13
       },
       "id": 7,
       "options": {
@@ -389,7 +853,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 0
+        "y": 13
       },
       "id": 8,
       "options": {
@@ -478,7 +942,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 21
       },
       "id": 1,
       "options": {
@@ -555,8 +1019,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -584,7 +1047,7 @@
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 34
       },
       "id": 6,
       "options": {
@@ -676,7 +1139,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 47
       },
       "id": 3,
       "options": {
@@ -775,9 +1238,9 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 58
       },
-      "id": 9,
+      "id": 11,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -802,7 +1265,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT DISTINCT\n       i.*,\n       s.name AS shoot_name,\n       s.project_name AS project_name\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL AND i.account_id IN ($aws_account);\n",
+          "rawSql": "SELECT b.*\nFROM aws_bucket AS b\nLEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name\nWHERE gbb.name IS NULL AND account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -823,7 +1286,7 @@
           }
         }
       ],
-      "title": "List of Unknown EC2 Instance Images",
+      "title": "List of Leaked S3 Buckets",
       "type": "table"
     },
     {
@@ -875,9 +1338,9 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 69
       },
-      "id": 10,
+      "id": 9,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -902,7 +1365,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT b.*\nFROM aws_bucket AS b\nLEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name\nWHERE gbb.name IS NULL AND account_id IN ($aws_account);",
+          "rawSql": "SELECT DISTINCT\n       i.*,\n       s.name AS shoot_name,\n       s.project_name AS project_name\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL AND i.account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -923,7 +1386,7 @@
           }
         }
       ],
-      "title": "List of Leaked S3 Buckets",
+      "title": "List of Unknown EC2 Instance Images",
       "type": "table"
     }
   ],
@@ -967,6 +1430,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked AWS Resources",
   "uid": "ddod4l1vde680a",
-  "version": 4,
+  "version": 9,
   "weekStart": ""
 }
