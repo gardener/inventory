@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 6,
+  "id": 7,
   "links": [],
   "panels": [
     {
@@ -207,6 +207,7 @@
             "cellOptions": {
               "type": "auto"
             },
+            "filterable": true,
             "inspect": true
           },
           "mappings": [],
@@ -296,6 +297,7 @@
             "cellOptions": {
               "type": "auto"
             },
+            "filterable": true,
             "inspect": true
           },
           "mappings": [],
@@ -376,7 +378,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "sap-se-gcp-k8s-dev-team"
           ],
@@ -414,6 +416,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked GCP Resources",
   "uid": "fdw5qjcrnirr4a",
-  "version": 6,
+  "version": 2,
   "weekStart": ""
 }
