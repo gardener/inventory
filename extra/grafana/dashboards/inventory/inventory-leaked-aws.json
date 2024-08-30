@@ -121,7 +121,7 @@
             },
             "filterData": {
               "id": "byRefId",
-              "options": "B"
+              "options": "Leaked VPCs Query"
             },
             "location": {
               "mode": "auto"
@@ -169,7 +169,7 @@
             },
             "filterData": {
               "id": "byRefId",
-              "options": "A"
+              "options": "Leaked Instances Query"
             },
             "location": {
               "mode": "auto"
@@ -217,7 +217,7 @@
             },
             "filterData": {
               "id": "byRefId",
-              "options": "C"
+              "options": "Leaked Buckets Query"
             },
             "location": {
               "mode": "auto"
@@ -265,7 +265,7 @@
             },
             "filterData": {
               "id": "byRefId",
-              "options": "D"
+              "options": "Unknown Machine Images Query"
             },
             "location": {
               "mode": "auto"
@@ -313,7 +313,7 @@
             },
             "filterData": {
               "id": "byRefId",
-              "options": "E"
+              "options": "Long Running Instances Query"
             },
             "location": {
               "mode": "auto"
@@ -344,8 +344,8 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        i.region AS region,\n        COUNT(i.name) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region = gd.region_name\nWHERE i.state = 'running'\nGROUP BY (i.region, gd.city, gd.latitude, gd.longitude)\n",
-          "refId": "A",
+          "rawSql": "SELECT\n        i.region_name AS region,\n        COUNT(i.id) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nWHERE i.state = 'running' AND i.account_id IN ($aws_account)\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude);",
+          "refId": "Leaked Instances Query",
           "sql": {
             "columns": [
               {
@@ -373,8 +373,8 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT\n        v.region_name AS region,\n        COUNT(v.name) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_vpc AS v\nINNER JOIN aws_geodata AS gd ON v.region_name = gd.region_name\nGROUP BY (v.region_name, gd.city, gd.latitude, gd.longitude)\n",
-          "refId": "B",
+          "rawSql": "SELECT\n        v.region_name AS region,\n        COUNT(v.id) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_vpc AS v\nINNER JOIN aws_geodata AS gd ON v.region_name = gd.region_name\nWHERE v.account_id IN ($aws_account)\nGROUP BY (v.region_name, gd.city, gd.latitude, gd.longitude);",
+          "refId": "Leaked VPCs Query",
           "sql": {
             "columns": [
               {
@@ -402,8 +402,8 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT\n        b.region_name AS region,\n        COUNT(b.name) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_bucket AS b\nINNER JOIN aws_geodata AS gd ON b.region_name = gd.region_name\nGROUP BY (b.region_name, gd.city, gd.latitude, gd.longitude)\n",
-          "refId": "C",
+          "rawSql": "SELECT\n        b.region_name AS region,\n        COUNT(b.id) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_orphan_bucket AS b\nINNER JOIN aws_geodata AS gd ON b.region_name = gd.region_name\nWHERE b.account_id IN ($aws_account)\nGROUP BY (b.region_name, gd.city, gd.latitude, gd.longitude)\n",
+          "refId": "Leaked Buckets Query",
           "sql": {
             "columns": [
               {
@@ -431,8 +431,8 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT DISTINCT\n       i.region_name AS region,\n       COUNT(i.id) AS total,\n       gd.latitude AS lat,\n       gd.longitude AS lon,\n       gd.city AS city\nFROM aws_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude)\n",
-          "refId": "D",
+          "rawSql": "SELECT DISTINCT\n       i.region_name AS region,\n       COUNT(i.id) AS total,\n       gd.latitude AS lat,\n       gd.longitude AS lon,\n       gd.city AS city\nFROM aws_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE i.account_id IN ($aws_account) AND cpaw.ami IS NULL\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude)\n",
+          "refId": "Unknown Machine Images Query",
           "sql": {
             "columns": [
               {
@@ -460,8 +460,8 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT\n        i.region_name AS region,\n        COUNT(i.name) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nWHERE launch_time < NOW() - INTERVAL '180 days'\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude)\n",
-          "refId": "E",
+          "rawSql": "SELECT\n        i.region_name AS region,\n        COUNT(i.name) AS total,\n        gd.latitude AS lat,\n        gd.longitude AS lon,\n        gd.city AS city\nFROM aws_instance AS i\nINNER JOIN aws_geodata AS gd ON i.region_name = gd.region_name\nWHERE i.launch_time < NOW() - INTERVAL '180 days' AND i.account_id IN ($aws_account)\nGROUP BY (i.region_name, gd.city, gd.latitude, gd.longitude);\n",
+          "refId": "Long Running Instances Query",
           "sql": {
             "columns": [
               {
@@ -1240,7 +1240,7 @@
         "x": 0,
         "y": 58
       },
-      "id": 9,
+      "id": 11,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1265,7 +1265,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT DISTINCT\n       i.*,\n       s.name AS shoot_name,\n       s.project_name AS project_name\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL AND i.account_id IN ($aws_account);\n",
+          "rawSql": "SELECT b.*\nFROM aws_bucket AS b\nLEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name\nWHERE gbb.name IS NULL AND account_id IN ($aws_account);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1286,7 +1286,7 @@
           }
         }
       ],
-      "title": "List of Unknown EC2 Instance Images",
+      "title": "List of Leaked S3 Buckets",
       "type": "table"
     },
     {
@@ -1338,9 +1338,9 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 69
       },
-      "id": 10,
+      "id": 9,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1365,7 +1365,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT b.*\nFROM aws_bucket AS b\nLEFT JOIN g_backup_bucket AS gbb ON b.name = gbb.name\nWHERE gbb.name IS NULL AND account_id IN ($aws_account);",
+          "rawSql": "SELECT DISTINCT\n       i.*,\n       s.name AS shoot_name,\n       s.project_name AS project_name\nFROM aws_instance AS i\nINNER JOIN g_machine AS m ON i.name = m.name\nINNER JOIN g_shoot AS s ON m.namespace = s.technical_id\nLEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_profile_name AND i.image_id = cpaw.ami\nWHERE cpaw.ami IS NULL AND i.account_id IN ($aws_account);\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1386,7 +1386,7 @@
           }
         }
       ],
-      "title": "List of Leaked S3 Buckets",
+      "title": "List of Unknown EC2 Instance Images",
       "type": "table"
     }
   ],
@@ -1430,6 +1430,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked AWS Resources",
   "uid": "ddod4l1vde680a",
-  "version": 4,
+  "version": 9,
   "weekStart": ""
 }
