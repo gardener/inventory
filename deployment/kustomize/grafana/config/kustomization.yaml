@@ -23,3 +23,5 @@ configMapGenerator:
       - files/dashboards/inventory/inventory-aws.json
       - files/dashboards/inventory/inventory-gardener.json
       - files/dashboards/inventory/inventory-leaked-aws.json
+      - files/dashboards/inventory/inventory-gcp.json
+      - files/dashboards/inventory/inventory-gcp-leaked.json
