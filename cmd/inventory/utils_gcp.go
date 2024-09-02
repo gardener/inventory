@@ -238,17 +238,27 @@ func configureGCPClients(ctx context.Context, conf *config.Config) error {
 
 // closeGCPClients closes the existing GCP client connections
 func closeGCPClients() {
-	_ = gcpclients.ProjectsClientset.Range(func(projectID string, client *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
+	_ = gcpclients.ProjectsClientset.Range(func(_ string, client *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
 		client.Client.Close()
 		return nil
 	})
 
-	_ = gcpclients.InstancesClientset.Range(func(projectID string, client *gcpclients.Client[*compute.InstancesClient]) error {
+	_ = gcpclients.InstancesClientset.Range(func(_ string, client *gcpclients.Client[*compute.InstancesClient]) error {
 		client.Client.Close()
 		return nil
 	})
 
-	_ = gcpclients.NetworksClientset.Range(func(projectID string, client *gcpclients.Client[*compute.NetworksClient]) error {
+	_ = gcpclients.NetworksClientset.Range(func(_ string, client *gcpclients.Client[*compute.NetworksClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.AddressesClientset.Range(func(_ string, client *gcpclients.Client[*compute.AddressesClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.GlobalAddressesClientset.Range(func(_ string, client *gcpclients.Client[*compute.GlobalAddressesClient]) error {
 		client.Client.Close()
 		return nil
 	})

@@ -17,3 +17,11 @@ var InstancesClientset = registry.New[string, *Client[*compute.InstancesClient]]
 // NetworksClientset provides the registry of GCP API clients for interfacing
 // with the networks API service.
 var NetworksClientset = registry.New[string, *Client[*compute.NetworksClient]]()
+
+// AddressesClientset provides the registry of GCP API clients for interfacing
+// with the Compute Addresses API service.
+var AddressesClientset = registry.New[string, *Client[*compute.AddressesClient]]()
+
+// GlobalAddressesClientset provides the registry of GCP API clients for
+// interfacing with the Compute Global Addresses API service.
+var GlobalAddressesClientset = registry.New[string, *Client[*compute.GlobalAddressesClient]]()
