@@ -50,3 +50,13 @@ func RegionFromZone(zone string) string {
 
 	return zone[:idx]
 }
+
+// ResourceNameFromURL returns the name of a resource from the specified URL.
+//
+// See [Resource Names] for more details.
+//
+// [Resource Names]: https://cloud.google.com/apis/design/resource_names
+func ResourceNameFromURL(s string) string {
+	parts := strings.Split(s, "/")
+	return parts[len(parts)-1]
+}
