@@ -169,6 +169,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 
 		// Register the client for each specified GCP project
 		for _, project := range nc.Projects {
+			// Instances
 			instanceClient, err := compute.NewInstancesRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create instance client for %s: %w", namedCreds, err)
@@ -188,6 +189,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"project", project,
 			)
 
+			// VPCs
 			networkClient, err := compute.NewNetworksRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create network client for %s: %w", namedCreds, err)
@@ -204,6 +206,47 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"configured GCP client",
 				"service", "compute",
 				"sub_service", "networks",
+				"credentials", namedCreds,
+				"project", project,
+			)
+
+			// Global & Regional Addresses
+			addrClient, err := compute.NewAddressesRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create addresses client for %s: %w", namedCreds, err)
+			}
+
+			addrClientWrapper := &gcpclients.Client[*compute.AddressesClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           addrClient,
+			}
+			gcpclients.AddressesClientset.Overwrite(project, addrClientWrapper)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "addresses",
+				"credentials", namedCreds,
+				"project", project,
+			)
+
+			globalAddrClient, err := compute.NewGlobalAddressesRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create global addresses client for %s: %w", namedCreds, err)
+			}
+
+			globalAddrClientWrapper := &gcpclients.Client[*compute.GlobalAddressesClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           globalAddrClient,
+			}
+			gcpclients.GlobalAddressesClientset.Overwrite(project, globalAddrClientWrapper)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "global_addresses",
 				"credentials", namedCreds,
 				"project", project,
 			)
