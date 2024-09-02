@@ -127,6 +127,16 @@ type Address struct {
 	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
+// AddressToProject represents a link table connecting the [Project] with
+// [Address] models.
+type AddressToProject struct {
+	bun.BaseModel `bun:"table:l_gcp_addr_to_project"`
+	coremodels.Model
+
+	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_addr_to_project_key"`
+	AddressID uint64 `bun:"address_id,notnull,unique:l_gcp_addr_to_project_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
@@ -137,4 +147,5 @@ func init() {
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_vpc_to_project", &VPCToProject{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_addr_to_project", &AddressToProject{})
 }
