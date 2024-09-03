@@ -106,15 +106,16 @@ type VPC struct {
 	bun.BaseModel `bun:"table:gcp_vpc"`
 	coremodels.Model
 
-	VPCID             uint64   `bun:"vpc_id,notnull,unique:gcp_vpc_key"`
-	ProjectID         string   `bun:"project_id,notnull,unique:gcp_vpc_key"`
-	Name              string   `bun:"name,notnull"`
-	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
-	Description       string   `bun:"description,notnull"`
-	GatewayIPv4       string   `bun:"gateway_ipv4,notnull"`
-	FirewallPolicy    string   `bun:"firewall_policy,notnull"`
-	MTU               int32    `bun:"mtu,notnull"`
-	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
+	VPCID             uint64    `bun:"vpc_id,notnull,unique:gcp_vpc_key"`
+	ProjectID         string    `bun:"project_id,notnull,unique:gcp_vpc_key"`
+	Name              string    `bun:"name,notnull"`
+	CreationTimestamp string    `bun:"creation_timestamp,nullzero"`
+	Description       string    `bun:"description,notnull"`
+	GatewayIPv4       string    `bun:"gateway_ipv4,notnull"`
+	FirewallPolicy    string    `bun:"firewall_policy,notnull"`
+	MTU               int32     `bun:"mtu,notnull"`
+	Project           *Project  `bun:"rel:has-one,join:project_id=project_id"`
+	Subnets           []*Subnet `bun:"rel:has-many,join:name=vpc_name"`
 }
 
 // VPCToProject represents a link table connecting the [Project] with
@@ -170,17 +171,28 @@ type Subnet struct {
 	bun.BaseModel `bun:"table:gcp_subnet"`
 	coremodels.Model
 
-	SubnetID          uint64 `bun:"subnet_id,notnull,unique:gcp_subnet_to_vpc_key"`
-	ProjectID         string `bun:"project_id,notnull"`
-	VPCID             string `bun:"vpc_id,notnull,unique:gcp_subnet_to_vpc_key"`
-	Name              string `bun:"name,notnull"`
-	CreationTimestamp string `bun:"creation_timestamp,nullzero"`
-	Description       string `bun:"description,notnull"`
-	// GatewayIPv4       string   `bun:"gateway_ipv4,notnull"`
-	// FirewallPolicy    string   `bun:"firewall_policy,notnull"`
-	// MTU               int32    `bun:"mtu,notnull"`
-	Project *Project `bun:"rel:has-one,join:project_id=project_id"`
-	VPC     *VPC     `bun:"rel:has-one,join:vpc_id=vpc_id"`
+	SubnetID          uint64   `bun:"subnet_id,notnull,unique:gcp_subnet_key"`
+	VPCName           string   `bun:"vpc_name,notnull,unique:gcp_subnet_key"`
+	ProjectID         string   `bun:"project_id,notnull,unique:gcp_subnet_key"`
+	Name              string   `bun:"name,notnull"`
+	Region            string   `bun:"region,notnull"`
+	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
+	Description       string   `bun:"description,notnull"`
+	IPv4CIDRRange     string   `bun:"ipv4_cidr_range,notnull"`
+	Gateway           string   `bun:"gateway,notnull"`
+	Purpose           string   `bun:"purpose,notnull"`
+	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
+	VPC               *VPC     `bun:"rel:has-one,join:vpc_name=name"`
+}
+
+// SubnetToVPC represents a link table connecting the [VPC] with
+// [Subnet] models.
+type SubnetToVPC struct {
+	bun.BaseModel `bun:"table:l_gcp_subnet_to_vpc"`
+	coremodels.Model
+
+	VPCID    uint64 `bun:"vpc_id,notnull,unique:l_gcp_subnet_to_vpc_key"`
+	SubnetID uint64 `bun:"subnet_id,notnull,unique:l_gcp_subnet_to_vpc_key"`
 }
 
 func init() {
@@ -196,4 +208,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_vpc_to_project", &VPCToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_addr_to_project", &AddressToProject{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_vpc", &SubnetToVPC{})
 }

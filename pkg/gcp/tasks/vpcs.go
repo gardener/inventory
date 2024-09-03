@@ -138,7 +138,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 
 	vpcIter := client.Client.List(ctx, &req)
 
-	vpcs := make([]models.VPC, 0)
+	items := make([]models.VPC, 0)
 
 	for {
 		vpc, err := vpcIter.Next()
@@ -155,6 +155,14 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 			return err
 		}
 
+		subnets := vpc.GetSubnetworks()
+		for _, subnet := range subnets {
+			logger.Info(
+				"subnets found",
+				"name", subnet,
+			)
+		}
+
 		item := models.VPC{
 			VPCID:             vpc.GetId(),
 			ProjectID:         payload.ProjectID,
@@ -165,15 +173,15 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 			FirewallPolicy:    vpc.GetFirewallPolicy(),
 			MTU:               vpc.GetMtu(),
 		}
-		vpcs = append(vpcs, item)
+		items = append(items, item)
 	}
 
-	if len(vpcs) == 0 {
+	if len(items) == 0 {
 		return nil
 	}
 
 	out, err := db.DB.NewInsert().
-		Model(&vpcs).
+		Model(&items).
 		On("CONFLICT (vpc_id, project_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
 		Set("creation_timestamp = EXCLUDED.creation_timestamp").

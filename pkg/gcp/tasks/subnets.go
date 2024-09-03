@@ -9,9 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
-	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"github.com/hibiken/asynq"
 	"google.golang.org/api/iterator"
 
@@ -72,7 +73,7 @@ func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 func enqueueCollectSubnets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	err := gcpclients.ProjectsClientset.Range(func(projectID string, _ *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
+	err := gcpclients.SubnetworksClientset.Range(func(projectID string, c *gcpclients.Client[*compute.SubnetworksClient]) error {
 		p := &CollectSubnetsPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
 		if err != nil {
@@ -113,7 +114,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 // collectSubnets collects the GCP subnets using the client configuration
 // specified in the payload.
 func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
-	client, ok := gcpclients.SubnetClientset.Get(payload.ProjectID)
+	client, ok := gcpclients.SubnetworksClientset.Get(payload.ProjectID)
 	if !ok {
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
@@ -123,9 +124,11 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 	logger.Info("collecting GCP subnets", "project", payload.ProjectID)
 
 	pageSize := uint32(constants.PageSize)
+	partialSuccess := true
 	req := computepb.AggregatedListSubnetworksRequest{
-		Project:    utils.ProjectFQN(payload.ProjectID),
-		MaxResults: &pageSize,
+		Project:              gcputils.ProjectFQN(payload.ProjectID),
+		MaxResults:           &pageSize,
+		ReturnPartialSuccess: &partialSuccess,
 	}
 
 	subnetIter := client.Client.AggregatedList(ctx, &req)
@@ -155,22 +158,29 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 			return err
 		}
 
-		zone := gcputils.UnqualifyZone(pair.Key)
+		// we do not need the key, as it is the region and we get that in the values as well
 		subnets := pair.Value.GetSubnetworks()
 		for _, i := range subnets {
+			i.GetNetwork()
 			item := models.Subnet{
 				SubnetID:          i.GetId(),
+				VPCName:           parseNetworkName(i.GetNetwork()),
 				ProjectID:         payload.ProjectID,
 				Name:              i.GetName(),
+				Region:            i.GetRegion(),
 				CreationTimestamp: i.GetCreationTimestamp(),
-				// Description:       vpc.GetDescription(),
-				// GatewayIPv4:       vpc.GetGatewayIPv4(),
-				// FirewallPolicy:    vpc.GetFirewallPolicy(),
-				// MTU:               vpc.GetMtu(),
+				Description:       i.GetDescription(),
+				IPv4CIDRRange:     i.GetIpCidrRange(),
+				Gateway:           i.GetGatewayAddress(),
+				Purpose:           i.GetPurpose(),
 			}
-            items = append(items, item)
+
+			items = append(items, item)
 		}
 	}
+
+	logger.Info("subnets",
+		"count", len(items))
 
 	if len(items) == 0 {
 		return nil
@@ -178,14 +188,14 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	out, err := db.DB.NewInsert().
 		Model(&items).
-		On("CONFLICT (subnet_id, vpc_id) DO UPDATE").
+		On("CONFLICT (subnet_id, vpc_name, project_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
+		Set("region = EXCLUDED.region").
 		Set("creation_timestamp = EXCLUDED.creation_timestamp").
-		// Set("description = EXCLUDED.description").
-		// Set("gateway_ipv4 = EXCLUDED.gateway_ipv4").
-		// Set("firewall_policy = EXCLUDED.firewall_policy").
-		// Set("mtu = EXCLUDED.mtu").
-		// Set("updated_at = EXCLUDED.updated_at").
+		Set("description = EXCLUDED.description").
+		Set("ipv4_cidr_range = EXCLUDED.ipv4_cidr_range").
+		Set("gateway = EXCLUDED.gateway").
+		Set("purpose = EXCLUDED.purpose").
 		Returning("id").
 		Exec(ctx)
 
@@ -210,4 +220,16 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 	)
 
 	return nil
+}
+
+func parseNetworkName(network string) string {
+	parts := strings.Split(network, "/")
+
+    // expecting split with the following parts:
+    // [https: <empty string here> www.googleapis.com compute v1 projects <project> global networks <vpc network>]
+	if len(parts) < 10 {
+		return ""
+	}
+
+    return parts[9]
 }
