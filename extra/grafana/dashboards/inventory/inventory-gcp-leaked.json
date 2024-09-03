@@ -379,12 +379,8 @@
       {
         "current": {
           "selected": true,
-          "text": [
-            "sap-se-gcp-k8s-dev-team"
-          ],
-          "value": [
-            "sap-se-gcp-k8s-dev-team"
-          ]
+          "text": [],
+          "value": []
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -394,7 +390,7 @@
         "description": "GCP Project",
         "hide": 0,
         "includeAll": false,
-        "label": "gcp_project",
+        "label": "GCP Project",
         "multi": true,
         "name": "gcp_project",
         "options": [],
@@ -416,6 +412,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked GCP Resources",
   "uid": "fdw5qjcrnirr4a",
-  "version": 2,
+  "version": 5,
   "weekStart": ""
 }
