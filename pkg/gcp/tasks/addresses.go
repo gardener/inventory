@@ -143,9 +143,7 @@ func getRegionalAddresses(ctx context.Context, payload CollectAddressesPayload) 
 		if err != nil {
 			return nil, err
 		}
-		for _, item := range pair.Value.Addresses {
-			items = append(items, item)
-		}
+		items = append(items, pair.Value.Addresses...)
 	}
 
 	return items, nil
