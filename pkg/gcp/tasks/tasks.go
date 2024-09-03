@@ -30,6 +30,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectProjectsTask,
 		NewCollectInstancesTask,
 		NewCollectVPCsTask,
+		NewCollectAddressesTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -41,6 +42,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 	linkFns := []utils.LinkFunction{
 		LinkInstanceWithProject,
 		LinkVPCWithProject,
+		LinkAddressWithProject,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
@@ -54,4 +56,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectInstances, asynq.HandlerFunc(HandleCollectInstancesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectVPCs, asynq.HandlerFunc(HandleCollectVPCsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectAddresses, asynq.HandlerFunc(HandleCollectAddressesTask))
 }
