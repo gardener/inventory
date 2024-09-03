@@ -6,6 +6,7 @@ package utils
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/gardener/inventory/pkg/gcp/constants"
@@ -57,6 +58,11 @@ func RegionFromZone(zone string) string {
 //
 // [Resource Names]: https://cloud.google.com/apis/design/resource_names
 func ResourceNameFromURL(s string) string {
-	parts := strings.Split(s, "/")
+	u, err := url.Parse(s)
+	if err != nil {
+		return ""
+	}
+
+	parts := strings.Split(u.Path, "/")
 	return parts[len(parts)-1]
 }
