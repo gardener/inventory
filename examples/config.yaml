@@ -241,6 +241,9 @@ scheduler:
     - name: "gcp:task:collect-addresses"
       spec: "@every 1h"
       desc: "Collect GCP Addresses"
+    - name: "gcp:task:collect-subnets"
+      spec: "@every 1h"
+      desc: "Collect GCP Subnets"
     - name: "gcp:task:link-all"
       spec: "@every 30m"
       desc: "Link all GCP models"
@@ -294,6 +297,8 @@ scheduler:
           - name: "gcp:model:address"
             duration: 24h
           - name: "gcp:model:nic"
+            duration: 24h
+          - name: "gcp:model:subnet"
             duration: 24h
 
 virtual_garden:
