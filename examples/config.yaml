@@ -293,6 +293,8 @@ scheduler:
             duration: 24h
           - name: "gcp:model:address"
             duration: 24h
+          - name: "gcp:model:nic"
+            duration: 24h
 
 virtual_garden:
   # Path to token for Virtual Garden cluster authentication
