@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
@@ -130,7 +131,8 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		ReturnPartialSuccess: &partialSuccess,
 	}
 
-	items := make([]models.Instance, 0)
+	instances := make([]models.Instance, 0)
+	nics := make([]models.NetworkInterface, 0)
 	it := client.Client.AggregatedList(ctx, req)
 	for {
 		// The iterator returns a k/v pair, where the key represents a
@@ -150,39 +152,58 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		}
 
 		zone := gcputils.UnqualifyZone(pair.Key)
-		instances := pair.Value.Instances
-		for _, i := range instances {
-			item := models.Instance{
-				Name:                 i.GetName(),
-				Hostname:             i.GetHostname(),
-				InstanceID:           i.GetId(),
+		region := gcputils.RegionFromZone(zone)
+		for _, inst := range pair.Value.Instances {
+			// Collect instance
+			instance := models.Instance{
+				Name:                 inst.GetName(),
+				Hostname:             inst.GetHostname(),
+				InstanceID:           inst.GetId(),
 				ProjectID:            payload.ProjectID,
 				Zone:                 zone,
-				Region:               gcputils.RegionFromZone(zone),
-				CanIPForward:         i.GetCanIpForward(),
-				CPUPlatform:          i.GetCpuPlatform(),
-				CreationTimestamp:    i.GetCreationTimestamp(),
-				Description:          i.GetDescription(),
-				LastStartTimestamp:   i.GetLastStartTimestamp(),
-				LastStopTimestamp:    i.GetLastStopTimestamp(),
-				LastSuspendTimestamp: i.GetLastSuspendedTimestamp(),
-				MachineType:          i.GetMachineType(),
-				MinCPUPlatform:       i.GetMinCpuPlatform(),
-				SelfLink:             i.GetSelfLink(),
-				SourceMachineImage:   i.GetSourceMachineImage(),
-				Status:               i.GetStatus(),
-				StatusMessage:        i.GetStatusMessage(),
+				Region:               region,
+				CanIPForward:         inst.GetCanIpForward(),
+				CPUPlatform:          inst.GetCpuPlatform(),
+				CreationTimestamp:    inst.GetCreationTimestamp(),
+				Description:          inst.GetDescription(),
+				LastStartTimestamp:   inst.GetLastStartTimestamp(),
+				LastStopTimestamp:    inst.GetLastStopTimestamp(),
+				LastSuspendTimestamp: inst.GetLastSuspendedTimestamp(),
+				MachineType:          inst.GetMachineType(),
+				MinCPUPlatform:       inst.GetMinCpuPlatform(),
+				SelfLink:             inst.GetSelfLink(),
+				SourceMachineImage:   inst.GetSourceMachineImage(),
+				Status:               inst.GetStatus(),
+				StatusMessage:        inst.GetStatusMessage(),
 			}
-			items = append(items, item)
+			instances = append(instances, instance)
+
+			// Collect NICs
+			for _, ni := range inst.GetNetworkInterfaces() {
+				nic := models.NetworkInterface{
+					Name:           ni.GetName(),
+					ProjectID:      payload.ProjectID,
+					InstanceID:     inst.GetId(),
+					Network:        gcputils.ResourceNameFromURL(ni.GetNetwork()),
+					Subnetwork:     gcputils.ResourceNameFromURL(ni.GetSubnetwork()),
+					IPv4:           net.ParseIP(ni.GetNetworkIP()),
+					IPv6:           net.ParseIP(ni.GetIpv6Address()),
+					IPv6AccessType: ni.GetIpv6AccessType(),
+					NICType:        ni.GetNicType(),
+					StackType:      ni.GetStackType(),
+				}
+				nics = append(nics, nic)
+			}
 		}
 	}
 
-	if len(items) == 0 {
+	// Upsert instances
+	if len(instances) == 0 {
 		return nil
 	}
 
 	out, err := db.DB.NewInsert().
-		Model(&items).
+		Model(&instances).
 		On("CONFLICT (project_id, instance_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
 		Set("hostname = EXCLUDED.hostname").
@@ -216,6 +237,40 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 
 	logger.Info(
 		"populated gcp instances",
+		"project", payload.ProjectID,
+		"count", count,
+	)
+
+	// Upsert NICs
+	if len(nics) == 0 {
+		return nil
+	}
+
+	out, err = db.DB.NewInsert().
+		Model(&nics).
+		On("CONFLICT (project_id, instance_id, name) DO UPDATE").
+		Set("network = EXCLUDED.network").
+		Set("subnetwork = EXCLUDED.subnetwork").
+		Set("ipv4 = EXCLUDED.ipv4").
+		Set("ipv6 = EXCLUDED.ipv6").
+		Set("ipv6_access_type = EXCLUDED.ipv6_access_type").
+		Set("nic_type = EXCLUDED.nic_type").
+		Set("stack_type = EXCLUDED.stack_type").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err = out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger.Info(
+		"populated gcp network interfaces",
 		"project", payload.ProjectID,
 		"count", count,
 	)

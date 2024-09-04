@@ -160,6 +160,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:instance", &Instance{})
 	registry.ModelRegistry.MustRegister("gcp:model:vpc", &VPC{})
 	registry.ModelRegistry.MustRegister("gcp:model:address", &Address{})
+	registry.ModelRegistry.MustRegister("gcp:model:nic", &NetworkInterface{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
