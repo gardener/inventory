@@ -63,6 +63,24 @@ type Instance struct {
 	Project              *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
+// NetworkInterface represents a NIC attached to an [Instance].
+type NetworkInterface struct {
+	bun.BaseModel `bun:"table:gcp_nic"`
+	coremodels.Model
+
+	Name           string `bun:"name,notnull,unique:gcp_nic_key"`
+	ProjectID      string `bun:"project_id,notnull,unique:gcp_nic_key"`
+	InstanceID     uint64 `bun:"instance_id,notnull,unique:gcp_nic_key"`
+	Network        string `bun:"network,notnull"`
+	Subnetwork     string `bun:"subnetwork,notnull"`
+	IPv4           net.IP `bun:"ipv4,nullzero,type:inet"`
+	IPv6           net.IP `bun:"ipv6,nullzero,type:inet"`
+	IPv6AccessType string `bun:"ipv6_access_type,notnull"`
+	NICType        string `bun:"nic_type,notnull"`
+	StackType      string `bun:"stack_type,notnull"`
+	Zone           string `bun:"zone,notnull"`
+}
+
 // InstanceToProject represents a link table connecting the [Project] with
 // [Instance] models.
 type InstanceToProject struct {
