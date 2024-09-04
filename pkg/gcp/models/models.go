@@ -106,7 +106,7 @@ type Address struct {
 	bun.BaseModel `bun:"table:gcp_address"`
 	coremodels.Model
 
-	Address           net.IP   `bun:"address,notnull,type:varchar"`
+	Address           net.IP   `bun:"address,notnull,type:inet"`
 	AddressType       string   `bun:"address_type,notnull"`
 	IsGlobal          bool     `bun:"is_global,notnull"`
 	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
