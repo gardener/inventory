@@ -78,7 +78,6 @@ type NetworkInterface struct {
 	IPv6AccessType string `bun:"ipv6_access_type,notnull"`
 	NICType        string `bun:"nic_type,notnull"`
 	StackType      string `bun:"stack_type,notnull"`
-	Zone           string `bun:"zone,notnull"`
 }
 
 // InstanceToProject represents a link table connecting the [Project] with
