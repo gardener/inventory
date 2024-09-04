@@ -41,6 +41,7 @@ func UnqualifyZone(s string) string {
 //
 // [GCP Naming Convention]: https://cloud.google.com/compute/docs/regions-zones#identifying_a_region_or_zone
 func RegionFromZone(zone string) string {
+	zone = UnqualifyZone(zone)
 	if zone == "" {
 		return ""
 	}

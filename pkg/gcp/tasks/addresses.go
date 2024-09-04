@@ -218,9 +218,6 @@ func collectAddresses(ctx context.Context, payload CollectAddressesPayload) erro
 	for _, pair := range addresses {
 		for _, addr := range pair.items {
 			ip := net.ParseIP(addr.GetAddress())
-			if ip == nil {
-				logger.Warn("invalid IP address found", "address", addr.GetAddress())
-			}
 			item := models.Address{
 				Address:           ip,
 				AddressType:       addr.GetAddressType(),
