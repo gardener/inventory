@@ -159,3 +159,52 @@ func LinkAddressWithProject(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkInstanceWithNetworkInterface creates links between the
+// [models.NetworkInterface] and [models.Instance] models.
+func LinkInstanceWithNetworkInterface(ctx context.Context, db *bun.DB) error {
+	var items []models.NetworkInterface
+	err := db.NewSelect().
+		Model(&items).
+		Relation("Instance").
+		Where("instance.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.InstanceToNetworkInterface, 0, len(items))
+	for _, item := range items {
+		link := models.InstanceToNetworkInterface{
+			InstanceID:         item.Instance.ID,
+			NetworkInterfaceID: item.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (instance_id, nic_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gcp instance with network interface", "count", count)
+
+	return nil
+}
