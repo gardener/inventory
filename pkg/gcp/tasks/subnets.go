@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"net"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
@@ -161,16 +161,26 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		// we do not need the key, as it is the region and we get that in the values as well
 		subnets := pair.Value.GetSubnetworks()
 		for _, i := range subnets {
-			i.GetNetwork()
+            CIDRRange := i.GetIpCidrRange()
+			_, _, err := net.ParseCIDR(CIDRRange)
+			if err != nil {
+				logger.Warn(
+                    "invalid IP CIDR found", 
+                    "cidr", CIDRRange,
+                    "reason", err,
+                )
+                return err
+			}
+
 			item := models.Subnet{
 				SubnetID:          i.GetId(),
-				VPCName:           parseNetworkName(i.GetNetwork()),
+				VPCName:           gcputils.ResourceNameFromURL(i.GetNetwork()),
 				ProjectID:         payload.ProjectID,
 				Name:              i.GetName(),
 				Region:            i.GetRegion(),
 				CreationTimestamp: i.GetCreationTimestamp(),
 				Description:       i.GetDescription(),
-				IPv4CIDRRange:     i.GetIpCidrRange(),
+				IPv4CIDRRange:     CIDRRange,
 				Gateway:           i.GetGatewayAddress(),
 				Purpose:           i.GetPurpose(),
 			}
@@ -220,16 +230,4 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 	)
 
 	return nil
-}
-
-func parseNetworkName(network string) string {
-	parts := strings.Split(network, "/")
-
-    // expecting split with the following parts:
-    // [https: <empty string here> www.googleapis.com compute v1 projects <project> global networks <vpc network>]
-	if len(parts) < 10 {
-		return ""
-	}
-
-    return parts[9]
 }
