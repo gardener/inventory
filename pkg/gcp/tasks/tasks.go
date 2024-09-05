@@ -46,6 +46,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkAddressWithProject,
 		LinkInstanceWithNetworkInterface,
 		LinkSubnetWithVPC,
+		LinkSubnetWithProject,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)

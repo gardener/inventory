@@ -185,14 +185,24 @@ type Subnet struct {
 	VPC               *VPC     `bun:"rel:has-one,join:vpc_name=name,join:project_id=project_id"`
 }
 
-// SubnetToVPC represents a link table connecting the [VPC] with
-// [Subnet] models.
+// SubnetToVPC represents a link table connecting the [Subnet] with
+// [VPC] models.
 type SubnetToVPC struct {
 	bun.BaseModel `bun:"table:l_gcp_subnet_to_vpc"`
 	coremodels.Model
 
 	VPCID    uint64 `bun:"vpc_id,notnull,unique:l_gcp_subnet_to_vpc_key"`
 	SubnetID uint64 `bun:"subnet_id,notnull,unique:l_gcp_subnet_to_vpc_key"`
+}
+
+// SubnetToProject represents a link table connecting the [Subnet] with
+// [Project] models.
+type SubnetToProject struct {
+	bun.BaseModel `bun:"table:l_gcp_subnet_to_project"`
+	coremodels.Model
+
+	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_subnet_to_project_key"`
+	SubnetID  uint64 `bun:"subnet_id,notnull,unique:l_gcp_subnet_to_project_key"`
 }
 
 func init() {
