@@ -219,4 +219,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:link_vpc_to_project", &VPCToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_addr_to_project", &AddressToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_vpc", &SubnetToVPC{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_project", &SubnetToProject{})
 }

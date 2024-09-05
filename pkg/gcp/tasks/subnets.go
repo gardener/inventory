@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -133,13 +132,13 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	subnetIter := client.Client.AggregatedList(ctx, &req)
 	if subnetIter == nil {
-		err := fmt.Errorf("%w", "no iterator returned")
+		err := errors.New("no iterator returned")
 		logger.Error(
 			"unable to list subnets",
 			"project", payload.ProjectID,
 			"reason", err,
 		)
-		return err
+		return asynqutils.SkipRetry(err)
 	}
 
 	items := make([]models.Subnet, 0)
