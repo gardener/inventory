@@ -161,15 +161,15 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		// we do not need the key, as it is the region and we get that in the values as well
 		subnets := pair.Value.GetSubnetworks()
 		for _, i := range subnets {
-            CIDRRange := i.GetIpCidrRange()
+			CIDRRange := i.GetIpCidrRange()
 			_, _, err := net.ParseCIDR(CIDRRange)
 			if err != nil {
 				logger.Warn(
-                    "invalid IP CIDR found", 
-                    "cidr", CIDRRange,
-                    "reason", err,
-                )
-                return err
+					"invalid IP CIDR found",
+					"cidr", CIDRRange,
+					"reason", err,
+				)
+				return err
 			}
 
 			item := models.Subnet{
