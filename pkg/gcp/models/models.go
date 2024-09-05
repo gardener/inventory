@@ -68,16 +68,27 @@ type NetworkInterface struct {
 	bun.BaseModel `bun:"table:gcp_nic"`
 	coremodels.Model
 
-	Name           string `bun:"name,notnull,unique:gcp_nic_key"`
-	ProjectID      string `bun:"project_id,notnull,unique:gcp_nic_key"`
-	InstanceID     uint64 `bun:"instance_id,notnull,unique:gcp_nic_key"`
-	Network        string `bun:"network,notnull"`
-	Subnetwork     string `bun:"subnetwork,notnull"`
-	IPv4           net.IP `bun:"ipv4,nullzero,type:inet"`
-	IPv6           net.IP `bun:"ipv6,nullzero,type:inet"`
-	IPv6AccessType string `bun:"ipv6_access_type,notnull"`
-	NICType        string `bun:"nic_type,notnull"`
-	StackType      string `bun:"stack_type,notnull"`
+	Name           string    `bun:"name,notnull,unique:gcp_nic_key"`
+	ProjectID      string    `bun:"project_id,notnull,unique:gcp_nic_key"`
+	InstanceID     uint64    `bun:"instance_id,notnull,unique:gcp_nic_key"`
+	Network        string    `bun:"network,notnull"`
+	Subnetwork     string    `bun:"subnetwork,notnull"`
+	IPv4           net.IP    `bun:"ipv4,nullzero,type:inet"`
+	IPv6           net.IP    `bun:"ipv6,nullzero,type:inet"`
+	IPv6AccessType string    `bun:"ipv6_access_type,notnull"`
+	NICType        string    `bun:"nic_type,notnull"`
+	StackType      string    `bun:"stack_type,notnull"`
+	Instance       *Instance `bun:"rel:has-one,join:project_id=project_id,join:instance_id=instance_id"`
+}
+
+// InstanceToNetworkInterface represents a link table connecting the
+// [NetworkInterface] with [Instance] models.
+type InstanceToNetworkInterface struct {
+	bun.BaseModel `bun:"table:l_gcp_instance_to_nic"`
+	coremodels.Model
+
+	InstanceID         uint64 `bun:"instance_id,notnull,unique:l_gcp_instance_to_nic_key"`
+	NetworkInterfaceID uint64 `bun:"nic_id,notnull,unique:l_gcp_instance_to_nic_key"`
 }
 
 // InstanceToProject represents a link table connecting the [Project] with
