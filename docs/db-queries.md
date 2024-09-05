@@ -145,6 +145,25 @@ LEFT JOIN g_cloud_profile_aws_image AS cpaw ON s.cloud_profile = cpaw.cloud_prof
 WHERE cpaw.ami IS NULL;
 ```
 
+## GCP Compute Engine Instances with Network Interfaces
+
+The following query will join the GCP Compute Engine Instances with the Network
+Interfaces.
+
+``` sql
+SELECT
+        i.*,
+        nic.id AS nic_id,
+        nic.name AS nic_name,
+        nic.network AS nic_network,
+        nic.subnetwork AS nic_subnet,
+        nic.ipv4 AS nic_ipv4,
+        nic.ipv6 AS nic_ipv6,
+        nic.stack_type AS nic_stack_type
+FROM gcp_instance AS i
+INNER JOIN gcp_nic AS nic ON i.instance_id = nic.instance_id AND i.project_id = nic.project_id;
+```
+
 ## Shoots Grouped by Cloud Profile
 
 The following query will give you the shoots grouped by cloud profile.
