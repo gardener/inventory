@@ -251,7 +251,6 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"project", project,
 			)
 
-
 			subnetClient, err := compute.NewSubnetworksRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create gcp subnet client for %s: %w", namedCreds, err)

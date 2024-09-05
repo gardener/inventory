@@ -182,7 +182,7 @@ type Subnet struct {
 	Gateway           string   `bun:"gateway,notnull"`
 	Purpose           string   `bun:"purpose,notnull"`
 	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
-	VPC               *VPC     `bun:"rel:has-one,join:vpc_name=name"`
+	VPC               *VPC     `bun:"rel:has-one,join:vpc_name=name,join:project_id=project_id"`
 }
 
 // SubnetToVPC represents a link table connecting the [VPC] with
