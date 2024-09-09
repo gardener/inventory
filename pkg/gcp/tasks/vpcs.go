@@ -155,14 +155,6 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 			return err
 		}
 
-		subnets := vpc.GetSubnetworks()
-		for _, subnet := range subnets {
-			logger.Info(
-				"subnets found",
-				"name", subnet,
-			)
-		}
-
 		item := models.VPC{
 			VPCID:             vpc.GetId(),
 			ProjectID:         payload.ProjectID,

@@ -172,7 +172,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 			// Instances
 			instanceClient, err := compute.NewInstancesRESTClient(ctx, opts...)
 			if err != nil {
-				return fmt.Errorf("gcp: cannot create gcp instance client for %s: %w", namedCreds, err)
+				return fmt.Errorf("gcp: cannot create instance client for %s: %w", namedCreds, err)
 			}
 			instanceClientWrapper := &gcpclients.Client[*compute.InstancesClient]{
 				NamedCredentials: namedCreds,
@@ -192,7 +192,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 			// VPCs
 			networkClient, err := compute.NewNetworksRESTClient(ctx, opts...)
 			if err != nil {
-				return fmt.Errorf("gcp: cannot create gcp network client for %s: %w", namedCreds, err)
+				return fmt.Errorf("gcp: cannot create network client for %s: %w", namedCreds, err)
 			}
 
 			networkClientWrapper := &gcpclients.Client[*compute.NetworksClient]{
@@ -253,7 +253,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 
 			subnetClient, err := compute.NewSubnetworksRESTClient(ctx, opts...)
 			if err != nil {
-				return fmt.Errorf("gcp: cannot create gcp subnet client for %s: %w", namedCreds, err)
+				return fmt.Errorf("gcp: cannot create subnet client for %s: %w", namedCreds, err)
 			}
 
 			subnetClientWrapper := &gcpclients.Client[*compute.SubnetworksClient]{

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS "gcp_subnet" (
     "creation_timestamp" varchar,
     "description" varchar NOT NULL,
     "ipv4_cidr_range" varchar NOT NULL,
-    "gateway" varchar NOT NULL,
+    "gateway" inet,
     "purpose" varchar NOT NULL,
 
     "id" bigserial NOT NULL,
