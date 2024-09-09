@@ -71,6 +71,10 @@ func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 // for all collected GCP projects.
 func enqueueCollectSubnets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
+	if gcpclients.SubnetworksClientset.Length() == 0 {
+		logger.Warn("no GCP subnet clients found")
+		return nil
+	}
 
 	err := gcpclients.SubnetworksClientset.Range(func(projectID string, c *gcpclients.Client[*compute.SubnetworksClient]) error {
 		p := &CollectSubnetsPayload{ProjectID: projectID}
@@ -171,16 +175,17 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 				return err
 			}
 
+			gateway := net.ParseIP(i.GetGatewayAddress())
 			item := models.Subnet{
 				SubnetID:          i.GetId(),
 				VPCName:           gcputils.ResourceNameFromURL(i.GetNetwork()),
 				ProjectID:         payload.ProjectID,
 				Name:              i.GetName(),
-				Region:            i.GetRegion(),
+				Region:            gcputils.ResourceNameFromURL(i.GetRegion()),
 				CreationTimestamp: i.GetCreationTimestamp(),
 				Description:       i.GetDescription(),
 				IPv4CIDRRange:     CIDRRange,
-				Gateway:           i.GetGatewayAddress(),
+				Gateway:           gateway,
 				Purpose:           i.GetPurpose(),
 			}
 
@@ -188,8 +193,10 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		}
 	}
 
-	logger.Info("subnets",
-		"count", len(items))
+	logger.Info(
+		"subnets",
+		"count", len(items),
+	)
 
 	if len(items) == 0 {
 		return nil
@@ -205,6 +212,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		Set("ipv4_cidr_range = EXCLUDED.ipv4_cidr_range").
 		Set("gateway = EXCLUDED.gateway").
 		Set("purpose = EXCLUDED.purpose").
+		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
 
