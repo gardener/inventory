@@ -134,21 +134,12 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		ReturnPartialSuccess: &partialSuccess,
 	}
 
-	subnetIter := client.Client.AggregatedList(ctx, &req)
-	if subnetIter == nil {
-		err := errors.New("no iterator returned")
-		logger.Error(
-			"unable to list subnets",
-			"project", payload.ProjectID,
-			"reason", err,
-		)
-		return asynqutils.SkipRetry(err)
-	}
+	iter := client.Client.AggregatedList(ctx, &req)
 
 	items := make([]models.Subnet, 0)
 
 	for {
-		pair, err := subnetIter.Next()
+		pair, err := iter.Next()
 		if errors.Is(err, iterator.Done) {
 			break
 		}
@@ -164,12 +155,12 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		// we do not need the key, as it is the region and we get that in the values as well
 		subnets := pair.Value.GetSubnetworks()
 		for _, i := range subnets {
-			CIDRRange := i.GetIpCidrRange()
-			_, _, err := net.ParseCIDR(CIDRRange)
+			cidrRange := i.GetIpCidrRange()
+			_, _, err := net.ParseCIDR(cidrRange)
 			if err != nil {
 				logger.Warn(
 					"invalid IP CIDR found",
-					"cidr", CIDRRange,
+					"cidr", cidrRange,
 					"reason", err,
 				)
 				return err
@@ -184,7 +175,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 				Region:            gcputils.ResourceNameFromURL(i.GetRegion()),
 				CreationTimestamp: i.GetCreationTimestamp(),
 				Description:       i.GetDescription(),
-				IPv4CIDRRange:     CIDRRange,
+				IPv4CIDRRange:     cidrRange,
 				Gateway:           gateway,
 				Purpose:           i.GetPurpose(),
 			}
@@ -192,11 +183,6 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 			items = append(items, item)
 		}
 	}
-
-	logger.Info(
-		"subnets",
-		"count", len(items),
-	)
 
 	if len(items) == 0 {
 		return nil
