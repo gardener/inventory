@@ -19,6 +19,7 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
+	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	gutils "github.com/gardener/inventory/pkg/gardener/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -130,11 +131,13 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 	}
 
 	machines := make([]models.Machine, 0)
-	err = pager.New(
+	p := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return client.MachineV1alpha1().Machines("").List(ctx, opts)
 		}),
-	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
+	)
+	opts := metav1.ListOptions{Limit: constants.PageSize}
+	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		m, ok := obj.(*v1alpha1.Machine)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)

@@ -16,6 +16,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
+	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
@@ -43,11 +44,13 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("Collecting Gardener backup buckets")
 	buckets := make([]models.BackupBucket, 0)
-	err = pager.New(
+	p := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return client.CoreV1beta1().BackupBuckets().List(ctx, metav1.ListOptions{})
 		}),
-	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
+	)
+	opts := metav1.ListOptions{Limit: constants.PageSize}
+	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		b, ok := obj.(*v1beta1.BackupBucket)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
