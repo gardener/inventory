@@ -16,6 +16,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
+	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
@@ -44,11 +45,13 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener projects")
 	projects := make([]models.Project, 0)
-	err = pager.New(
+	p := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return client.CoreV1beta1().Projects().List(ctx, opts)
 		}),
-	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
+	)
+	opts := metav1.ListOptions{Limit: constants.PageSize}
+	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		p, ok := obj.(*v1beta1.Project)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
