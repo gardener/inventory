@@ -32,19 +32,20 @@ import (
 	"k8s.io/client-go/tools/pager"
 
 	"github.com/gardener/inventory/pkg/core/registry"
+	"github.com/gardener/inventory/pkg/gardener/constants"
 )
 
 // ErrClientNotFound is returned when attempting to get a client, which does not
 // exist in the registry.
 var ErrClientNotFound = errors.New("client not found")
 
-// ErrNoShoots is returned when there are no shoots registered in the
-// virtual garden cluster.
-var ErrNoShoots = errors.New("no shoots found")
+// ErrNoSeeds is returned when there are no seeds registered in the virtual
+// garden cluster.
+var ErrNoSeeds = errors.New("no seeds found")
 
-// ErrShootNotFound is an error, which is returned when a given shoot is not
-// found in the virtual garden cluster.
-var ErrShootNotFound = errors.New("shoot not found")
+// ErrSeedNotFound is an error, which is returned when a given seed is not found
+// in the virtual garden cluster.
+var ErrSeedNotFound = errors.New("seed not found")
 
 // ErrSeedIsExcluded is an error, which is returned when attempting to get a
 // [*rest.Config] for a seed cluster, which is excluded in the configuration.
@@ -169,39 +170,39 @@ func VirtualGardenClient() (*gardenerversioned.Clientset, error) {
 	return DefaultClient.VirtualGardenClient()
 }
 
-// Shoots returns the list of shoots registered in the Virtual Garden cluster.
-func (c *Client) Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
+// Seeds returns the list of seeds registered in the Virtual Garden cluster.
+func (c *Client) Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
 	client, err := c.VirtualGardenClient()
 	if err != nil {
 		return nil, err
 	}
 
-	shoots := make([]*v1beta1.Shoot, 0)
+	seeds := make([]*v1beta1.Seed, 0)
 	err = pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return client.CoreV1beta1().Shoots("").List(ctx, metav1.ListOptions{})
+			return client.CoreV1beta1().Seeds().List(ctx, opts)
 		}),
-	).EachListItem(ctx, metav1.ListOptions{}, func(obj runtime.Object) error {
-		s, ok := obj.(*v1beta1.Shoot)
+	).EachListItem(ctx, metav1.ListOptions{Limit: constants.PageSize}, func(obj runtime.Object) error {
+		s, ok := obj.(*v1beta1.Seed)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
 
-		shoots = append(shoots, s)
+		seeds = append(seeds, s)
 		return nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("could not list shoots: %w", err)
+		return nil, fmt.Errorf("could not list seeds: %w", err)
 	}
 
-	return shoots, nil
+	return seeds, nil
 }
 
-// Shoots returns the list of shoots registered in the Virtual Garden cluster
+// Seeds returns the list of seeds registered in the Virtual Garden cluster
 // using the [DefaultClient].
-func Shoots(ctx context.Context) ([]*v1beta1.Shoot, error) {
-	return DefaultClient.Shoots(ctx)
+func Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
+	return DefaultClient.Seeds(ctx)
 }
 
 // MCMClient returns a machine versioned clientset for the given seed name
@@ -251,17 +252,17 @@ func MCMClient(name string) (*machineversioned.Clientset, error) {
 // createGardenConfig creates a [*rest.Config] for the given seed name and
 // returns it.
 func (c *Client) createGardenConfig(name string) (*rest.Config, error) {
-	shoots, err := c.Shoots(context.Background())
+	seeds, err := c.Seeds(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("failed to list shoots: %w", err)
+		return nil, fmt.Errorf("failed to list seeds: %w", err)
 	}
 
-	if len(shoots) == 0 {
-		return nil, ErrNoShoots
+	if len(seeds) == 0 {
+		return nil, ErrNoSeeds
 	}
 
-	for _, shoot := range shoots {
-		if shoot.Name != name {
+	for _, seed := range seeds {
+		if seed.Name != name {
 			continue
 		}
 
@@ -294,11 +295,11 @@ func (c *Client) createGardenConfig(name string) (*rest.Config, error) {
 		return restConfig, nil
 	}
 
-	return nil, fmt.Errorf("%w: %s", ErrShootNotFound, name)
+	return nil, fmt.Errorf("%w: %s", ErrSeedNotFound, name)
 }
 
 // fetchSeedKubeconfig sends a http request to the viewerkubeconfig subresource
-// of a shoot
+// of a managed seed.
 func (c *Client) fetchSeedKubeconfig(name string) (string, error) {
 	config, found := c.restConfigs.Get(VIRTUAL_GARDEN)
 	if !found || config == nil {
@@ -320,7 +321,6 @@ func (c *Client) fetchSeedKubeconfig(name string) (string, error) {
 	// Prepare the path to the viewerkubeconfig subresource
 	path := fmt.Sprintf(VIEWERKUBECONFIG_SUBRESOURCE_PATH, name)
 	body := bytes.NewBufferString(EXPIRATION_SECONDS) //one week
-
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	result := client.Post().

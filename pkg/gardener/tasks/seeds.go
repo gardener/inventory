@@ -46,7 +46,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 	seeds := make([]models.Seed, 0)
 	p := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return client.CoreV1beta1().Seeds().List(ctx, metav1.ListOptions{})
+			return client.CoreV1beta1().Seeds().List(ctx, opts)
 		}),
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
