@@ -30,6 +30,8 @@ const (
 
 	// providerTypeAWS is the name of the provider for AWS Cloud Profile
 	cpProviderTypeAWS = "aws"
+	// providerTypeGCP is the name of the provider for GCP Cloud Profile
+	cpProviderTypeGCP = "gcp"
 )
 
 // CollectCPMachineImagesPayload is the payload for collecting the Machine
@@ -60,6 +62,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 	// Images.
 	providerTypeToTask := map[string]string{
 		cpProviderTypeAWS: TaskCollectAWSMachineImages,
+		cpProviderTypeGCP: TaskCollectGCPMachineImages,
 	}
 
 	client, err := gardenerclient.VirtualGardenClient()
