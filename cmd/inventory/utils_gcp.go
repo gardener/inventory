@@ -270,6 +270,26 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"credentials", namedCreds,
 				"project", project,
 			)
+
+			diskClient, err := compute.NewDisksRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create disk client for %s: %w", namedCreds, err)
+			}
+
+			diskClientWrapper := &gcpclients.Client[*compute.DisksClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           diskClient,
+			}
+			gcpclients.DisksClientset.Overwrite(project, diskClientWrapper)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "disks",
+				"credentials", namedCreds,
+				"project", project,
+			)
 		}
 	}
 
@@ -327,6 +347,11 @@ func closeGCPClients() {
 	})
 
 	_ = gcpclients.SubnetworksClientset.Range(func(_ string, client *gcpclients.Client[*compute.SubnetworksClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.DisksClientset.Range(func(_ string, client *gcpclients.Client[*compute.DisksClient]) error {
 		client.Client.Close()
 		return nil
 	})
