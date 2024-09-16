@@ -41,26 +41,26 @@ type Instance struct {
 	bun.BaseModel `bun:"table:gcp_instance"`
 	coremodels.Model
 
-	Name                 string   `bun:"name,notnull"`
-	Hostname             string   `bun:"hostname,notnull"`
-	InstanceID           uint64   `bun:"instance_id,notnull,unique:gcp_instance_key"`
-	ProjectID            string   `bun:"project_id,notnull,unique:gcp_instance_key"`
-	Zone                 string   `bun:"zone,notnull"`
-	Region               string   `bun:"region,notnull"`
-	CanIPForward         bool     `bun:"can_ip_forward,notnull"`
-	CPUPlatform          string   `bun:"cpu_platform,notnull"`
-	CreationTimestamp    string   `bun:"creation_timestamp,nullzero"`
-	Description          string   `bun:"description,notnull"`
-	LastStartTimestamp   string   `bun:"last_start_timestamp,nullzero"`
-	LastStopTimestamp    string   `bun:"last_stop_timestamp,nullzero"`
-	LastSuspendTimestamp string   `bun:"last_suspend_timestamp,nullzero"`
-	MachineType          string   `bun:"machine_type,notnull"`
-	MinCPUPlatform       string   `bun:"min_cpu_platform,notnull"`
-	SelfLink             string   `bun:"self_link,notnull"`
-	SourceMachineImage   string   `bun:"source_machine_image,notnull"`
-	Status               string   `bun:"status,notnull"`
-	StatusMessage        string   `bun:"status_message,notnull"`
-	Project              *Project `bun:"rel:has-one,join:project_id=project_id"`
+	Name                   string   `bun:"name,notnull"`
+	Hostname               string   `bun:"hostname,notnull"`
+	InstanceID             uint64   `bun:"instance_id,notnull,unique:gcp_instance_key"`
+	ProjectID              string   `bun:"project_id,notnull,unique:gcp_instance_key"`
+	Zone                   string   `bun:"zone,notnull"`
+	Region                 string   `bun:"region,notnull"`
+	CanIPForward           bool     `bun:"can_ip_forward,notnull"`
+	CPUPlatform            string   `bun:"cpu_platform,notnull"`
+	CreationTimestamp      string   `bun:"creation_timestamp,nullzero"`
+	Description            string   `bun:"description,notnull"`
+	LastStartTimestamp     string   `bun:"last_start_timestamp,nullzero"`
+	LastStopTimestamp      string   `bun:"last_stop_timestamp,nullzero"`
+	LastSuspendTimestamp   string   `bun:"last_suspend_timestamp,nullzero"`
+	MachineType            string   `bun:"machine_type,notnull"`
+	MinCPUPlatform         string   `bun:"min_cpu_platform,notnull"`
+	SelfLink               string   `bun:"self_link,notnull"`
+	SourceMachineImageLink string   `bun:"source_machine_image_link,notnull"`
+	Status                 string   `bun:"status,notnull"`
+	StatusMessage          string   `bun:"status_message,notnull"`
+	Project                *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // NetworkInterface represents a NIC attached to an [Instance].
