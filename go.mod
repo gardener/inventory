@@ -28,7 +28,7 @@ require (
 	github.com/uptrace/bun/driver/pgdriver v1.2.3
 	github.com/uptrace/bun/extra/bundebug v1.2.3
 	github.com/urfave/cli/v2 v2.27.4
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.23.0
 	google.golang.org/api v0.196.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.31.0
