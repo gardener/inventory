@@ -14,9 +14,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.7
 	github.com/aws/smithy-go v1.20.4
-	github.com/gardener/gardener v1.97.1
+	github.com/gardener/gardener v1.99.1
 	github.com/gardener/gardener-extension-provider-aws v1.56.1
-	github.com/gardener/machine-controller-manager v0.53.0
+	github.com/gardener/gardener-extension-provider-gcp v1.38.0
+	github.com/gardener/machine-controller-manager v0.53.1
 	github.com/hibiken/asynq v0.24.1
 	github.com/hibiken/asynq/x v0.0.0-20240506061152-d04888e74845
 	github.com/hibiken/asynqmon v0.7.2
