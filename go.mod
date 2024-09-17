@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/compute v1.28.0
 	cloud.google.com/go/resourcemanager v1.10.1
 	github.com/aws/aws-sdk-go-v2 v1.30.5
-	github.com/aws/aws-sdk-go-v2/config v1.27.31
+	github.com/aws/aws-sdk-go-v2/config v1.27.34
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.32
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.7
