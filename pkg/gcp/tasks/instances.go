@@ -37,14 +37,6 @@ type CollectInstancesPayload struct {
 	ProjectID string `json:"project_id" yaml:"project_id"`
 }
 
-// ErrNoSourceMachineImage is an error, which is returned when a
-// source machine image was not found for an instance.
-var ErrNoSourceImage = errors.New("no source machine image found")
-
-// ErrNoDiskInformation is an error, which is returned when
-// disk information was not found for an instance.
-var ErrNoDiskInformation = errors.New("no disk information found")
-
 // NewCollectInstancesTask creates a new [asynq.Task] for collecting GCP Compute
 // Engine Instances, without specifying a payload.
 func NewCollectInstancesTask() *asynq.Task {
@@ -335,7 +327,7 @@ func getSourceMachineImageFromDisks(
 		}
 		disk, err := diskClient.Client.Get(ctx, &diskRequest)
 		if err != nil {
-			return "", ErrNoDiskInformation
+			return "", err
 		}
 
 		sourceMachineImage = utils.ResourceNameFromURL(disk.GetSourceImage())
