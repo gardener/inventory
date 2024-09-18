@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -37,6 +36,14 @@ type CollectInstancesPayload struct {
 	// collect GCP Compute Engine Instances.
 	ProjectID string `json:"project_id" yaml:"project_id"`
 }
+
+// ErrNoSourceMachineImage is an error, which is returned when a
+// source machine image was not found for an instance.
+var ErrNoSourceImage = errors.New("no source machine image found")
+
+// ErrNoDiskInformation is an error, which is returned when
+// disk information was not found for an instance.
+var ErrNoDiskInformation = errors.New("no disk information found")
 
 // NewCollectInstancesTask creates a new [asynq.Task] for collecting GCP Compute
 // Engine Instances, without specifying a payload.
@@ -156,37 +163,36 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		zone := gcputils.UnqualifyZone(pair.Key)
 		region := gcputils.RegionFromZone(zone)
 		for _, inst := range pair.Value.Instances {
-			sourceMachineImageLink, err := getSourceMachineImageLinkFromDisks(ctx, payload.ProjectID, zone, inst.GetDisks())
+			sourceMachineImage, err := getSourceMachineImageFromDisks(ctx, payload.ProjectID, zone, inst.GetDisks())
 			if err != nil {
 				logger.Error(
 					"could not get source machine image",
 					"reason",
 					err,
 				)
-				sourceMachineImageLink = ""
 			}
 
 			// Collect instance
 			instance := models.Instance{
-				Name:                   inst.GetName(),
-				Hostname:               inst.GetHostname(),
-				InstanceID:             inst.GetId(),
-				ProjectID:              payload.ProjectID,
-				Zone:                   zone,
-				Region:                 region,
-				CanIPForward:           inst.GetCanIpForward(),
-				CPUPlatform:            inst.GetCpuPlatform(),
-				CreationTimestamp:      inst.GetCreationTimestamp(),
-				Description:            inst.GetDescription(),
-				LastStartTimestamp:     inst.GetLastStartTimestamp(),
-				LastStopTimestamp:      inst.GetLastStopTimestamp(),
-				LastSuspendTimestamp:   inst.GetLastSuspendedTimestamp(),
-				MachineType:            inst.GetMachineType(),
-				MinCPUPlatform:         inst.GetMinCpuPlatform(),
-				SelfLink:               inst.GetSelfLink(),
-				SourceMachineImageLink: sourceMachineImageLink,
-				Status:                 inst.GetStatus(),
-				StatusMessage:          inst.GetStatusMessage(),
+				Name:                 inst.GetName(),
+				Hostname:             inst.GetHostname(),
+				InstanceID:           inst.GetId(),
+				ProjectID:            payload.ProjectID,
+				Zone:                 zone,
+				Region:               region,
+				CanIPForward:         inst.GetCanIpForward(),
+				CPUPlatform:          inst.GetCpuPlatform(),
+				CreationTimestamp:    inst.GetCreationTimestamp(),
+				Description:          inst.GetDescription(),
+				LastStartTimestamp:   inst.GetLastStartTimestamp(),
+				LastStopTimestamp:    inst.GetLastStopTimestamp(),
+				LastSuspendTimestamp: inst.GetLastSuspendedTimestamp(),
+				MachineType:          utils.ResourceNameFromURL(inst.GetMachineType()),
+				MinCPUPlatform:       inst.GetMinCpuPlatform(),
+				SelfLink:             inst.GetSelfLink(),
+				SourceMachineImage:   sourceMachineImage,
+				Status:               inst.GetStatus(),
+				StatusMessage:        inst.GetStatusMessage(),
 			}
 			instances = append(instances, instance)
 
@@ -290,20 +296,20 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 	return nil
 }
 
-func getSourceMachineImageLinkFromDisks(
+func getSourceMachineImageFromDisks(
 	ctx context.Context,
 	projectID string,
 	zone string,
 	disks []*computepb.AttachedDisk,
 ) (string, error) {
-	// Iterate through disks, find boot disk.
+	// Iterate through disks, find first boot disk.
 	// Derive source machine image from it.
 
 	// expectations:
-	// only 1 boot disk per instance
+	// only 1 boot disk per instance (uses first one)
 	// the attached disk points to another disk, which contains the source machine image
 
-	var sourceMachineImageLink string
+	var sourceMachineImage string
 
 	for _, disk := range disks {
 		if disk == nil {
@@ -327,13 +333,15 @@ func getSourceMachineImageLinkFromDisks(
 			Zone:    zone,
 			Disk:    sourceDiskName,
 		}
-		pDisk, err := diskClient.Client.Get(ctx, &diskRequest)
+		disk, err := diskClient.Client.Get(ctx, &diskRequest)
 		if err != nil {
-			return "", fmt.Errorf("retrieving disk information: %v", err)
+			return "", ErrNoDiskInformation
 		}
 
-		sourceMachineImageLink = pDisk.GetSourceImage()
+		sourceMachineImage = utils.ResourceNameFromURL(disk.GetSourceImage())
+
+		return sourceMachineImage, nil
 	}
 
-	return sourceMachineImageLink, nil
+	return sourceMachineImage, nil
 }
