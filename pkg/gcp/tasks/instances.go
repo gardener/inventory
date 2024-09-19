@@ -37,6 +37,10 @@ type CollectInstancesPayload struct {
 	ProjectID string `json:"project_id" yaml:"project_id"`
 }
 
+// ErrNoSourceImage is an error returned when a
+// source image was not found for an instance.
+var ErrNoSourceImage = errors.New("no source image found")
+
 // NewCollectInstancesTask creates a new [asynq.Task] for collecting GCP Compute
 // Engine Instances, without specifying a payload.
 func NewCollectInstancesTask() *asynq.Task {
@@ -335,5 +339,5 @@ func getSourceMachineImageFromDisks(
 		return sourceMachineImage, nil
 	}
 
-	return sourceMachineImage, nil
+	return "", ErrNoSourceImage
 }
