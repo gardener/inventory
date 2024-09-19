@@ -16,6 +16,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	"github.com/gardener/inventory/pkg/gcp/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	decodeutils "github.com/gardener/inventory/pkg/utils/decode"
 	"github.com/gardener/inventory/pkg/utils/ptr"
@@ -65,7 +66,7 @@ func collectGCPMachineImages(ctx context.Context, payload CollectCPMachineImages
 			item := models.CloudProfileGCPImage{
 				Name:             image.Name,
 				Version:          version.Version,
-				Image:            version.Image,
+				Image:            utils.ResourceNameFromURL(version.Image),
 				Architecture:     ptr.Value(version.Architecture, ""),
 				CloudProfileName: payload.CloudProfileName,
 			}
