@@ -114,6 +114,9 @@ type GCPServices struct {
 
 	// Compute contains the Compute Service configuration.
 	Compute GCPServiceConfig `yaml:"compute"`
+
+	// Storage contains the Storage Service configuration.
+	Storage GCPServiceConfig `yaml:"storage"`
 }
 
 // GCPServiceConfig provides service-specific configuration for a GCP service.
