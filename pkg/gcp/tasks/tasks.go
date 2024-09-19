@@ -32,6 +32,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectVPCsTask,
 		NewCollectAddressesTask,
 		NewCollectSubnetsTask,
+		NewCollectBucketsTask,
 	}
 
 	return utils.Enqueue(taskFns)
@@ -62,4 +63,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectVPCs, asynq.HandlerFunc(HandleCollectVPCsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAddresses, asynq.HandlerFunc(HandleCollectAddressesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectBuckets, asynq.HandlerFunc(HandleCollectBucketsTask))
 }
