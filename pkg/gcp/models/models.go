@@ -204,6 +204,20 @@ type SubnetToProject struct {
 	SubnetID  uint64 `bun:"subnet_id,notnull,unique:l_gcp_subnet_to_project_key"`
 }
 
+// Bucket represents a GCP Bucket
+type Bucket struct {
+	bun.BaseModel `bun:"table:gcp_bucket"`
+	coremodels.Model
+
+	Name                string   `bun:"name,notnull,unique:gcp_bucket_key"`
+	ProjectID           string   `bun:"project_id,notnull,unique:gcp_bucket_key"`
+	LocationType        string   `bun:"location_type,notnull"`
+	Location            string   `bun:"location,notnull"`
+	DefaultStorageClass string   `bun:"default_storage_class,notnull"`
+	CreationTimestamp   string   `bun:"creation_timestamp,nullzero"`
+	Project             *Project `bun:"rel:has-one,join:project_id=project_id"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
@@ -212,6 +226,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:address", &Address{})
 	registry.ModelRegistry.MustRegister("gcp:model:nic", &NetworkInterface{})
 	registry.ModelRegistry.MustRegister("gcp:model:subnet", &Subnet{})
+	registry.ModelRegistry.MustRegister("gcp:model:bucket", &Bucket{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
