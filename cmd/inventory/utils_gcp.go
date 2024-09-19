@@ -13,6 +13,7 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"cloud.google.com/go/storage"
 	"google.golang.org/api/option"
 
 	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
@@ -296,6 +297,45 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 	return nil
 }
 
+// configureGCPStorageClientsets configures the GCP storage API clientsets.
+func configureGCPStorageClientsets(ctx context.Context, conf *config.Config) error {
+	for _, namedCreds := range conf.GCP.Services.Storage.UseCredentials {
+		opts, err := getGCPClientOptions(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		nc, ok := conf.GCP.Credentials[namedCreds]
+		if !ok {
+			return fmt.Errorf("gcp: %w: %s", errUnknownNamedCredentials, namedCreds)
+		}
+
+		// Register the client for each specified GCP project
+		for _, project := range nc.Projects {
+			// Buckets
+			storageClient, err := storage.NewClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create gcp storage client for %s: %w", namedCreds, err)
+			}
+			storageClientWrapper := &gcpclients.Client[*storage.Client]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           storageClient,
+			}
+			gcpclients.StorageClientset.Overwrite(project, storageClientWrapper)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "storage",
+				"credentials", namedCreds,
+				"project", project,
+			)
+		}
+	}
+
+	return nil
+}
+
 // configureGCPClients creates the GCP API clients from the specified
 // configuration.
 func configureGCPClients(ctx context.Context, conf *config.Config) error {
@@ -308,6 +348,7 @@ func configureGCPClients(ctx context.Context, conf *config.Config) error {
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"resource_manager": configureGCPResourceManagerClientsets,
 		"compute":          configureGCPComputeClientsets,
+		"storage":          configureGCPStorageClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
@@ -352,6 +393,11 @@ func closeGCPClients() {
 	})
 
 	_ = gcpclients.DisksClientset.Range(func(_ string, client *gcpclients.Client[*compute.DisksClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.StorageClientset.Range(func(_ string, client *gcpclients.Client[*storage.Client]) error {
 		client.Client.Close()
 		return nil
 	})
