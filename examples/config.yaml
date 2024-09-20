@@ -58,7 +58,7 @@ gcp:
     compute:
       use_credentials:
         - foo
-    # Storage API clients collect Instances.
+    # Storage API clients collect Buckets.
     storage:
       use_credentials:
         - foo
