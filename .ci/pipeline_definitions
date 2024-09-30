@@ -2,9 +2,9 @@ inventory:
   base_definition:
     steps:
       verify:
-        image: 'golang:1.22.4'
+        image: 'golang:1.23.1'
       build:
-        image: 'golang:1.22.4'
+        image: 'golang:1.23.1'
         output_dir: binary
     traits:
       version:
