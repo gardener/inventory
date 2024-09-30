@@ -6,7 +6,6 @@ package utils
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/hibiken/asynq"
 	"github.com/uptrace/bun"
@@ -19,12 +18,13 @@ import (
 type TaskConstructor func() *asynq.Task
 
 // Enqueue enqueues the tasks produced by the given task constructors.
-func Enqueue(items []TaskConstructor) error {
+func Enqueue(ctx context.Context, items []TaskConstructor) error {
+	logger := asynqutils.GetLogger(ctx)
 	for _, fn := range items {
 		task := fn()
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
-			slog.Error(
+			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
 				"reason", err,
@@ -32,7 +32,7 @@ func Enqueue(items []TaskConstructor) error {
 			return err
 		}
 
-		slog.Info(
+		logger.Info(
 			"enqueued task",
 			"type", task.Type(),
 			"id", info.ID,
