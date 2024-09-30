@@ -264,7 +264,7 @@ func NewTaskCommand() *cli.Command {
 				},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					client := newClient(conf)
+					client := newAsynqClient(conf)
 					defer client.Close()
 
 					taskName := ctx.String("task")
