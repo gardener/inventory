@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 7,
+  "id": 8,
   "links": [],
   "panels": [
     {
@@ -544,6 +544,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -574,10 +575,97 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 24,
         "x": 0,
         "y": 29
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM gcp_orphan_subnet WHERE project_id in ($gcp_project);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Leaked Subnets",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 37
       },
       "id": 5,
       "options": {
@@ -631,6 +719,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
+      "description": "List of GCP machine images not specified in a GCP Cloud Profile.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -648,8 +737,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -664,7 +752,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 44
       },
       "id": 8,
       "options": {
@@ -710,7 +798,7 @@
           }
         }
       ],
-      "title": "Unknown ",
+      "title": "Unknown Images",
       "type": "table"
     }
   ],
@@ -754,6 +842,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked GCP Resources",
   "uid": "fdw5qjcrnirr4a",
-  "version": 2,
+  "version": 7,
   "weekStart": ""
 }
