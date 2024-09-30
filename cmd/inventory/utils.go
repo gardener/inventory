@@ -190,8 +190,8 @@ func newRedisClientOpt(conf *config.Config) asynq.RedisClientOpt {
 	return opts
 }
 
-// newClient creates a new [asynq.Client] from the given config
-func newClient(conf *config.Config) *asynq.Client {
+// newAsynqClient creates a new [asynq.Client] from the given config
+func newAsynqClient(conf *config.Config) *asynq.Client {
 	redisClientOpt := newRedisClientOpt(conf)
 	return asynq.NewClient(redisClientOpt)
 }

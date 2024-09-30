@@ -141,7 +141,7 @@ func NewWorkerCommand() *cli.Command {
 					conf := getConfig(ctx)
 					db := newDB(conf)
 					defer db.Close()
-					client := newClient(conf)
+					client := newAsynqClient(conf)
 					defer client.Close()
 					server := newServer(conf)
 
