@@ -35,7 +35,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectBucketsTask,
 	}
 
-	return utils.Enqueue(taskFns)
+	return utils.Enqueue(ctx, taskFns)
 }
 
 // HandleLinkAllTask is a handler, which establishes links between the various
