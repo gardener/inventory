@@ -1019,7 +1019,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1124,7 +1125,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1194,6 +1196,94 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM aws_orphan_subnet\nWHERE account_id in ($aws_account);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Leaked Subnets",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1210,7 +1300,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1238,7 +1329,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 68
       },
       "id": 11,
       "options": {
@@ -1310,7 +1401,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1338,7 +1430,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 69
+        "y": 79
       },
       "id": 9,
       "options": {
@@ -1396,9 +1488,9 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "997823283084",
-          "value": "997823283084"
+          "selected": true,
+          "text": [],
+          "value": []
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
@@ -1430,6 +1522,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked AWS Resources",
   "uid": "ddod4l1vde680a",
-  "version": 9,
+  "version": 11,
   "weekStart": ""
 }
