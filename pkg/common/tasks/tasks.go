@@ -6,11 +6,9 @@ package tasks
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/hibiken/asynq"
-	"gopkg.in/yaml.v3"
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
@@ -32,7 +30,7 @@ type HousekeeperPayload struct {
 // RetentionConfig represents the retention configuration for a given model.
 type RetentionConfig struct {
 	// Name specifies the model name.
-	Name string `yaml:"name"`
+	Name string `yaml:"name" json:"name"`
 
 	// Duration specifies the max duration for which an object will be kept,
 	// if it hasn't been updated recently.
@@ -45,15 +43,15 @@ type RetentionConfig struct {
 	// If the object is not update anymore by the time the housekeeper runs,
 	// after 20:00:00 this object will be considered as stale and removed
 	// from the database.
-	Duration time.Duration `yaml:"duration"`
+	Duration time.Duration `yaml:"duration" json:"duration"`
 }
 
 // HandleHousekeeperTask performs housekeeping activities, such as deleting
 // stale records.
 func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 	var payload HousekeeperPayload
-	if err := yaml.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+	if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
+		return err
 	}
 
 	logger := asynqutils.GetLogger(ctx)
