@@ -14,4 +14,7 @@ const (
 
 	// ZonesPrefix is the prefix for zone identifiers.
 	ZonesPrefix = "zones/"
+
+	// RegionsPrefix is the prefix for region identifiers.
+	RegionsPrefix = "regions/"
 )

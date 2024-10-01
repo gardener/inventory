@@ -30,6 +30,11 @@ func ZoneFQN(s string) string {
 	return fmt.Sprintf("%s%s", constants.ZonesPrefix, s)
 }
 
+// UnqualifyRegion returns the unqualified name for a region.
+func UnqualifyRegion(s string) string {
+	return strings.TrimPrefix(s, constants.RegionsPrefix)
+}
+
 // UnqualifyZone returns the unqualified name for a zone.
 func UnqualifyZone(s string) string {
 	return strings.TrimPrefix(s, constants.ZonesPrefix)
