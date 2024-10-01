@@ -252,6 +252,9 @@ scheduler:
     - name: "gcp:task:collect-buckets"
       spec: "@every 1h"
       desc: "Collect GCP Buckets"
+    - name: "gcp:task:collect-forwarding-rules"
+      spec: "@every 1h"
+      desc: "Collect GCP Forwarding Rules"
     - name: "gcp:task:link-all"
       spec: "@every 30m"
       desc: "Link all GCP models"
@@ -309,6 +312,8 @@ scheduler:
           - name: "gcp:model:subnet"
             duration: 24h
           - name: "gcp:model:bucket"
+            duration: 24h
+          - name: "gcp:model:forwarding_rule"
             duration: 24h
 
 virtual_garden:

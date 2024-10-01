@@ -64,4 +64,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectAddresses, asynq.HandlerFunc(HandleCollectAddressesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectBuckets, asynq.HandlerFunc(HandleCollectBucketsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectForwardingRules, asynq.HandlerFunc(HandleCollectForwardingRules))
 }
