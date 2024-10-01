@@ -117,6 +117,7 @@ services:
     volumes:
       - ./extra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./extra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./extra/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
       - ./extra/grafana/dashboards:/var/lib/grafana/dashboards
 
   prometheus:
