@@ -54,7 +54,8 @@ gcp:
     resource_manager:
       use_credentials:
         - foo
-    # Compute API clients collect Instances.
+    # Compute API clients collect Instances, VPCs, Subnets, Regional & Global
+    # Addresses, Disks and Forwarding Rules.
     compute:
       use_credentials:
         - foo
