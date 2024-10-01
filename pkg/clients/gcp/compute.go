@@ -33,3 +33,7 @@ var SubnetworksClientset = registry.New[string, *Client[*compute.SubnetworksClie
 // DisksClientset provides the registry of GCP API clients for interfacing
 // with the disk API service.
 var DisksClientset = registry.New[string, *Client[*compute.DisksClient]]()
+
+// ForwardingRulesClientset provides the registry of GCP API clients for
+// interfacing with the Forwarding Rules service.
+var ForwardingRulesClientset = registry.New[string, *Client[*compute.ForwardingRulesClient]]()
