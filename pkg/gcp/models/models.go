@@ -255,6 +255,16 @@ type ForwardingRule struct {
 	Subnet              *Subnet  `bun:"rel:has-one,join:project_id=project_id,join:subnetwork=name"`
 }
 
+// ForwardingRuleToProject represents a link table connecting the
+// [ForwardingRule] and [Project] models.
+type ForwardingRuleToProject struct {
+	bun.BaseModel `bun:"table:l_gcp_fr_to_project"`
+	coremodels.Model
+
+	RuleID    uint64 `bun:"rule_id,notnull,unique:l_gcp_fr_to_project_key"`
+	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_fr_to_project_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
@@ -273,4 +283,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_nic", &InstanceToNetworkInterface{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_vpc", &SubnetToVPC{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_project", &SubnetToProject{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_forwarding_rule_to_project", &ForwardingRuleToProject{})
 }
