@@ -247,7 +247,7 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
-				"sub_service", "global_addresses",
+				"sub_service", "global-addresses",
 				"credentials", namedCreds,
 				"project", project,
 			)
@@ -288,6 +288,26 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"configured GCP client",
 				"service", "compute",
 				"sub_service", "disks",
+				"credentials", namedCreds,
+				"project", project,
+			)
+
+			frClient, err := compute.NewForwardingRulesRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create forwarding rules client for %s: %w", namedCreds, err)
+			}
+
+			frClientWrapper := &gcpclients.Client[*compute.ForwardingRulesClient]{
+				NamedCredentials: namedCreds,
+				ProjectID:        project,
+				Client:           frClient,
+			}
+			gcpclients.ForwardingRulesClientset.Overwrite(project, frClientWrapper)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "forwarding-rules",
 				"credentials", namedCreds,
 				"project", project,
 			)
@@ -398,6 +418,11 @@ func closeGCPClients() {
 	})
 
 	_ = gcpclients.StorageClientset.Range(func(_ string, client *gcpclients.Client[*storage.Client]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.ForwardingRulesClientset.Range(func(_ string, client *gcpclients.Client[*compute.ForwardingRulesClient]) error {
 		client.Client.Close()
 		return nil
 	})
