@@ -1,0 +1,74 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: orphan resources
+      folder: inventory
+      interval: 30m
+      rules:
+        - uid: cdzkc15hnbm68c
+          title: Orphan resources
+          condition: C
+          data:
+            - refId: subnet_count
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ds_gardener_inventory
+              model:
+                editorMode: code
+                format: table
+                intervalMs: 1000
+                maxDataPoints: 43200
+                rawQuery: true
+                rawSql: |-
+                    SELECT COUNT(1) as cnt FROM gcp_orphan_subnet as gos
+                    WHERE gos.name NOT LIKE '%soil%';
+                refId: subnet_count
+                sql:
+                    columns:
+                        - parameters: []
+                          type: function
+                    groupBy:
+                        - property:
+                            type: string
+                          type: groupBy
+                    limit: 50
+            - refId: C
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: subnet_count
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 30m
+          annotations:
+            description: Checks the count of leaked subnets and fires if it's greater than 0
+            summary: Leaked subnets have been spotted.
+          labels:
+            label1: value1
+          isPaused: false
+          notification_settings:
+            receiver: grafana-default-email
