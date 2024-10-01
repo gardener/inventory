@@ -218,6 +218,43 @@ type Bucket struct {
 	Project             *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
+// ForwardingRule represents a GCP Forwarding Rule resource. The Forwarding
+// Rules in GCP are global and regional. For more details please refer to the
+// [Forwarding Rules overview] documentation.
+//
+// [Forwarding Rules overview]: https://cloud.google.com/load-balancing/docs/forwarding-rule-concepts
+type ForwardingRule struct {
+	bun.BaseModel `bun:"table:gcp_forwarding_rule"`
+	coremodels.Model
+
+	RuleID              uint64   `bun:"rule_id,notnull,unique:gcp_forwarding_rule_key"`
+	ProjectID           string   `bun:"project_id,notnull,unique:gcp_forwarding_rule_key"`
+	Name                string   `bun:"name,notnull"`
+	IPAddress           net.IP   `bun:"ip_address,nullzero,type:inet"`
+	IPProtocol          string   `bun:"ip_protocol,notnull"`
+	IPVersion           string   `bun:"ip_version,notnull"`
+	AllPorts            bool     `bun:"all_ports,notnull"`
+	AllowGlobalAccess   bool     `bun:"allow_global_access,notnull"`
+	BackendService      string   `bun:"backend_service,nullzero"`
+	BaseForwardingRule  string   `bun:"base_forwarding_rule,nullzero"`
+	CreationTimestamp   string   `bun:"creation_timestamp,nullzero"`
+	Description         string   `bun:"description,notnull"`
+	LoadBalancingScheme string   `bun:"load_balancing_scheme,notnull"`
+	Network             string   `bun:"network,nullzero"`
+	NetworkTier         string   `bun:"network_tier,nullzero"`
+	PortRange           string   `bun:"port_range,nullzero"`
+	Ports               []string `bun:"ports,nullzero,array"`
+	Region              string   `bun:"region,notnull"`
+	ServiceLabel        string   `bun:"service_label,nullzero"`
+	ServiceName         string   `bun:"service_name,nullzero"`
+	SourceIPRanges      []string `bun:"source_ip_ranges,nullzero,array"`
+	Subnetwork          string   `bun:"subnetwork,nullzero"`
+	Target              string   `bun:"target,nullzero"`
+	Project             *Project `bun:"rel:has-one,join:project_id=project_id"`
+	VPC                 *VPC     `bun:"rel:has-one,join:project_id=project_id,join:network=name"`
+	Subnet              *Subnet  `bun:"rel:has-one,join:project_id=project_id,join:subnetwork=name"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
@@ -227,6 +264,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:nic", &NetworkInterface{})
 	registry.ModelRegistry.MustRegister("gcp:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("gcp:model:bucket", &Bucket{})
+	registry.ModelRegistry.MustRegister("gcp:model:forwarding_rule", &ForwardingRule{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
