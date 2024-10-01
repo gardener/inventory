@@ -33,6 +33,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectAddressesTask,
 		NewCollectSubnetsTask,
 		NewCollectBucketsTask,
+		NewCollectForwardingRulesTask,
 	}
 
 	return utils.Enqueue(ctx, taskFns)
@@ -48,6 +49,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkInstanceWithNetworkInterface,
 		LinkSubnetWithVPC,
 		LinkSubnetWithProject,
+		LinkForwardingRuleWithProject,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)

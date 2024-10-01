@@ -306,3 +306,52 @@ func LinkSubnetWithProject(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkForwardingRuleWithProject creates links between the
+// [models.ForwardingRule] and [models.Project] models.
+func LinkForwardingRuleWithProject(ctx context.Context, db *bun.DB) error {
+	var items []models.ForwardingRule
+	err := db.NewSelect().
+		Model(&items).
+		Relation("Project").
+		Where("project.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.ForwardingRuleToProject, 0, len(items))
+	for _, item := range items {
+		link := models.ForwardingRuleToProject{
+			ProjectID: item.Project.ID,
+			RuleID:    item.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (project_id, rule_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gcp forwarding rule with project", "count", count)
+
+	return nil
+}
