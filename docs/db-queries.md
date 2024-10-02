@@ -181,7 +181,8 @@ SELECT
         gfr.ip_address AS ip_address,
         gfr.region AS region,
         gfr.project_id AS project_id,
-        'gcp_forwarding_rule' AS origin;
+        'gcp_forwarding_rule' AS origin
+FROM gcp_forwarding_rule AS gfr WHERE gfr.load_balancing_scheme = 'EXTERNAL';
 ```
 
 ## Shoots Grouped by Cloud Profile
