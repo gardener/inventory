@@ -164,6 +164,26 @@ FROM gcp_instance AS i
 INNER JOIN gcp_nic AS nic ON i.instance_id = nic.instance_id AND i.project_id = nic.project_id;
 ```
 
+## GCP Public IP Addresses
+
+The following query selects the GCP Public IP Addresses by making a `UNION` of
+the `gcp_address` and `gcp_forwarding_rule` tables.
+
+``` sql
+SELECT
+        ga.address AS ip_address,
+        ga.region AS region,
+        ga.project_id AS project_id,
+        'gcp_address' AS origin
+FROM gcp_address AS ga WHERE ga.address_type = 'EXTERNAL'
+UNION
+SELECT
+        gfr.ip_address AS ip_address,
+        gfr.region AS region,
+        gfr.project_id AS project_id,
+        'gcp_forwarding_rule' AS origin;
+```
+
 ## Shoots Grouped by Cloud Profile
 
 The following query will give you the shoots grouped by cloud profile.
