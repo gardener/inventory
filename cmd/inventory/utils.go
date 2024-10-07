@@ -67,6 +67,14 @@ var errNoServiceCredentials = errors.New("no credentials specified for service")
 // using an unknown named credentials.
 var errUnknownNamedCredentials = errors.New("unknown named credentials")
 
+// errNoAuthenticationMethod is an error, which is returned when no
+// authentication method was specified in named credentials.
+var errNoAuthenticationMethod = errors.New("no authentication method specified")
+
+// errUnknownAuthenticationMethod is an error, which is returned when using an
+// unknown/unsupported authentication method in named credentials.
+var errUnknownAuthenticationMethod = errors.New("unknown authentication method specified")
+
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
 	conf := ctx.Context.Value(configKey{}).(*config.Config)

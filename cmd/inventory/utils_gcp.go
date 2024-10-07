@@ -21,14 +21,6 @@ import (
 	"github.com/gardener/inventory/pkg/version"
 )
 
-// errNoGCPAuthenticationMethod is an error, which is returned when using an
-// unknown/unsupported GCP authentication method.
-var errNoGCPAuthenticationMethod = errors.New("no GCP authentication method specified")
-
-// errUnknownGCPAuthenticationMethod is an error, which is returned when using
-// an unknown/unsupported GCP authentication method/strategy.
-var errUnknownGCPAuthenticationMethod = errors.New("unknown GCP authentication method specified")
-
 // errNoGCPKeyFile is an error, which is returned when no path to a service
 // account JSON Key File was specified for a named credential.
 var errNoGCPKeyFile = errors.New("no service account JSON key file specified")
@@ -73,10 +65,10 @@ func validateGCPConfig(conf *config.Config) error {
 
 	for name, creds := range conf.GCP.Credentials {
 		if creds.Authentication == "" {
-			return fmt.Errorf("gcp: %w: credentials %s", errNoGCPAuthenticationMethod, name)
+			return fmt.Errorf("gcp: %w: credentials %s", errNoAuthenticationMethod, name)
 		}
 		if !slices.Contains(supportedAuthnMethods, creds.Authentication) {
-			return fmt.Errorf("gcp: %w: %s uses %s", errUnknownGCPAuthenticationMethod, name, creds.Authentication)
+			return fmt.Errorf("gcp: %w: %s uses %s", errUnknownAuthenticationMethod, name, creds.Authentication)
 		}
 		if len(creds.Projects) == 0 {
 			return fmt.Errorf("gcp: %w: credentials %s", errNoGCPProjects, name)
