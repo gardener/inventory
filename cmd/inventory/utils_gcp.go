@@ -47,6 +47,7 @@ func validateGCPConfig(conf *config.Config) error {
 	services := map[string][]string{
 		"resource_manager": conf.GCP.Services.ResourceManager.UseCredentials,
 		"compute":          conf.GCP.Services.Compute.UseCredentials,
+		"storage":          conf.GCP.Services.Storage.UseCredentials,
 	}
 
 	for service, namedCredentials := range services {
