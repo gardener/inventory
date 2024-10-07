@@ -32,6 +32,19 @@ const (
 	// method/strategy to use when creating API clients, which are
 	// authenticated using service account JSON key files.
 	GCPAuthenticationMethodKeyFile = "key_file"
+
+	// AzureAuthenticationMethodDefault is the name of the authentication
+	// mechanism for Azure, which uses the [DefaultAzureCredential] chain of
+	// credential providers.
+	//
+	// [DefaultAzureCredential]: https://learn.microsoft.com/en-us/azure/developer/go/sdk/authentication-overview
+	AzureAuthenticationMethodDefault = "default"
+
+	// AzureAuthenticationMethodWorkloadIdentity is the name of the
+	// authentication mechanism for Azure, which uses [Workload Identity Federation].
+	//
+	// [Workload Identity Federation]: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
+	AzureAuthenticationMethodWorkloadIdentity = "workload_identity"
 )
 
 // ErrNoConfigVersion error is returned when the configuration does not specify
@@ -80,6 +93,75 @@ type Config struct {
 
 	// GCP represents the GCP specific configuration settings.
 	GCP GCPConfig `yaml:"gcp"`
+
+	// Azure represents the Azure specific configuration settings.
+	Azure AzureConfig `yaml:"azure"`
+}
+
+// AzureConfig provides Azure specific configuration settings.
+type AzureConfig struct {
+	// IsEnabled specifies whether the Azure collection is enabled or not.
+	// Setting this to false will not create any Azure API client.
+	IsEnabled bool `yaml:"is_enabled"`
+
+	// Services provides the Azure service-specific configuration.
+	Services AzureServices `yaml:"services"`
+
+	// Credentials specifies the Azure named credentials configuration,
+	// which is used by the various Azure services.
+	Credentials map[string]AzureCredentialsConfig `yaml:"credentials"`
+}
+
+// AzureServices repsesents the known Azure services and their config.
+type AzureServices struct {
+	// Compute provides the Compute service configuration.
+	Compute AzureServiceConfig `yaml:"compute"`
+}
+
+// AzureServiceConfig provides configuration specific for an Azure service.
+type AzureServiceConfig struct {
+	// UseCredentials specifies the name of the credentials to use.
+	UseCredentials []string `yaml:"use_credentials"`
+}
+
+// AzureCredentialsConfig provides named credentials configuration for the Azure
+// API clients.
+type AzureCredentialsConfig struct {
+	// Authentication specifies the authentication mechanism to use when
+	// creating Azure API clients.
+	//
+	// The currently supported authentication mechanisms are `default' and
+	// `workload_identity'.
+	//
+	// When using `default' as the authentication mechanism the API client
+	// will be initialized with the DefaultAzureCredential chain of
+	// credential providers [1].
+	//
+	// When using `workload_identity' as the authentication mechanism, the
+	// API client will be configured to authenticate using Workload Identity
+	// Federation [2].
+	//
+	// [1]: https://learn.microsoft.com/en-us/azure/developer/go/sdk/authentication-overview
+	// [2]: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
+	Authentication string `yaml:"authentication"`
+
+	// WorkloadIdentity provides the config settings for authentication
+	// using Workload Identity Federation.
+	WorkloadIdentity AzureWorkloadIdentityConfig `yaml:"workload_identity"`
+}
+
+// AzureWorkloadIdentityConfig provides the config settings for Azure Workload
+// Identity Federation.
+type AzureWorkloadIdentityConfig struct {
+	// ClientID specifies the service principal.
+	ClientID string
+
+	// TenantID specifies the tenant of the service principal.
+	TenantID string
+
+	// TokenFile specifies the path to a file, which contains the JWT token,
+	// which will be exchanged for Azure access token.
+	TokenFile string
 }
 
 // GCPConfig provides GCP specific configuration settings.
