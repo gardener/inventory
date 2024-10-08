@@ -6,14 +6,14 @@ require (
 	cloud.google.com/go/compute v1.28.1
 	cloud.google.com/go/resourcemanager v1.10.1
 	cloud.google.com/go/storage v1.43.0
-	github.com/aws/aws-sdk-go-v2 v1.32.1
-	github.com/aws/aws-sdk-go-v2/config v1.27.41
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.39
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.181.1
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.14.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6 v6.1.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription v1.2.0
+	github.com/aws/aws-sdk-go-v2 v1.32.1
+	github.com/aws/aws-sdk-go-v2/config v1.27.41
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.39
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.181.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2
