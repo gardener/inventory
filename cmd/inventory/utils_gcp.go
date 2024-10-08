@@ -103,7 +103,7 @@ func getGCPClientOptions(conf *config.Config, namedCredentials string) ([]option
 		}
 		opts = append(opts, option.WithCredentialsFile(creds.KeyFile.Path))
 	default:
-		return nil, fmt.Errorf("gcp: %w: %s uses %s", errUnknownGCPAuthenticationMethod, namedCredentials, creds.Authentication)
+		return nil, fmt.Errorf("gcp: %w: %s uses %s", errUnknownAuthenticationMethod, namedCredentials, creds.Authentication)
 	}
 
 	return opts, nil
