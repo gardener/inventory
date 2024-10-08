@@ -154,14 +154,14 @@ type AzureCredentialsConfig struct {
 // Identity Federation.
 type AzureWorkloadIdentityConfig struct {
 	// ClientID specifies the service principal.
-	ClientID string
+	ClientID string `yaml:"client_id"`
 
 	// TenantID specifies the tenant of the service principal.
-	TenantID string
+	TenantID string `yaml:"tenant_id"`
 
 	// TokenFile specifies the path to a file, which contains the JWT token,
 	// which will be exchanged for Azure access token.
-	TokenFile string
+	TokenFile string `yaml:"token_file"`
 }
 
 // GCPConfig provides GCP specific configuration settings.
