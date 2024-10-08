@@ -116,6 +116,9 @@ type AzureConfig struct {
 type AzureServices struct {
 	// Compute provides the Compute service configuration.
 	Compute AzureServiceConfig `yaml:"compute"`
+
+	// ResourceManager provides the Resource Manager configuration.
+	ResourceManager AzureServiceConfig `yaml:"resource_manager"`
 }
 
 // AzureServiceConfig provides configuration specific for an Azure service.

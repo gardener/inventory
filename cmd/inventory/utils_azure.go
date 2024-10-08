@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
 
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
@@ -38,7 +39,8 @@ var errAzureNoTokenFile = errors.New("no token file specified")
 func validateAzureConfig(conf *config.Config) error {
 	// Make sure that the services have named credentials configured.
 	services := map[string][]string{
-		"compute": conf.Azure.Services.Compute.UseCredentials,
+		"compute":          conf.Azure.Services.Compute.UseCredentials,
+		"resource_manager": conf.Azure.Services.ResourceManager.UseCredentials,
 	}
 
 	for service, namedCredentials := range services {
@@ -84,7 +86,8 @@ func configureAzureClients(ctx context.Context, conf *config.Config) error {
 
 	slog.Info("configuring Azure clients")
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
-		"compute": configureAzureComputeClientsets,
+		"compute":          configureAzureComputeClientsets,
+		"resource_manager": configureAzureResourceManagerClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
@@ -202,6 +205,92 @@ func configureAzureComputeClientsets(ctx context.Context, conf *config.Config) e
 				"configured Azure client",
 				"service", "compute",
 				"sub_service", "virtual-machines",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
+		}
+	}
+
+	return nil
+}
+
+// configureAzureResourceManagerClientsets configures the Azure Resource Manager
+// API clientsets.
+func configureAzureResourceManagerClientsets(ctx context.Context, conf *config.Config) error {
+	// Similar to the way we do it for Compute API clients, we first need to
+	// get the token provider, and then for each Subscription to which the
+	// named credentials have access we create and register an API client.
+	for _, namedCreds := range conf.Azure.Services.ResourceManager.UseCredentials {
+		tokenProvider, err := getAzureTokenProvider(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		// Get the subscriptions to which the current credentials have
+		// access to and register each subscription as a known client in
+		// our clientset.
+		subscriptions, err := getAzureSubscriptions(ctx, tokenProvider)
+		if err != nil {
+			return err
+		}
+
+		for _, subscription := range subscriptions {
+			subscriptionID := ptr.Value(subscription.SubscriptionID, "")
+			subscriptionName := ptr.Value(subscription.DisplayName, "")
+			if subscriptionID == "" {
+				return fmt.Errorf("empty subscription id for named credentials %s", namedCreds)
+			}
+
+			subFactory, err := armsubscription.NewClientFactory(tokenProvider, &arm.ClientOptions{})
+			if err != nil {
+				return err
+			}
+
+			// Register Subscription clients
+			subClient := subFactory.NewSubscriptionsClient()
+			azureclients.SubscriptionsClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armsubscription.SubscriptionsClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           subClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "resource_manager",
+				"sub_service", "subscriptions",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
+
+			// Register Resource Groups clients
+			rgFactory, err := armresources.NewClientFactory(
+				subscriptionID,
+				tokenProvider,
+				&arm.ClientOptions{},
+			)
+			if err != nil {
+				return err
+			}
+
+			rgClient := rgFactory.NewResourceGroupsClient()
+			azureclients.ResourceGroupsClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armresources.ResourceGroupsClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           rgClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "resource_manager",
+				"sub_service", "resource-groups",
 				"credentials", namedCreds,
 				"subscription_id", subscriptionID,
 				"subscription_name", subscriptionName,
