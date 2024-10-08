@@ -109,13 +109,13 @@ func getAzureTokenProvider(conf *config.Config, namedCredentials string) (azcore
 		return azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{})
 	case config.AzureAuthenticationMethodWorkloadIdentity:
 		if creds.WorkloadIdentity.ClientID == "" {
-			return nil, errAzureNoClientID
+			return nil, fmt.Errorf("%w for %s", errAzureNoClientID, namedCredentials)
 		}
 		if creds.WorkloadIdentity.TenantID == "" {
-			return nil, errAzureNoTenantID
+			return nil, fmt.Errorf("%w for %s", errAzureNoTenantID, namedCredentials)
 		}
 		if creds.WorkloadIdentity.TokenFile == "" {
-			return nil, errAzureNoTokenFile
+			return nil, fmt.Errorf("%w for %s", errAzureNoTokenFile, namedCredentials)
 		}
 
 		opts := &azidentity.WorkloadIdentityCredentialOptions{
