@@ -48,6 +48,13 @@ azure:
   # Subscriptions and Resource Groups, for which `foo' and `bar' credentials
   # have access to.
   services:
+    # Resource Manager API clients collect Subscriptions and Resource Groups.
+    resource_manager:
+      use_credentials:
+        - foo
+        - bar
+
+    # Compute service API clients collect Virtual Machines.
     compute:
       use_credentials:
         - foo
