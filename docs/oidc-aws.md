@@ -97,6 +97,10 @@ connecting to multiple AWS accounts for each supported AWS service.
 ``` yaml
 # AWS specific configuration
 aws:
+  # Setting `is_enabled' to false would not create API clients for AWS, and as a
+  # result Inventory will not process any of the AWS collection tasks.
+  is_enabled: true
+
   region: eu-central-1  # Frankfurt
   default_region: eu-central-1  # Frankfurt
   app_id: gardener-inventory  # Optional application specific identifier
