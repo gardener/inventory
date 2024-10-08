@@ -127,6 +127,7 @@ func NewWorkerCommand() *cli.Command {
 						validateDBConfig,
 						validateAWSConfig,
 						validateGCPConfig,
+						validateAzureConfig,
 					}
 
 					for _, validator := range validatorFuncs {
@@ -167,7 +168,6 @@ func NewWorkerCommand() *cli.Command {
 					slog.Info("configuring asynq client")
 					asynqclient.SetClient(client)
 
-					// AWS clients config
 					if err := configureAWSClients(ctx.Context, conf); err != nil {
 						return err
 					}
@@ -176,6 +176,10 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 					defer closeGCPClients()
+
+					if err := configureAzureClients(ctx.Context, conf); err != nil {
+						return err
+					}
 
 					// Configure logging and middlewares
 					slog.Info("configuring logging and middlewares")
