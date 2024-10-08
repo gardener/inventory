@@ -172,7 +172,7 @@ func configureAzureComputeClientsets(ctx context.Context, conf *config.Config) e
 		}
 
 		for _, subscription := range subscriptions {
-			subscriptionID := ptr.Value(subscription.ID, "")
+			subscriptionID := ptr.Value(subscription.SubscriptionID, "")
 			subscriptionName := ptr.Value(subscription.DisplayName, "")
 			if subscriptionID == "" {
 				return fmt.Errorf("empty subscription id for named credentials %s", namedCreds)
