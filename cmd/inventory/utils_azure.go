@@ -235,6 +235,12 @@ func configureAzureResourceManagerClientsets(ctx context.Context, conf *config.C
 			return err
 		}
 
+		subFactory, err := armsubscription.NewClientFactory(tokenProvider, &arm.ClientOptions{})
+		if err != nil {
+			return err
+		}
+		subClient := subFactory.NewSubscriptionsClient()
+
 		for _, subscription := range subscriptions {
 			subscriptionID := ptr.Value(subscription.SubscriptionID, "")
 			subscriptionName := ptr.Value(subscription.DisplayName, "")
@@ -242,13 +248,7 @@ func configureAzureResourceManagerClientsets(ctx context.Context, conf *config.C
 				return fmt.Errorf("empty subscription id for named credentials %s", namedCreds)
 			}
 
-			subFactory, err := armsubscription.NewClientFactory(tokenProvider, &arm.ClientOptions{})
-			if err != nil {
-				return err
-			}
-
 			// Register Subscription clients
-			subClient := subFactory.NewSubscriptionsClient()
 			azureclients.SubscriptionsClientset.Overwrite(
 				subscriptionID,
 				&azureclients.Client[*armsubscription.SubscriptionsClient]{
