@@ -21,9 +21,31 @@ type Subscription struct {
 	State          string `bun:"state,nullzero"`
 }
 
+// ResourceGroup represents an Azure Resource Group
+type ResourceGroup struct {
+	bun.BaseModel `bun:"table:az_resource_group"`
+	coremodels.Model
+
+	Name           string `bun:"name,notnull,unique:az_resource_group_key"`
+	SubscriptionID string `bun:"subscription_id,notnull,unique:az_resource_group_key"`
+	Location       string `bun:"location,notnull"`
+}
+
+// ResourceGroupToSubscription represents a link table connecting the
+// [Subscription] with [ResourceGroup] models.
+type ResourceGroupToSubscription struct {
+	bun.BaseModel `bun:"table:l_az_rg_to_subscription"`
+	coremodels.Model
+
+	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_rg_to_subscription_key"`
+	SubscriptionID  uint64 `bun:"sub_id,notnull,unique:l_az_rg_to_subscription_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
+	registry.ModelRegistry.MustRegister("az:model:resource_group", &ResourceGroup{})
 
 	// Link tables
+	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
 }
