@@ -314,6 +314,11 @@ scheduler:
       spec: "@every 30m"
       desc: "Link all GCP models"
 
+    # Azure tasks
+    - name: "az:task:collect-subscriptions"
+      spec: "@every 1h"
+      desc: "Collect Azure Subscriptions"
+
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
       spec: "@every 12h"
@@ -369,6 +374,9 @@ scheduler:
           - name: "gcp:model:bucket"
             duration: 24h
           - name: "gcp:model:forwarding_rule"
+            duration: 24h
+          # Azure
+          - name: "az:model:subscription"
             duration: 24h
 
 virtual_garden:
