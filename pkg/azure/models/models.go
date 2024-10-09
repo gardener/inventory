@@ -16,9 +16,10 @@ type Subscription struct {
 	bun.BaseModel `bun:"table:az_subscription"`
 	coremodels.Model
 
-	SubscriptionID string `bun:"subscription_id,notnull,unique"`
-	Name           string `bun:"name,nullzero"`
-	State          string `bun:"state,nullzero"`
+	SubscriptionID string           `bun:"subscription_id,notnull,unique"`
+	Name           string           `bun:"name,nullzero"`
+	State          string           `bun:"state,nullzero"`
+	ResourceGroups []*ResourceGroup `bun:"rel:has-many,join:subscription_id=subscription_id"`
 }
 
 // ResourceGroup represents an Azure Resource Group
@@ -26,9 +27,10 @@ type ResourceGroup struct {
 	bun.BaseModel `bun:"table:az_resource_group"`
 	coremodels.Model
 
-	Name           string `bun:"name,notnull,unique:az_resource_group_key"`
-	SubscriptionID string `bun:"subscription_id,notnull,unique:az_resource_group_key"`
-	Location       string `bun:"location,notnull"`
+	Name           string        `bun:"name,notnull,unique:az_resource_group_key"`
+	SubscriptionID string        `bun:"subscription_id,notnull,unique:az_resource_group_key"`
+	Location       string        `bun:"location,notnull"`
+	Subscription   *Subscription `bun:"rel:has-one,join:subscription_id=subscription_id"`
 }
 
 // ResourceGroupToSubscription represents a link table connecting the
