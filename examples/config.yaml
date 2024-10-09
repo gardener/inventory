@@ -318,6 +318,9 @@ scheduler:
     - name: "az:task:collect-subscriptions"
       spec: "@every 1h"
       desc: "Collect Azure Subscriptions"
+    - name: "az:task:collect-resource-groups"
+      spec: "@every 1h"
+      desc: "Collect Azure Resource Groups"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
@@ -377,6 +380,8 @@ scheduler:
             duration: 24h
           # Azure
           - name: "az:model:subscription"
+            duration: 24h
+          - name: "az:model:resource_group"
             duration: 24h
 
 virtual_garden:
