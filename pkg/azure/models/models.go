@@ -61,7 +61,7 @@ type VirtualMachine struct {
 	PowerState        string         `bun:"power_state,nullzero"`
 	VMAgentVersion    string         `bun:"vm_agent_version,nullzero"`
 	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
-	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name"`
+	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,subscription_id=subscription_id"`
 }
 
 func init() {
