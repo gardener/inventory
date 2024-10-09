@@ -26,7 +26,9 @@ const (
 // Azure objects.
 func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
-	taskFns := []utils.TaskConstructor{}
+	taskFns := []utils.TaskConstructor{
+		NewCollectSubscriptionsTasks,
+	}
 
 	return utils.Enqueue(ctx, taskFns)
 }
@@ -44,4 +46,6 @@ func init() {
 	// Task handlers
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
+	registry.TaskRegistry.MustRegister(TaskCollectSubscriptions, asynq.HandlerFunc(HandleCollectSubscriptionsTask))
+
 }
