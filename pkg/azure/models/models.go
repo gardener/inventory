@@ -5,6 +5,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -43,10 +45,30 @@ type ResourceGroupToSubscription struct {
 	SubscriptionID  uint64 `bun:"sub_id,notnull,unique:l_az_rg_to_subscription_key"`
 }
 
+// VirtualMachine represents an Azure Virtual Machine.
+type VirtualMachine struct {
+	bun.BaseModel `bun:"table:az_vm"`
+	coremodels.Model
+
+	Name              string         `bun:"name,notnull,unique:az_vm_key"`
+	SubscriptionID    string         `bun:"subscription_id,notnull,unique:az_vm_key"`
+	ResourceGroupName string         `bun:"resource_group,notnull,unique:az_vm_key"`
+	Location          string         `bun:"location,notnull"`
+	ProvisioningState string         `bun:"provisioning_state,notnull"`
+	TimeCreated       time.Time      `bun:"vm_created_at,nullzero"`
+	HyperVGeneration  string         `bun:"hyper_v_gen,notnull"`
+	VMSize            string         `bun:"vm_size,nullzero"`
+	PowerState        string         `bun:"power_state,nullzero"`
+	VMAgentVersion    string         `bun:"vm_agent_version,nullzero"`
+	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
 	registry.ModelRegistry.MustRegister("az:model:resource_group", &ResourceGroup{})
+	registry.ModelRegistry.MustRegister("az:model:vm", &VirtualMachine{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
