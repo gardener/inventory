@@ -28,6 +28,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	// Task constructors
 	taskFns := []utils.TaskConstructor{
 		NewCollectSubscriptionsTasks,
+		NewCollectResourceGroupsTask,
 	}
 
 	return utils.Enqueue(ctx, taskFns)
@@ -47,5 +48,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSubscriptions, asynq.HandlerFunc(HandleCollectSubscriptionsTask))
-
+	registry.TaskRegistry.MustRegister(TaskCollectResourceGroups, asynq.HandlerFunc(HandleCollectResourceGroupsTask))
 }
