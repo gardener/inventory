@@ -18,10 +18,11 @@ type Subscription struct {
 	bun.BaseModel `bun:"table:az_subscription"`
 	coremodels.Model
 
-	SubscriptionID string           `bun:"subscription_id,notnull,unique"`
-	Name           string           `bun:"name,nullzero"`
-	State          string           `bun:"state,nullzero"`
-	ResourceGroups []*ResourceGroup `bun:"rel:has-many,join:subscription_id=subscription_id"`
+	SubscriptionID  string            `bun:"subscription_id,notnull,unique"`
+	Name            string            `bun:"name,nullzero"`
+	State           string            `bun:"state,nullzero"`
+	ResourceGroups  []*ResourceGroup  `bun:"rel:has-many,join:subscription_id=subscription_id"`
+	VirtualMachines []*VirtualMachine `bun:"rel:has-many,join:subscription_id=subscription_id"`
 }
 
 // ResourceGroup represents an Azure Resource Group
@@ -64,6 +65,16 @@ type VirtualMachine struct {
 	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
 }
 
+// VirtualMachineToResourceGroup represents a link table connecting the
+// [VirtualMachine] with [ResourceGroup] models.
+type VirtualMachineToResourceGroup struct {
+	bun.BaseModel `bun:"table:l_az_vm_to_rg"`
+	coremodels.Model
+
+	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_vm_to_rg_key"`
+	VMID            uint64 `bun:"vm_id,notnull,unique:l_az_vm_to_rg_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -72,4 +83,5 @@ func init() {
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
+	registry.ModelRegistry.MustRegister("az:model:link_vm_to_rg", &VirtualMachineToResourceGroup{})
 }
