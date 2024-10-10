@@ -56,12 +56,12 @@ type VirtualMachine struct {
 	Location          string         `bun:"location,notnull"`
 	ProvisioningState string         `bun:"provisioning_state,notnull"`
 	TimeCreated       time.Time      `bun:"vm_created_at,nullzero"`
-	HyperVGeneration  string         `bun:"hyper_v_gen,notnull"`
 	VMSize            string         `bun:"vm_size,nullzero"`
 	PowerState        string         `bun:"power_state,nullzero"`
+	HyperVGeneration  string         `bun:"hyper_v_gen,nullzero"`
 	VMAgentVersion    string         `bun:"vm_agent_version,nullzero"`
 	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
-	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,subscription_id=subscription_id"`
+	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
 }
 
 func init() {
