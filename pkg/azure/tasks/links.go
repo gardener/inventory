@@ -61,3 +61,52 @@ func LinkResourceGroupWithSubscription(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkVirtualMachineWithResourceGroup creates links between the
+// [models.VirtualMachine] and [models.ResourceGroup] models.
+func LinkVirtualMachineWithResourceGroup(ctx context.Context, db *bun.DB) error {
+	var items []models.VirtualMachine
+	err := db.NewSelect().
+		Model(&items).
+		Relation("ResourceGroup").
+		Where("resource_group.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.VirtualMachineToResourceGroup, 0, len(items))
+	for _, item := range items {
+		link := models.VirtualMachineToResourceGroup{
+			VMID:            item.ID,
+			ResourceGroupID: item.ResourceGroup.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (rg_id, vm_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked azure vm with resource group", "count", count)
+
+	return nil
+}
