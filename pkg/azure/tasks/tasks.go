@@ -40,6 +40,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 	linkFns := []utils.LinkFunction{
 		LinkResourceGroupWithSubscription,
+		LinkVirtualMachineWithResourceGroup,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
