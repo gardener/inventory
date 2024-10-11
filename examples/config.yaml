@@ -60,6 +60,11 @@ azure:
         - foo
         - bar
 
+    # Network service API clients collect Public IP Addresses.
+    network:
+      use_credentials:
+        - foo
+
   # The `credentials' section provides named credentials, which are used by the
   # various Azure services. The currently supported authentication mechanisms
   # are `default' and `workload_identity'.
