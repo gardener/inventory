@@ -108,12 +108,29 @@ type PublicAddressToResourceGroup struct {
 	PublicAddressID uint64 `bun:"pa_id,notnull,unique:l_az_pub_addr_to_rg_key"`
 }
 
+// LoadBalancer represents an Azure Load Balancer.
+type LoadBalancer struct {
+	bun.BaseModel `bun:"table:az_lb"`
+	coremodels.Model
+
+	Name              string         `bun:"name,notnull,unique:az_lb_key"`
+	SubscriptionID    string         `bun:"subscription_id,notnull,unique:az_lb_key"`
+	ResourceGroupName string         `bun:"resource_group,notnull,unique:az_lb_key"`
+	Location          string         `bun:"location,notnull"`
+	ProvisioningState string         `bun:"provisioning_state,notnull"`
+	SKUName           string         `bun:"sku_name,notnull"`
+	SKUTier           string         `bun:"sku_tier,notnull"`
+	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
 	registry.ModelRegistry.MustRegister("az:model:resource_group", &ResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:vm", &VirtualMachine{})
 	registry.ModelRegistry.MustRegister("az:model:public_address", &PublicAddress{})
+	registry.ModelRegistry.MustRegister("az:model:loadbalancer", &LoadBalancer{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
