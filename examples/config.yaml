@@ -329,6 +329,9 @@ scheduler:
     - name: "az:task:collect-vms"
       spec: "@every 1h"
       desc: "Collect Azure Virtual Machines"
+    - name: "az:task:collect-public-addresses"
+      spec: "@every 1h"
+      desc: "Collect Azure Public IP Addresses"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
@@ -392,6 +395,8 @@ scheduler:
           - name: "az:model:resource_group"
             duration: 24h
           - name: "az:model:vm"
+            duration: 24h
+          - name: "az:model:public_address"
             duration: 24h
 
 virtual_garden:
