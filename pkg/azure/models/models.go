@@ -5,6 +5,7 @@
 package models
 
 import (
+	"net"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -75,11 +76,34 @@ type VirtualMachineToResourceGroup struct {
 	VMID            uint64 `bun:"vm_id,notnull,unique:l_az_vm_to_rg_key"`
 }
 
+// PublicAddress represents an Azure Public IP Address.
+type PublicAddress struct {
+	bun.BaseModel `bun:"table:az_public_address"`
+	coremodels.Model
+
+	Name              string         `bun:"name,notnull,unique:az_public_address_key"`
+	SubscriptionID    string         `bun:"subscription_id,notnull,unique:az_public_address_key"`
+	ResourceGroupName string         `bun:"resource_group,notnull,unique:az_public_address_key"`
+	Location          string         `bun:"location,notnull"`
+	ProvisioningState string         `bun:"provisioning_state,notnull"`
+	SKUName           string         `bun:"sku_name,notnull"`
+	SKUTier           string         `bun:"sku_tier,notnull"`
+	DDoSProctection   string         `bun:"ddos_protection,nullzero"`
+	FQDN              string         `bun:"fqdn,nullzero"`
+	ReverseFQDN       string         `bun:"reverse_fqdn,nullzero"`
+	NATGateway        string         `bun:"nat_gateway,nullzero"`
+	IPAddress         net.IP         `bun:"ip_address,nullzero,type:inet"`
+	IPVersion         string         `bun:"ip_version,nullzero"`
+	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
 	registry.ModelRegistry.MustRegister("az:model:resource_group", &ResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:vm", &VirtualMachine{})
+	registry.ModelRegistry.MustRegister("az:model:public_address", &PublicAddress{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
