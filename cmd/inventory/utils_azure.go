@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	armnetwork "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
 
@@ -41,6 +42,7 @@ func validateAzureConfig(conf *config.Config) error {
 	services := map[string][]string{
 		"compute":          conf.Azure.Services.Compute.UseCredentials,
 		"resource_manager": conf.Azure.Services.ResourceManager.UseCredentials,
+		"network":          conf.Azure.Services.Network.UseCredentials,
 	}
 
 	for service, namedCredentials := range services {
@@ -88,6 +90,7 @@ func configureAzureClients(ctx context.Context, conf *config.Config) error {
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"compute":          configureAzureComputeClientsets,
 		"resource_manager": configureAzureResourceManagerClientsets,
+		"network":          configureAzureNetworkClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
@@ -291,6 +294,63 @@ func configureAzureResourceManagerClientsets(ctx context.Context, conf *config.C
 				"configured Azure client",
 				"service", "resource_manager",
 				"sub_service", "resource-groups",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
+		}
+	}
+
+	return nil
+}
+
+// configureAzureNetworkClientsets configures the Azure Network API clientsets.
+func configureAzureNetworkClientsets(ctx context.Context, conf *config.Config) error {
+	for _, namedCreds := range conf.Azure.Services.Network.UseCredentials {
+		tokenProvider, err := getAzureTokenProvider(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		// Get the subscriptions to which the current credentials have
+		// access to and register each subscription as a known client in
+		// our clientset.
+		subscriptions, err := getAzureSubscriptions(ctx, tokenProvider)
+		if err != nil {
+			return err
+		}
+
+		for _, subscription := range subscriptions {
+			subscriptionID := ptr.Value(subscription.SubscriptionID, "")
+			subscriptionName := ptr.Value(subscription.DisplayName, "")
+			if subscriptionID == "" {
+				return fmt.Errorf("empty subscription id for named credentials %s", namedCreds)
+			}
+
+			factory, err := armnetwork.NewClientFactory(
+				subscriptionID,
+				tokenProvider,
+				&arm.ClientOptions{},
+			)
+			if err != nil {
+				return err
+			}
+			ipClient := factory.NewPublicIPAddressesClient()
+
+			// Register Public IP Addresses client
+			azureclients.PublicIPAddressesClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armnetwork.PublicIPAddressesClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           ipClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "network",
+				"sub_service", "public-ip-addresses",
 				"credentials", namedCreds,
 				"subscription_id", subscriptionID,
 				"subscription_name", subscriptionName,
