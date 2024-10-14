@@ -13,3 +13,7 @@ import (
 // PublicIPAddressesClientset provides the registry of Azure API clients
 // for interfacing with Public IP Addresses.
 var PublicIPAddressesClientset = registry.New[string, *Client[*armnetwork.PublicIPAddressesClient]]()
+
+// LoadBalancersClientset provides the registry of Azure API clients for
+// interfacing with Load Balancers API.
+var LoadBalancersClientset = registry.New[string, *Client[*armnetwork.LoadBalancersClient]]()
