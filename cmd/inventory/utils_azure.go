@@ -335,9 +335,9 @@ func configureAzureNetworkClientsets(ctx context.Context, conf *config.Config) e
 			if err != nil {
 				return err
 			}
-			ipClient := factory.NewPublicIPAddressesClient()
 
 			// Register Public IP Addresses client
+			ipClient := factory.NewPublicIPAddressesClient()
 			azureclients.PublicIPAddressesClientset.Overwrite(
 				subscriptionID,
 				&azureclients.Client[*armnetwork.PublicIPAddressesClient]{
@@ -351,6 +351,26 @@ func configureAzureNetworkClientsets(ctx context.Context, conf *config.Config) e
 				"configured Azure client",
 				"service", "network",
 				"sub_service", "public-ip-addresses",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
+
+			// Register Load Balancers API client
+			lbClient := factory.NewLoadBalancersClient()
+			azureclients.LoadBalancersClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armnetwork.LoadBalancersClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           lbClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "network",
+				"sub_service", "load-balancers",
 				"credentials", namedCreds,
 				"subscription_id", subscriptionID,
 				"subscription_name", subscriptionName,
