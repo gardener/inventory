@@ -110,3 +110,52 @@ func LinkVirtualMachineWithResourceGroup(ctx context.Context, db *bun.DB) error 
 
 	return nil
 }
+
+// LinkPublicAddressWithResourceGroup establishes relationships between the
+// [models.PublicAddress] and [models.ResourceGroup] models.
+func LinkPublicAddressWithResourceGroup(ctx context.Context, db *bun.DB) error {
+	var items []models.PublicAddress
+	err := db.NewSelect().
+		Model(&items).
+		Relation("ResourceGroup").
+		Where("resource_group.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.PublicAddressToResourceGroup, 0, len(items))
+	for _, item := range items {
+		link := models.PublicAddressToResourceGroup{
+			PublicAddressID: item.ID,
+			ResourceGroupID: item.ResourceGroup.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (rg_id, pa_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked azure public address with resource group", "count", count)
+
+	return nil
+}
