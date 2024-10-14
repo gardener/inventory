@@ -98,6 +98,16 @@ type PublicAddress struct {
 	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
 }
 
+// PublicAddressToResourceGroup represents a link table connecting the
+// [PublicAddress] with [ResourceGroup] models.
+type PublicAddressToResourceGroup struct {
+	bun.BaseModel `bun:"table:l_az_pub_addr_to_rg"`
+	coremodels.Model
+
+	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_pub_addr_to_rg_key"`
+	PublicAddressID uint64 `bun:"pa_id,notnull,unique:l_az_pub_addr_to_rg_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
