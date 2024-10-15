@@ -134,6 +134,22 @@ type LoadBalancerToResourceGroup struct {
 	LoadBalancerID  uint64 `bun:"lb_id,notnull,unique:l_az_lb_to_rg_key"`
 }
 
+// VPC represents an Azure VPC.
+type VPC struct {
+	bun.BaseModel `bun:"table:az_vpc"`
+	coremodels.Model
+
+	Name                string         `bun:"name,notnull,unique:az_vpc_key"`
+	SubscriptionID      string         `bun:"subscription_id,notnull,unique:az_vpc_key"`
+	ResourceGroupName   string         `bun:"resource_group,notnull,unique:az_vpc_key"`
+	Location            string         `bun:"location,notnull"`
+	ProvisioningState   string         `bun:"provisioning_state,notnull"`
+	EncryptionEnabled   *bool          `bun:"encryption_enabled"`
+	VMProtectionEnabled *bool          `bun:"vm_protection_enabled"`
+	Subscription        *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup       *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -141,6 +157,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:vm", &VirtualMachine{})
 	registry.ModelRegistry.MustRegister("az:model:public_address", &PublicAddress{})
 	registry.ModelRegistry.MustRegister("az:model:loadbalancer", &LoadBalancer{})
+	registry.ModelRegistry.MustRegister("az:model:vpc", &VPC{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
