@@ -47,6 +47,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkVirtualMachineWithResourceGroup,
 		LinkPublicAddressWithResourceGroup,
 		LinkLoadBalancerWithResourceGroup,
+		LinkVPCWithResourceGroup,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
