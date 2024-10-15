@@ -159,3 +159,52 @@ func LinkPublicAddressWithResourceGroup(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkLoadBalancerWithResourceGroup establishes relationships between the
+// [models.LoadBalancer] and [models.ResourceGroup] models.
+func LinkLoadBalancerWithResourceGroup(ctx context.Context, db *bun.DB) error {
+	var items []models.LoadBalancer
+	err := db.NewSelect().
+		Model(&items).
+		Relation("ResourceGroup").
+		Where("resource_group.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.LoadBalancerToResourceGroup, 0, len(items))
+	for _, item := range items {
+		link := models.LoadBalancerToResourceGroup{
+			LoadBalancerID:  item.ID,
+			ResourceGroupID: item.ResourceGroup.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (lb_id, rg_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked load balancer with resource group", "count", count)
+
+	return nil
+}
