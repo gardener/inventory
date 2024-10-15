@@ -60,7 +60,7 @@ azure:
         - foo
         - bar
 
-    # Network service API clients collect Public IP Addresses.
+    # Network service API clients collect Public IP Addresses and LBs.
     network:
       use_credentials:
         - foo
@@ -332,6 +332,9 @@ scheduler:
     - name: "az:task:collect-public-addresses"
       spec: "@every 1h"
       desc: "Collect Azure Public IP Addresses"
+    - name: "az:task:collect-loadbalancers"
+      spec: "@every 1h"
+      desc: "Collect Azure Load Balancers"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
@@ -397,6 +400,8 @@ scheduler:
           - name: "az:model:vm"
             duration: 24h
           - name: "az:model:public_address"
+            duration: 24h
+          - name: "az:model:loadbalancer"
             duration: 24h
 
 virtual_garden:
