@@ -124,6 +124,16 @@ type LoadBalancer struct {
 	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
 }
 
+// LoadBalancerToResourceGroup represents a link table connecting the
+// [LoadBalancer] with [ResourceGroup] models.
+type LoadBalancerToResourceGroup struct {
+	bun.BaseModel `bun:"table:l_az_lb_to_rg"`
+	coremodels.Model
+
+	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_lb_to_rg_key"`
+	LoadBalancerID  uint64 `bun:"lb_id,notnull,unique:l_az_lb_to_rg_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -136,4 +146,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
 	registry.ModelRegistry.MustRegister("az:model:link_vm_to_rg", &VirtualMachineToResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:link_public_address_to_rg", &PublicAddressToResourceGroup{})
+	registry.ModelRegistry.MustRegister("az:model:link_lb_to_rg", &LoadBalancerToResourceGroup{})
 }
