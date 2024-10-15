@@ -119,6 +119,7 @@ services:
       - ./extra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./extra/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
       - ./extra/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./extra/grafana/config/grafana.ini:/etc/grafana/grafana.ini
 
   prometheus:
     image: prom/prometheus:v2.52.0
