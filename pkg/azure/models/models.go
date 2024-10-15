@@ -150,6 +150,25 @@ type VPC struct {
 	ResourceGroup       *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
 }
 
+// Subnet represents an Azure Subnet.
+type Subnet struct {
+	bun.BaseModel `bun:"table:az_subnet"`
+	coremodels.Model
+
+	Name              string         `bun:"name,notnull,unique:az_subnet_key"`
+	SubscriptionID    string         `bun:"subscription_id,notnull,unique:az_subnet_key"`
+	ResourceGroupName string         `bun:"resource_group,notnull,unique:az_subnet_key"`
+	VPCName           string         `bun:"vpc_name,notnull,unique:az_subnet_key"`
+	Type              string         `bun:"type,notnull"`
+	ProvisioningState string         `bun:"provisioning_state,notnull"`
+	AddressPrefix     string         `bun:"address_prefix,notnull"`
+	SecurityGroup     string         `bun:"security_group,notnull"`
+	Purpose           string         `bun:"purpose,notnull"`
+	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
+	VPC               *VPC           `bun:"rel:has-one,join:vpc_name=name,subscription_id=subscription_id,resource_group=resource_group"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -158,6 +177,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:public_address", &PublicAddress{})
 	registry.ModelRegistry.MustRegister("az:model:loadbalancer", &LoadBalancer{})
 	registry.ModelRegistry.MustRegister("az:model:vpc", &VPC{})
+	registry.ModelRegistry.MustRegister("az:model:subnet", &Subnet{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
