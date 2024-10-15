@@ -208,3 +208,52 @@ func LinkLoadBalancerWithResourceGroup(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkVPCWithResourceGroup establishes relationships between the
+// [models.VPC] and [models.ResourceGroup] models.
+func LinkVPCWithResourceGroup(ctx context.Context, db *bun.DB) error {
+	var items []models.VPC
+	err := db.NewSelect().
+		Model(&items).
+		Relation("ResourceGroup").
+		Where("resource_group.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.VPCToResourceGroup, 0, len(items))
+	for _, item := range items {
+		link := models.VPCToResourceGroup{
+			VPCID:           item.ID,
+			ResourceGroupID: item.ResourceGroup.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (vpc_id, rg_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked azure vpc with resource group", "count", count)
+
+	return nil
+}
