@@ -396,6 +396,27 @@ func configureAzureNetworkClientsets(ctx context.Context, conf *config.Config) e
 				"subscription_id", subscriptionID,
 				"subscription_name", subscriptionName,
 			)
+
+			subnetsClient := factory.NewSubnetsClient()
+
+			// Register Subnets client
+			azureclients.SubnetsClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armnetwork.SubnetsClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           subnetsClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "network",
+				"sub_service", "subnets",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
 		}
 	}
 
