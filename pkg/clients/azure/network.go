@@ -21,3 +21,7 @@ var LoadBalancersClientset = registry.New[string, *Client[*armnetwork.LoadBalanc
 // VirtualNetworksClientset provides the registry of Azure API clients
 // for interfacing with VPCs.
 var VirtualNetworksClientset = registry.New[string, *Client[*armnetwork.VirtualNetworksClient]]()
+
+// SubnetsClientset provides the registry of Azure API clients
+// for interfacing with Subnets.
+var SubnetsClientset = registry.New[string, *Client[*armnetwork.SubnetsClient]]()
