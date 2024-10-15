@@ -1,0 +1,230 @@
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package tasks
+
+import (
+	"context"
+	"encoding/json"
+
+	armnetwork "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/hibiken/asynq"
+
+	"github.com/gardener/inventory/pkg/azure/models"
+	azureutils "github.com/gardener/inventory/pkg/azure/utils"
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
+	azureclients "github.com/gardener/inventory/pkg/clients/azure"
+	"github.com/gardener/inventory/pkg/clients/db"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	"github.com/gardener/inventory/pkg/utils/ptr"
+)
+
+// TaskCollectSubnets is the name of the task for collecting Azure
+// Subnets.
+const TaskCollectSubnets = "az:task:collect-subnets"
+
+// CollectSubnetsPayload is the payload used for collecting Azure
+// Subnets.
+type CollectSubnetsPayload struct {
+	// SubscriptionID specifies the Azure Subscription ID from which to
+	// collect.
+	SubscriptionID string `json:"subscription_id" yaml:"subscription_id"`
+
+	// ResourceGroup specifies from which resource group to collect.
+	ResourceGroup string `json:"resource_group" yaml:"resource_group"`
+}
+
+// NewCollectSubnetsTask creates a new [asynq.Task] for collecting Azure
+// Subnets, without specifying a payload.
+func NewCollectSubnetsTask() *asynq.Task {
+	return asynq.NewTask(TaskCollectSubnets, nil)
+}
+
+// HandleCollectSubnetsTask is the handler, which collects Azure
+// Subnets.
+func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
+	// If we were called without a payload, then we enqueue collection from
+	// all known resource groups.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectSubnets(ctx)
+	}
+
+	var payload CollectSubnetsPayload
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if payload.SubscriptionID == "" {
+		return asynqutils.SkipRetry(ErrNoSubscriptionID)
+	}
+	if payload.ResourceGroup == "" {
+		return asynqutils.SkipRetry(ErrNoResourceGroup)
+	}
+
+	return collectSubnets(ctx, payload)
+}
+
+// enqueueSubnets enqueues tasks for collecting Azure Subnets for known Resource Groups.
+func enqueueCollectSubnets(ctx context.Context) error {
+	resourceGroups, err := azureutils.GetResourceGroupsFromDB(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Enqueue task for each resource group
+	logger := asynqutils.GetLogger(ctx)
+	for _, rg := range resourceGroups {
+		if !azureclients.SubnetsClientset.Exists(rg.SubscriptionID) {
+			logger.Warn(
+				"Azure Subnets client not found",
+				"subscription_id", rg.SubscriptionID,
+				"resource_group", rg.Name,
+			)
+			continue
+		}
+
+		payload := CollectSubnetsPayload{
+			SubscriptionID: rg.SubscriptionID,
+			ResourceGroup:  rg.Name,
+		}
+
+		data, err := json.Marshal(payload)
+		if err != nil {
+			logger.Error(
+				"failed to marshal payload for Azure Subnets",
+				"subscription_id", rg.SubscriptionID,
+				"resource_group", rg.Name,
+				"reason", err,
+			)
+			continue
+		}
+		task := asynq.NewTask(TaskCollectSubnets, data)
+		info, err := asynqclient.Client.Enqueue(task)
+		if err != nil {
+			logger.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"subscription_id", rg.SubscriptionID,
+				"resource_group", rg.Name,
+				"reason", err,
+			)
+			continue
+		}
+
+		logger.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"subscription_id", rg.SubscriptionID,
+			"resource_group", rg.Name,
+		)
+	}
+
+	return nil
+}
+
+// collectSubnets collects the Azure Subnets from the
+// subscription and resource group specified in the payload.
+func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
+	client, ok := azureclients.SubnetsClientset.Get(payload.SubscriptionID)
+	if !ok {
+		return asynqutils.SkipRetry(ClientNotFound(payload.SubscriptionID))
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info(
+		"collecting Azure Subnets",
+		"subscription_id", payload.SubscriptionID,
+		"resource_group", payload.ResourceGroup,
+	)
+
+	var vpcs []models.VPC
+	err := db.DB.NewSelect().
+		Model(&vpcs).
+		Where("subscription_id = ? AND resource_group = ?", payload.SubscriptionID, payload.ResourceGroup).
+		Scan(ctx)
+
+	subnets := make([]models.Subnet, 0)
+
+	for _, vpc := range vpcs {
+		pager := client.Client.NewListPager(
+			payload.ResourceGroup,
+			vpc.Name,
+			&armnetwork.SubnetsClientListOptions{},
+		)
+
+		for pager.More() {
+			page, err := pager.NextPage(ctx)
+			if err != nil {
+				logger.Error(
+					"failed to get Azure Subnets",
+					"subscription_id", payload.SubscriptionID,
+					"resource_group", payload.ResourceGroup,
+					"reason", err,
+				)
+				return err
+			}
+
+			for _, subnet := range page.Value {
+				var provisioningState armnetwork.ProvisioningState
+				var addressPrefix string
+				var purpose string
+				var securityGroup string
+
+				if subnet.Properties != nil {
+					provisioningState = ptr.Value(subnet.Properties.ProvisioningState, armnetwork.ProvisioningState(""))
+					addressPrefix = ptr.Value(subnet.Properties.AddressPrefix, "")
+					purpose = ptr.Value(subnet.Properties.Purpose, "")
+					if subnet.Properties.NetworkSecurityGroup != nil {
+						securityGroup = ptr.Value(subnet.Properties.NetworkSecurityGroup.Name, "")
+					}
+				}
+
+				item := models.Subnet{
+					Name:              ptr.Value(subnet.Name, ""),
+					Type:              ptr.Value(subnet.Type, ""),
+					SubscriptionID:    payload.SubscriptionID,
+					ResourceGroupName: payload.ResourceGroup,
+					ProvisioningState: string(provisioningState),
+					VPCName:           vpc.Name,
+					AddressPrefix:     addressPrefix,
+					SecurityGroup:     securityGroup,
+					Purpose:           purpose,
+				}
+				subnets = append(subnets, item)
+			}
+		}
+	}
+
+	if len(subnets) == 0 {
+		return nil
+	}
+
+	out, err := db.DB.NewInsert().
+		Model(&subnets).
+		On("CONFLICT (subscription_id, resource_group, vpc_name, name) DO UPDATE").
+		Set("type = EXCLUDED.type").
+		Set("provisioning_state = EXCLUDED.provisioning_state").
+		Set("address_prefix = EXCLUDED.address_prefix").
+		Set("security_group = EXCLUDED.security_group").
+		Set("purpose = EXCLUDED.purpose").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger.Info("populated azure subnets", "count", count)
+
+	return nil
+}
