@@ -169,6 +169,16 @@ type Subnet struct {
 	VPC               *VPC           `bun:"rel:has-one,join:vpc_name=name,subscription_id=subscription_id,resource_group=resource_group"`
 }
 
+// VPCToResourceGroup represents a link table connecting the
+// [VPC] with [ResourceGroup] models.
+type VPCToResourceGroup struct {
+	bun.BaseModel `bun:"table:l_az_vpc_to_rg"`
+	coremodels.Model
+
+	VPCID           uint64 `bun:"vpc_id,notnull,unique:l_az_vpc_to_rg_key"`
+	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_vpc_to_rg_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -184,4 +194,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:link_vm_to_rg", &VirtualMachineToResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:link_public_address_to_rg", &PublicAddressToResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:link_lb_to_rg", &LoadBalancerToResourceGroup{})
+	registry.ModelRegistry.MustRegister("az:model:link_vpc_to_rg", &VPCToResourceGroup{})
 }
