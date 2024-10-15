@@ -375,6 +375,27 @@ func configureAzureNetworkClientsets(ctx context.Context, conf *config.Config) e
 				"subscription_id", subscriptionID,
 				"subscription_name", subscriptionName,
 			)
+
+			vpcClient := factory.NewVirtualNetworksClient()
+
+			// Register VPCs client
+			azureclients.VirtualNetworksClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armnetwork.VirtualNetworksClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           vpcClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "network",
+				"sub_service", "vpcs",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
 		}
 	}
 

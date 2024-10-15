@@ -17,3 +17,7 @@ var PublicIPAddressesClientset = registry.New[string, *Client[*armnetwork.Public
 // LoadBalancersClientset provides the registry of Azure API clients for
 // interfacing with Load Balancers API.
 var LoadBalancersClientset = registry.New[string, *Client[*armnetwork.LoadBalancersClient]]()
+
+// VirtualNetworksClientset provides the registry of Azure API clients
+// for interfacing with VPCs.
+var VirtualNetworksClientset = registry.New[string, *Client[*armnetwork.VirtualNetworksClient]]()
