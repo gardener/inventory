@@ -338,6 +338,9 @@ scheduler:
     - name: "az:task:collect-vpcs"
       spec: "@every 1h"
       desc: "Collect Azure VPCs"
+    - name: "az:task:collect-subnets"
+      spec: "@every 1h"
+      desc: "Collect Azure Subnets"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
@@ -407,6 +410,8 @@ scheduler:
           - name: "az:model:loadbalancer"
             duration: 24h
           - name: "az:model:vpc"
+            duration: 24h
+          - name: "az:model:subnet"
             duration: 24h
 
 virtual_garden:
