@@ -23,6 +23,13 @@ func GetResourceGroupsFromDB(ctx context.Context) ([]models.ResourceGroup, error
 	return items, err
 }
 
+// GetVPCsFromDB returns the [models.VPC] from the database.
+func GetVPCsFromDB(ctx context.Context) ([]models.VPC, error) {
+	items := make([]models.VPC, 0)
+	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+	return items, err
+}
+
 // GetPowerState returns the power state of a Virtual Machine by looking up the
 // provided states.
 func GetPowerState(states []*armcompute.InstanceViewStatus) string {

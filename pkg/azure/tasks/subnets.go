@@ -33,6 +33,9 @@ type CollectSubnetsPayload struct {
 
 	// ResourceGroup specifies from which resource group to collect.
 	ResourceGroup string `json:"resource_group" yaml:"resource_group"`
+
+	// VPCName specifies from which VPC to collect.
+	VPCName string `json:"vpc_name" yaml:"vpc_name"`
 }
 
 // NewCollectSubnetsTask creates a new [asynq.Task] for collecting Azure
@@ -62,40 +65,45 @@ func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 	if payload.ResourceGroup == "" {
 		return asynqutils.SkipRetry(ErrNoResourceGroup)
 	}
+	if payload.VPCName == "" {
+		return asynqutils.SkipRetry(ErrNoVPC)
+	}
 
 	return collectSubnets(ctx, payload)
 }
 
 // enqueueSubnets enqueues tasks for collecting Azure Subnets for known Resource Groups.
 func enqueueCollectSubnets(ctx context.Context) error {
-	resourceGroups, err := azureutils.GetResourceGroupsFromDB(ctx)
+	vpcs, err := azureutils.GetVPCsFromDB(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Enqueue task for each resource group
 	logger := asynqutils.GetLogger(ctx)
-	for _, rg := range resourceGroups {
-		if !azureclients.SubnetsClientset.Exists(rg.SubscriptionID) {
+	for _, vpc := range vpcs {
+		if !azureclients.SubnetsClientset.Exists(vpc.SubscriptionID) {
 			logger.Warn(
 				"Azure Subnets client not found",
-				"subscription_id", rg.SubscriptionID,
-				"resource_group", rg.Name,
+				"subscription_id", vpc.SubscriptionID,
+				"resource_group", vpc.Name,
 			)
 			continue
 		}
 
 		payload := CollectSubnetsPayload{
-			SubscriptionID: rg.SubscriptionID,
-			ResourceGroup:  rg.Name,
+			SubscriptionID: vpc.SubscriptionID,
+			ResourceGroup:  vpc.ResourceGroupName,
+			VPCName:        vpc.Name,
 		}
 
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for Azure Subnets",
-				"subscription_id", rg.SubscriptionID,
-				"resource_group", rg.Name,
+				"subscription_id", vpc.SubscriptionID,
+				"resource_group", vpc.ResourceGroupName,
+				"vpc", vpc.Name,
 				"reason", err,
 			)
 			continue
@@ -106,8 +114,9 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"subscription_id", rg.SubscriptionID,
-				"resource_group", rg.Name,
+				"subscription_id", vpc.SubscriptionID,
+				"resource_group", vpc.ResourceGroupName,
+				"vpc", vpc.Name,
 				"reason", err,
 			)
 			continue
@@ -118,8 +127,9 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"subscription_id", rg.SubscriptionID,
-			"resource_group", rg.Name,
+			"subscription_id", vpc.SubscriptionID,
+			"resource_group", vpc.ResourceGroupName,
+			"vpc", vpc.Name,
 		)
 	}
 
@@ -139,63 +149,57 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		"collecting Azure Subnets",
 		"subscription_id", payload.SubscriptionID,
 		"resource_group", payload.ResourceGroup,
+		"vpc", payload.VPCName,
 	)
-
-	var vpcs []models.VPC
-	err := db.DB.NewSelect().
-		Model(&vpcs).
-		Where("subscription_id = ? AND resource_group = ?", payload.SubscriptionID, payload.ResourceGroup).
-		Scan(ctx)
 
 	subnets := make([]models.Subnet, 0)
 
-	for _, vpc := range vpcs {
-		pager := client.Client.NewListPager(
-			payload.ResourceGroup,
-			vpc.Name,
-			&armnetwork.SubnetsClientListOptions{},
-		)
+	pager := client.Client.NewListPager(
+		payload.ResourceGroup,
+		payload.VPCName,
+		&armnetwork.SubnetsClientListOptions{},
+	)
 
-		for pager.More() {
-			page, err := pager.NextPage(ctx)
-			if err != nil {
-				logger.Error(
-					"failed to get Azure Subnets",
-					"subscription_id", payload.SubscriptionID,
-					"resource_group", payload.ResourceGroup,
-					"reason", err,
-				)
-				return err
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			logger.Error(
+				"failed to get Azure Subnets",
+				"subscription_id", payload.SubscriptionID,
+				"resource_group", payload.ResourceGroup,
+				"vpc", payload.VPCName,
+				"reason", err,
+			)
+			return err
+		}
+
+		for _, subnet := range page.Value {
+			var provisioningState armnetwork.ProvisioningState
+			var addressPrefix string
+			var purpose string
+			var securityGroup string
+
+			if subnet.Properties != nil {
+				provisioningState = ptr.Value(subnet.Properties.ProvisioningState, armnetwork.ProvisioningState(""))
+				addressPrefix = ptr.Value(subnet.Properties.AddressPrefix, "")
+				purpose = ptr.Value(subnet.Properties.Purpose, "")
+				if subnet.Properties.NetworkSecurityGroup != nil {
+					securityGroup = ptr.Value(subnet.Properties.NetworkSecurityGroup.Name, "")
+				}
 			}
 
-			for _, subnet := range page.Value {
-				var provisioningState armnetwork.ProvisioningState
-				var addressPrefix string
-				var purpose string
-				var securityGroup string
-
-				if subnet.Properties != nil {
-					provisioningState = ptr.Value(subnet.Properties.ProvisioningState, armnetwork.ProvisioningState(""))
-					addressPrefix = ptr.Value(subnet.Properties.AddressPrefix, "")
-					purpose = ptr.Value(subnet.Properties.Purpose, "")
-					if subnet.Properties.NetworkSecurityGroup != nil {
-						securityGroup = ptr.Value(subnet.Properties.NetworkSecurityGroup.Name, "")
-					}
-				}
-
-				item := models.Subnet{
-					Name:              ptr.Value(subnet.Name, ""),
-					Type:              ptr.Value(subnet.Type, ""),
-					SubscriptionID:    payload.SubscriptionID,
-					ResourceGroupName: payload.ResourceGroup,
-					ProvisioningState: string(provisioningState),
-					VPCName:           vpc.Name,
-					AddressPrefix:     addressPrefix,
-					SecurityGroup:     securityGroup,
-					Purpose:           purpose,
-				}
-				subnets = append(subnets, item)
+			item := models.Subnet{
+				Name:              ptr.Value(subnet.Name, ""),
+				Type:              ptr.Value(subnet.Type, ""),
+				SubscriptionID:    payload.SubscriptionID,
+				ResourceGroupName: payload.ResourceGroup,
+				ProvisioningState: string(provisioningState),
+				VPCName:           payload.VPCName,
+				AddressPrefix:     addressPrefix,
+				SecurityGroup:     securityGroup,
+				Purpose:           purpose,
 			}
+			subnets = append(subnets, item)
 		}
 	}
 

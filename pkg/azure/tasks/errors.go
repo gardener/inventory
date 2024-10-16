@@ -17,6 +17,10 @@ var ErrNoSubscriptionID = errors.New("no subscription id specified")
 // Azure Resource Group name, but none was provided.
 var ErrNoResourceGroup = errors.New("no resource group specified")
 
+// ErrNoVPC is an error, which is returned when a task expects an
+// Azure VPC name, but none was provided.
+var ErrNoVPC = errors.New("no vpc specified")
+
 // ErrClientNotFound is an error, which is returned when an API client was not
 // found in the clientset registries.
 var ErrClientNotFound = errors.New("client not found")
