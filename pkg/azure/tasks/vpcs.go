@@ -180,8 +180,8 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 				ResourceGroupName:   payload.ResourceGroup,
 				Location:            ptr.Value(vpc.Location, ""),
 				ProvisioningState:   string(provisioningState),
-				EncryptionEnabled:   encryptionEnabled,
-				VMProtectionEnabled: vmProtectionEnabled,
+				EncryptionEnabled:   ptr.Value(encryptionEnabled, false),
+				VMProtectionEnabled: ptr.Value(vmProtectionEnabled, false),
 			}
 			items = append(items, item)
 		}
