@@ -144,8 +144,8 @@ type VPC struct {
 	ResourceGroupName   string         `bun:"resource_group,notnull,unique:az_vpc_key"`
 	Location            string         `bun:"location,notnull"`
 	ProvisioningState   string         `bun:"provisioning_state,notnull"`
-	EncryptionEnabled   *bool          `bun:"encryption_enabled"`
-	VMProtectionEnabled *bool          `bun:"vm_protection_enabled"`
+	EncryptionEnabled   bool           `bun:"encryption_enabled,notnull"`
+	VMProtectionEnabled bool           `bun:"vm_protection_enabled,notnull"`
 	Subscription        *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
 	ResourceGroup       *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
 }
