@@ -122,6 +122,9 @@ type AzureServices struct {
 
 	// Network provides the Network service configuration.
 	Network AzureServiceConfig `yaml:"network"`
+
+	// Storage provides the Storage service configuration.
+	Storage AzureServiceConfig `yaml:"storage"`
 }
 
 // AzureServiceConfig provides configuration specific for an Azure service.
