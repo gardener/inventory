@@ -36,6 +36,13 @@ func GetVPCsFromDB(ctx context.Context) ([]models.VPC, error) {
 	return items, err
 }
 
+// GetStorageAccountsFromDB returns the [models.StorageAccount] from the database.
+func GetStorageAccountsFromDB(ctx context.Context) ([]models.StorageAccount, error) {
+	items := make([]models.StorageAccount, 0)
+	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+	return items, err
+}
+
 // GetPowerState returns the power state of a Virtual Machine by looking up the
 // provided states.
 func GetPowerState(states []*armcompute.InstanceViewStatus) string {
