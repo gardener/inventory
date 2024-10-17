@@ -17,6 +17,7 @@ import (
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	armnetwork "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
 
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
@@ -43,6 +44,7 @@ func validateAzureConfig(conf *config.Config) error {
 		"compute":          conf.Azure.Services.Compute.UseCredentials,
 		"resource_manager": conf.Azure.Services.ResourceManager.UseCredentials,
 		"network":          conf.Azure.Services.Network.UseCredentials,
+		"storage":          conf.Azure.Services.Storage.UseCredentials,
 	}
 
 	for service, namedCredentials := range services {
@@ -91,6 +93,7 @@ func configureAzureClients(ctx context.Context, conf *config.Config) error {
 		"compute":          configureAzureComputeClientsets,
 		"resource_manager": configureAzureResourceManagerClientsets,
 		"network":          configureAzureNetworkClientsets,
+		"storage":          configureAzureStorageClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
@@ -413,6 +416,83 @@ func configureAzureNetworkClientsets(ctx context.Context, conf *config.Config) e
 				"configured Azure client",
 				"service", "network",
 				"sub_service", "subnets",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
+		}
+	}
+
+	return nil
+}
+
+// configureAzureStorageClientsets configures the Azure Storage API clientsets.
+func configureAzureStorageClientsets(ctx context.Context, conf *config.Config) error {
+	for _, namedCreds := range conf.Azure.Services.Storage.UseCredentials {
+		tokenProvider, err := getAzureTokenProvider(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		// Get the subscriptions to which the current credentials have
+		// access to and register each subscription as a known client in
+		// our clientset.
+		subscriptions, err := getAzureSubscriptions(ctx, tokenProvider)
+		if err != nil {
+			return err
+		}
+
+		for _, subscription := range subscriptions {
+			subscriptionID := ptr.Value(subscription.SubscriptionID, "")
+			subscriptionName := ptr.Value(subscription.DisplayName, "")
+			if subscriptionID == "" {
+				return fmt.Errorf("empty subscription id for named credentials %s", namedCreds)
+			}
+
+			factory, err := armstorage.NewClientFactory(
+				subscriptionID,
+				tokenProvider,
+				&arm.ClientOptions{},
+			)
+			if err != nil {
+				return err
+			}
+
+			// Register Storage Account client
+			storageAccountsClient := factory.NewAccountsClient()
+			azureclients.StorageAccountsClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armstorage.AccountsClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           storageAccountsClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "storage",
+				"sub_service", "storage-accounts",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
+
+			// Register Blob container client
+			blobContainerClient := factory.NewBlobContainersClient()
+			azureclients.BlobContainersClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armstorage.BlobContainersClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           blobContainerClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "storage",
+				"sub_service", "blob-containers",
 				"credentials", namedCreds,
 				"subscription_id", subscriptionID,
 				"subscription_name", subscriptionName,
