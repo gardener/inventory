@@ -21,6 +21,10 @@ var ErrNoResourceGroup = errors.New("no resource group specified")
 // Azure VPC name, but none was provided.
 var ErrNoVPC = errors.New("no vpc specified")
 
+// ErrNoStorageAccount is an error, which is returned when a task expects an
+// Azure Storage Account name, but none was provided.
+var ErrNoStorageAccount = errors.New("no storage account specified")
+
 // ErrClientNotFound is an error, which is returned when an API client was not
 // found in the clientset registries.
 var ErrClientNotFound = errors.New("client not found")
