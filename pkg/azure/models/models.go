@@ -179,6 +179,41 @@ type VPCToResourceGroup struct {
 	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_vpc_to_rg_key"`
 }
 
+// StorageAccount represents an Azure Storage Account.
+type StorageAccount struct {
+	bun.BaseModel `bun:"table:az_storage_account"`
+	coremodels.Model
+
+	Name              string         `bun:"name,notnull,unique:az_storage_account_key"`
+	SubscriptionID    string         `bun:"subscription_id,notnull,unique:az_storage_account_key"`
+	ResourceGroupName string         `bun:"resource_group,notnull,unique:az_storage_account_key"`
+	Location          string         `bun:"location,notnull"`
+	ProvisioningState string         `bun:"provisioning_state,notnull"`
+	Kind              string         `bun:"kind,notnull"`
+	SKUName           string         `bun:"sku_name,notnull"`
+	SKUTier           string         `bun:"sku_tier,notnull"`
+	CreationTime      time.Time      `bun:"creation_time,nullzero"`
+	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
+}
+
+// BlobContainer represents an Azure Blob container.
+type BlobContainer struct {
+	bun.BaseModel `bun:"table:az_blob_container"`
+	coremodels.Model
+
+	Name               string          `bun:"name,notnull,unique:az_blob_container_key"`
+	SubscriptionID     string          `bun:"subscription_id,notnull,unique:az_blob_container_key"`
+	ResourceGroupName  string          `bun:"resource_group,notnull,unique:az_blob_container_key"`
+	StorageAccountName string          `bun:"storage_account,notnull,unique:az_blob_container_key"`
+	PublicAccess       string          `bun:"public_access,notnull"`
+	Deleted            bool            `bun:"deleted,notnull"`
+	LastModifiedTime   time.Time       `bun:"last_modified_time,nullzero"`
+	Subscription       *Subscription   `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup      *ResourceGroup  `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
+	StorageAccount     *StorageAccount `bun:"rel:has-one,join:storage_account=name,join:resource_group=resource_group,join:subscription_id=subscription_id"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -188,6 +223,8 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:loadbalancer", &LoadBalancer{})
 	registry.ModelRegistry.MustRegister("az:model:vpc", &VPC{})
 	registry.ModelRegistry.MustRegister("az:model:subnet", &Subnet{})
+	registry.ModelRegistry.MustRegister("az:model:storage_account", &StorageAccount{})
+	registry.ModelRegistry.MustRegister("az:model:blob_container", &BlobContainer{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
