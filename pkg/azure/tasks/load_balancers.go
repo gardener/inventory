@@ -157,7 +157,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 				"resource_group", payload.ResourceGroup,
 				"reason", err,
 			)
-			return err
+			return azureutils.MaybeSkipRetry(err)
 		}
 
 		// NOTE: Frontend and Backend configuration for Load Balancers is not

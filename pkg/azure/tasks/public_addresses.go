@@ -158,7 +158,7 @@ func collectPublicAddresses(ctx context.Context, payload CollectPublicAddressesP
 				"resource_group", payload.ResourceGroup,
 				"reason", err,
 			)
-			return err
+			return azureutils.MaybeSkipRetry(err)
 		}
 
 		for _, addr := range page.Value {

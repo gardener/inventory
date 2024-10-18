@@ -170,7 +170,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 				"vpc", payload.VPCName,
 				"reason", err,
 			)
-			return err
+			return azureutils.MaybeSkipRetry(err)
 		}
 
 		for _, subnet := range page.Value {
