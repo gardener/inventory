@@ -50,6 +50,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkPublicAddressWithResourceGroup,
 		LinkLoadBalancerWithResourceGroup,
 		LinkVPCWithResourceGroup,
+		LinkSubnetWithVPC,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)

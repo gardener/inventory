@@ -257,3 +257,52 @@ func LinkVPCWithResourceGroup(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkSubnetWithVPC establishes relationships between the
+// [models.Subnet] and [models.VPC] models.
+func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
+	var items []models.Subnet
+	err := db.NewSelect().
+		Model(&items).
+		Relation("VPC").
+		Where("vpc.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.SubnetToVPC, 0, len(items))
+	for _, item := range items {
+		link := models.SubnetToVPC{
+			SubnetID: item.ID,
+			VPCID:    item.VPC.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (subnet_id, vpc_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked azure subnet with vpc", "count", count)
+
+	return nil
+}
