@@ -6,14 +6,20 @@ package utils
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"slices"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 
 	"github.com/gardener/inventory/pkg/azure/constants"
 	"github.com/gardener/inventory/pkg/azure/models"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/ptr"
+	"github.com/hibiken/asynq"
 )
 
 // GetResourceGroupsFromDB returns the [models.ResourceGroup] from the database.
@@ -46,4 +52,22 @@ func GetPowerState(states []*armcompute.InstanceViewStatus) string {
 	}
 
 	return constants.PowerStateUnknown
+}
+
+// MaybeSkipRetry wraps known "good" Azure errors with [asynq.SkipRetry], so
+// that the tasks from which these errors originate from won't be retried.
+func MaybeSkipRetry(err error) error {
+	// Skip retrying for the following HTTP status codes
+	skipRetryCodes := []int{
+		http.StatusNotFound,
+	}
+
+	var respErr *azcore.ResponseError
+	if errors.As(err, &respErr) {
+		if slices.Contains(skipRetryCodes, respErr.StatusCode) {
+			return fmt.Errorf("%w (%w)", err, asynq.SkipRetry)
+		}
+	}
+
+	return err
 }
