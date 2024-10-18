@@ -166,7 +166,7 @@ type Subnet struct {
 	Purpose           string         `bun:"purpose,notnull"`
 	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
 	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
-	VPC               *VPC           `bun:"rel:has-one,join:vpc_name=name,subscription_id=subscription_id,resource_group=resource_group"`
+	VPC               *VPC           `bun:"rel:has-one,join:vpc_name=name,join:subscription_id=subscription_id,join:resource_group=resource_group"`
 }
 
 // VPCToResourceGroup represents a link table connecting the
@@ -214,6 +214,16 @@ type BlobContainer struct {
 	StorageAccount     *StorageAccount `bun:"rel:has-one,join:storage_account=name,join:resource_group=resource_group,join:subscription_id=subscription_id"`
 }
 
+// SubnetToVPC represents a link table connecting the
+// [Subnet] with [VPC] models.
+type SubnetToVPC struct {
+	bun.BaseModel `bun:"table:l_az_subnet_to_vpc"`
+	coremodels.Model
+
+	SubnetID uint64 `bun:"subnet_id,notnull,unique:l_az_subnet_to_vpc_key"`
+	VPCID    uint64 `bun:"vpc_id,notnull,unique:l_az_subnet_to_vpc_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -232,4 +242,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:link_public_address_to_rg", &PublicAddressToResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:link_lb_to_rg", &LoadBalancerToResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:link_vpc_to_rg", &VPCToResourceGroup{})
+	registry.ModelRegistry.MustRegister("az:model:link_subnet_to_vpc", &SubnetToVPC{})
 }
