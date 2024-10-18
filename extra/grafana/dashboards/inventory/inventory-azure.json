@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 7,
+  "id": 10,
   "links": [],
   "panels": [
     {
@@ -625,7 +625,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(vm.id) AS total\nFROM az_vm AS vm\nINNER JOIN az_subscription AS s ON vm.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)\nORDER BY total DESC;",
+          "rawSql": "SELECT\n        COUNT(vm.id) AS total\nFROM az_vm AS vm\nINNER JOIN az_subscription AS s ON vm.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -866,7 +866,8 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1130,7 +1131,8 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "#EAB839",
@@ -1179,7 +1181,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(pa.id) AS total\nFROM az_public_address AS pa\nINNER JOIN az_subscription AS s ON pa.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)\nORDER BY total DESC;",
+          "rawSql": "SELECT\n        COUNT(pa.id) AS total\nFROM az_public_address AS pa\nINNER JOIN az_subscription AS s ON pa.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1220,7 +1222,8 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1479,7 +1482,8 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1566,7 +1570,8 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "#EAB839",
@@ -1615,7 +1620,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(lb.id) AS total\nFROM az_lb AS lb\nINNER JOIN az_subscription AS s ON lb.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)\nORDER BY total DESC;",
+          "rawSql": "SELECT\n        COUNT(lb.id) AS total\nFROM az_lb AS lb\nINNER JOIN az_subscription AS s ON lb.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1679,6 +1684,6 @@
   "timezone": "browser",
   "title": "Inventory: Azure",
   "uid": "ce11apds05m9sd",
-  "version": 34,
+  "version": 2,
   "weekStart": ""
 }
