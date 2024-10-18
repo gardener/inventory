@@ -12,6 +12,7 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/azure/models"
+	azureutils "github.com/gardener/inventory/pkg/azure/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -128,7 +129,7 @@ func collectResourceGroups(ctx context.Context, payload CollectResourceGroupsPay
 				"subscription_id", payload.SubscriptionID,
 				"reason", err,
 			)
-			return err
+			return azureutils.MaybeSkipRetry(err)
 		}
 		for _, rg := range page.Value {
 			item := models.ResourceGroup{

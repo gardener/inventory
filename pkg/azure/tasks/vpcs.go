@@ -156,7 +156,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 				"resource_group", payload.ResourceGroup,
 				"reason", err,
 			)
-			return err
+			return azureutils.MaybeSkipRetry(err)
 		}
 
 		for _, vpc := range page.Value {
@@ -166,11 +166,9 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 
 			if vpc.Properties != nil {
 				provisioningState = ptr.Value(vpc.Properties.ProvisioningState, armnetwork.ProvisioningState(""))
-
 				if vpc.Properties.Encryption != nil {
 					encryptionEnabled = vpc.Properties.Encryption.Enabled
 				}
-
 				vmProtectionEnabled = vpc.Properties.EnableVMProtection
 			}
 

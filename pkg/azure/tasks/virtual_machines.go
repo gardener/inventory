@@ -158,7 +158,7 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 				"resource_group", payload.ResourceGroup,
 				"reason", err,
 			)
-			return err
+			return azureutils.MaybeSkipRetry(err)
 		}
 
 		for _, vm := range page.Value {
