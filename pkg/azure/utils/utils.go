@@ -14,12 +14,12 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/azure/constants"
 	"github.com/gardener/inventory/pkg/azure/models"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	"github.com/hibiken/asynq"
 )
 
 // GetResourceGroupsFromDB returns the [models.ResourceGroup] from the database.
