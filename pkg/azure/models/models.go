@@ -224,6 +224,16 @@ type SubnetToVPC struct {
 	VPCID    uint64 `bun:"vpc_id,notnull,unique:l_az_subnet_to_vpc_key"`
 }
 
+// BlobContainerToResourceGroup represents a link table connecting the
+// [BlobContainer] with [ResourceGroup] models.
+type BlobContainerToResourceGroup struct {
+	bun.BaseModel `bun:"table:l_az_blob_container_to_rg"`
+	coremodels.Model
+
+	BlobContainerID uint64 `bun:"blob_container_id,notnull,unique:l_az_blob_container_to_rg_key"`
+	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_blob_container_to_rg_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -243,4 +253,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:link_lb_to_rg", &LoadBalancerToResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:link_vpc_to_rg", &VPCToResourceGroup{})
 	registry.ModelRegistry.MustRegister("az:model:link_subnet_to_vpc", &SubnetToVPC{})
+	registry.ModelRegistry.MustRegister("az:model:link_blob_container_to_rg", &BlobContainerToResourceGroup{})
 }
