@@ -306,3 +306,52 @@ func LinkSubnetWithVPC(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkBlobContainerWithResourceGroup establishes relationships between the
+// [models.BlobContainer] and [models.ResourceGroup] models.
+func LinkBlobContainerWithResourceGroup(ctx context.Context, db *bun.DB) error {
+	var items []models.BlobContainer
+	err := db.NewSelect().
+		Model(&items).
+		Relation("ResourceGroup").
+		Where("resource_group.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.BlobContainerToResourceGroup, 0, len(items))
+	for _, item := range items {
+		link := models.BlobContainerToResourceGroup{
+			BlobContainerID: item.ID,
+			ResourceGroupID: item.ResourceGroup.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (blob_container_id, rg_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked azure blob container with resource group", "count", count)
+
+	return nil
+}
