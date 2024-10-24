@@ -1,6 +1,6 @@
 module github.com/gardener/inventory
 
-go 1.22.3
+go 1.23.0
 
 require (
 	cloud.google.com/go/compute v1.28.1
@@ -22,8 +22,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.32.2
 	github.com/aws/smithy-go v1.22.0
-	github.com/gardener/gardener v1.99.1
+	github.com/gardener/gardener v1.103.0
 	github.com/gardener/gardener-extension-provider-aws v1.56.1
+	github.com/gardener/gardener-extension-provider-azure v1.48.1
 	github.com/gardener/gardener-extension-provider-gcp v1.38.0
 	github.com/gardener/machine-controller-manager v0.53.1
 	github.com/hibiken/asynq v0.24.1
@@ -108,13 +109,13 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.55.0 // indirect
+	github.com/prometheus/common v0.58.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.4.0 // indirect
 	github.com/redis/go-redis/v9 v9.6.1 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/spf13/cast v1.6.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
@@ -150,3 +151,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+replace k8s.io/client-go => k8s.io/client-go v0.31.0
