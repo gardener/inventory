@@ -253,3 +253,51 @@ func LinkGCPImageWithCloudProfile(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkAzureImageWithCloudProfile creates the relationship between the CloudProfileAzureImage and CloudProfile
+func LinkAzureImageWithCloudProfile(ctx context.Context, db *bun.DB) error {
+	var azureImages []models.CloudProfileAzureImage
+	err := db.NewSelect().
+		Model(&azureImages).
+		Relation("CloudProfile").
+		Where("cloud_profile.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.AzureImageToCloudProfile, 0, len(azureImages))
+	for _, image := range azureImages {
+		link := models.AzureImageToCloudProfile{
+			AzureImageID:   image.ID,
+			CloudProfileID: image.CloudProfile.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (azure_image_id, cloud_profile_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gardener cloud profile azure image with cloud profile", "count", count)
+
+	return nil
+}
