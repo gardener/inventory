@@ -163,6 +163,29 @@ type GCPImageToCloudProfile struct {
 	CloudProfileID uint64 `bun:"cloud_profile_id,notnull,unique:l_g_gcp_image_to_cloud_profile_key"`
 }
 
+// CloudProfileAzureImage represents an Azure Machine Image collected from a CloudProfile.
+type CloudProfileAzureImage struct {
+	bun.BaseModel `bun:"table:g_cloud_profile_azure_image"`
+	coremodels.Model
+
+	Name    string `bun:"name,notnull,unique:g_cloud_profile_azure_image_key"`
+	Version string `bun:"version,notnull,unique:g_cloud_profile_azure_image_key"`
+	// Image            string        `bun:"image,notnull,unique:g_cloud_profile_azure_image_key"`
+	URN              string        `bun:"urn,notnull"`
+	Architecture     string        `bun:"architecture,notnull"`
+	CloudProfileName string        `bun:"cloud_profile_name,notnull,unique:g_cloud_profile_azure_image_key"`
+	CloudProfile     *CloudProfile `bun:"rel:has-one,join:cloud_profile_name=name"`
+}
+
+// AzureImageToCloudProfile represents a link table connecting the CloudProfileAzureImage with CloudProfile.
+type AzureImageToCloudProfile struct {
+	bun.BaseModel `bun:"table:l_g_azure_image_to_cloud_profile"`
+	coremodels.Model
+
+	AzureImageID   uint64 `bun:"azure_image_id,notnull,unique:l_g_azure_image_to_cloud_profile_key"`
+	CloudProfileID uint64 `bun:"cloud_profile_id,notnull,unique:l_g_azure_image_to_cloud_profile_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("g:model:project", &Project{})
@@ -173,6 +196,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile", &CloudProfile{})
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile_aws_image", &CloudProfileAWSImage{})
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile_gcp_image", &CloudProfileGCPImage{})
+	registry.ModelRegistry.MustRegister("g:model:cloud_profile_azure_image", &CloudProfileAzureImage{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})
@@ -180,4 +204,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:link_machine_to_shoot", &MachineToShoot{})
 	registry.ModelRegistry.MustRegister("g:model:link_aws_image_to_cloud_profile", &AWSImageToCloudProfile{})
 	registry.ModelRegistry.MustRegister("g:model:link_gcp_image_to_cloud_profile", &GCPImageToCloudProfile{})
+	registry.ModelRegistry.MustRegister("g:model:link_azure_image_to_cloud_profile", &AzureImageToCloudProfile{})
 }
