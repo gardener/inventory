@@ -76,8 +76,8 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 
 	out, err := db.DB.NewInsert().
 		Model(&items).
-		On("CONFLICT (name, urn, version, cloud_profile_name) DO UPDATE").
-		Set("architecture = EXCLUDED.architecture").
+		On("CONFLICT (name, architecture, version, cloud_profile_name) DO UPDATE").
+		Set("urn = EXCLUDED.urn").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

@@ -31,6 +31,18 @@ const (
 	shootProjectPrefix = "garden-"
 )
 
+func getCloudProfileName(s v1beta1.Shoot) (string, error) {
+	if s.Spec.CloudProfile != nil {
+		return s.Spec.CloudProfile.Name, nil
+	}
+
+	if s.Spec.CloudProfileName != nil {
+		return *s.Spec.CloudProfileName, nil
+	}
+
+	return "", fmt.Errorf("No cloud profile name found for shoot %s", s.Name)
+}
+
 // NewCollectShootsTask creates a new [asynq.Task] for collecting
 // Gardener shoots, without specifying a payload.
 func NewCollectShootsTask() *asynq.Task {
@@ -59,12 +71,21 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
 		projectName, _ := strings.CutPrefix(s.Namespace, shootProjectPrefix)
+		cloudProfileName, err := getCloudProfileName(*s)
+		if err != nil {
+			logger.Error(
+				"cannot extract shoot",
+				"reason", err,
+			)
+			return err
+		}
+
 		item := models.Shoot{
 			Name:         s.Name,
 			TechnicalId:  s.Status.TechnicalID,
 			Namespace:    s.Namespace,
 			ProjectName:  projectName,
-			CloudProfile: s.Spec.CloudProfileName,
+			CloudProfile: cloudProfileName,
 			Purpose:      stringutils.StringFromPointer((*string)(s.Spec.Purpose)),
 			SeedName:     stringutils.StringFromPointer(s.Spec.SeedName),
 			Status:       s.Labels["shoot.gardener.cloud/status"],
