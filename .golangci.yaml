@@ -1,4 +1,33 @@
+---
 run:
   concurrency: 4
   go: "1.22"
   timeout: 10m
+
+
+linters-settings:
+  lll:
+    line-length: 160
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - copyloopvar
+    - goconst
+    - gocyclo
+    - gofmt
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - prealloc
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - gosec
