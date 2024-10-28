@@ -160,7 +160,7 @@ func newLogger(w io.Writer, conf *config.Config) (*slog.Logger, error) {
 
 	level, ok := levels[logLevel(conf.Logging.Level)]
 	if !ok {
-		return nil, fmt.Errorf("%w: %s", errInvalidLogLevel, string(conf.Logging.Level))
+		return nil, fmt.Errorf("%w: %s", errInvalidLogLevel, conf.Logging.Level)
 	}
 
 	var handler slog.Handler
