@@ -244,7 +244,7 @@ func newDB(conf *config.Config) *bun.DB {
 // given config.
 func newMigrator(conf *config.Config, db *bun.DB) (*migrate.Migrator, error) {
 	// By default we will use the bundled migrations, unless we have an
-	// explicitely specified alternate migrations directory.
+	// explicitly specified alternate migrations directory.
 	m := migrations.Migrations
 	migrationDir := conf.Database.MigrationDirectory
 
