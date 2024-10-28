@@ -26,7 +26,7 @@ import (
 
 const (
 	// TokenRetrieverName specifies the name of the Token Retriever.
-	TokenRetrieverName = "kube_sa_token"
+	TokenRetrieverName = "kube_sa_token" // #nosec: G101
 )
 
 // ErrNoServiceAccount is an error, which is returned when the
