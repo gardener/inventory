@@ -7,6 +7,7 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/hibiken/asynq/x/metrics"
 	"github.com/hibiken/asynqmon"
@@ -74,8 +75,9 @@ func NewDashboardCommand() *cli.Command {
 					mux.Handle("/metrics", promhttp.HandlerFor(promRegistry, promhttp.HandlerOpts{}))
 
 					srv := &http.Server{
-						Addr:    conf.Dashboard.Address,
-						Handler: mux,
+						Addr:              conf.Dashboard.Address,
+						ReadHeaderTimeout: time.Second * 30,
+						Handler:           mux,
 					}
 
 					slog.Info("starting server", "address", conf.Dashboard.Address, "ui", "/", "metrics", "/metrics")
