@@ -49,6 +49,7 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 		LinkMachineWithShoot,
 		LinkAWSImageWithCloudProfile,
 		LinkGCPImageWithCloudProfile,
+		LinkAzureImageWithCloudProfile,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
@@ -64,6 +65,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectCloudProfiles, asynq.HandlerFunc(HandleCollectCloudProfilesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAWSMachineImages, asynq.HandlerFunc(HandleCollectAWSMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectGCPMachineImages, asynq.HandlerFunc(HandleCollectGCPMachineImagesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectAzureMachineImages, asynq.HandlerFunc(HandleCollectAzureMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
