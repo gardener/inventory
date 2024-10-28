@@ -168,12 +168,11 @@ type CloudProfileAzureImage struct {
 	bun.BaseModel `bun:"table:g_cloud_profile_azure_image"`
 	coremodels.Model
 
-	Name    string `bun:"name,notnull,unique:g_cloud_profile_azure_image_key"`
-	Version string `bun:"version,notnull,unique:g_cloud_profile_azure_image_key"`
-	// Image            string        `bun:"image,notnull,unique:g_cloud_profile_azure_image_key"`
-	URN              string        `bun:"urn,notnull"`
-	Architecture     string        `bun:"architecture,notnull"`
+	Name             string        `bun:"name,notnull,unique:g_cloud_profile_azure_image_key"`
+	Version          string        `bun:"version,notnull,unique:g_cloud_profile_azure_image_key"`
+	Architecture     string        `bun:"architecture,notnull,unique:g_cloud_profile_azure_image_key"`
 	CloudProfileName string        `bun:"cloud_profile_name,notnull,unique:g_cloud_profile_azure_image_key"`
+	URN              string        `bun:"urn,notnull"`
 	CloudProfile     *CloudProfile `bun:"rel:has-one,join:cloud_profile_name=name"`
 }
 
