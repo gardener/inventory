@@ -189,6 +189,7 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 				vmName,
 				&armcompute.VirtualMachinesClientInstanceViewOptions{},
 			)
+
 			if err != nil {
 				logger.Error(
 					"unable to get Azure VM instance view",
@@ -205,6 +206,11 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 				vmAgentVersion = ptr.Value(instanceView.VMAgent.VMAgentVersion, "")
 			}
 
+			galleryImageID := ptr.Value(vm.Properties.StorageProfile.ImageReference.CommunityGalleryImageID, "")
+			if galleryImageID == "" {
+				galleryImageID = ptr.Value(vm.Properties.StorageProfile.ImageReference.SharedGalleryImageID, "")
+			}
+
 			item := models.VirtualMachine{
 				Name:              vmName,
 				SubscriptionID:    payload.SubscriptionID,
@@ -216,6 +222,7 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 				VMSize:            string(vmSize),
 				PowerState:        azureutils.GetPowerState(instanceView.Statuses),
 				VMAgentVersion:    vmAgentVersion,
+				GalleryImageID:    galleryImageID,
 			}
 			items = append(items, item)
 		}
@@ -235,6 +242,7 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 		Set("vm_size = EXCLUDED.vm_size").
 		Set("power_state = EXCLUDED.power_state").
 		Set("vm_agent_version = EXCLUDED.vm_agent_version").
+		Set("gallery_image_id = EXCLUDED.gallery_image_id").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

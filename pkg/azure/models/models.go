@@ -62,6 +62,7 @@ type VirtualMachine struct {
 	PowerState        string         `bun:"power_state,nullzero"`
 	HyperVGeneration  string         `bun:"hyper_v_gen,nullzero"`
 	VMAgentVersion    string         `bun:"vm_agent_version,nullzero"`
+	GalleryImageID    string         `bun:"gallery_image_id,nullzero"`
 	Subscription      *Subscription  `bun:"rel:has-one,join:subscription_id=subscription_id"`
 	ResourceGroup     *ResourceGroup `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
 }
