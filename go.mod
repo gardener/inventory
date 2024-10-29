@@ -32,7 +32,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.20.5
 	github.com/uptrace/bun v1.2.5
-	github.com/uptrace/bun/dialect/pgdialect v1.2.3
+	github.com/uptrace/bun/dialect/pgdialect v1.2.5
 	github.com/uptrace/bun/driver/pgdriver v1.2.3
 	github.com/uptrace/bun/extra/bundebug v1.2.3
 	github.com/urfave/cli/v2 v2.27.4
