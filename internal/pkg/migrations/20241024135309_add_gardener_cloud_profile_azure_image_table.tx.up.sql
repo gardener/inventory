@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS "g_cloud_profile_azure_image" (
     "architecture" VARCHAR NOT NULL,
     "cloud_profile_name" VARCHAR NOT NULL,
     "urn" VARCHAR NOT NULL,
+    "gallery_image_id" VARCHAR NOT NULL,
 
     "id" BIGSERIAL NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
