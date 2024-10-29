@@ -60,12 +60,19 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	items := make([]models.CloudProfileAzureImage, 0)
+
 	for _, image := range images {
 		for _, version := range image.Versions {
+			galleryImageID := ptr.Value(version.CommunityGalleryImageID, "")
+			if galleryImageID == "" {
+				galleryImageID = ptr.Value(version.SharedGalleryImageID, "")
+			}
+
 			item := models.CloudProfileAzureImage{
 				Name:             image.Name,
 				Version:          version.Version,
 				URN:              ptr.Value(version.URN, ""),
+				GalleryImageID:   galleryImageID,
 				Architecture:     ptr.Value(version.Architecture, ""),
 				CloudProfileName: payload.CloudProfileName,
 			}
@@ -78,6 +85,7 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 		Model(&items).
 		On("CONFLICT (name, architecture, version, cloud_profile_name) DO UPDATE").
 		Set("urn = EXCLUDED.urn").
+		Set("gallery_image_id = EXCLUDED.gallery_image_id").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
