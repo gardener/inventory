@@ -42,8 +42,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.31.2
 	k8s.io/apimachinery v0.31.2
-	k8s.io/client-go v0.31.2
-	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
+	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
+	k8s.io/utils v0.0.0-20240902221715-702e33fdd3c3
 )
 
 require (
@@ -152,4 +152,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace k8s.io/client-go => k8s.io/client-go v0.31.0
+replace k8s.io/client-go => k8s.io/client-go v0.31.2
