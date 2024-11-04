@@ -34,6 +34,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectSubnetsTask,
 		NewCollectBucketsTask,
 		NewCollectForwardingRulesTask,
+		NewCollectDisksTask,
 	}
 
 	return utils.Enqueue(ctx, taskFns)
@@ -50,6 +51,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkSubnetWithVPC,
 		LinkSubnetWithProject,
 		LinkForwardingRuleWithProject,
+		LinkInstanceWithDisk,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
@@ -67,4 +69,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectBuckets, asynq.HandlerFunc(HandleCollectBucketsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectForwardingRules, asynq.HandlerFunc(HandleCollectForwardingRules))
+	registry.TaskRegistry.MustRegister(TaskCollectDisks, asynq.HandlerFunc(HandleCollectDisksTask))
 }
