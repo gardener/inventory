@@ -265,6 +265,43 @@ type ForwardingRuleToProject struct {
 	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_fr_to_project_key"`
 }
 
+// Disk represents a GCP Disk
+type Disk struct {
+	bun.BaseModel `bun:"table:gcp_disk"`
+	coremodels.Model
+
+	Name              string   `bun:"name,notnull,unique:gcp_disk_key"`
+	ProjectID         string   `bun:"project_id,notnull,unique:gcp_disk_key"`
+	Zone              string   `bun:"zone,notnull"`
+	Region            string   `bun:"region,notnull"`
+	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
+	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
+}
+
+// AttachedDisk represents an attached GCP Disk
+type AttachedDisk struct {
+	bun.BaseModel `bun:"table:gcp_attached_disk"`
+	coremodels.Model
+
+	InstanceName string    `bun:"instance_name,notnull,unique:gcp_attached_disk_key"`
+	DiskName     string    `bun:"disk_name,notnull,unique:gcp_attached_disk_key"`
+	ProjectID    string    `bun:"project_id,notnull,unique:gcp_attached_disk_key"`
+	Zone         string    `bun:"zone,notnull"`
+	Region       string    `bun:"region,notnull"`
+	Instance     *Instance `bun:"rel:has-one,join:project_id=project_id,join:instance_name=name"`
+	Disk         *Disk     `bun:"rel:has-one,join:project_id=project_id,join:disk_name=name"`
+}
+
+// InstanceToDisk represents a link table connecting the [Instance] with
+// [Disk] models.
+type InstanceToDisk struct {
+	bun.BaseModel `bun:"table:l_gcp_instance_to_disk"`
+	coremodels.Model
+
+	InstanceID uint64 `bun:"instance_id,notnull,unique:l_gcp_instance_to_disk_key"`
+	DiskID     uint64 `bun:"disk_id,notnull,unique:l_gcp_instance_to_disk_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
@@ -275,6 +312,8 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("gcp:model:bucket", &Bucket{})
 	registry.ModelRegistry.MustRegister("gcp:model:forwarding_rule", &ForwardingRule{})
+	registry.ModelRegistry.MustRegister("gcp:model:disk", &Disk{})
+	registry.ModelRegistry.MustRegister("gcp:model:attached_disk", &AttachedDisk{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
@@ -284,4 +323,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_vpc", &SubnetToVPC{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_project", &SubnetToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_forwarding_rule_to_project", &ForwardingRuleToProject{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_disk", &InstanceToDisk{})
 }
