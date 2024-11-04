@@ -355,3 +355,53 @@ func LinkForwardingRuleWithProject(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkInstanceWithDisk creates links between the
+// [models.Instance] and [models.Disk] models.
+func LinkInstanceWithDisk(ctx context.Context, db *bun.DB) error {
+	var items []models.AttachedDisk
+	err := db.NewSelect().
+		Model(&items).
+		Relation("Instance").
+		Relation("Disk").
+		Where("instance.id IS NOT NULL AND disk.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.InstanceToDisk, 0, len(items))
+	for _, item := range items {
+		link := models.InstanceToDisk{
+			InstanceID: item.Instance.ID,
+			DiskID:     item.Disk.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (instance_id, disk_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gcp instance with disk", "count", count)
+
+	return nil
+}
