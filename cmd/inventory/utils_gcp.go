@@ -38,10 +38,11 @@ func validateGCPConfig(conf *config.Config) error {
 
 	// Make sure that the GCP services have named credentials configured.
 	services := map[string][]string{
-		"resource_manager": conf.GCP.Services.ResourceManager.UseCredentials,
-		"compute":          conf.GCP.Services.Compute.UseCredentials,
-		"storage":          conf.GCP.Services.Storage.UseCredentials,
-		"gke":              conf.GCP.Services.GKE.UseCredentials,
+		"resource_manager":  conf.GCP.Services.ResourceManager.UseCredentials,
+		"compute":           conf.GCP.Services.Compute.UseCredentials,
+		"storage":           conf.GCP.Services.Storage.UseCredentials,
+		"gke":               conf.GCP.Services.GKE.UseCredentials,
+		"soil-gcp-regional": []string{conf.GCP.SoilCluster.UseCredentials},
 	}
 
 	for service, namedCredentials := range services {
