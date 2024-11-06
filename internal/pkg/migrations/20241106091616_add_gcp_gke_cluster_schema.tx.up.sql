@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS "gcp_gke_cluster" (
+    "name" varchar NOT NULL,
+    "cluster_id" varchar NOT NULL,
+    "project_id" varchar NOT NULL,
+    "location" varchar NOT NULL,
+    "network" varchar NOT NULL,
+    "subnetwork" varchar NOT NULL,
+    "cluster_ipv4_cidr" varchar NOT NULL,
+    "services_ipv4_cidr" varchar NOT NULL,
+    "enable_k8s_alpha" boolean NOT NULL,
+    "endpoint" varchar NOT NULL,
+    "initial_version" varchar NOT NULL,
+    "current_master_version" varchar NOT NULL,
+    "ca_data" varchar NOT NULL,
+    "id" bigserial NOT NULL,
+    "created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("id"),
+    CONSTRAINT "gcp_gke_cluster_key" UNIQUE ("cluster_id", "project_id")
+);
