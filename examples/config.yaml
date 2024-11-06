@@ -65,7 +65,7 @@ azure:
       use_credentials:
         - foo
 
-    # Storage service API clients collect Storage Accounts and Blob containers 
+    # Storage service API clients collect Storage Accounts and Blob containers
     storage:
       use_credentials:
         - foo
@@ -127,6 +127,11 @@ gcp:
         - foo
     # Storage API clients collect Buckets.
     storage:
+      use_credentials:
+        - foo
+
+    # Collects GKE clusters
+    gke:
       use_credentials:
         - foo
 

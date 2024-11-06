@@ -208,6 +208,9 @@ type GCPServices struct {
 
 	// Storage contains the Storage Service configuration.
 	Storage GCPServiceConfig `yaml:"storage"`
+
+	// GKE contains the GKE service configuration.
+	GKE GCPServiceConfig `yaml:"gke"`
 }
 
 // GCPServiceConfig provides service-specific configuration for a GCP service.
