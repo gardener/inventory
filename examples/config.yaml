@@ -325,6 +325,9 @@ scheduler:
     - name: "gcp:task:collect-forwarding-rules"
       spec: "@every 1h"
       desc: "Collect GCP Forwarding Rules"
+    - name: "gcp:task:collect-gke-clusters"
+      spec: "@every 1h"
+      desc: "Collect GKE Clusters"
     - name: "gcp:task:link-all"
       spec: "@every 30m"
       desc: "Link all GCP models"
@@ -418,6 +421,7 @@ scheduler:
             duration: 24h
           - name: "gcp:model:forwarding_rule"
             duration: 24h
+          - name: "gcp:model:gke_cluster"
           # Azure
           - name: "az:model:subscription"
             duration: 24h
