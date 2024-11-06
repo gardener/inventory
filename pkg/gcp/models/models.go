@@ -302,6 +302,39 @@ type InstanceToDisk struct {
 	DiskID     uint64 `bun:"disk_id,notnull,unique:l_gcp_instance_to_disk_key"`
 }
 
+// GKECluster represents a GKE Cluster.
+type GKECluster struct {
+	bun.BaseModel `bun:"table:gcp_gke_cluster"`
+	coremodels.Model
+
+	Name                  string   `bun:"name,notnull"`
+	ClusterID             string   `bun:"cluster_id,notnull,unique:gcp_gke_cluster_key"`
+	ProjectID             string   `bun:"project_id,notnull,unique:gcp_gke_cluster_key"`
+	Location              string   `bun:"location,notnull"`
+	Network               string   `bun:"network,notnull"`
+	Subnetwork            string   `bun:"subnetwork,notnull"`
+	ClusterIPv4CIDR       string   `bun:"cluster_ipv4_cidr,notnull"`
+	ServicesIPv4CIDR      string   `bun:"services_ipv4_cidr,notnull"`
+	EnableKubernetesAlpha bool     `bun:"enable_k8s_alpha,notnull"`
+	Endpoint              string   `bun:"endpoint,notnull"`
+	InitialVersion        string   `bun:"initial_version,notnull"`
+	CurrentMasterVersion  string   `bun:"current_master_version,notnull"`
+	CAData                string   `bun:"ca_data,notnull"`
+	Project               *Project `bun:"rel:has-one,join:project_id=project_id"`
+	VPC                   *VPC     `bun:"rel:has-one,join:project_id=project_id,join:network=name"`
+	Subnet                *Subnet  `bun:"rel:has-one,join:project_id=project_id,join:subnetwork=name,join:location=region"`
+}
+
+// GKEClusterToProject represents a link table connecting the [GKECluster] with
+// [Project] models.
+type GKEClusterToProject struct {
+	bun.BaseModel `bun:"table:l_gcp_gke_cluster_to_project"`
+	coremodels.Model
+
+	ClusterID uint64 `bun:"cluster_id,notnull,unique:l_gcp_gke_cluster_to_project_key"`
+	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_gke_cluster_to_project_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
@@ -314,6 +347,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:forwarding_rule", &ForwardingRule{})
 	registry.ModelRegistry.MustRegister("gcp:model:disk", &Disk{})
 	registry.ModelRegistry.MustRegister("gcp:model:attached_disk", &AttachedDisk{})
+	registry.ModelRegistry.MustRegister("gcp:model:gke_cluster", &GKECluster{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
@@ -324,4 +358,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_project", &SubnetToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_forwarding_rule_to_project", &ForwardingRuleToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_disk", &InstanceToDisk{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_gke_cluster_to_project", &GKEClusterToProject{})
 }
