@@ -12,6 +12,7 @@ import (
 	"slices"
 
 	compute "cloud.google.com/go/compute/apiv1"
+	container "cloud.google.com/go/container/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/option"
@@ -40,6 +41,7 @@ func validateGCPConfig(conf *config.Config) error {
 		"resource_manager": conf.GCP.Services.ResourceManager.UseCredentials,
 		"compute":          conf.GCP.Services.Compute.UseCredentials,
 		"storage":          conf.GCP.Services.Storage.UseCredentials,
+		"gke":              conf.GCP.Services.GKE.UseCredentials,
 	}
 
 	for service, namedCredentials := range services {
@@ -349,6 +351,46 @@ func configureGCPStorageClientsets(ctx context.Context, conf *config.Config) err
 	return nil
 }
 
+// configureGKEClientsets configures the GKE related API clients.
+func configureGKEClientsets(ctx context.Context, conf *config.Config) error {
+	for _, namedCreds := range conf.GCP.Services.GKE.UseCredentials {
+		opts, err := getGCPClientOptions(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		nc, ok := conf.GCP.Credentials[namedCreds]
+		if !ok {
+			return fmt.Errorf("gcp: %w: %s", errUnknownNamedCredentials, namedCreds)
+		}
+
+		// Register the client for each specified GCP project
+		for _, project := range nc.Projects {
+			client, err := container.NewClusterManagerRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create gcp cluster manager client for %s: %w", namedCreds, err)
+			}
+			gcpclients.ClusterManagerClientset.Overwrite(
+				project,
+				&gcpclients.Client[*container.ClusterManagerClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           client,
+				},
+			)
+
+			slog.Info(
+				"configured GCP client",
+				"service", "cluster_manager",
+				"credentials", namedCreds,
+				"project", project,
+			)
+		}
+	}
+
+	return nil
+}
+
 // configureGCPClients creates the GCP API clients from the specified
 // configuration.
 func configureGCPClients(ctx context.Context, conf *config.Config) error {
@@ -362,6 +404,7 @@ func configureGCPClients(ctx context.Context, conf *config.Config) error {
 		"resource_manager": configureGCPResourceManagerClientsets,
 		"compute":          configureGCPComputeClientsets,
 		"storage":          configureGCPStorageClientsets,
+		"gke":              configureGKEClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
@@ -416,6 +459,11 @@ func closeGCPClients() {
 	})
 
 	_ = gcpclients.ForwardingRulesClientset.Range(func(_ string, client *gcpclients.Client[*compute.ForwardingRulesClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.ClusterManagerClientset.Range(func(_ string, client *gcpclients.Client[*container.ClusterManagerClient]) error {
 		client.Client.Close()
 		return nil
 	})
