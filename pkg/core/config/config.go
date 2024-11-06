@@ -189,13 +189,20 @@ type GCPConfig struct {
 	// is used by the various GCP services.
 	Credentials map[string]GCPCredentialsConfig `yaml:"credentials"`
 
-	// SoilRegionalHost is the Kubernetes API server URL of the GCP regional
-	// soil cluster.
-	SoilRegionalHost string `yaml:"soil_regional_host"`
+	// SoilCluster specifies the configuration settings for the GKE Regional
+	// Soil cluster.
+	SoilCluster GCPSoilClusterConfig `yaml:"soil_cluster"`
+}
 
-	// SoilRegionalCAPath is the path to the CA certificate of the GCP
-	// regional soil cluster.
-	SoilRegionalCAPath string `yaml:"soil_regional_ca_path"`
+// GCPSoilClusterConfig provides config settings specific to the GKE Regional
+// Soil cluster.
+type GCPSoilClusterConfig struct {
+	// ClusterName specifies the name of the GKE cluster.
+	ClusterName string `yaml:"cluster_name"`
+
+	// UseCredentials specifies the named credentials to use when creating
+	// an API client to communicate with the GCP Regional Soil cluster.
+	UseCredentials string `yaml:"use_credentials"`
 }
 
 // GCPServices provides service-specific configuration for the GCP services.
