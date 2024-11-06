@@ -405,3 +405,52 @@ func LinkInstanceWithDisk(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkGKEClusterWithProject creates links between the [models.GKECluster] and
+// [models.Project] models.
+func LinkGKEClusterWithProject(ctx context.Context, db *bun.DB) error {
+	var items []models.GKECluster
+	err := db.NewSelect().
+		Model(&items).
+		Relation("Project").
+		Where("project.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.GKEClusterToProject, 0)
+	for _, item := range items {
+		link := models.GKEClusterToProject{
+			ClusterID: item.ID,
+			ProjectID: item.Project.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (project_id, cluster_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gke cluster with project", "count", count)
+
+	return nil
+}
