@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/x509"
+	"database/sql"
 	"encoding/base64"
 	"encoding/pem"
 	"errors"
@@ -18,11 +19,11 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/auth/credentials"
 	"github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	machineversioned "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned"
-	"golang.org/x/oauth2/google"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -33,6 +34,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gardener/constants"
+	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
 )
 
 // ErrClientNotFound is returned when attempting to get a client, which does not
@@ -76,11 +78,13 @@ type Client struct {
 	// collection will be skipped and no client config is created for.
 	excludedSeeds []string
 
-	// soilRegionalHost is the host of the soil-gcp-regional cluster
-	soilRegionalHost string
+	// soilClusterName specifies the name of the GKE Regional Soil cluster.
+	soilClusterName string
 
-	// soilRegionalCAPath is the path to the CA certificate of the soil-gcp-regional cluster
-	soilRegionalCAPath string
+	// soilCredentialsFile specifies the credentials file to use when
+	// performing the OAuth2 token exchange in order to access the GKE
+	// Regional Soil cluster.
+	soilCredentialsFile string
 }
 
 // DefaultClient is the default client for interacting with the Gardener APIs.
@@ -133,17 +137,22 @@ func WithExcludedSeeds(seeds []string) Option {
 	return opt
 }
 
-func WithSoilRegionalHost(host string) Option {
+// WithSoilClusterName is an [Option], which configures the [Client] to use the
+// given GKE cluster name for the Regional Soil cluster.
+func WithSoilClusterName(name string) Option {
 	opt := func(c *Client) {
-		c.soilRegionalHost = host
+		c.soilClusterName = name
 	}
 
 	return opt
 }
 
-func WithSoilRegionalCAPath(path string) Option {
+// WithSoilCredentialsFile is an [Option], which configures the [Client] to use
+// the given credentials file when performing the OAuth2 token exchange in order
+// to access the GKE Regional Soil cluster.
+func WithSoilCredentialsFile(path string) Option {
 	opt := func(c *Client) {
-		c.soilRegionalCAPath = path
+		c.soilCredentialsFile = path
 	}
 
 	return opt
@@ -206,22 +215,20 @@ func Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
 }
 
 // MCMClient returns a machine versioned clientset for the given seed name
-func (c *Client) MCMClient(name string) (*machineversioned.Clientset, error) {
+func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.Clientset, error) {
 	if slices.Contains(c.excludedSeeds, name) {
 		return nil, fmt.Errorf("%w: %s", ErrSeedIsExcluded, name)
 	}
 
 	if name == SOIL_GCP_REGIONAL {
-		if _, found := c.restConfigs.Get(name); !found {
-			return c.fetchSoilGCPRegionalClient()
-		}
+		return c.fetchSoilGCPRegionalClient(ctx)
 	}
 
 	// Check to see if there is a rest.Config with such name, and create
 	// config for it, if that's the first time we see it.
 	config, found := c.restConfigs.Get(name)
 	if !found {
-		config, err := c.createGardenConfig(name)
+		config, err := c.createGardenConfig(ctx, name)
 		if err != nil {
 			return nil, err
 		}
@@ -231,7 +238,7 @@ func (c *Client) MCMClient(name string) (*machineversioned.Clientset, error) {
 
 	// Make sure our config has not expired
 	if goneIn60Seconds(config) {
-		config, err := c.createGardenConfig(name)
+		config, err := c.createGardenConfig(ctx, name)
 		if err != nil {
 			return nil, err
 		}
@@ -245,14 +252,14 @@ func (c *Client) MCMClient(name string) (*machineversioned.Clientset, error) {
 
 // MCMClient returns a machine versioned clientset for the given seed name using
 // the [DefaultClient].
-func MCMClient(name string) (*machineversioned.Clientset, error) {
-	return DefaultClient.MCMClient(name)
+func MCMClient(ctx context.Context, name string) (*machineversioned.Clientset, error) {
+	return DefaultClient.MCMClient(ctx, name)
 }
 
 // createGardenConfig creates a [*rest.Config] for the given seed name and
 // returns it.
-func (c *Client) createGardenConfig(name string) (*rest.Config, error) {
-	seeds, err := c.Seeds(context.Background())
+func (c *Client) createGardenConfig(ctx context.Context, name string) (*rest.Config, error) {
+	seeds, err := c.Seeds(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list seeds: %w", err)
 	}
@@ -267,7 +274,7 @@ func (c *Client) createGardenConfig(name string) (*rest.Config, error) {
 		}
 
 		// send a http request to the viewerkubeconfig subresources
-		kubeconfigStr, err := c.fetchSeedKubeconfig(name)
+		kubeconfigStr, err := c.fetchSeedKubeconfig(ctx, name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch kubeconfig: %w", err)
 		}
@@ -300,7 +307,7 @@ func (c *Client) createGardenConfig(name string) (*rest.Config, error) {
 
 // fetchSeedKubeconfig sends a http request to the viewerkubeconfig subresource
 // of a managed seed.
-func (c *Client) fetchSeedKubeconfig(name string) (string, error) {
+func (c *Client) fetchSeedKubeconfig(ctx context.Context, name string) (string, error) {
 	config, found := c.restConfigs.Get(VIRTUAL_GARDEN)
 	if !found || config == nil {
 		return "", fmt.Errorf("garden config not found")
@@ -321,8 +328,6 @@ func (c *Client) fetchSeedKubeconfig(name string) (string, error) {
 	// Prepare the path to the viewerkubeconfig subresource
 	path := fmt.Sprintf(VIEWERKUBECONFIG_SUBRESOURCE_PATH, name)
 	body := bytes.NewBufferString(EXPIRATION_SECONDS) //one week
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
 	result := client.Post().
 		AbsPath(path).
 		SetHeader("Accept", "application/json").
@@ -415,36 +420,56 @@ func tokenIsAboutToExpire(token string) bool {
 	return (time.Now().UTC().Unix() + 60) > tokenPayload.Exp // gone in 60 seconds
 }
 
-func (c *Client) fetchSoilGCPRegionalClient() (*machineversioned.Clientset, error) {
-
-	// Load the credentials from the JSON configuration file
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	creds, err := google.FindDefaultCredentials(ctx,
-		"https://www.googleapis.com/auth/userinfo.email",
-		"https://www.googleapis.com/auth/cloud-platform",
-		"openid",
-	)
+// fetchSoilGCPRegionalClient returns a [machineversioned.Clientset] which is
+// configured against the GKE Regional cluster (soil cluster).
+func (c *Client) fetchSoilGCPRegionalClient(ctx context.Context) (*machineversioned.Clientset, error) {
+	// Get the GKE cluster from the data already collected by Inventory,
+	// which has already discovered the control-plane endpoint and the CA
+	// root of trust for us.
+	cluster, err := gcputils.GetGKEClusterFromDB(ctx, c.soilClusterName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load credentials configuration: %w", err)
+		// Cluster does not exist
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("GKE cluster not found in db: %s", c.soilClusterName)
+		}
+		// Something else occurred
+		return nil, err
 	}
 
-	// Use the credentials to create a token source
-	tokenSource := creds.TokenSource
+	// Perform OAuth2 token exchange and use the token to access the GKE
+	// cluster.
+	opts := &credentials.DetectOptions{
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/cloud-platform",
+			"openid",
+		},
+		CredentialsFile: c.soilCredentialsFile,
+	}
 
-	// Get an access token
-	token, err := tokenSource.Token()
+	creds, err := credentials.DetectDefault(opts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch soil-gcp-regional token: %w", err)
+		return nil, err
+	}
+
+	token, err := creds.TokenProvider.Token(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	caData, err := base64.StdEncoding.DecodeString(cluster.CAData)
+	if err != nil {
+		return nil, err
 	}
 
 	config := &rest.Config{
-		Host:        c.soilRegionalHost,
-		BearerToken: token.AccessToken,
+		Host:        fmt.Sprintf("https://%s", cluster.Endpoint),
+		BearerToken: token.Value,
 		TLSClientConfig: rest.TLSClientConfig{
 			Insecure: false,
-			CAFile:   c.soilRegionalCAPath,
+			CAData:   caData,
 		},
 	}
+
 	return machineversioned.NewForConfig(config)
 }

@@ -153,12 +153,14 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 
-					gardenClient := gardenerclient.New(
+					soilCredsFile := conf.GCP.Credentials[conf.GCP.SoilCluster.UseCredentials].KeyFile.Path
+					gardenClientOpts := []gardenerclient.Option{
 						gardenerclient.WithRestConfigs(gardenConfigs),
 						gardenerclient.WithExcludedSeeds(conf.VirtualGarden.ExcludedSeeds),
-						gardenerclient.WithSoilRegionalHost(conf.GCP.SoilRegionalHost),
-						gardenerclient.WithSoilRegionalCAPath(conf.GCP.SoilRegionalCAPath),
-					)
+						gardenerclient.WithSoilCredentialsFile(soilCredsFile),
+						gardenerclient.WithSoilClusterName(conf.GCP.SoilCluster.ClusterName),
+					}
+					gardenClient := gardenerclient.New(gardenClientOpts...)
 					gardenerclient.SetDefaultClient(gardenClient)
 
 					// Initialize DB and asynq client
