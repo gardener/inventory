@@ -36,6 +36,17 @@ spec:
             - name: inventory-config
               mountPath: /app/config
               readOnly: true
+        - name: cleanup-archived-tasks
+          image: europe-docker.pkg.dev/gardener-project/releases/gardener/inventory:latest
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', '/app/inventory queue drain --type archived && /app/inventory queue drain --type completed']
+          env:
+            - name: INVENTORY_CONFIG
+              value: /app/config/config.yaml
+          volumeMounts:
+            - name: inventory-config
+              mountPath: /app/config
+              readOnly: true
       containers:
       - name: worker
         securityContext:
