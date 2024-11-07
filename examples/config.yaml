@@ -367,6 +367,9 @@ scheduler:
     - name: "az:task:collect-blob-containers"
       spec: "@every 1h"
       desc: "Collect Azure Blob containers"
+    - name: "az:task:link-all"
+      spec: "@every 1h"
+      desc: "Link all Azure models"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
