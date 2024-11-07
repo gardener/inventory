@@ -81,6 +81,10 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 		}
 	}
 
+	if len(items) == 0 {
+		return nil
+	}
+
 	out, err := db.DB.NewInsert().
 		Model(&items).
 		On("CONFLICT (name, architecture, version, cloud_profile_name) DO UPDATE").
