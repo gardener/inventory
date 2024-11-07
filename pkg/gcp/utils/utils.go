@@ -5,11 +5,14 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
 
+	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gcp/constants"
+	"github.com/gardener/inventory/pkg/gcp/models"
 )
 
 // ProjectFQN returns the fully-qualified name for the given project id.
@@ -71,4 +74,15 @@ func ResourceNameFromURL(s string) string {
 
 	parts := strings.Split(u.Path, "/")
 	return parts[len(parts)-1]
+}
+
+// GetGKEClusterFromDB returns the [models.GKECluster] with the given name by
+// looking up the database.
+func GetGKEClusterFromDB(ctx context.Context, name string) (models.GKECluster, error) {
+	var item models.GKECluster
+	err := db.DB.NewSelect().
+		Model(&item).
+		Where("name = ?", name).
+		Scan(ctx)
+	return item, err
 }
