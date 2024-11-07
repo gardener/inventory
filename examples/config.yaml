@@ -332,6 +332,9 @@ scheduler:
     - name: "gcp:task:collect-forwarding-rules"
       spec: "@every 1h"
       desc: "Collect GCP Forwarding Rules"
+    - name: "gcp:task:collect-disks"
+      spec: "@every 1h"
+      desc: "Collect GCP Disks"
     - name: "gcp:task:collect-gke-clusters"
       spec: "@every 1h"
       desc: "Collect GKE Clusters"
@@ -431,7 +434,12 @@ scheduler:
             duration: 24h
           - name: "gcp:model:forwarding_rule"
             duration: 24h
+          - name: "gcp:model:disk"
+            duration: 24h
+          - name: "gcp:model:attached_disk"
+            duration: 24h
           - name: "gcp:model:gke_cluster"
+            duration: 24h
           # Azure
           - name: "az:model:subscription"
             duration: 24h
