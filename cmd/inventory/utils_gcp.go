@@ -42,7 +42,7 @@ func validateGCPConfig(conf *config.Config) error {
 		"compute":           conf.GCP.Services.Compute.UseCredentials,
 		"storage":           conf.GCP.Services.Storage.UseCredentials,
 		"gke":               conf.GCP.Services.GKE.UseCredentials,
-		"soil-gcp-regional": []string{conf.GCP.SoilCluster.UseCredentials},
+		"soil-gcp-regional": {conf.GCP.SoilCluster.UseCredentials},
 	}
 
 	for service, namedCredentials := range services {
