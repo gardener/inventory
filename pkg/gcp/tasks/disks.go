@@ -154,13 +154,14 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 			}
 			currentDiskAttachedInstances := i.GetUsers()
 
+			zone := utils.ResourceNameFromURL(i.GetZone())
 			for _, instanceURL := range currentDiskAttachedInstances {
 				attachedDisk := models.AttachedDisk{
 					InstanceName: utils.ResourceNameFromURL(instanceURL),
 					DiskName:     i.GetName(),
 					ProjectID:    payload.ProjectID,
-					Zone:         i.GetZone(),
-					Region:       utils.UnqualifyRegion(pair.Key),
+					Zone:         zone,
+					Region:       utils.RegionFromZone(zone),
 				}
 				attachedDisks = append(attachedDisks, attachedDisk)
 			}
@@ -168,8 +169,8 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 			disk := models.Disk{
 				Name:              i.GetName(),
 				ProjectID:         payload.ProjectID,
-				Zone:              i.GetZone(),
-				Region:            utils.UnqualifyRegion(pair.Key),
+				Zone:              zone,
+				Region:            utils.RegionFromZone(zone),
 				CreationTimestamp: i.GetCreationTimestamp(),
 			}
 
