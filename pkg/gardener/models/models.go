@@ -192,6 +192,21 @@ type AzureImageToCloudProfile struct {
 	CloudProfileID uint64 `bun:"cloud_profile_id,notnull,unique:l_g_azure_image_to_cloud_profile_key"`
 }
 
+// PersistentVolume represents a Kubernetes PV in Gardener
+type PersistentVolume struct {
+	bun.BaseModel `bun:"table:g_persistent_volume"`
+	coremodels.Model
+
+	Name         string `bun:"name,notnull,unique:g_persistent_volume_key"`
+	SeedName     string `bun:"seed_name,notnull,unique:g_persistent_volume_key"`
+	Provider     string `bun:"provider,nullzero"`
+	DiskRef      string `bun:"disk_ref,nullzero"`
+	Status       string `bun:"status,notnull"`
+	Capacity     string `bun:"capacity,notnull"`
+	StorageClass string `bun:"storage_class,notnull"`
+	Seed         *Seed  `bun:"rel:has-one,join:seed_name=name"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("g:model:project", &Project{})
@@ -203,6 +218,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile_aws_image", &CloudProfileAWSImage{})
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile_gcp_image", &CloudProfileGCPImage{})
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile_azure_image", &CloudProfileAzureImage{})
+	registry.ModelRegistry.MustRegister("g:model:persistent_volume", &PersistentVolume{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})

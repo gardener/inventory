@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -214,14 +215,14 @@ func Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
 	return DefaultClient.Seeds(ctx)
 }
 
-// MCMClient returns a machine versioned clientset for the given seed name
-func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.Clientset, error) {
+// RestConfig returns a REST client config for the given seed name
+func (c *Client) RestConfig(ctx context.Context, name string) (*rest.Config, error) {
 	if slices.Contains(c.excludedSeeds, name) {
 		return nil, fmt.Errorf("%w: %s", ErrSeedIsExcluded, name)
 	}
 
 	if name == SOIL_GCP_REGIONAL {
-		return c.fetchSoilGCPRegionalClient(ctx)
+		return c.fetchSoilGCPRegionalClientConfig(ctx)
 	}
 
 	// Check to see if there is a rest.Config with such name, and create
@@ -233,7 +234,7 @@ func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.
 			return nil, err
 		}
 		c.restConfigs.Overwrite(name, config)
-		return machineversioned.NewForConfig(config)
+		return config, nil
 	}
 
 	// Make sure our config has not expired
@@ -243,10 +244,30 @@ func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.
 			return nil, err
 		}
 		c.restConfigs.Overwrite(name, config)
-		return machineversioned.NewForConfig(config)
+		return config, nil
 	}
 
 	// If we reach this far, we still have a valid config
+	return config, nil
+}
+
+// KubeClient returns a Kubernetes client for the given seed name
+func (c *Client) KubeClient(ctx context.Context, name string) (*kubernetes.Clientset, error) {
+	config, err := c.RestConfig(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return kubernetes.NewForConfig(config)
+}
+
+// MCMClient returns a machine versioned clientset for the given seed name
+func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.Clientset, error) {
+	config, err := c.RestConfig(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
 	return machineversioned.NewForConfig(config)
 }
 
@@ -420,9 +441,9 @@ func tokenIsAboutToExpire(token string) bool {
 	return (time.Now().UTC().Unix() + 60) > tokenPayload.Exp // gone in 60 seconds
 }
 
-// fetchSoilGCPRegionalClient returns a [machineversioned.Clientset] which is
+// fetchSoilGCPRegionalClientConfig returns a [rest.Config] which is
 // configured against the GKE Regional cluster (soil cluster).
-func (c *Client) fetchSoilGCPRegionalClient(ctx context.Context) (*machineversioned.Clientset, error) {
+func (c *Client) fetchSoilGCPRegionalClientConfig(ctx context.Context) (*rest.Config, error) {
 	// Get the GKE cluster from the data already collected by Inventory,
 	// which has already discovered the control-plane endpoint and the CA
 	// root of trust for us.
@@ -471,5 +492,5 @@ func (c *Client) fetchSoilGCPRegionalClient(ctx context.Context) (*machineversio
 		},
 	}
 
-	return machineversioned.NewForConfig(config)
+	return config, nil
 }

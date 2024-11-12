@@ -35,6 +35,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectMachinesTask,
 		NewCollectBackupBucketsTask,
 		NewCollectCloudProfilesTask,
+		NewCollectPersistentVolumesTask,
 	}
 
 	return utils.Enqueue(ctx, taskFns)
@@ -60,12 +61,13 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSeeds, asynq.HandlerFunc(HandleCollectSeedsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectShoots, asynq.HandlerFunc(HandleCollectShootsTask))
-	registry.TaskRegistry.MustRegister(TasksCollectMachines, asynq.HandlerFunc(HandleCollectMachinesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectMachines, asynq.HandlerFunc(HandleCollectMachinesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectBackupBuckets, asynq.HandlerFunc(HandleCollectBackupBucketsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectCloudProfiles, asynq.HandlerFunc(HandleCollectCloudProfilesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAWSMachineImages, asynq.HandlerFunc(HandleCollectAWSMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectGCPMachineImages, asynq.HandlerFunc(HandleCollectGCPMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAzureMachineImages, asynq.HandlerFunc(HandleCollectAzureMachineImagesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectPersistentVolumes, asynq.HandlerFunc(HandleCollectPersistentVolumesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
