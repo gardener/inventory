@@ -91,6 +91,7 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 			Status:       s.Labels["shoot.gardener.cloud/status"],
 			IsHibernated: s.Status.IsHibernated,
 			CreatedBy:    s.Annotations["gardener.cloud/created-by"],
+			Region:       s.Spec.Region,
 		}
 		shoots = append(shoots, item)
 		return nil
@@ -116,6 +117,7 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		Set("status = EXCLUDED.status").
 		Set("is_hibernated = EXCLUDED.is_hibernated").
 		Set("created_by = EXCLUDED.created_by").
+		Set("region = EXCLUDED.region").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
