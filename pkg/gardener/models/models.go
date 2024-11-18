@@ -92,6 +92,7 @@ type Machine struct {
 	Namespace  string `bun:"namespace,notnull,unique:g_machine_name_namespace_key"`
 	ProviderId string `bun:"provider_id,notnull"`
 	Status     string `bun:"status,notnull"`
+	Node       string `bun:"node,nullzero"`
 	Shoot      *Shoot `bun:"rel:has-one,join:namespace=technical_id"`
 }
 
