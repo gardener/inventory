@@ -81,17 +81,18 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		}
 
 		item := models.Shoot{
-			Name:         s.Name,
-			TechnicalId:  s.Status.TechnicalID,
-			Namespace:    s.Namespace,
-			ProjectName:  projectName,
-			CloudProfile: cloudProfileName,
-			Purpose:      stringutils.StringFromPointer((*string)(s.Spec.Purpose)),
-			SeedName:     stringutils.StringFromPointer(s.Spec.SeedName),
-			Status:       s.Labels["shoot.gardener.cloud/status"],
-			IsHibernated: s.Status.IsHibernated,
-			CreatedBy:    s.Annotations["gardener.cloud/created-by"],
-			Region:       s.Spec.Region,
+			Name:              s.Name,
+			TechnicalId:       s.Status.TechnicalID,
+			Namespace:         s.Namespace,
+			ProjectName:       projectName,
+			CloudProfile:      cloudProfileName,
+			Purpose:           stringutils.StringFromPointer((*string)(s.Spec.Purpose)),
+			SeedName:          stringutils.StringFromPointer(s.Spec.SeedName),
+			Status:            s.Labels["shoot.gardener.cloud/status"],
+			IsHibernated:      s.Status.IsHibernated,
+			CreatedBy:         s.Annotations["gardener.cloud/created-by"],
+			Region:            s.Spec.Region,
+			KubernetesVersion: s.Spec.Kubernetes.Version,
 		}
 		shoots = append(shoots, item)
 		return nil
@@ -118,6 +119,7 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		Set("is_hibernated = EXCLUDED.is_hibernated").
 		Set("created_by = EXCLUDED.created_by").
 		Set("region = EXCLUDED.region").
+		Set("k8s_version = EXCLUDED.k8s_version").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

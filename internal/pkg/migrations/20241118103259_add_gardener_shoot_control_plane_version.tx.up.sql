@@ -1,0 +1,1 @@
+ALTER TABLE g_shoot ADD COLUMN k8s_version VARCHAR;
