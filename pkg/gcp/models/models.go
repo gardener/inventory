@@ -272,8 +272,11 @@ type Disk struct {
 
 	Name              string   `bun:"name,notnull,unique:gcp_disk_key"`
 	ProjectID         string   `bun:"project_id,notnull,unique:gcp_disk_key"`
-	Zone              string   `bun:"zone,notnull"`
+	Zone              string   `bun:"zone,notnull,unique:gcp_disk_key"`
 	Region            string   `bun:"region,notnull"`
+	Type              string   `bun:"type,notnull"`
+	Description       string   `bun:"description,notnull"`
+	IsRegional        bool     `bun:"is_regional,notnull"`
 	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
 	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
