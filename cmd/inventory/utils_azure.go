@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"slices"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -94,6 +95,12 @@ func configureAzureClients(ctx context.Context, conf *config.Config) error {
 		"resource_manager": configureAzureResourceManagerClientsets,
 		"network":          configureAzureNetworkClientsets,
 		"storage":          configureAzureStorageClientsets,
+	}
+
+	if conf.Debug {
+		if err := os.Setenv("AZURE_SDK_GO_LOGGING", "all"); err != nil {
+			return err
+		}
 	}
 
 	for svc, configFunc := range configFuncs {
