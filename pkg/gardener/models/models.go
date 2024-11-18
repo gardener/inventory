@@ -76,6 +76,7 @@ type Shoot struct {
 	Status       string     `bun:"status,notnull"`
 	IsHibernated bool       `bun:"is_hibernated,notnull"`
 	CreatedBy    string     `bun:"created_by,notnull"`
+	Region       string     `bun:"region,nullzero"`
 	Seed         *Seed      `bun:"rel:has-one,join:seed_name=name"`
 	Project      *Project   `bun:"rel:has-one,join:project_name=name"`
 	Machines     []*Machine `bun:"rel:has-many,join:technical_id=namespace"`
