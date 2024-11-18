@@ -56,9 +56,10 @@ type Seed struct {
 	bun.BaseModel `bun:"table:g_seed"`
 	coremodels.Model
 
-	Name              string   `bun:"name,notnull,unique"`
-	KubernetesVersion string   `bun:"kubernetes_version,notnull"`
-	Shoots            []*Shoot `bun:"rel:has-many,join:name=seed_name"`
+	Name              string     `bun:"name,notnull,unique"`
+	KubernetesVersion string     `bun:"kubernetes_version,notnull"`
+	Machines          []*Machine `bun:"rel:has-many,join:name=seed_name"`
+	Shoots            []*Shoot   `bun:"rel:has-many,join:name=seed_name"`
 }
 
 // Shoot represents a Gardener shoot
@@ -93,6 +94,8 @@ type Machine struct {
 	ProviderId string `bun:"provider_id,notnull"`
 	Status     string `bun:"status,notnull"`
 	Node       string `bun:"node,nullzero"`
+	SeedName   string `bun:"seed_name,notnull"`
+	Seed       *Seed  `bun:"rel:has-one,join:seed_name=name"`
 	Shoot      *Shoot `bun:"rel:has-one,join:namespace=technical_id"`
 }
 
