@@ -66,20 +66,21 @@ type Shoot struct {
 	bun.BaseModel `bun:"table:g_shoot"`
 	coremodels.Model
 
-	Name         string     `bun:"name,notnull"`
-	TechnicalId  string     `bun:"technical_id,notnull,unique"`
-	Namespace    string     `bun:"namespace,notnull"`
-	ProjectName  string     `bun:"project_name,notnull"`
-	CloudProfile string     `bun:"cloud_profile,notnull"`
-	Purpose      string     `bun:"purpose,notnull"`
-	SeedName     string     `bun:"seed_name,notnull"`
-	Status       string     `bun:"status,notnull"`
-	IsHibernated bool       `bun:"is_hibernated,notnull"`
-	CreatedBy    string     `bun:"created_by,notnull"`
-	Region       string     `bun:"region,nullzero"`
-	Seed         *Seed      `bun:"rel:has-one,join:seed_name=name"`
-	Project      *Project   `bun:"rel:has-one,join:project_name=name"`
-	Machines     []*Machine `bun:"rel:has-many,join:technical_id=namespace"`
+	Name              string     `bun:"name,notnull"`
+	TechnicalId       string     `bun:"technical_id,notnull,unique"`
+	Namespace         string     `bun:"namespace,notnull"`
+	ProjectName       string     `bun:"project_name,notnull"`
+	CloudProfile      string     `bun:"cloud_profile,notnull"`
+	Purpose           string     `bun:"purpose,notnull"`
+	SeedName          string     `bun:"seed_name,notnull"`
+	Status            string     `bun:"status,notnull"`
+	IsHibernated      bool       `bun:"is_hibernated,notnull"`
+	CreatedBy         string     `bun:"created_by,notnull"`
+	Region            string     `bun:"region,nullzero"`
+	KubernetesVersion string     `bun:"k8s_version,nullzero"`
+	Seed              *Seed      `bun:"rel:has-one,join:seed_name=name"`
+	Project           *Project   `bun:"rel:has-one,join:project_name=name"`
+	Machines          []*Machine `bun:"rel:has-many,join:technical_id=namespace"`
 }
 
 // Machine represents a Gardener machine
