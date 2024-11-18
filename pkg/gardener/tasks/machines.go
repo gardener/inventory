@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	// TasksCollectMachines is the name of the task for collecting Gardener
+	// TaskCollectMachines is the name of the task for collecting Gardener
 	// Machines.
-	TasksCollectMachines = "g:task:collect-machines"
+	TaskCollectMachines = "g:task:collect-machines"
 )
 
 // CollectMachinesPayload is the payload, which is used for collecting Gardener
@@ -42,7 +42,7 @@ type CollectMachinesPayload struct {
 // NewCollectMachinesTask creates a new [asynq.Task] for collecting Gardener
 // Machines, without specifying a payload.
 func NewCollectMachinesTask() *asynq.Task {
-	return asynq.NewTask(TasksCollectMachines, nil)
+	return asynq.NewTask(TaskCollectMachines, nil)
 }
 
 // HandleCollectMachinesTask is the handler for collecting Gardener Machines.
@@ -91,7 +91,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 			continue
 		}
 
-		task := asynq.NewTask(TasksCollectMachines, data)
+		task := asynq.NewTask(TaskCollectMachines, data)
 		info, err := asynqclient.Client.Enqueue(task)
 		if err != nil {
 			logger.Error(
