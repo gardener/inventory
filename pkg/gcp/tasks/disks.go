@@ -166,11 +166,23 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 				attachedDisks = append(attachedDisks, attachedDisk)
 			}
 
+			isRegional := (zone == "")
+
+			var region string
+			if isRegional {
+				region = utils.ResourceNameFromURL(i.GetRegion())
+			} else {
+				region = utils.RegionFromZone(zone)
+			}
+
 			disk := models.Disk{
 				Name:              i.GetName(),
 				ProjectID:         payload.ProjectID,
 				Zone:              zone,
-				Region:            utils.RegionFromZone(zone),
+				Region:            region,
+				Description:       i.GetDescription(),
+				Type:              utils.ResourceNameFromURL(i.GetType()),
+				IsRegional:        isRegional,
 				CreationTimestamp: i.GetCreationTimestamp(),
 			}
 
@@ -184,9 +196,11 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 
 	out, err := db.DB.NewInsert().
 		Model(&disks).
-		On("CONFLICT (name, project_id) DO UPDATE").
-		Set("zone = EXCLUDED.zone").
+		On("CONFLICT (name, project_id, zone) DO UPDATE").
 		Set("region = EXCLUDED.region").
+		Set("type = EXCLUDED.type").
+		Set("description = EXCLUDED.description").
+		Set("is_regional = EXCLUDED.is_regional").
 		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
