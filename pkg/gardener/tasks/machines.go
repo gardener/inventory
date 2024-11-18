@@ -147,6 +147,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 			Namespace:  m.Namespace,
 			ProviderId: m.Spec.ProviderID,
 			Status:     string(m.Status.CurrentStatus.Phase),
+			Node:       m.Labels["node"],
 		}
 		machines = append(machines, item)
 		return nil
@@ -164,6 +165,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		Model(&machines).
 		On("CONFLICT (name, namespace) DO UPDATE").
 		Set("status = EXCLUDED.status").
+		Set("node = EXCLUDED.node").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

@@ -1,0 +1,1 @@
+ALTER TABLE g_machine ADD COLUMN node VARCHAR;
