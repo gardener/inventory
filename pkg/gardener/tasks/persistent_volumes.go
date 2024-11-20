@@ -172,6 +172,10 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 			// TODO: Add the rest of the in-tree drivers
 		}
 
+		var volumeMode string
+		if pv.Spec.VolumeMode != nil {
+			volumeMode = string(*pv.Spec.VolumeMode)
+		}
 		item := models.PersistentVolume{
 			Name:         pv.GetName(),
 			SeedName:     payload.Seed,
@@ -180,6 +184,7 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 			Status:       string(pv.Status.Phase),
 			Capacity:     pv.Spec.Capacity.Storage().String(),
 			StorageClass: pv.Spec.StorageClassName,
+			VolumeMode:   volumeMode,
 		}
 		pvs = append(pvs, item)
 		return nil
@@ -196,11 +201,12 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 	out, err := db.DB.NewInsert().
 		Model(&pvs).
 		On("CONFLICT (name, seed_name) DO UPDATE").
-		Set("provider= EXCLUDED.provider").
-		Set("disk_ref= EXCLUDED.disk_ref").
+		Set("provider = EXCLUDED.provider").
+		Set("disk_ref = EXCLUDED.disk_ref").
 		Set("status = EXCLUDED.status").
 		Set("capacity = EXCLUDED.capacity").
 		Set("storage_class = EXCLUDED.storage_class").
+		Set("volume_mode = EXCLUDED.volume_mode").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
