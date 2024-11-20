@@ -128,7 +128,7 @@ func enqueueCollectPersistentVolumes(ctx context.Context) error {
 func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolumesPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener Persistent Volumes", "seed", payload.Seed)
-	client, err := gardenerclient.DefaultClient.KubeClient(ctx, payload.Seed)
+	client, err := gardenerclient.KubeClient(ctx, payload.Seed)
 	if err != nil {
 		if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
 			// Don't treat excluded seeds as errors, in order to

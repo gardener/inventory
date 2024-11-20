@@ -261,6 +261,12 @@ func (c *Client) KubeClient(ctx context.Context, name string) (*kubernetes.Clien
 	return kubernetes.NewForConfig(config)
 }
 
+// KubeClient returns a kubernetes client for the given seed name using
+// the [DefaultClient].
+func KubeClient(ctx context.Context, name string) (*kubernetes.Clientset, error) {
+	return DefaultClient.KubeClient(ctx, name)
+}
+
 // MCMClient returns a machine versioned clientset for the given seed name
 func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.Clientset, error) {
 	config, err := c.RestConfig(ctx, name)
