@@ -204,6 +204,7 @@ type PersistentVolume struct {
 	Status       string `bun:"status,notnull"`
 	Capacity     string `bun:"capacity,notnull"`
 	StorageClass string `bun:"storage_class,notnull"`
+	VolumeMode   string `bun:"volume_mode,nullzero"`
 	Seed         *Seed  `bun:"rel:has-one,join:seed_name=name"`
 }
 
