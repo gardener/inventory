@@ -156,20 +156,21 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 		var sourceName string
 		source := pv.Spec.PersistentVolumeSource
 
-		if csi := source.CSI; csi != nil {
-			sourceName = csi.Driver
-			diskRef = csi.VolumeHandle
-		} else if source.GCEPersistentDisk != nil {
+		switch {
+		case source.CSI != nil:
+			sourceName = source.CSI.Driver
+			diskRef = source.CSI.VolumeHandle
+		case source.GCEPersistentDisk != nil:
 			sourceName = "gce-persistent-disk"
 			diskRef = source.GCEPersistentDisk.PDName
-		} else if source.AWSElasticBlockStore != nil {
+		case source.AWSElasticBlockStore != nil:
 			sourceName = "aws-elastic-block-store"
 			diskRef = source.AWSElasticBlockStore.VolumeID
-		} else if source.AzureDisk != nil {
+		case source.AzureDisk != nil:
 			sourceName = "azure-disk"
 			diskRef = source.AzureDisk.DiskName
+			// TODO: Add the rest of the in-tree drivers
 		}
-		// if non of the above, keep sourceName, diskRef empty
 
 		item := models.PersistentVolume{
 			Name:         pv.GetName(),
