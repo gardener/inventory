@@ -176,14 +176,18 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 			}
 
 			disk := models.Disk{
-				Name:              i.GetName(),
-				ProjectID:         payload.ProjectID,
-				Zone:              zone,
-				Region:            region,
-				Description:       i.GetDescription(),
-				Type:              utils.ResourceNameFromURL(i.GetType()),
-				IsRegional:        isRegional,
-				CreationTimestamp: i.GetCreationTimestamp(),
+				Name:                i.GetName(),
+				ProjectID:           payload.ProjectID,
+				Zone:                zone,
+				Region:              region,
+				Description:         i.GetDescription(),
+				Type:                utils.ResourceNameFromURL(i.GetType()),
+				IsRegional:          isRegional,
+				CreationTimestamp:   i.GetCreationTimestamp(),
+				LastAttachTimestamp: i.GetLastAttachTimestamp(),
+				LastDetachTimestamp: i.GetLastDetachTimestamp(),
+				Status:              i.GetStatus(),
+				SizeGB:              i.GetSizeGb(),
 			}
 
 			disks = append(disks, disk)
@@ -202,6 +206,10 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 		Set("description = EXCLUDED.description").
 		Set("is_regional = EXCLUDED.is_regional").
 		Set("creation_timestamp = EXCLUDED.creation_timestamp").
+		Set("last_attach_timestamp = EXCLUDED.last_attach_timestamp").
+		Set("last_detach_timestamp = EXCLUDED.last_detach_timestamp").
+		Set("status = EXCLUDED.status").
+		Set("size_gb = EXCLUDED.size_gb").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
