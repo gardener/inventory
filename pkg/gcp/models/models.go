@@ -270,15 +270,19 @@ type Disk struct {
 	bun.BaseModel `bun:"table:gcp_disk"`
 	coremodels.Model
 
-	Name              string   `bun:"name,notnull,unique:gcp_disk_key"`
-	ProjectID         string   `bun:"project_id,notnull,unique:gcp_disk_key"`
-	Zone              string   `bun:"zone,notnull,unique:gcp_disk_key"`
-	Region            string   `bun:"region,notnull"`
-	Type              string   `bun:"type,notnull"`
-	Description       string   `bun:"description,notnull"`
-	IsRegional        bool     `bun:"is_regional,notnull"`
-	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
-	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
+	Name                string   `bun:"name,notnull,unique:gcp_disk_key"`
+	ProjectID           string   `bun:"project_id,notnull,unique:gcp_disk_key"`
+	Zone                string   `bun:"zone,notnull,unique:gcp_disk_key"`
+	Region              string   `bun:"region,notnull"`
+	Type                string   `bun:"type,notnull"`
+	Description         string   `bun:"description,notnull"`
+	IsRegional          bool     `bun:"is_regional,notnull"`
+	CreationTimestamp   string   `bun:"creation_timestamp,nullzero"`
+	LastAttachTimestamp string   `bun:"last_attach_timestamp,nullzero"`
+	LastDetachTimestamp string   `bun:"last_detach_timestamp,nullzero"`
+	SizeGB              int64    `bun:"size_gb,notnull"`
+	Status              string   `bun:"status,nullzero"`
+	Project             *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // AttachedDisk represents an attached GCP Disk
