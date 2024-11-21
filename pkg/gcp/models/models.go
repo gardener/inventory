@@ -282,6 +282,7 @@ type Disk struct {
 	LastDetachTimestamp string   `bun:"last_detach_timestamp,nullzero"`
 	SizeGB              int64    `bun:"size_gb,notnull"`
 	Status              string   `bun:"status,nullzero"`
+	KubeClusterName     string   `bun:"k8s_cluster_name,nullzero"`
 	Project             *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 

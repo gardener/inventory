@@ -175,6 +175,12 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 				region = utils.RegionFromZone(zone)
 			}
 
+			// Infer the cluster name by inspecting the labels added
+			// by the GCP provider extension.
+			//
+			// https://github.com/gardener/gardener-extension-provider-gcp/blob/master/pkg/controller/worker/machines.go#L447-L448
+			labels := i.GetLabels()
+			kubeClusterName := labels["k8s-cluster-name"]
 			disk := models.Disk{
 				Name:                i.GetName(),
 				ProjectID:           payload.ProjectID,
@@ -188,6 +194,7 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 				LastDetachTimestamp: i.GetLastDetachTimestamp(),
 				Status:              i.GetStatus(),
 				SizeGB:              i.GetSizeGb(),
+				KubeClusterName:     kubeClusterName,
 			}
 
 			disks = append(disks, disk)
@@ -210,6 +217,7 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 		Set("last_detach_timestamp = EXCLUDED.last_detach_timestamp").
 		Set("status = EXCLUDED.status").
 		Set("size_gb = EXCLUDED.size_gb").
+		Set("k8s_cluster_name = EXCLUDED.k8s_cluster_name").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
