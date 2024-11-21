@@ -93,6 +93,7 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 			CreatedBy:         s.Annotations["gardener.cloud/created-by"],
 			Region:            s.Spec.Region,
 			KubernetesVersion: s.Spec.Kubernetes.Version,
+			CreationTimestamp: s.CreationTimestamp.Time,
 		}
 		shoots = append(shoots, item)
 		return nil
@@ -120,6 +121,7 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		Set("created_by = EXCLUDED.created_by").
 		Set("region = EXCLUDED.region").
 		Set("k8s_version = EXCLUDED.k8s_version").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
