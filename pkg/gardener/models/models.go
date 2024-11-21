@@ -5,6 +5,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -79,6 +81,7 @@ type Shoot struct {
 	CreatedBy         string     `bun:"created_by,notnull"`
 	Region            string     `bun:"region,nullzero"`
 	KubernetesVersion string     `bun:"k8s_version,nullzero"`
+	CreationTimestamp time.Time  `bun:"creation_timestamp,nullzero"`
 	Seed              *Seed      `bun:"rel:has-one,join:seed_name=name"`
 	Project           *Project   `bun:"rel:has-one,join:project_name=name"`
 	Machines          []*Machine `bun:"rel:has-many,join:technical_id=namespace"`

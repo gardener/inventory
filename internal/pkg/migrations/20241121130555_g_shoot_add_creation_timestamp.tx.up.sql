@@ -1,0 +1,1 @@
+ALTER TABLE g_shoot ADD COLUMN creation_timestamp TIMESTAMP WITH TIME ZONE;
