@@ -178,7 +178,7 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 			// Infer the cluster name by inspecting the labels added
 			// by the GCP provider extension.
 			//
-			// https://github.com/gardener/gardener-extension-provider-gcp/blob/master/pkg/controller/worker/machines.go#L447-L448
+			// https://github.com/gardener/gardener-extension-provider-gcp/pull/660
 			labels := i.GetLabels()
 			kubeClusterName := labels["k8s-cluster-name"]
 			disk := models.Disk{
