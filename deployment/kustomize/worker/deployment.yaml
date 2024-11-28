@@ -41,10 +41,12 @@ spec:
           imagePullPolicy: IfNotPresent
           command:
             - sh
+          args:
             - -c
-            - /app/inventory queue info --queue default > /dev/null 2>&1 || exit 0
-            - /app/inventory queue drain --type archived
-            - /app/inventory queue drain --type completed
+            - >-
+              /app/inventory queue info --queue default > /dev/null 2>&1 || exit 0 &&
+              /app/inventory queue drain --type archived &&
+              /app/inventory queue drain --type completed
           env:
             - name: INVENTORY_CONFIG
               value: /app/config/config.yaml
