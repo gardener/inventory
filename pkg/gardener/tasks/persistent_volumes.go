@@ -158,18 +158,47 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 
 		switch {
 		case source.CSI != nil:
-			sourceName = source.CSI.Driver
+			sourceName = fmt.Sprintf("csi:%s", source.CSI.Driver)
 			diskRef = source.CSI.VolumeHandle
 		case source.GCEPersistentDisk != nil:
-			sourceName = "gce-persistent-disk"
+			sourceName = "in-tree:gce-pd"
 			diskRef = source.GCEPersistentDisk.PDName
 		case source.AWSElasticBlockStore != nil:
-			sourceName = "aws-elastic-block-store"
+			sourceName = "in-tree:aws-ebs"
 			diskRef = source.AWSElasticBlockStore.VolumeID
+		case source.HostPath != nil:
+			sourceName = "in-tree:host-path"
+			diskRef = source.HostPath.Path
+		case source.Glusterfs != nil:
+			sourceName = "in-tree:glusterfs"
+			diskRef = source.Glusterfs.Path
+		case source.NFS != nil:
+			sourceName = "in-tree:nfs"
+			diskRef = fmt.Sprintf("%s:%s", source.NFS.Server, source.NFS.Path)
 		case source.AzureDisk != nil:
-			sourceName = "azure-disk"
+			sourceName = "in-tree:azure-disk"
 			diskRef = source.AzureDisk.DiskName
-			// TODO: Add the rest of the in-tree drivers
+		case source.AzureFile != nil:
+			sourceName = "in-tree:azure-file"
+			diskRef = source.AzureFile.ShareName
+		case source.Cinder != nil:
+			sourceName = "in-tree:cinder"
+			diskRef = source.Cinder.VolumeID
+		case source.VsphereVolume != nil:
+			sourceName = "in-tree:vsphere"
+			diskRef = source.VsphereVolume.VolumePath
+		case source.PhotonPersistentDisk != nil:
+			sourceName = "in-tree:photon-pd"
+			diskRef = source.PhotonPersistentDisk.PdID
+		case source.PortworxVolume != nil:
+			sourceName = "in-tree:portworx"
+			diskRef = source.PortworxVolume.VolumeID
+		case source.Local != nil:
+			sourceName = "in-tree:local"
+			diskRef = source.Local.Path
+		case source.StorageOS != nil:
+			sourceName = "in-tree:storageos"
+			diskRef = source.StorageOS.VolumeName
 		}
 
 		var volumeMode string
