@@ -51,7 +51,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 5,
+        "w": 4,
         "x": 0,
         "y": 0
       },
@@ -136,8 +136,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 5,
-        "x": 5,
+        "w": 4,
+        "x": 4,
         "y": 0
       },
       "id": 2,
@@ -221,7 +221,7 @@
       "gridPos": {
         "h": 7,
         "w": 4,
-        "x": 10,
+        "x": 8,
         "y": 0
       },
       "id": 6,
@@ -304,8 +304,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 5,
-        "x": 14,
+        "w": 4,
+        "x": 12,
         "y": 0
       },
       "id": 7,
@@ -388,8 +388,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 5,
-        "x": 19,
+        "w": 4,
+        "x": 16,
         "y": 0
       },
       "id": 10,
@@ -441,6 +441,92 @@
         }
       ],
       "title": "Leaked GCP Disks",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "decgbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(size_gb)\nFROM gcp_orphan_disk\nWHERE project_id IN ($gcp_project)\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Leaked GCP Space",
       "type": "stat"
     },
     {
@@ -661,8 +747,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -750,8 +835,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -840,8 +924,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -944,8 +1027,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1017,7 +1099,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [],
           "value": []
         },
@@ -1051,6 +1133,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked GCP Resources",
   "uid": "fdw5qjcrnirr4a",
-  "version": 8,
+  "version": 11,
   "weekStart": ""
 }
