@@ -45,12 +45,13 @@ type Project struct {
 	bun.BaseModel `bun:"table:g_project"`
 	coremodels.Model
 
-	Name      string   `bun:"name,notnull,unique"`
-	Namespace string   `bun:"namespace,notnull"`
-	Status    string   `bun:"status,notnull"`
-	Purpose   string   `bun:"purpose,notnull"`
-	Owner     string   `bun:"owner,notnull"`
-	Shoots    []*Shoot `bun:"rel:has-many,join:name=project_name"`
+	Name              string    `bun:"name,notnull,unique"`
+	Namespace         string    `bun:"namespace,notnull"`
+	Status            string    `bun:"status,notnull"`
+	Purpose           string    `bun:"purpose,notnull"`
+	Owner             string    `bun:"owner,notnull"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Shoots            []*Shoot  `bun:"rel:has-many,join:name=project_name"`
 }
 
 // Seed represents a Gardener seed
@@ -60,6 +61,7 @@ type Seed struct {
 
 	Name              string     `bun:"name,notnull,unique"`
 	KubernetesVersion string     `bun:"kubernetes_version,notnull"`
+	CreationTimestamp time.Time  `bun:"creation_timestamp,nullzero"`
 	Machines          []*Machine `bun:"rel:has-many,join:name=seed_name"`
 	Shoots            []*Shoot   `bun:"rel:has-many,join:name=seed_name"`
 }
@@ -92,14 +94,15 @@ type Machine struct {
 	bun.BaseModel `bun:"table:g_machine"`
 	coremodels.Model
 
-	Name       string `bun:"name,notnull,unique:g_machine_name_namespace_key"`
-	Namespace  string `bun:"namespace,notnull,unique:g_machine_name_namespace_key"`
-	ProviderId string `bun:"provider_id,notnull"`
-	Status     string `bun:"status,notnull"`
-	Node       string `bun:"node,nullzero"`
-	SeedName   string `bun:"seed_name,notnull"`
-	Seed       *Seed  `bun:"rel:has-one,join:seed_name=name"`
-	Shoot      *Shoot `bun:"rel:has-one,join:namespace=technical_id"`
+	Name              string    `bun:"name,notnull,unique:g_machine_name_namespace_key"`
+	Namespace         string    `bun:"namespace,notnull,unique:g_machine_name_namespace_key"`
+	ProviderId        string    `bun:"provider_id,notnull"`
+	Status            string    `bun:"status,notnull"`
+	Node              string    `bun:"node,nullzero"`
+	SeedName          string    `bun:"seed_name,notnull"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
+	Shoot             *Shoot    `bun:"rel:has-one,join:namespace=technical_id"`
 }
 
 // BackupBucket represents a Gardener BackupBucket resource
@@ -107,13 +110,14 @@ type BackupBucket struct {
 	bun.BaseModel `bun:"table:g_backup_bucket"`
 	coremodels.Model
 
-	Name          string `bun:"name,notnull,unique"`
-	ProviderType  string `bun:"provider_type,notnull"`
-	RegionName    string `bun:"region_name,notnull"`
-	State         string `bun:"state,nullzero"`
-	StateProgress int    `bun:"state_progress,nullzero"`
-	SeedName      string `bun:"seed_name,notnull"`
-	Seed          *Seed  `bun:"rel:has-one,join:seed_name=name"`
+	Name              string    `bun:"name,notnull,unique"`
+	ProviderType      string    `bun:"provider_type,notnull"`
+	RegionName        string    `bun:"region_name,notnull"`
+	State             string    `bun:"state,nullzero"`
+	StateProgress     int       `bun:"state_progress,nullzero"`
+	SeedName          string    `bun:"seed_name,notnull"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }
 
 // CloudProfile represents a Gardener CloudProfile resource
@@ -121,8 +125,9 @@ type CloudProfile struct {
 	bun.BaseModel `bun:"table:g_cloud_profile"`
 	coremodels.Model
 
-	Name string `bun:"name,notnull,unique"`
-	Type string `bun:"type,notnull"`
+	Name              string    `bun:"name,notnull,unique"`
+	Type              string    `bun:"type,notnull"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
 }
 
 // CloudProfileAWSImage represents an AWS Machine Image collected from a CloudProfile.
@@ -200,15 +205,16 @@ type PersistentVolume struct {
 	bun.BaseModel `bun:"table:g_persistent_volume"`
 	coremodels.Model
 
-	Name         string `bun:"name,notnull,unique:g_persistent_volume_key"`
-	SeedName     string `bun:"seed_name,notnull,unique:g_persistent_volume_key"`
-	Provider     string `bun:"provider,nullzero"`
-	DiskRef      string `bun:"disk_ref,nullzero"`
-	Status       string `bun:"status,notnull"`
-	Capacity     string `bun:"capacity,notnull"`
-	StorageClass string `bun:"storage_class,notnull"`
-	VolumeMode   string `bun:"volume_mode,nullzero"`
-	Seed         *Seed  `bun:"rel:has-one,join:seed_name=name"`
+	Name              string    `bun:"name,notnull,unique:g_persistent_volume_key"`
+	SeedName          string    `bun:"seed_name,notnull,unique:g_persistent_volume_key"`
+	Provider          string    `bun:"provider,nullzero"`
+	DiskRef           string    `bun:"disk_ref,nullzero"`
+	Status            string    `bun:"status,notnull"`
+	Capacity          string    `bun:"capacity,notnull"`
+	StorageClass      string    `bun:"storage_class,notnull"`
+	VolumeMode        string    `bun:"volume_mode,nullzero"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }
 
 func init() {
