@@ -64,12 +64,13 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 		}
 
 		item := models.BackupBucket{
-			Name:          b.GetName(),
-			SeedName:      stringutils.StringFromPointer(b.Spec.SeedName),
-			ProviderType:  b.Spec.Provider.Type,
-			RegionName:    b.Spec.Provider.Region,
-			State:         state,
-			StateProgress: stateProgress,
+			Name:              b.GetName(),
+			SeedName:          stringutils.StringFromPointer(b.Spec.SeedName),
+			ProviderType:      b.Spec.Provider.Type,
+			RegionName:        b.Spec.Provider.Region,
+			State:             state,
+			StateProgress:     stateProgress,
+			CreationTimestamp: b.CreationTimestamp.Time,
 		}
 		buckets = append(buckets, item)
 		return nil
@@ -91,6 +92,7 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 		Set("seed_name = EXCLUDED.seed_name").
 		Set("state = EXCLUDED.state").
 		Set("state_progress = EXCLUDED.state_progress").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

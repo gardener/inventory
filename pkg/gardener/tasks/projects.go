@@ -57,11 +57,12 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
 		item := models.Project{
-			Name:      p.Name,
-			Namespace: stringutils.StringFromPointer(p.Spec.Namespace),
-			Status:    string(p.Status.Phase),
-			Purpose:   stringutils.StringFromPointer(p.Spec.Purpose),
-			Owner:     p.Spec.Owner.Name,
+			Name:              p.Name,
+			Namespace:         stringutils.StringFromPointer(p.Spec.Namespace),
+			Status:            string(p.Status.Phase),
+			Purpose:           stringutils.StringFromPointer(p.Spec.Purpose),
+			Owner:             p.Spec.Owner.Name,
+			CreationTimestamp: p.CreationTimestamp.Time,
 		}
 		projects = append(projects, item)
 		return nil
@@ -82,6 +83,7 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		Set("status = EXCLUDED.status").
 		Set("purpose = EXCLUDED.purpose").
 		Set("owner = EXCLUDED.owner").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
