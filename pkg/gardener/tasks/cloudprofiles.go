@@ -91,8 +91,9 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		providerType := cp.Spec.Type
 		providerConfig := cp.Spec.ProviderConfig
 		item := models.CloudProfile{
-			Name: cp.Name,
-			Type: providerType,
+			Name:              cp.Name,
+			Type:              providerType,
+			CreationTimestamp: cp.CreationTimestamp.Time,
 		}
 		cloudProfiles = append(cloudProfiles, item)
 
@@ -169,6 +170,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		Model(&cloudProfiles).
 		On("CONFLICT (name) DO UPDATE").
 		Set("type = EXCLUDED.type").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

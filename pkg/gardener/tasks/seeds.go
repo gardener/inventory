@@ -58,6 +58,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 		item := models.Seed{
 			Name:              s.Name,
 			KubernetesVersion: stringutils.StringFromPointer(s.Status.KubernetesVersion),
+			CreationTimestamp: s.CreationTimestamp.Time,
 		}
 		seeds = append(seeds, item)
 		return nil
@@ -75,6 +76,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 		Model(&seeds).
 		On("CONFLICT (name) DO UPDATE").
 		Set("kubernetes_version = EXCLUDED.kubernetes_version").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

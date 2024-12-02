@@ -177,14 +177,15 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 			volumeMode = string(*pv.Spec.VolumeMode)
 		}
 		item := models.PersistentVolume{
-			Name:         pv.GetName(),
-			SeedName:     payload.Seed,
-			Provider:     sourceName,
-			DiskRef:      diskRef,
-			Status:       string(pv.Status.Phase),
-			Capacity:     pv.Spec.Capacity.Storage().String(),
-			StorageClass: pv.Spec.StorageClassName,
-			VolumeMode:   volumeMode,
+			Name:              pv.GetName(),
+			SeedName:          payload.Seed,
+			Provider:          sourceName,
+			DiskRef:           diskRef,
+			Status:            string(pv.Status.Phase),
+			Capacity:          pv.Spec.Capacity.Storage().String(),
+			StorageClass:      pv.Spec.StorageClassName,
+			VolumeMode:        volumeMode,
+			CreationTimestamp: pv.CreationTimestamp.Time,
 		}
 		pvs = append(pvs, item)
 		return nil
@@ -207,6 +208,7 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 		Set("capacity = EXCLUDED.capacity").
 		Set("storage_class = EXCLUDED.storage_class").
 		Set("volume_mode = EXCLUDED.volume_mode").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

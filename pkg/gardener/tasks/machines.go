@@ -143,12 +143,13 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
 		item := models.Machine{
-			Name:       m.Name,
-			Namespace:  m.Namespace,
-			ProviderId: m.Spec.ProviderID,
-			Status:     string(m.Status.CurrentStatus.Phase),
-			Node:       m.Labels["node"],
-			SeedName:   payload.Seed,
+			Name:              m.Name,
+			Namespace:         m.Namespace,
+			ProviderId:        m.Spec.ProviderID,
+			Status:            string(m.Status.CurrentStatus.Phase),
+			Node:              m.Labels["node"],
+			SeedName:          payload.Seed,
+			CreationTimestamp: m.CreationTimestamp.Time,
 		}
 		machines = append(machines, item)
 		return nil
@@ -168,6 +169,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		Set("status = EXCLUDED.status").
 		Set("node = EXCLUDED.node").
 		Set("seed_name = EXCLUDED.seed_name").
+		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
