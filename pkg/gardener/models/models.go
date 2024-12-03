@@ -7,6 +7,7 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -18,8 +19,8 @@ type ShootToProject struct {
 	bun.BaseModel `bun:"table:l_g_shoot_to_project"`
 	coremodels.Model
 
-	ShootID   uint64 `bun:"shoot_id,notnull,unique:l_g_shoot_to_project_key"`
-	ProjectID uint64 `bun:"project_id,notnull,unique:l_g_shoot_to_project_key"`
+	ShootID   uuid.UUID `bun:"shoot_id,notnull,type:uuid,unique:l_g_shoot_to_project_key"`
+	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_g_shoot_to_project_key"`
 }
 
 // ShootToSeed represents a link table connecting the Shoot with Seed.
@@ -27,8 +28,8 @@ type ShootToSeed struct {
 	bun.BaseModel `bun:"table:l_g_shoot_to_seed"`
 	coremodels.Model
 
-	ShootID uint64 `bun:"shoot_id,notnull,unique:l_g_shoot_to_seed_key"`
-	SeedID  uint64 `bun:"seed_id,notnull,unique:l_g_shoot_to_seed_key"`
+	ShootID uuid.UUID `bun:"shoot_id,notnull,type:uuid,unique:l_g_shoot_to_seed_key"`
+	SeedID  uuid.UUID `bun:"seed_id,notnull,type:uuid,unique:l_g_shoot_to_seed_key"`
 }
 
 // MachineToShoot represents a link table connecting the Machine with Shoot.
@@ -36,8 +37,8 @@ type MachineToShoot struct {
 	bun.BaseModel `bun:"table:l_g_machine_to_shoot"`
 	coremodels.Model
 
-	ShootID   uint64 `bun:"shoot_id,notnull,unique:l_g_machine_to_shoot_key"`
-	MachineID uint64 `bun:"machine_id,notnull,unique:l_g_machine_to_shoot_key"`
+	ShootID   uuid.UUID `bun:"shoot_id,notnull,type:uuid,unique:l_g_machine_to_shoot_key"`
+	MachineID uuid.UUID `bun:"machine_id,notnull,type:uuid,unique:l_g_machine_to_shoot_key"`
 }
 
 // Project represents a Gardener project
@@ -151,8 +152,8 @@ type AWSImageToCloudProfile struct {
 	bun.BaseModel `bun:"table:l_g_aws_image_to_cloud_profile"`
 	coremodels.Model
 
-	AWSImageID     uint64 `bun:"aws_image_id,notnull,unique:l_g_aws_image_to_cloud_profile_key"`
-	CloudProfileID uint64 `bun:"cloud_profile_id,notnull,unique:l_g_aws_image_to_cloud_profile_key"`
+	AWSImageID     uuid.UUID `bun:"aws_image_id,notnull,type:uuid,unique:l_g_aws_image_to_cloud_profile_key"`
+	CloudProfileID uuid.UUID `bun:"cloud_profile_id,notnull,type:uuid,unique:l_g_aws_image_to_cloud_profile_key"`
 }
 
 // CloudProfileGCPImage represents a GCP Machine Image collected from a CloudProfile.
@@ -173,8 +174,8 @@ type GCPImageToCloudProfile struct {
 	bun.BaseModel `bun:"table:l_g_gcp_image_to_cloud_profile"`
 	coremodels.Model
 
-	GCPImageID     uint64 `bun:"gcp_image_id,notnull,unique:l_g_gcp_image_to_cloud_profile_key"`
-	CloudProfileID uint64 `bun:"cloud_profile_id,notnull,unique:l_g_gcp_image_to_cloud_profile_key"`
+	GCPImageID     uuid.UUID `bun:"gcp_image_id,notnull,type:uuid,unique:l_g_gcp_image_to_cloud_profile_key"`
+	CloudProfileID uuid.UUID `bun:"cloud_profile_id,notnull,type:uuid,unique:l_g_gcp_image_to_cloud_profile_key"`
 }
 
 // CloudProfileAzureImage represents an Azure Machine Image collected from a CloudProfile.
@@ -196,8 +197,8 @@ type AzureImageToCloudProfile struct {
 	bun.BaseModel `bun:"table:l_g_azure_image_to_cloud_profile"`
 	coremodels.Model
 
-	AzureImageID   uint64 `bun:"azure_image_id,notnull,unique:l_g_azure_image_to_cloud_profile_key"`
-	CloudProfileID uint64 `bun:"cloud_profile_id,notnull,unique:l_g_azure_image_to_cloud_profile_key"`
+	AzureImageID   uuid.UUID `bun:"azure_image_id,notnull,type:uuid,unique:l_g_azure_image_to_cloud_profile_key"`
+	CloudProfileID uuid.UUID `bun:"cloud_profile_id,notnull,type:uuid,unique:l_g_azure_image_to_cloud_profile_key"`
 }
 
 // PersistentVolume represents a Kubernetes PV in Gardener

@@ -7,6 +7,7 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -18,8 +19,8 @@ type RegionToAZ struct {
 	bun.BaseModel `bun:"table:l_aws_region_to_az"`
 	coremodels.Model
 
-	RegionID           uint64 `bun:"region_id,notnull,unique:l_aws_region_to_az_key"`
-	AvailabilityZoneID uint64 `bun:"az_id,notnull,unique:l_aws_region_to_az_key"`
+	RegionID           uuid.UUID `bun:"region_id,notnull,type:uuid,unique:l_aws_region_to_az_key"`
+	AvailabilityZoneID uuid.UUID `bun:"az_id,notnull,type:uuid,unique:l_aws_region_to_az_key"`
 }
 
 // RegionToVPC represents a link table connecting the Region with VPC.
@@ -27,8 +28,8 @@ type RegionToVPC struct {
 	bun.BaseModel `bun:"table:l_aws_region_to_vpc"`
 	coremodels.Model
 
-	RegionID uint64 `bun:"region_id,notnull,unique:l_aws_region_to_vpc_key"`
-	VpcID    uint64 `bun:"vpc_id,notnull,unique:l_aws_region_to_vpc_key"`
+	RegionID uuid.UUID `bun:"region_id,notnull,type:uuid,unique:l_aws_region_to_vpc_key"`
+	VpcID    uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_aws_region_to_vpc_key"`
 }
 
 // VPCToSubnet represents a link table connecting the VPC with Subnet.
@@ -36,8 +37,8 @@ type VPCToSubnet struct {
 	bun.BaseModel `bun:"table:l_aws_vpc_to_subnet"`
 	coremodels.Model
 
-	VpcID    uint64 `bun:"vpc_id,notnull,unique:l_aws_vpc_to_subnet_key"`
-	SubnetID uint64 `bun:"subnet_id,notnull,unique:l_aws_vpc_to_subnet_key"`
+	VpcID    uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_aws_vpc_to_subnet_key"`
+	SubnetID uuid.UUID `bun:"subnet_id,notnull,type:uuid,unique:l_aws_vpc_to_subnet_key"`
 }
 
 // VPCToInstance represents a link table connecting the VPC with Instance.
@@ -45,8 +46,8 @@ type VPCToInstance struct {
 	bun.BaseModel `bun:"table:l_aws_vpc_to_instance"`
 	coremodels.Model
 
-	VpcID      uint64 `bun:"vpc_id,notnull,unique:l_aws_vpc_to_instance_key"`
-	InstanceID uint64 `bun:"instance_id,notnull,unique:l_aws_vpc_to_instance_key"`
+	VpcID      uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_aws_vpc_to_instance_key"`
+	InstanceID uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_aws_vpc_to_instance_key"`
 }
 
 // SubnetToAZ represents a link table connecting the Subnet with AZ.
@@ -54,8 +55,8 @@ type SubnetToAZ struct {
 	bun.BaseModel `bun:"table:l_aws_subnet_to_az"`
 	coremodels.Model
 
-	AvailabilityZoneID uint64 `bun:"az_id,notnull,unique:l_aws_subnet_to_az_key"`
-	SubnetID           uint64 `bun:"subnet_id,notnull,unique:l_aws_subnet_to_az_key"`
+	AvailabilityZoneID uuid.UUID `bun:"az_id,notnull,type:uuid,unique:l_aws_subnet_to_az_key"`
+	SubnetID           uuid.UUID `bun:"subnet_id,notnull,type:uuid,unique:l_aws_subnet_to_az_key"`
 }
 
 // InstanceToSubnet represents a link table connecting the Instance with Subnet.
@@ -63,8 +64,8 @@ type InstanceToSubnet struct {
 	bun.BaseModel `bun:"table:l_aws_instance_to_subnet"`
 	coremodels.Model
 
-	InstanceID uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_subnet_key"`
-	SubnetID   uint64 `bun:"subnet_id,notnull,unique:l_aws_instance_to_subnet_key"`
+	InstanceID uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_aws_instance_to_subnet_key"`
+	SubnetID   uuid.UUID `bun:"subnet_id,notnull,type:uuid,unique:l_aws_instance_to_subnet_key"`
 }
 
 // InstanceToRegion represents a link table connecting the Instance with Region.
@@ -72,8 +73,8 @@ type InstanceToRegion struct {
 	bun.BaseModel `bun:"table:l_aws_instance_to_region"`
 	coremodels.Model
 
-	InstanceID uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_region_key"`
-	RegionID   uint64 `bun:"region_id,notnull,unique:l_aws_instance_to_region_key"`
+	InstanceID uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_aws_instance_to_region_key"`
+	RegionID   uuid.UUID `bun:"region_id,notnull,type:uuid,unique:l_aws_instance_to_region_key"`
 }
 
 // InstanceToImage represents a link table connecting the Instance with Image
@@ -81,8 +82,8 @@ type InstanceToImage struct {
 	bun.BaseModel `bun:"table:l_aws_instance_to_image"`
 	coremodels.Model
 
-	InstanceID uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_image_key"`
-	ImageID    uint64 `bun:"image_id,notnull,unique:l_aws_instance_to_image_key"`
+	InstanceID uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_aws_instance_to_image_key"`
+	ImageID    uuid.UUID `bun:"image_id,notnull,type:uuid,unique:l_aws_instance_to_image_key"`
 }
 
 // ImageToRegion represents a link table connecting the Image with Region.
@@ -90,8 +91,8 @@ type ImageToRegion struct {
 	bun.BaseModel `bun:"table:l_aws_image_to_region"`
 	coremodels.Model
 
-	ImageID  uint64 `bun:"image_id,notnull,unique:l_aws_image_to_region_key"`
-	RegionID uint64 `bun:"region_id,notnull,unique:l_aws_image_to_region_key"`
+	ImageID  uuid.UUID `bun:"image_id,notnull,type:uuid,unique:l_aws_image_to_region_key"`
+	RegionID uuid.UUID `bun:"region_id,notnull,type:uuid,unique:l_aws_image_to_region_key"`
 }
 
 // Region represents an AWS Region
@@ -188,8 +189,8 @@ type InstanceToNetworkInterface struct {
 	bun.BaseModel `bun:"table:l_aws_instance_to_net_interface"`
 	coremodels.Model
 
-	InstanceID         uint64 `bun:"instance_id,notnull,unique:l_aws_instance_to_net_interface_key"`
-	NetworkInterfaceID uint64 `bun:"ni_id,notnull,unique:l_aws_instance_to_net_interface_key"`
+	InstanceID         uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_aws_instance_to_net_interface_key"`
+	NetworkInterfaceID uuid.UUID `bun:"ni_id,notnull,type:uuid,unique:l_aws_instance_to_net_interface_key"`
 }
 
 // Image represents an AWS AMI
@@ -243,8 +244,8 @@ type LoadBalancerToVPC struct {
 	bun.BaseModel `bun:"table:l_aws_lb_to_vpc"`
 	coremodels.Model
 
-	LoadBalancerID uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_vpc_key"`
-	VpcID          uint64 `bun:"vpc_id,notnull,unique:l_aws_lb_to_vpc_key"`
+	LoadBalancerID uuid.UUID `bun:"lb_id,notnull,type:uuid,unique:l_aws_lb_to_vpc_key"`
+	VpcID          uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_aws_lb_to_vpc_key"`
 }
 
 // LoadBalancerToRegion represents a link table connecting the LoadBalancer with Region.
@@ -252,8 +253,8 @@ type LoadBalancerToRegion struct {
 	bun.BaseModel `bun:"table:l_aws_lb_to_region"`
 	coremodels.Model
 
-	LoadBalancerID uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_region_key"`
-	RegionID       uint64 `bun:"region_id,notnull,unique:l_aws_lb_to_region_key"`
+	LoadBalancerID uuid.UUID `bun:"lb_id,notnull,type:uuid,unique:l_aws_lb_to_region_key"`
+	RegionID       uuid.UUID `bun:"region_id,notnull,type:uuid,unique:l_aws_lb_to_region_key"`
 }
 
 // Bucket represents an AWS S3 bucket
@@ -317,8 +318,8 @@ type LoadBalancerToNetworkInterface struct {
 	bun.BaseModel `bun:"table:l_aws_lb_to_net_interface"`
 	coremodels.Model
 
-	LoadBalancerID     uint64 `bun:"lb_id,notnull,unique:l_aws_lb_to_net_interface_key"`
-	NetworkInterfaceID uint64 `bun:"ni_id,notnull,unique:l_aws_lb_to_net_interface_key"`
+	LoadBalancerID     uuid.UUID `bun:"lb_id,notnull,type:uuid,unique:l_aws_lb_to_net_interface_key"`
+	NetworkInterfaceID uuid.UUID `bun:"ni_id,notnull,type:uuid,unique:l_aws_lb_to_net_interface_key"`
 }
 
 func init() {
