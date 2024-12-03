@@ -29,6 +29,7 @@ require (
 	github.com/gardener/gardener-extension-provider-azure v1.48.1
 	github.com/gardener/gardener-extension-provider-gcp v1.38.0
 	github.com/gardener/machine-controller-manager v0.53.1
+	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.25.0
 	github.com/hibiken/asynq/x v0.0.0-20240506061152-d04888e74845
 	github.com/hibiken/asynqmon v0.7.2
@@ -100,7 +101,6 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect

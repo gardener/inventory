@@ -8,6 +8,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -43,8 +44,8 @@ type ResourceGroupToSubscription struct {
 	bun.BaseModel `bun:"table:l_az_rg_to_subscription"`
 	coremodels.Model
 
-	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_rg_to_subscription_key"`
-	SubscriptionID  uint64 `bun:"sub_id,notnull,unique:l_az_rg_to_subscription_key"`
+	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_rg_to_subscription_key"`
+	SubscriptionID  uuid.UUID `bun:"sub_id,notnull,type:uuid,unique:l_az_rg_to_subscription_key"`
 }
 
 // VirtualMachine represents an Azure Virtual Machine.
@@ -73,8 +74,8 @@ type VirtualMachineToResourceGroup struct {
 	bun.BaseModel `bun:"table:l_az_vm_to_rg"`
 	coremodels.Model
 
-	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_vm_to_rg_key"`
-	VMID            uint64 `bun:"vm_id,notnull,unique:l_az_vm_to_rg_key"`
+	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_vm_to_rg_key"`
+	VMID            uuid.UUID `bun:"vm_id,notnull,type:uuid,unique:l_az_vm_to_rg_key"`
 }
 
 // PublicAddress represents an Azure Public IP Address.
@@ -105,8 +106,8 @@ type PublicAddressToResourceGroup struct {
 	bun.BaseModel `bun:"table:l_az_pub_addr_to_rg"`
 	coremodels.Model
 
-	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_pub_addr_to_rg_key"`
-	PublicAddressID uint64 `bun:"pa_id,notnull,unique:l_az_pub_addr_to_rg_key"`
+	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_pub_addr_to_rg_key"`
+	PublicAddressID uuid.UUID `bun:"pa_id,notnull,type:uuid,unique:l_az_pub_addr_to_rg_key"`
 }
 
 // LoadBalancer represents an Azure Load Balancer.
@@ -131,8 +132,8 @@ type LoadBalancerToResourceGroup struct {
 	bun.BaseModel `bun:"table:l_az_lb_to_rg"`
 	coremodels.Model
 
-	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_lb_to_rg_key"`
-	LoadBalancerID  uint64 `bun:"lb_id,notnull,unique:l_az_lb_to_rg_key"`
+	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_lb_to_rg_key"`
+	LoadBalancerID  uuid.UUID `bun:"lb_id,notnull,type:uuid,unique:l_az_lb_to_rg_key"`
 }
 
 // VPC represents an Azure VPC.
@@ -176,8 +177,8 @@ type VPCToResourceGroup struct {
 	bun.BaseModel `bun:"table:l_az_vpc_to_rg"`
 	coremodels.Model
 
-	VPCID           uint64 `bun:"vpc_id,notnull,unique:l_az_vpc_to_rg_key"`
-	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_vpc_to_rg_key"`
+	VPCID           uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_az_vpc_to_rg_key"`
+	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_vpc_to_rg_key"`
 }
 
 // StorageAccount represents an Azure Storage Account.
@@ -221,8 +222,8 @@ type SubnetToVPC struct {
 	bun.BaseModel `bun:"table:l_az_subnet_to_vpc"`
 	coremodels.Model
 
-	SubnetID uint64 `bun:"subnet_id,notnull,unique:l_az_subnet_to_vpc_key"`
-	VPCID    uint64 `bun:"vpc_id,notnull,unique:l_az_subnet_to_vpc_key"`
+	SubnetID uuid.UUID `bun:"subnet_id,notnull,type:uuid,unique:l_az_subnet_to_vpc_key"`
+	VPCID    uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_az_subnet_to_vpc_key"`
 }
 
 // BlobContainerToResourceGroup represents a link table connecting the
@@ -231,8 +232,8 @@ type BlobContainerToResourceGroup struct {
 	bun.BaseModel `bun:"table:l_az_blob_container_to_rg"`
 	coremodels.Model
 
-	BlobContainerID uint64 `bun:"blob_container_id,notnull,unique:l_az_blob_container_to_rg_key"`
-	ResourceGroupID uint64 `bun:"rg_id,notnull,unique:l_az_blob_container_to_rg_key"`
+	BlobContainerID uuid.UUID `bun:"blob_container_id,notnull,type:uuid,unique:l_az_blob_container_to_rg_key"`
+	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_blob_container_to_rg_key"`
 }
 
 func init() {

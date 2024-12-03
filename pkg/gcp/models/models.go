@@ -8,6 +8,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -87,8 +88,8 @@ type InstanceToNetworkInterface struct {
 	bun.BaseModel `bun:"table:l_gcp_instance_to_nic"`
 	coremodels.Model
 
-	InstanceID         uint64 `bun:"instance_id,notnull,unique:l_gcp_instance_to_nic_key"`
-	NetworkInterfaceID uint64 `bun:"nic_id,notnull,unique:l_gcp_instance_to_nic_key"`
+	InstanceID         uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_gcp_instance_to_nic_key"`
+	NetworkInterfaceID uuid.UUID `bun:"nic_id,notnull,type:uuid,unique:l_gcp_instance_to_nic_key"`
 }
 
 // InstanceToProject represents a link table connecting the [Project] with
@@ -97,8 +98,8 @@ type InstanceToProject struct {
 	bun.BaseModel `bun:"table:l_gcp_instance_to_project"`
 	coremodels.Model
 
-	ProjectID  uint64 `bun:"project_id,notnull,unique:l_gcp_instance_to_project_key"`
-	InstanceID uint64 `bun:"instance_id,notnull,unique:l_gcp_instance_to_project_key"`
+	ProjectID  uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_instance_to_project_key"`
+	InstanceID uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_gcp_instance_to_project_key"`
 }
 
 // VPC represents a GCP VPC
@@ -123,8 +124,8 @@ type VPCToProject struct {
 	bun.BaseModel `bun:"table:l_gcp_vpc_to_project"`
 	coremodels.Model
 
-	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_vpc_to_project_key"`
-	VPCID     uint64 `bun:"vpc_id,notnull,unique:l_gcp_vpc_to_project_key"`
+	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_vpc_to_project_key"`
+	VPCID     uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_gcp_vpc_to_project_key"`
 }
 
 // Address represents a GCP static IP address resource. The Address model
@@ -161,8 +162,8 @@ type AddressToProject struct {
 	bun.BaseModel `bun:"table:l_gcp_addr_to_project"`
 	coremodels.Model
 
-	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_addr_to_project_key"`
-	AddressID uint64 `bun:"address_id,notnull,unique:l_gcp_addr_to_project_key"`
+	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_addr_to_project_key"`
+	AddressID uuid.UUID `bun:"address_id,notnull,type:uuid,unique:l_gcp_addr_to_project_key"`
 }
 
 // Subnet represents a GCP Subnet
@@ -190,8 +191,8 @@ type SubnetToVPC struct {
 	bun.BaseModel `bun:"table:l_gcp_subnet_to_vpc"`
 	coremodels.Model
 
-	VPCID    uint64 `bun:"vpc_id,notnull,unique:l_gcp_subnet_to_vpc_key"`
-	SubnetID uint64 `bun:"subnet_id,notnull,unique:l_gcp_subnet_to_vpc_key"`
+	VPCID    uuid.UUID `bun:"vpc_id,notnull,type:uuid,unique:l_gcp_subnet_to_vpc_key"`
+	SubnetID uuid.UUID `bun:"subnet_id,notnull,type:uuid,unique:l_gcp_subnet_to_vpc_key"`
 }
 
 // SubnetToProject represents a link table connecting the [Subnet] with
@@ -200,8 +201,8 @@ type SubnetToProject struct {
 	bun.BaseModel `bun:"table:l_gcp_subnet_to_project"`
 	coremodels.Model
 
-	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_subnet_to_project_key"`
-	SubnetID  uint64 `bun:"subnet_id,notnull,unique:l_gcp_subnet_to_project_key"`
+	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_subnet_to_project_key"`
+	SubnetID  uuid.UUID `bun:"subnet_id,notnull,type:uuid,unique:l_gcp_subnet_to_project_key"`
 }
 
 // Bucket represents a GCP Bucket
@@ -261,8 +262,8 @@ type ForwardingRuleToProject struct {
 	bun.BaseModel `bun:"table:l_gcp_fr_to_project"`
 	coremodels.Model
 
-	RuleID    uint64 `bun:"rule_id,notnull,unique:l_gcp_fr_to_project_key"`
-	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_fr_to_project_key"`
+	RuleID    uuid.UUID `bun:"rule_id,notnull,type:uuid,unique:l_gcp_fr_to_project_key"`
+	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_fr_to_project_key"`
 }
 
 // Disk represents a GCP Disk
@@ -306,8 +307,8 @@ type InstanceToDisk struct {
 	bun.BaseModel `bun:"table:l_gcp_instance_to_disk"`
 	coremodels.Model
 
-	InstanceID uint64 `bun:"instance_id,notnull,unique:l_gcp_instance_to_disk_key"`
-	DiskID     uint64 `bun:"disk_id,notnull,unique:l_gcp_instance_to_disk_key"`
+	InstanceID uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_gcp_instance_to_disk_key"`
+	DiskID     uuid.UUID `bun:"disk_id,notnull,type:uuid,unique:l_gcp_instance_to_disk_key"`
 }
 
 // GKECluster represents a GKE Cluster.
@@ -339,8 +340,8 @@ type GKEClusterToProject struct {
 	bun.BaseModel `bun:"table:l_gcp_gke_cluster_to_project"`
 	coremodels.Model
 
-	ClusterID uint64 `bun:"cluster_id,notnull,unique:l_gcp_gke_cluster_to_project_key"`
-	ProjectID uint64 `bun:"project_id,notnull,unique:l_gcp_gke_cluster_to_project_key"`
+	ClusterID uuid.UUID `bun:"cluster_id,notnull,type:uuid,unique:l_gcp_gke_cluster_to_project_key"`
+	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_gke_cluster_to_project_key"`
 }
 
 func init() {
