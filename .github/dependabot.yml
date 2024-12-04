@@ -5,7 +5,6 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
     commit-message:
       prefix: ":seedling:"
     # Skip gardaner packages. These shall be updated manually.
