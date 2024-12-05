@@ -37,3 +37,7 @@ var DisksClientset = registry.New[string, *Client[*compute.DisksClient]]()
 // ForwardingRulesClientset provides the registry of GCP API clients for
 // interfacing with the Forwarding Rules service.
 var ForwardingRulesClientset = registry.New[string, *Client[*compute.ForwardingRulesClient]]()
+
+// TargetPoolsClientset provides the registry of GCP API clients for interfacing
+// with the Target Pools service.
+var TargetPoolsClientset = registry.New[string, *Client[*compute.TargetPoolsClient]]()

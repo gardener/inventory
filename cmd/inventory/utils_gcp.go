@@ -132,17 +132,19 @@ func configureGCPResourceManagerClientsets(ctx context.Context, conf *config.Con
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create client for %s: %w", namedCreds, err)
 			}
-			client := &gcpclients.Client[*resourcemanager.ProjectsClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           c,
-			}
-			gcpclients.ProjectsClientset.Overwrite(project, client)
+			gcpclients.ProjectsClientset.Overwrite(
+				project,
+				&gcpclients.Client[*resourcemanager.ProjectsClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           c,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "resource_manager",
 				"sub_service", "projects",
-				"credentials", client.NamedCredentials,
+				"credentials", namedCreds,
 				"project", project,
 			)
 		}
@@ -171,13 +173,14 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create instance client for %s: %w", namedCreds, err)
 			}
-			instanceClientWrapper := &gcpclients.Client[*compute.InstancesClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           instanceClient,
-			}
-			gcpclients.InstancesClientset.Overwrite(project, instanceClientWrapper)
-
+			gcpclients.InstancesClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.InstancesClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           instanceClient,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
@@ -191,14 +194,14 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create network client for %s: %w", namedCreds, err)
 			}
-
-			networkClientWrapper := &gcpclients.Client[*compute.NetworksClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           networkClient,
-			}
-			gcpclients.NetworksClientset.Overwrite(project, networkClientWrapper)
-
+			gcpclients.NetworksClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.NetworksClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           networkClient,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
@@ -207,19 +210,19 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"project", project,
 			)
 
-			// Global & Regional Addresses
+			// Regional Addresses client
 			addrClient, err := compute.NewAddressesRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create addresses client for %s: %w", namedCreds, err)
 			}
-
-			addrClientWrapper := &gcpclients.Client[*compute.AddressesClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           addrClient,
-			}
-			gcpclients.AddressesClientset.Overwrite(project, addrClientWrapper)
-
+			gcpclients.AddressesClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.AddressesClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           addrClient,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
@@ -228,18 +231,19 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"project", project,
 			)
 
+			// Global Addresses client
 			globalAddrClient, err := compute.NewGlobalAddressesRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create global addresses client for %s: %w", namedCreds, err)
 			}
-
-			globalAddrClientWrapper := &gcpclients.Client[*compute.GlobalAddressesClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           globalAddrClient,
-			}
-			gcpclients.GlobalAddressesClientset.Overwrite(project, globalAddrClientWrapper)
-
+			gcpclients.GlobalAddressesClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.GlobalAddressesClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           globalAddrClient,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
@@ -248,17 +252,19 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"project", project,
 			)
 
+			// Subnet clients
 			subnetClient, err := compute.NewSubnetworksRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create subnet client for %s: %w", namedCreds, err)
 			}
-
-			subnetClientWrapper := &gcpclients.Client[*compute.SubnetworksClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           subnetClient,
-			}
-			gcpclients.SubnetworksClientset.Overwrite(project, subnetClientWrapper)
+			gcpclients.SubnetworksClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.SubnetworksClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           subnetClient,
+				},
+			)
 
 			slog.Info(
 				"configured GCP client",
@@ -268,18 +274,19 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"project", project,
 			)
 
+			// Disk clients
 			diskClient, err := compute.NewDisksRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create disk client for %s: %w", namedCreds, err)
 			}
-
-			diskClientWrapper := &gcpclients.Client[*compute.DisksClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           diskClient,
-			}
-			gcpclients.DisksClientset.Overwrite(project, diskClientWrapper)
-
+			gcpclients.DisksClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.DisksClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           diskClient,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
@@ -288,22 +295,44 @@ func configureGCPComputeClientsets(ctx context.Context, conf *config.Config) err
 				"project", project,
 			)
 
+			// Forwarding Rules clients
 			frClient, err := compute.NewForwardingRulesRESTClient(ctx, opts...)
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create forwarding rules client for %s: %w", namedCreds, err)
 			}
-
-			frClientWrapper := &gcpclients.Client[*compute.ForwardingRulesClient]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           frClient,
-			}
-			gcpclients.ForwardingRulesClientset.Overwrite(project, frClientWrapper)
-
+			gcpclients.ForwardingRulesClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.ForwardingRulesClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           frClient,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "compute",
 				"sub_service", "forwarding-rules",
+				"credentials", namedCreds,
+				"project", project,
+			)
+
+			// Target Pools clients
+			tpClient, err := compute.NewTargetPoolsRESTClient(ctx, opts...)
+			if err != nil {
+				return fmt.Errorf("gcp: cannot create target pools client for %s: %w", namedCreds, err)
+			}
+			gcpclients.TargetPoolsClientset.Overwrite(
+				project,
+				&gcpclients.Client[*compute.TargetPoolsClient]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           tpClient,
+				},
+			)
+			slog.Info(
+				"configured GCP client",
+				"service", "compute",
+				"sub_service", "target-pools",
 				"credentials", namedCreds,
 				"project", project,
 			)
@@ -333,13 +362,14 @@ func configureGCPStorageClientsets(ctx context.Context, conf *config.Config) err
 			if err != nil {
 				return fmt.Errorf("gcp: cannot create gcp storage client for %s: %w", namedCreds, err)
 			}
-			storageClientWrapper := &gcpclients.Client[*storage.Client]{
-				NamedCredentials: namedCreds,
-				ProjectID:        project,
-				Client:           storageClient,
-			}
-			gcpclients.StorageClientset.Overwrite(project, storageClientWrapper)
-
+			gcpclients.StorageClientset.Overwrite(
+				project,
+				&gcpclients.Client[*storage.Client]{
+					NamedCredentials: namedCreds,
+					ProjectID:        project,
+					Client:           storageClient,
+				},
+			)
 			slog.Info(
 				"configured GCP client",
 				"service", "storage",
@@ -465,6 +495,11 @@ func closeGCPClients() {
 	})
 
 	_ = gcpclients.ClusterManagerClientset.Range(func(_ string, client *gcpclients.Client[*container.ClusterManagerClient]) error {
+		client.Client.Close()
+		return nil
+	})
+
+	_ = gcpclients.TargetPoolsClientset.Range(func(_ string, client *gcpclients.Client[*compute.TargetPoolsClient]) error {
 		client.Client.Close()
 		return nil
 	})

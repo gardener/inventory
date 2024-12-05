@@ -131,7 +131,7 @@ gcp:
         - foo
 
     # Compute API clients collect Instances, VPCs, Subnets, Regional & Global
-    # Addresses, Disks and Forwarding Rules.
+    # Addresses, Disks, Forwarding Rules and Target Pools.
     compute:
       use_credentials:
         - foo
