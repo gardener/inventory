@@ -344,6 +344,56 @@ type GKEClusterToProject struct {
 	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_gke_cluster_to_project_key"`
 }
 
+// TargetPool represents a group of backend instances which receive incoming
+// traffic from GCP load balancers.
+type TargetPool struct {
+	bun.BaseModel `bun:"table:gcp_target_pool"`
+	coremodels.Model
+
+	TargetPoolID      uint64   `bun:"target_pool_id,notnull,unique:gcp_target_pool_key"`
+	ProjectID         string   `bun:"project_id,notnull,unique:gcp_target_pool_key"`
+	Name              string   `bun:"name,notnull"`
+	Description       string   `bun:"description,notnull"`
+	BackupPool        string   `bun:"backup_pool,nullzero"`
+	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
+	Region            string   `bun:"region,notnull"`
+	SecurityPolicy    string   `bun:"security_policy,notnull"`
+	SessionAffinity   string   `bun:"session_affinity,notnull"`
+	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
+}
+
+// TargetPoolInstance represents an instance of a target pool.
+type TargetPoolInstance struct {
+	bun.BaseModel `bun:"table:gcp_target_pool_instance"`
+	coremodels.Model
+
+	TargetPoolID uint64      `bun:"target_pool_id,notnull,unique:gcp_target_pool_instance_key"`
+	ProjectID    string      `bun:"project_id,notnull,unique:gcp_target_pool_instance_key"`
+	InstanceName string      `bun:"instance_name,notnull,unique:gcp_target_pool_instance_key"`
+	Project      *Project    `bun:"rel:has-one,join:project_id=project_id"`
+	TargetPool   *TargetPool `bun:"rel:has-one,join:project_id=project_id,join:target_pool_id=target_pool_id"`
+}
+
+// TargetPoolToInstance represents a link table connecting the [TargetPool] with
+// [TargetPoolInstance] models.
+type TargetPoolToInstance struct {
+	bun.BaseModel `bun:"table:l_gcp_target_pool_to_instance"`
+	coremodels.Model
+
+	TargetPoolID uuid.UUID `bun:"target_pool_id,notnull,type:uuid,unique:l_gcp_target_pool_to_instance_key"`
+	InstanceID   uuid.UUID `bun:"instance_id,notnull,type:uuid,unique:l_gcp_target_pool_to_instance_key"`
+}
+
+// TargetPoolToProject represents a link table connecting the [TargetPool] with
+// [Project] models.
+type TargetPoolToProject struct {
+	bun.BaseModel `bun:"table:l_gcp_target_pool_to_project"`
+	coremodels.Model
+
+	TargetPoolID uuid.UUID `bun:"target_pool_id,notnull,type:uuid,unique:l_gcp_target_pool_to_project_key"`
+	ProjectID    uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_target_pool_to_project_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
@@ -357,6 +407,8 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:disk", &Disk{})
 	registry.ModelRegistry.MustRegister("gcp:model:attached_disk", &AttachedDisk{})
 	registry.ModelRegistry.MustRegister("gcp:model:gke_cluster", &GKECluster{})
+	registry.ModelRegistry.MustRegister("gcp:model:target_pool", &TargetPool{})
+	registry.ModelRegistry.MustRegister("gcp:model:target_pool_instance", &TargetPoolInstance{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
@@ -368,4 +420,6 @@ func init() {
 	registry.ModelRegistry.MustRegister("gcp:model:link_forwarding_rule_to_project", &ForwardingRuleToProject{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_disk", &InstanceToDisk{})
 	registry.ModelRegistry.MustRegister("gcp:model:link_gke_cluster_to_project", &GKEClusterToProject{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_target_pool_to_instance", &TargetPoolToInstance{})
+	registry.ModelRegistry.MustRegister("gcp:model:link_target_pool_to_project", &TargetPoolToProject{})
 }
