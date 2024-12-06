@@ -357,7 +357,7 @@ type TargetPool struct {
 	BackupPool        string   `bun:"backup_pool,nullzero"`
 	CreationTimestamp string   `bun:"creation_timestamp,nullzero"`
 	Region            string   `bun:"region,notnull"`
-	SecurityPolicy    string   `bun:"security_policy,notnull"`
+	SecurityPolicy    string   `bun:"security_policy,nullzero"`
 	SessionAffinity   string   `bun:"session_affinity,notnull"`
 	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
