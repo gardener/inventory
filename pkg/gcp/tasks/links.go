@@ -454,3 +454,101 @@ func LinkGKEClusterWithProject(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkTargetPoolWithInstance creates links between the [models.TargetPool] and
+// [models.TargetPoolInstance] models.
+func LinkTargetPoolWithInstance(ctx context.Context, db *bun.DB) error {
+	var items []models.TargetPoolInstance
+	err := db.NewSelect().
+		Model(&items).
+		Relation("TargetPool").
+		Where("target_pool.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.TargetPoolToInstance, 0, len(items))
+	for _, item := range items {
+		link := models.TargetPoolToInstance{
+			TargetPoolID: item.TargetPool.ID,
+			InstanceID:   item.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (target_pool_id, instance_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gcp target pool with instance", "count", count)
+
+	return nil
+}
+
+// LinkTargetPoolWithProject creates links between the [models.TargetPool] and
+// [models.Project] models.
+func LinkTargetPoolWithProject(ctx context.Context, db *bun.DB) error {
+	var items []models.TargetPool
+	err := db.NewSelect().
+		Model(&items).
+		Relation("Project").
+		Where("project.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.TargetPoolToProject, 0, len(items))
+	for _, item := range items {
+		link := models.TargetPoolToProject{
+			TargetPoolID: item.ID,
+			ProjectID:    item.Project.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (target_pool_id, project_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gcp target pool with project", "count", count)
+
+	return nil
+}
