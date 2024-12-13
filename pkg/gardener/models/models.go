@@ -85,6 +85,8 @@ type Shoot struct {
 	Region            string     `bun:"region,nullzero"`
 	KubernetesVersion string     `bun:"k8s_version,nullzero"`
 	CreationTimestamp time.Time  `bun:"creation_timestamp,nullzero"`
+	WorkerGroups      []string   `bun:"worker_groups,array,nullzero"`
+	WorkerPrefixes    []string   `bun:"worker_prefixes,array,nullzero"`
 	Seed              *Seed      `bun:"rel:has-one,join:seed_name=name"`
 	Project           *Project   `bun:"rel:has-one,join:project_name=name"`
 	Machines          []*Machine `bun:"rel:has-many,join:technical_id=namespace"`
