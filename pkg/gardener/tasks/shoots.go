@@ -80,6 +80,12 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 			return err
 		}
 
+		workerGroups := make([]string, 0)
+		workerPrefixes := make([]string, 0)
+		for _, group := range s.Spec.Provider.Workers {
+			workerGroups = append(workerGroups, group.Name)
+			workerPrefixes = append(workerPrefixes, fmt.Sprintf("%s-%s", s.Status.TechnicalID, group.Name))
+		}
 		item := models.Shoot{
 			Name:              s.Name,
 			TechnicalId:       s.Status.TechnicalID,
@@ -94,6 +100,8 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 			Region:            s.Spec.Region,
 			KubernetesVersion: s.Spec.Kubernetes.Version,
 			CreationTimestamp: s.CreationTimestamp.Time,
+			WorkerGroups:      workerGroups,
+			WorkerPrefixes:    workerPrefixes,
 		}
 		shoots = append(shoots, item)
 		return nil
@@ -122,6 +130,8 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 		Set("region = EXCLUDED.region").
 		Set("k8s_version = EXCLUDED.k8s_version").
 		Set("creation_timestamp = EXCLUDED.creation_timestamp").
+		Set("worker_groups = EXCLUDED.worker_groups").
+		Set("worker_prefixes = EXCLUDED.worker_prefixes").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
