@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
 	"github.com/gardener/inventory/pkg/core/registry"
+	gardenerutils "github.com/gardener/inventory/pkg/gardener/utils"
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
@@ -174,10 +175,18 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 
 			// Target Pool Instance
 			for _, tpi := range tp.GetInstances() {
+				instanceName := gcputils.ResourceNameFromURL(tpi)
+				var inferredShoot string
+				shoot, err := gardenerutils.InferShootFromInstanceName(ctx, instanceName)
+				if err == nil {
+					inferredShoot = shoot.TechnicalId
+				}
+
 				item := models.TargetPoolInstance{
-					TargetPoolID: tp.GetId(),
-					ProjectID:    payload.ProjectID,
-					InstanceName: gcputils.ResourceNameFromURL(tpi),
+					TargetPoolID:          tp.GetId(),
+					ProjectID:             payload.ProjectID,
+					InstanceName:          instanceName,
+					InferredGardenerShoot: inferredShoot,
 				}
 				targetPoolInstances = append(targetPoolInstances, item)
 			}
@@ -226,6 +235,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 	out, err = db.DB.NewInsert().
 		Model(&targetPoolInstances).
 		On("CONFLICT (target_pool_id, project_id, instance_name) DO UPDATE").
+		Set("inferred_g_shoot = EXCLUDED.inferred_g_shoot").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
