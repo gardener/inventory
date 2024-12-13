@@ -367,11 +367,12 @@ type TargetPoolInstance struct {
 	bun.BaseModel `bun:"table:gcp_target_pool_instance"`
 	coremodels.Model
 
-	TargetPoolID uint64      `bun:"target_pool_id,notnull,unique:gcp_target_pool_instance_key"`
-	ProjectID    string      `bun:"project_id,notnull,unique:gcp_target_pool_instance_key"`
-	InstanceName string      `bun:"instance_name,notnull,unique:gcp_target_pool_instance_key"`
-	Project      *Project    `bun:"rel:has-one,join:project_id=project_id"`
-	TargetPool   *TargetPool `bun:"rel:has-one,join:project_id=project_id,join:target_pool_id=target_pool_id"`
+	TargetPoolID          uint64      `bun:"target_pool_id,notnull,unique:gcp_target_pool_instance_key"`
+	ProjectID             string      `bun:"project_id,notnull,unique:gcp_target_pool_instance_key"`
+	InstanceName          string      `bun:"instance_name,notnull,unique:gcp_target_pool_instance_key"`
+	InferredGardenerShoot string      `bun:"inferred_g_shoot,nullzero"`
+	Project               *Project    `bun:"rel:has-one,join:project_id=project_id"`
+	TargetPool            *TargetPool `bun:"rel:has-one,join:project_id=project_id,join:target_pool_id=target_pool_id"`
 }
 
 // TargetPoolToInstance represents a link table connecting the [TargetPool] with
