@@ -90,8 +90,8 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 h1:VaRN3TlFdd6KxX1x3ILT5ynH6HvK
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1/go.mod h1:FbtygfRFze9usAadmnGJNc8KsP346kEe+y2/oyhGAGc=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.25 h1:r67ps7oHCYnflpgDy2LZU0MAQtQbYIOqNNnqGO6xQkE=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.25/go.mod h1:GrGY+Q4fIokYLtjCVB/aFfCVL6hhGUFl8inD18fDalE=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.196.0 h1:ZBtoihAqfT+5b1FwGHOubq8k10KwaIyKZd2/CRTucAU=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.196.0/go.mod h1:00zqVNJFK6UASrTnuvjJHJuaqUdkVz5tW8Ip+VhzuNg=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.197.0 h1:Bo20e0LV3Qbkr7yZVGuOxvWbf9Vf3nqss5WyerHr6Ic=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.197.0/go.mod h1:00zqVNJFK6UASrTnuvjJHJuaqUdkVz5tW8Ip+VhzuNg=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.6 h1:uQFPQNvc9hIaF7SyHQyg2vRtTcWONaa1LUUy+8LEzT8=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.6/go.mod h1:KkaWcwL6GJtS/TNn1+fVJPAR+6G7Bs7kEm8E3MlgbhQ=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.1 h1:L9Wt9zgtoYKIlaeFTy+EztGjL4oaXBBGtVXA+jaeYko=
