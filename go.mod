@@ -3,7 +3,7 @@ module github.com/gardener/inventory
 go 1.23.0
 
 require (
-	cloud.google.com/go/auth v0.12.1
+	cloud.google.com/go/auth v0.13.0
 	cloud.google.com/go/compute v1.31.0
 	cloud.google.com/go/container v1.42.0
 	cloud.google.com/go/resourcemanager v1.10.2
@@ -40,7 +40,7 @@ require (
 	github.com/uptrace/bun/driver/pgdriver v1.2.6
 	github.com/uptrace/bun/extra/bundebug v1.2.6
 	github.com/urfave/cli/v2 v2.27.5
-	google.golang.org/api v0.211.0
+	google.golang.org/api v0.212.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.31.2
 	k8s.io/apimachinery v0.31.3
@@ -52,7 +52,7 @@ require (
 	cel.dev/expr v0.16.1 // indirect
 	cloud.google.com/go v0.116.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/longrunning v0.6.2 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
