@@ -61,6 +61,8 @@ type Instance struct {
 	SourceMachineImage   string   `bun:"source_machine_image,notnull"`
 	Status               string   `bun:"status,notnull"`
 	StatusMessage        string   `bun:"status_message,notnull"`
+	GKEClusterName       string   `bun:"gke_cluster_name,nullzero"`
+	GKEPoolName          string   `bun:"gke_pool_name,nullzero"`
 	Project              *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
