@@ -26,6 +26,12 @@ import (
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
+const (
+	// Labels which GCP assigns on nodes which are members of a GKE cluster
+	gkeClusterNameLabel     = "goog-k8s-cluster-name"
+	gkeClusterPoolNameLabel = "goog-k8s-node-pool-name"
+)
+
 // TaskCollectInstances is the name of the task for collecting GCP Instances
 const TaskCollectInstances = "gcp:task:collect-instances"
 
@@ -169,6 +175,9 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 			}
 
 			// Collect instance
+			labels := inst.GetLabels()
+			gkeClusterName := labels[gkeClusterNameLabel]
+			gkeClusterPoolName := labels[gkeClusterPoolNameLabel]
 			instance := models.Instance{
 				Name:                 inst.GetName(),
 				Hostname:             inst.GetHostname(),
@@ -189,6 +198,8 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 				SourceMachineImage:   sourceMachineImage,
 				Status:               inst.GetStatus(),
 				StatusMessage:        inst.GetStatusMessage(),
+				GKEClusterName:       gkeClusterName,
+				GKEPoolName:          gkeClusterPoolName,
 			}
 			instances = append(instances, instance)
 
@@ -236,6 +247,8 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		Set("source_machine_image = EXCLUDED.source_machine_image").
 		Set("status = EXCLUDED.status").
 		Set("status_message = EXCLUDED.status_message").
+		Set("gke_cluster_name = EXCLUDED.gke_cluster_name").
+		Set("gke_pool_name = EXCLUDED.gke_pool_name").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
