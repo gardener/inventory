@@ -555,7 +555,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n        COUNT(i.name) AS total\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nWHERE i.state = 'running' AND m.name IS NULL AND account_id IN ($aws_account);",
+              "rawSql": "SELECT COUNT(i.id) AS total FROM aws_orphan_instance AS i\nWHERE i.account_id IN ($aws_account);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -787,7 +787,31 @@
                 "properties": [
                   {
                     "id": "custom.width",
-                    "value": 343
+                    "value": 567
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "vpc_name"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 314
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "name"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 173
                   }
                 ]
               }
@@ -829,7 +853,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n        i.name AS instance_name,\n        i.instance_id AS instance_id,\n        i.instance_type AS type,\n        i.state AS state,\n        i.account_id AS account_id,\n\n        v.name AS vpc_name,\n        v.vpc_id AS vpc_id,\n        v.region_name AS region,\n\n        s.name AS shoot,\n        s.project_name AS project\nFROM aws_instance AS i\nLEFT JOIN g_machine AS m ON i.name = m.name\nLEFT JOIN aws_vpc AS v ON i.vpc_id = v.vpc_id\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE i.state = 'running' AND m.name IS NULL AND i.account_id IN ($aws_account);",
+              "rawSql": "SELECT i.*\nFROM aws_orphan_instance AS i \nWHERE i.account_id IN ($aws_account);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -1090,8 +1114,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1180,8 +1203,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1265,7 +1287,7 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1273,351 +1295,350 @@
         "y": 15
       },
       "id": 15,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 5,
+            "x": 0,
+            "y": 16
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT\n        COUNT(v.name) AS total\nFROM aws_orphan_vpc AS v\nWHERE v.account_id IN ($aws_account);\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Number of Leaked AWS VPCs",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "description": "Subnets which are part of a leaked VPC",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 5,
+            "x": 5,
+            "y": 16
+          },
+          "id": 16,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT\n        COUNT(*) AS total\nFROM aws_orphan_subnet AS s\nWHERE s.account_id IN ($aws_account);\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Number of Leaked AWS Subnets",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 24,
+            "x": 0,
+            "y": 24
+          },
+          "id": 3,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": true,
+              "enablePagination": true,
+              "fields": "",
+              "reducer": [
+                "count"
+              ],
+              "show": true
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT\n        v.*\nFROM aws_vpc AS v\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE s.technical_id is NULL AND account_id IN ($aws_account);\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Leaked AWS VPCs",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "description": "Subnets which belong to VPCs that have been identified as leaked",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 24,
+            "x": 0,
+            "y": 35
+          },
+          "id": 17,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": true,
+              "enablePagination": true,
+              "fields": "",
+              "reducer": [
+                "count"
+              ],
+              "show": true
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT\n        s.*\nFROM aws_subnet AS s\nINNER JOIN aws_vpc AS v ON s.vpc_id = v.vpc_id AND s.account_id = v.account_id\nLEFT JOIN g_shoot AS gs ON v.name = gs.technical_id\nWHERE gs.technical_id IS NULL AND s.account_id IN ($aws_account);\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Leaked AWS Subnets",
+          "type": "table"
+        }
+      ],
       "title": "VPCs & Subnets",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 0,
-        "y": 16
-      },
-      "id": 4,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(v.name) AS total\nFROM aws_orphan_vpc AS v\nWHERE v.account_id IN ($aws_account);\n",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Number of Leaked AWS VPCs",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "description": "Subnets which are part of a leaked VPC",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 5,
-        "y": 16
-      },
-      "id": 16,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(*) AS total\nFROM aws_orphan_subnet AS s\nWHERE s.account_id IN ($aws_account);\n",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Number of Leaked AWS Subnets",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": true
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 24,
-        "x": 0,
-        "y": 24
-      },
-      "id": 3,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": true,
-          "enablePagination": true,
-          "fields": "",
-          "reducer": [
-            "count"
-          ],
-          "show": true
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n        v.*\nFROM aws_vpc AS v\nLEFT JOIN g_shoot AS s ON v.name = s.technical_id\nWHERE s.technical_id is NULL AND account_id IN ($aws_account);\n",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Leaked AWS VPCs",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "description": "Subnets which belong to VPCs that have been identified as leaked",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": true
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 24,
-        "x": 0,
-        "y": 35
-      },
-      "id": 17,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": true,
-          "enablePagination": true,
-          "fields": "",
-          "reducer": [
-            "count"
-          ],
-          "show": true
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n        s.*\nFROM aws_subnet AS s\nINNER JOIN aws_vpc AS v ON s.vpc_id = v.vpc_id AND s.account_id = v.account_id\nLEFT JOIN g_shoot AS gs ON v.name = gs.technical_id\nWHERE gs.technical_id IS NULL AND s.account_id IN ($aws_account);\n",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Leaked AWS Subnets",
-      "type": "table"
     }
   ],
   "schemaVersion": 39,
@@ -1660,6 +1681,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked AWS Resources",
   "uid": "ddod4l1vde680a",
-  "version": 10,
+  "version": 12,
   "weekStart": ""
 }

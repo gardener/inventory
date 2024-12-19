@@ -22,7 +22,7 @@
   "links": [],
   "panels": [
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -30,361 +30,373 @@
         "y": 0
       },
       "id": 11,
-      "panels": [
-        {
-          "datasource": {
-            "default": true,
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 7,
-            "w": 5,
-            "x": 0,
-            "y": 1
-          },
-          "id": 1,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "percentChangeColorMode": "standard",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showPercentChange": false,
-            "textMode": "auto",
-            "wideLayout": true
-          },
-          "pluginVersion": "11.0.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "grafana-postgresql-datasource",
-                "uid": "ds_gardener_inventory"
-              },
-              "editorMode": "code",
-              "format": "table",
-              "rawQuery": true,
-              "rawSql": "SELECT\n        COUNT(vm.name) AS total\nFROM az_orphan_vm AS vm\nINNER JOIN az_subscription AS s ON vm.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name) AND vm.power_state = 'running'",
-              "refId": "A",
-              "sql": {
-                "columns": [
-                  {
-                    "parameters": [],
-                    "type": "function"
-                  }
-                ],
-                "groupBy": [
-                  {
-                    "property": {
-                      "type": "string"
-                    },
-                    "type": "groupBy"
-                  }
-                ],
-                "limit": 50
-              }
-            }
-          ],
-          "title": "Number of leaked Virtual Machines",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 7,
-            "w": 5,
-            "x": 5,
-            "y": 1
-          },
-          "id": 10,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showPercentChange": false,
-            "textMode": "auto",
-            "wideLayout": true
-          },
-          "pluginVersion": "11.0.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "grafana-postgresql-datasource",
-                "uid": "ds_gardener_inventory"
-              },
-              "editorMode": "code",
-              "format": "table",
-              "rawQuery": true,
-              "rawSql": "SELECT count(*) FROM az_unknown_image as i\nINNER JOIN az_subscription as s on s.subscription_id = i.subscription_id\nWHERE s.name in ($az_subscription_name);",
-              "refId": "A",
-              "sql": {
-                "columns": [
-                  {
-                    "parameters": [],
-                    "type": "function"
-                  }
-                ],
-                "groupBy": [
-                  {
-                    "property": {
-                      "type": "string"
-                    },
-                    "type": "groupBy"
-                  }
-                ],
-                "limit": 50
-              }
-            }
-          ],
-          "title": "Number of unknown VM images",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "custom": {
-                "align": "auto",
-                "cellOptions": {
-                  "type": "auto"
-                },
-                "filterable": true,
-                "inspect": true
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 13,
-            "w": 24,
-            "x": 0,
-            "y": 8
-          },
-          "id": 3,
-          "options": {
-            "cellHeight": "md",
-            "footer": {
-              "countRows": true,
-              "enablePagination": true,
-              "fields": "",
-              "reducer": [
-                "count"
-              ],
-              "show": true
-            },
-            "showHeader": true
-          },
-          "pluginVersion": "11.0.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "grafana-postgresql-datasource",
-                "uid": "ds_gardener_inventory"
-              },
-              "editorMode": "code",
-              "format": "table",
-              "rawQuery": true,
-              "rawSql": "SELECT vm.* FROM az_orphan_vm AS vm\nINNER JOIN az_subscription AS s ON vm.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name) AND vm.power_state = 'running'",
-              "refId": "A",
-              "sql": {
-                "columns": [
-                  {
-                    "parameters": [],
-                    "type": "function"
-                  }
-                ],
-                "groupBy": [
-                  {
-                    "property": {
-                      "type": "string"
-                    },
-                    "type": "groupBy"
-                  }
-                ],
-                "limit": 50
-              }
-            }
-          ],
-          "title": "Leaked Virtual Machines",
-          "transparent": true,
-          "type": "table"
-        },
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "custom": {
-                "align": "auto",
-                "cellOptions": {
-                  "type": "auto"
-                },
-                "inspect": false
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 24,
-            "x": 0,
-            "y": 21
-          },
-          "id": 7,
-          "options": {
-            "cellHeight": "sm",
-            "footer": {
-              "countRows": false,
-              "enablePagination": true,
-              "fields": "",
-              "reducer": [
-                "sum"
-              ],
-              "show": false
-            },
-            "showHeader": true
-          },
-          "pluginVersion": "11.0.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "grafana-postgresql-datasource",
-                "uid": "ds_gardener_inventory"
-              },
-              "editorMode": "code",
-              "format": "table",
-              "rawQuery": true,
-              "rawSql": "SELECT \n  i.gallery_image_id as gallery_image_id,\n  s.name as subscription\nFROM az_unknown_image as i\nINNER JOIN az_subscription as s on i.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name);",
-              "refId": "A",
-              "sql": {
-                "columns": [
-                  {
-                    "parameters": [],
-                    "type": "function"
-                  }
-                ],
-                "groupBy": [
-                  {
-                    "property": {
-                      "type": "string"
-                    },
-                    "type": "groupBy"
-                  }
-                ],
-                "limit": 50
-              }
-            }
-          ],
-          "title": "List of Unknown VM images",
-          "type": "table"
-        }
-      ],
+      "panels": [],
       "title": "Virtual Machines",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n        COUNT(vm.name) AS total\nFROM az_orphan_vm AS vm\nINNER JOIN az_subscription AS s ON vm.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Number of leaked Virtual Machines",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 5,
+        "y": 1
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) FROM az_unknown_image as i\nINNER JOIN az_subscription as s on s.subscription_id = i.subscription_id\nWHERE s.name in ($az_subscription_name);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Number of unknown VM images",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 399
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "md",
+        "footer": {
+          "countRows": true,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "count"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT vm.* FROM az_orphan_vm AS vm\nINNER JOIN az_subscription AS s ON vm.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name)",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Leaked Virtual Machines",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "ds_gardener_inventory"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  i.gallery_image_id as gallery_image_id,\n  s.name as subscription\nFROM az_unknown_image as i\nINNER JOIN az_subscription as s on i.subscription_id = s.subscription_id\nWHERE s.name IN ($az_subscription_name);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "List of Unknown VM images",
+      "type": "table"
     },
     {
       "collapsed": true,
@@ -392,7 +404,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 1
+        "y": 29
       },
       "id": 12,
       "panels": [
@@ -413,8 +425,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -500,8 +511,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -595,8 +605,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -687,8 +696,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -778,7 +786,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 30
       },
       "id": 13,
       "panels": [
@@ -798,8 +806,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -891,8 +898,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1002,6 +1008,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked Azure Resources",
   "uid": "be13dwc19i6tcb",
-  "version": 3,
+  "version": 5,
   "weekStart": ""
 }
