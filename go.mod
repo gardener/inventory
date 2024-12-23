@@ -30,7 +30,7 @@ require (
 	github.com/gardener/gardener-extension-provider-gcp v1.38.0
 	github.com/gardener/machine-controller-manager v0.53.1
 	github.com/google/uuid v1.6.0
-	github.com/hibiken/asynq v0.25.0
+	github.com/hibiken/asynq v0.25.1
 	github.com/hibiken/asynq/x v0.0.0-20240506061152-d04888e74845
 	github.com/hibiken/asynqmon v0.7.2
 	github.com/olekukonko/tablewriter v0.0.5
