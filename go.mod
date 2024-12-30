@@ -40,7 +40,7 @@ require (
 	github.com/uptrace/bun/driver/pgdriver v1.2.6
 	github.com/uptrace/bun/extra/bundebug v1.2.6
 	github.com/urfave/cli/v2 v2.27.5
-	google.golang.org/api v0.212.0
+	google.golang.org/api v0.214.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.32.0
 	k8s.io/apimachinery v0.32.0
@@ -154,7 +154,7 @@ require (
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241118233622-e639e219e697 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241206012308-a4fef0638583 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241209162323-e6fa225c2576 // indirect
 	google.golang.org/grpc v1.67.2 // indirect
 	google.golang.org/grpc/stats/opentelemetry v0.0.0-20240907200651-3ffb98b2c93a // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
