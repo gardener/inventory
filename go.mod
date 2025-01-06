@@ -35,9 +35,9 @@ require (
 	github.com/hibiken/asynqmon v0.7.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.20.5
-	github.com/uptrace/bun v1.2.6
+	github.com/uptrace/bun v1.2.8
 	github.com/uptrace/bun/dialect/pgdialect v1.2.6
-	github.com/uptrace/bun/driver/pgdriver v1.2.6
+	github.com/uptrace/bun/driver/pgdriver v1.2.8
 	github.com/uptrace/bun/extra/bundebug v1.2.6
 	github.com/urfave/cli/v2 v2.27.5
 	google.golang.org/api v0.214.0
@@ -148,7 +148,7 @@ require (
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
