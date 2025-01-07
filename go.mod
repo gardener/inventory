@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	cloud.google.com/go/auth v0.13.0
 	cloud.google.com/go/compute v1.31.0
-	cloud.google.com/go/container v1.42.0
+	cloud.google.com/go/container v1.42.1
 	cloud.google.com/go/resourcemanager v1.10.3
 	cloud.google.com/go/storage v1.48.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0

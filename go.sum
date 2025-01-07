@@ -12,8 +12,8 @@ cloud.google.com/go/compute v1.31.0 h1:NtkEQnSesZDeTM5Hq57CSeeRn1LkW/p+ffg9sxGIU
 cloud.google.com/go/compute v1.31.0/go.mod h1:4SCUCDAvOQvMGu4ze3YIJapnY0UQa5+WvJJeYFsQRoo=
 cloud.google.com/go/compute/metadata v0.6.0 h1:A6hENjEsCDtC1k8byVsgwvVcioamEHvZ4j01OwKxG9I=
 cloud.google.com/go/compute/metadata v0.6.0/go.mod h1:FjyFAW1MW0C203CEOMDTu3Dk1FlqW3Rga40jzHL4hfg=
-cloud.google.com/go/container v1.42.0 h1:sH9Hj9SoLeP+uKvLXc/04nWyWDiMo4Q85xfb1Nl5sAg=
-cloud.google.com/go/container v1.42.0/go.mod h1:YL6lDgCUi3frIWNIFU9qrmF7/6K1EYrtspmFTyyqJ+k=
+cloud.google.com/go/container v1.42.1 h1:eaMrgOl6NCk+Blhh29GgUVe3QGo7IiJQlP0w/EwLoV0=
+cloud.google.com/go/container v1.42.1/go.mod h1:5huIxYuOD8Ocuj0KbcyRq9MzB3J1mQObS0KSWHTYceY=
 cloud.google.com/go/iam v1.2.2 h1:ozUSofHUGf/F4tCNy/mu9tHLTaxZFLOUiKzjcgWHGIA=
 cloud.google.com/go/iam v1.2.2/go.mod h1:0Ys8ccaZHdI1dEUilwzqng/6ps2YB6vRsjIe00/+6JY=
 cloud.google.com/go/logging v1.12.0 h1:ex1igYcGFd4S/RZWOCU51StlIEuey5bjqwH9ZYjHibk=
@@ -599,7 +599,6 @@ google.golang.org/grpc v1.27.0/go.mod h1:qbnxyOmOxrQa7FizSgH+ReBfzJrCY1pSN7KXBS8
 google.golang.org/grpc v1.33.2/go.mod h1:JMHMWHQWaTccqQQlmk3MJZS+GWXOdAesneDmEnv2fbc=
 google.golang.org/grpc v1.67.3 h1:OgPcDAFKHnH8X3O4WcO4XUc8GRDeKsKReqbQtiCj7N8=
 google.golang.org/grpc v1.67.3/go.mod h1:YGaHCc6Oap+FzBJTZLBzkGSYt/cvGPFTPxkn7QfSU8s=
-google.golang.org/grpc/stats/opentelemetry v0.0.0-20240907200651-3ffb98b2c93a h1:UIpYSuWdWHSzjwcAFRLjKcPXFZVVLXGEM23W+NWqipw=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=
 google.golang.org/protobuf v0.0.0-20200228230310-ab0ca4ff8a60/go.mod h1:cfTl7dwQJ+fmap5saPgwCLgHXTUD7jkjRqWcaiX5VyM=
