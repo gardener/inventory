@@ -6,6 +6,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -19,12 +20,32 @@ const (
 	// HousekeeperTaskType is the name of the task responsible for cleaning
 	// up stale records from the database.
 	HousekeeperTaskType = "common:task:housekeeper"
+	// DeleteArchivedTaskType is the name of the task responsible for deleting
+	// archived tasks from a task queue
+	DeleteArchivedTaskType = "common:task:delete-archived-tasks"
+	// DeleteCompletedTaskType is the name of the task responsible for deleting
+	// completed tasks from a task queue
+	DeleteCompletedTaskType = "common:task:delete-completed-tasks"
 )
+
+var (
+	inspector asynq.Inspector
+)
+
+func RegisterInspector(i asynq.Inspector) {
+	inspector = i
+}
 
 // HousekeeperPayload represents the payload of the housekeeper task.
 type HousekeeperPayload struct {
 	// Retention provides the retention configuration of objects.
 	Retention []RetentionConfig `yaml:"retention"`
+}
+
+// TasksPayload represents the payload of a task management task.
+type TasksPayload struct {
+	// Name of the queue that holds the tasks.
+	Queue string `yaml:"queue"`
 }
 
 // RetentionConfig represents the retention configuration for a given model.
@@ -88,9 +109,70 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 	return nil
 }
 
+// HandleDeleteArchivedTask deletes earchived tasks.
+func HandleDeleteArchivedTask(ctx context.Context, task *asynq.Task) error {
+    data := task.Payload()
+    var queue string
+
+    if data == nil {
+        queue = "default"
+    } else {
+        var payload TasksPayload
+        if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
+            return asynqutils.SkipRetry(err)
+        }
+
+        queue = payload.Queue
+        if queue == "" {
+            return asynqutils.SkipRetry(errors.New("queue name is empty"))
+        }
+    }
+
+	logger := asynqutils.GetLogger(ctx)
+
+	count, err := inspector.DeleteAllArchivedTasks(queue)
+	if err != nil {
+		logger.Error("failed to delete archived tasks", "queue", queue, "reason", err)
+	}
+
+	logger.Info("deleted archived tasks", "count", count)
+
+	return nil
+}
+
+// HandleDeleteCompletedTask deletes completed tasks.
+func HandleDeleteCompletedTask(ctx context.Context, task *asynq.Task) error {
+    data := task.Payload()
+    var queue string
+
+    if data == nil {
+        queue = "default"
+    } else {
+        var payload TasksPayload
+        if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
+            return asynqutils.SkipRetry(err)
+        }
+
+        queue = payload.Queue
+        if queue == "" {
+            return asynqutils.SkipRetry(errors.New("queue name is empty"))
+        }
+    }
+
+	logger := asynqutils.GetLogger(ctx)
+
+	count, err := inspector.DeleteAllCompletedTasks(queue)
+	if err != nil {
+		logger.Error("failed to delete completed tasks", "queue", queue, "reason", err)
+	}
+
+	logger.Info("deleted completed tasks", "count", count)
+
+	return nil
+}
+
 func init() {
-	registry.TaskRegistry.MustRegister(
-		HousekeeperTaskType,
-		asynq.HandlerFunc(HandleHousekeeperTask),
-	)
+	registry.TaskRegistry.MustRegister(HousekeeperTaskType, asynq.HandlerFunc(HandleHousekeeperTask))
+	registry.TaskRegistry.MustRegister(DeleteArchivedTaskType, asynq.HandlerFunc(HandleDeleteArchivedTask))
+	registry.TaskRegistry.MustRegister(DeleteCompletedTaskType, asynq.HandlerFunc(HandleDeleteCompletedTask))
 }
