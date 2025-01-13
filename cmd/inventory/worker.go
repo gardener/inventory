@@ -19,7 +19,6 @@ import (
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
-	"github.com/gardener/inventory/pkg/common/tasks"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -171,6 +170,10 @@ func NewWorkerCommand() *cli.Command {
 					slog.Info("configuring asynq client")
 					asynqclient.SetClient(client)
 
+					// Initialize async inspector, for queue related tasks
+					slog.Info("configuring asynq inspector")
+					asynqclient.SetInspector(newInspector(conf))
+
 					if err := configureAWSClients(ctx.Context, conf); err != nil {
 						return err
 					}
@@ -198,10 +201,6 @@ func NewWorkerCommand() *cli.Command {
 					// Register our task handlers
 					mux := asynq.NewServeMux()
 					mux.Use(middlewares...)
-
-                    // Register the inspector in the tasks module,
-                    // to be used for task management related tasks.
-                    tasks.RegisterInspector(*newInspector(conf))
 
 					walker := func(name string, handler asynq.Handler) error {
 						slog.Info("registering task", "name", name)

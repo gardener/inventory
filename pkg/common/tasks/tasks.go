@@ -11,6 +11,7 @@ import (
 
 	"github.com/hibiken/asynq"
 
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -28,22 +29,14 @@ const (
 	DeleteCompletedTaskType = "common:task:delete-completed-tasks"
 )
 
-var (
-	inspector asynq.Inspector
-)
-
-func RegisterInspector(i asynq.Inspector) {
-	inspector = i
-}
-
 // HousekeeperPayload represents the payload of the housekeeper task.
 type HousekeeperPayload struct {
 	// Retention provides the retention configuration of objects.
 	Retention []RetentionConfig `yaml:"retention"`
 }
 
-// TasksPayload represents the payload of a task management task.
-type TasksPayload struct {
+// DeleteQueuePayload represents the payload of a task management task.
+type DeleteQueuePayload struct {
 	// Name of the queue that holds the tasks.
 	Queue string `yaml:"queue"`
 }
@@ -109,28 +102,28 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 	return nil
 }
 
-// HandleDeleteArchivedTask deletes earchived tasks.
+// HandleDeleteArchivedTask deletes archived tasks.
 func HandleDeleteArchivedTask(ctx context.Context, task *asynq.Task) error {
-    data := task.Payload()
-    var queue string
+	data := task.Payload()
+	var queue string
 
-    if data == nil {
-        queue = "default"
-    } else {
-        var payload TasksPayload
-        if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
-            return asynqutils.SkipRetry(err)
-        }
+	if data == nil {
+		return asynqutils.SkipRetry(errors.New("queue name is empty"))
+	}
 
-        queue = payload.Queue
-        if queue == "" {
-            return asynqutils.SkipRetry(errors.New("queue name is empty"))
-        }
-    }
+	var payload DeleteQueuePayload
+	if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	queue = payload.Queue
+	if queue == "" {
+		return asynqutils.SkipRetry(errors.New("queue name is empty"))
+	}
 
 	logger := asynqutils.GetLogger(ctx)
 
-	count, err := inspector.DeleteAllArchivedTasks(queue)
+	count, err := asynqclient.Inspector.DeleteAllArchivedTasks(queue)
 	if err != nil {
 		logger.Error("failed to delete archived tasks", "queue", queue, "reason", err)
 	}
@@ -142,26 +135,26 @@ func HandleDeleteArchivedTask(ctx context.Context, task *asynq.Task) error {
 
 // HandleDeleteCompletedTask deletes completed tasks.
 func HandleDeleteCompletedTask(ctx context.Context, task *asynq.Task) error {
-    data := task.Payload()
-    var queue string
+	data := task.Payload()
+	var queue string
 
-    if data == nil {
-        queue = "default"
-    } else {
-        var payload TasksPayload
-        if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
-            return asynqutils.SkipRetry(err)
-        }
+	if data == nil {
+		return asynqutils.SkipRetry(errors.New("no queue specified"))
+	}
 
-        queue = payload.Queue
-        if queue == "" {
-            return asynqutils.SkipRetry(errors.New("queue name is empty"))
-        }
-    }
+	var payload DeleteQueuePayload
+	if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	queue = payload.Queue
+	if queue == "" {
+		return asynqutils.SkipRetry(errors.New("queue name is empty"))
+	}
 
 	logger := asynqutils.GetLogger(ctx)
 
-	count, err := inspector.DeleteAllCompletedTasks(queue)
+	count, err := asynqclient.Inspector.DeleteAllCompletedTasks(queue)
 	if err != nil {
 		logger.Error("failed to delete completed tasks", "queue", queue, "reason", err)
 	}
