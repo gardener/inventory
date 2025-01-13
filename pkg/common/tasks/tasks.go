@@ -104,28 +104,20 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 
 // HandleDeleteArchivedTask deletes archived tasks.
 func HandleDeleteArchivedTask(ctx context.Context, task *asynq.Task) error {
-	data := task.Payload()
-	var queue string
-
-	if data == nil {
-		return asynqutils.SkipRetry(errors.New("queue name is empty"))
-	}
-
 	var payload DeleteQueuePayload
 	if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
 		return asynqutils.SkipRetry(err)
 	}
 
-	queue = payload.Queue
-	if queue == "" {
+	if payload.Queue == "" {
 		return asynqutils.SkipRetry(errors.New("queue name is empty"))
 	}
 
 	logger := asynqutils.GetLogger(ctx)
 
-	count, err := asynqclient.Inspector.DeleteAllArchivedTasks(queue)
+	count, err := asynqclient.Inspector.DeleteAllArchivedTasks(payload.Queue)
 	if err != nil {
-		logger.Error("failed to delete archived tasks", "queue", queue, "reason", err)
+		logger.Error("failed to delete archived tasks", "queue", payload.Queue, "reason", err)
 	}
 
 	logger.Info("deleted archived tasks", "count", count)
@@ -135,28 +127,20 @@ func HandleDeleteArchivedTask(ctx context.Context, task *asynq.Task) error {
 
 // HandleDeleteCompletedTask deletes completed tasks.
 func HandleDeleteCompletedTask(ctx context.Context, task *asynq.Task) error {
-	data := task.Payload()
-	var queue string
-
-	if data == nil {
-		return asynqutils.SkipRetry(errors.New("no queue specified"))
-	}
-
 	var payload DeleteQueuePayload
 	if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
 		return asynqutils.SkipRetry(err)
 	}
 
-	queue = payload.Queue
-	if queue == "" {
+	if payload.Queue == "" {
 		return asynqutils.SkipRetry(errors.New("queue name is empty"))
 	}
 
 	logger := asynqutils.GetLogger(ctx)
 
-	count, err := asynqclient.Inspector.DeleteAllCompletedTasks(queue)
+	count, err := asynqclient.Inspector.DeleteAllCompletedTasks(payload.Queue)
 	if err != nil {
-		logger.Error("failed to delete completed tasks", "queue", queue, "reason", err)
+		logger.Error("failed to delete completed tasks", "queue", payload.Queue, "reason", err)
 	}
 
 	logger.Info("deleted completed tasks", "count", count)
