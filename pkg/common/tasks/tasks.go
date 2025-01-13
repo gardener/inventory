@@ -32,13 +32,13 @@ const (
 // HousekeeperPayload represents the payload of the housekeeper task.
 type HousekeeperPayload struct {
 	// Retention provides the retention configuration of objects.
-	Retention []RetentionConfig `yaml:"retention"`
+	Retention []RetentionConfig `yaml:"retention" json:"retention"`
 }
 
 // DeleteQueuePayload represents the payload of a task management task.
 type DeleteQueuePayload struct {
 	// Name of the queue that holds the tasks.
-	Queue string `yaml:"queue"`
+	Queue string `yaml:"queue" json:"queue"`
 }
 
 // RetentionConfig represents the retention configuration for a given model.
