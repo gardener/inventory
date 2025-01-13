@@ -145,6 +145,8 @@ func NewWorkerCommand() *cli.Command {
 					client := newAsynqClient(conf)
 					defer client.Close()
 					server := newServer(conf)
+					inspector := newInspector(conf)
+					defer inspector.Close()
 
 					// Gardener client configs
 					slog.Info("configuring gardener clients")
@@ -172,7 +174,7 @@ func NewWorkerCommand() *cli.Command {
 
 					// Initialize async inspector, for queue related tasks
 					slog.Info("configuring asynq inspector")
-					asynqclient.SetInspector(newInspector(conf))
+					asynqclient.SetInspector(inspector)
 
 					if err := configureAWSClients(ctx.Context, conf); err != nil {
 						return err
