@@ -12,11 +12,8 @@ import (
 
 	"github.com/gardener/inventory/pkg/azure/constants"
 	"github.com/gardener/inventory/pkg/azure/utils"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
-
-func ptr[T any](t T) *T {
-	return &t
-}
 
 func TestGetPowerState(t *testing.T) {
 	testCases := []struct {
@@ -28,7 +25,7 @@ func TestGetPowerState(t *testing.T) {
 			desc: "power state prefix exists",
 			input: []*armcompute.InstanceViewStatus{
 				{
-					Code: ptr("PowerState/on"),
+					Code: ptr.To("PowerState/on"),
 				},
 			},
 			wanted: "on",
@@ -42,9 +39,9 @@ func TestGetPowerState(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			output := utils.GetPowerState(tc.input)
-			if strings.Compare(output, tc.wanted) != 0 {
-				t.Fatalf("got %s wanted %s", output, tc.wanted)
+			got := utils.GetPowerState(tc.input)
+			if strings.Compare(got, tc.wanted) != 0 {
+				t.Fatalf("got %s wanted %s", got, tc.wanted)
 			}
 		})
 	}
@@ -60,39 +57,32 @@ func TestMaybeSkipRetry(t *testing.T) {
 	}
 
 	testCases := []struct {
-		desc          string
-		input         error
-		isWantedError func(error) bool
+		desc       string
+		err        error
+		shouldSkip bool
 	}{
 		{
-			desc:  "non-Azure error is not skipped",
-			input: nonAzureError,
-			isWantedError: func(err error) bool {
-				return !errors.Is(err, asynq.SkipRetry)
-			},
+			desc:       "non-Azure error is not skipped",
+			err:        nonAzureError,
+			shouldSkip: false,
 		},
 		{
-			desc:  "Azure error 'Not found' is skipped",
-			input: &azErrorStatusNotFound,
-			isWantedError: func(err error) bool {
-				return errors.Is(err, asynq.SkipRetry)
-			},
+			desc:       "Azure error 'Not found' is skipped",
+			err:        &azErrorStatusNotFound,
+			shouldSkip: true,
 		},
 		{
-			desc:  "Azure error 'Forbidden' is not skipped",
-			input: &azErrorStatusForbidden,
-			isWantedError: func(err error) bool {
-				return !errors.Is(err, asynq.SkipRetry)
-			},
+			desc:       "Azure error 'Forbidden' is not skipped",
+			err:        &azErrorStatusForbidden,
+			shouldSkip: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			outError := utils.MaybeSkipRetry(tc.input)
-			if !tc.isWantedError(outError) {
-				// should error message be more explicit?
-				t.Fatalf("error incorrectly wrapped")
+			gotError := utils.MaybeSkipRetry(tc.err)
+			if errors.Is(gotError, asynq.SkipRetry) != tc.shouldSkip {
+				t.Fatalf("got %v wanted %v", gotError, tc.shouldSkip)
 			}
 		})
 	}

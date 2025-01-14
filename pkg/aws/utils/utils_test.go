@@ -7,11 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
 	"github.com/gardener/inventory/pkg/aws/utils"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
-
-func ptr[T any](t T) *T {
-	return &t
-}
 
 func TestFetchTag(t *testing.T) {
 	testCases := []struct {
@@ -23,9 +20,9 @@ func TestFetchTag(t *testing.T) {
 		{
 			desc: "fetch existing tag",
 			tags: []types.Tag{
-				{Key: ptr("tag1"), Value: ptr("value1")},
-				{Key: ptr("tag2"), Value: ptr("value2")},
-				{Key: ptr("tag3"), Value: ptr("value3")},
+				{Key: ptr.To("tag1"), Value: ptr.To("value1")},
+				{Key: ptr.To("tag2"), Value: ptr.To("value2")},
+				{Key: ptr.To("tag3"), Value: ptr.To("value3")},
 			},
 			key:    "tag1",
 			wanted: "value1",
@@ -33,8 +30,8 @@ func TestFetchTag(t *testing.T) {
 		{
 			desc: "fetch missing tag",
 			tags: []types.Tag{
-				{Key: ptr("tag2"), Value: ptr("value2")},
-				{Key: ptr("tag3"), Value: ptr("value3")},
+				{Key: ptr.To("tag2"), Value: ptr.To("value2")},
+				{Key: ptr.To("tag3"), Value: ptr.To("value3")},
 			},
 			key:    "tag1",
 			wanted: "",
@@ -43,7 +40,7 @@ func TestFetchTag(t *testing.T) {
 			desc: "handle tags with nil key",
 			tags: []types.Tag{
 				{Key: nil, Value: nil},
-				{Key: ptr("tag1"), Value: ptr("value1")},
+				{Key: ptr.To("tag1"), Value: ptr.To("value1")},
 			},
 			key:    "tag1",
 			wanted: "value1",
