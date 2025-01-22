@@ -45,6 +45,8 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener projects")
 	projects := make([]models.Project, 0)
+	members := make([]models.ProjectMember, 0)
+
 	p := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
 			return client.CoreV1beta1().Projects().List(ctx, opts)
@@ -56,7 +58,8 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
-		item := models.Project{
+		// Collect projects
+		projectItem := models.Project{
 			Name:              p.Name,
 			Namespace:         stringutils.StringFromPointer(p.Spec.Namespace),
 			Status:            string(p.Status.Phase),
@@ -64,7 +67,19 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 			Owner:             p.Spec.Owner.Name,
 			CreationTimestamp: p.CreationTimestamp.Time,
 		}
-		projects = append(projects, item)
+		projects = append(projects, projectItem)
+
+		// Collect project members
+		for _, member := range p.Spec.Members {
+			memberItem := models.ProjectMember{
+				Name:        member.Name,
+				Kind:        member.Kind,
+				Role:        member.Role,
+				ProjectName: p.Name,
+			}
+			members = append(members, memberItem)
+		}
+
 		return nil
 	})
 
@@ -72,6 +87,7 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list projects: %w", err)
 	}
 
+	// Persist projects
 	if len(projects) == 0 {
 		return nil
 	}
@@ -89,10 +105,6 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		Exec(ctx)
 
 	if err != nil {
-		logger.Error(
-			"could not insert gardener projects into db",
-			"reason", err,
-		)
 		return err
 	}
 
@@ -102,6 +114,31 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	logger.Info("populated gardener projects", "count", count)
+
+	// Persist project members
+	if len(members) == 0 {
+		return nil
+	}
+
+	out, err = db.DB.NewInsert().
+		Model(&members).
+		On("CONFLICT (name, project_name) DO UPDATE").
+		Set("kind = EXCLUDED.kind").
+		Set("role = EXCLUDED.role").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err = out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger.Info("populated gardener project members", "count", count)
 
 	return nil
 }
