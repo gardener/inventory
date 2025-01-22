@@ -46,13 +46,26 @@ type Project struct {
 	bun.BaseModel `bun:"table:g_project"`
 	coremodels.Model
 
-	Name              string    `bun:"name,notnull,unique"`
-	Namespace         string    `bun:"namespace,notnull"`
-	Status            string    `bun:"status,notnull"`
-	Purpose           string    `bun:"purpose,notnull"`
-	Owner             string    `bun:"owner,notnull"`
-	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
-	Shoots            []*Shoot  `bun:"rel:has-many,join:name=project_name"`
+	Name              string           `bun:"name,notnull,unique"`
+	Namespace         string           `bun:"namespace,notnull"`
+	Status            string           `bun:"status,notnull"`
+	Purpose           string           `bun:"purpose,notnull"`
+	Owner             string           `bun:"owner,notnull"`
+	CreationTimestamp time.Time        `bun:"creation_timestamp,nullzero"`
+	Shoots            []*Shoot         `bun:"rel:has-many,join:name=project_name"`
+	Members           []*ProjectMember `bun:"rel:has-many,join:name=project_name"`
+}
+
+// ProjectMember represents a member of a Gardener Project
+type ProjectMember struct {
+	bun.BaseModel `bun:"table:g_project_member"`
+	coremodels.Model
+
+	Name        string   `bun:"name,notnull,unique:g_project_member_key"`
+	ProjectName string   `bun:"project_name,notnull,unique:g_project_member_key"`
+	Kind        string   `bun:"kind,notnull"`
+	Role        string   `bun:"role,notnull"`
+	Project     *Project `bun:"rel:has-one,join:project_name=name"`
 }
 
 // Seed represents a Gardener seed
@@ -232,6 +245,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile_gcp_image", &CloudProfileGCPImage{})
 	registry.ModelRegistry.MustRegister("g:model:cloud_profile_azure_image", &CloudProfileAzureImage{})
 	registry.ModelRegistry.MustRegister("g:model:persistent_volume", &PersistentVolume{})
+	registry.ModelRegistry.MustRegister("g:model:project_member", &ProjectMember{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("g:model:link_shoot_to_project", &ShootToProject{})
