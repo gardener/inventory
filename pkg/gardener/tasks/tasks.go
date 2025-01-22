@@ -51,6 +51,7 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 		LinkAWSImageWithCloudProfile,
 		LinkGCPImageWithCloudProfile,
 		LinkAzureImageWithCloudProfile,
+		LinkProjectWithMember,
 	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
