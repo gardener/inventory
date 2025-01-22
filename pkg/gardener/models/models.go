@@ -68,6 +68,16 @@ type ProjectMember struct {
 	Project     *Project `bun:"rel:has-one,join:project_name=name"`
 }
 
+// ProjectToMember represents a link table connecting the [Project] and
+// [ProjectMember] models.
+type ProjectToMember struct {
+	bun.BaseModel `bun:"table:l_g_project_to_member"`
+	coremodels.Model
+
+	ProjectID uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_g_project_to_member_key"`
+	MemberID  uuid.UUID `bun:"member_id,notnull,type:uuid,unique:l_g_project_to_member_key"`
+}
+
 // Seed represents a Gardener seed
 type Seed struct {
 	bun.BaseModel `bun:"table:g_seed"`
@@ -254,4 +264,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("g:model:link_aws_image_to_cloud_profile", &AWSImageToCloudProfile{})
 	registry.ModelRegistry.MustRegister("g:model:link_gcp_image_to_cloud_profile", &GCPImageToCloudProfile{})
 	registry.ModelRegistry.MustRegister("g:model:link_azure_image_to_cloud_profile", &AzureImageToCloudProfile{})
+	registry.ModelRegistry.MustRegister("g:model:link_project_to_member", &ProjectToMember{})
 }
