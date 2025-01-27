@@ -455,6 +455,9 @@ type PeriodicJob struct {
 
 // GardenerConfig represents the Gardener specific configuration.
 type GardenerConfig struct {
+	// UserAgent is the User-Agent header to configure for the API client.
+	UserAgent string `yaml:"user_agent"`
+
 	// Endpoint specifies the endpoint of the Gardener APIs.
 	Endpoint string `yaml:"endpoint"`
 

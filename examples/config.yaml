@@ -481,7 +481,10 @@ scheduler:
 # Gardener specific configuration
 gardener:
   # Specifies the endpoint of the Gardener APIs.
-  endpoint: http://localhostst:6443/
+  endpoint: http://localhost:6443/
+
+  # User-Agent to set for the API clients
+  user_agent: gardener-inventory/0.1.0
 
   # Authentication mechanism to use when communicating with the Gardener APIs.
   # Supported mechanisms are `in_cluster', `token_path' and `kubeconfig'.
