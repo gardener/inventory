@@ -81,8 +81,8 @@ type Config struct {
 	// Scheduler represents the scheduler configuration.
 	Scheduler SchedulerConfig `yaml:"scheduler"`
 
-	// VirtualGarden represents the virtual garden configuration.
-	VirtualGarden VirtualGardenConfig `yaml:"virtual_garden"`
+	// Gardener represents the Gardener specific configuration.
+	Gardener GardenerConfig `yaml:"gardener"`
 
 	// Dashboard represents the configuration for the Dashboard
 	// service.
@@ -441,17 +441,52 @@ type PeriodicJob struct {
 	Payload string `yaml:"payload"`
 }
 
-// VirtualGardenConfig represents the Virtual Garden configuration.
-type VirtualGardenConfig struct {
-	// TokenPath is the path to the Inventory SA token, used for requesting the Virtual Garden
+// GardenerConfig represents the Gardener specific configuration.
+type GardenerConfig struct {
+	// Endpoint specifies the endpoint of the Gardener APIs.
+	Endpoint string `yaml:"endpoint"`
+
+	// Authentication specifies the mechanism for authentication when
+	// interfacing with the Gardener APIs. The currently supported
+	// authentication mechanisms are `in_cluster', `token' and `kubeconfig'.
+	//
+	// When using `in_cluster' the API client will be initialized using
+	// using Bearer tokens mounted into pods from well-known location.
+	//
+	// With `token' mechanism the API client will be initialized using a
+	// Bearer token provided from a specified path.
+	//
+	// With `kubeconfig' authentication mechanism the API client will be
+	// initialized using a specified kubeconfig file.
+	//
+	// For more details please refer to [1].
+	//
+	// [1]: https://kubernetes.io/docs/reference/access-authn-authz/authentication/
+	Authentication string `yaml:"authentication"`
+
+	// TokenPath represents a path to a token file, which will be used to
+	// authenticate against the Gardener APIs. The token should be signed by
+	// an Identity Provider which is trusted by Gardener.
 	TokenPath string `yaml:"token_path"`
-	// KubeConfig is the path to the kubeconfig file of the Virtual Garden
+
+	// Kubeconfig represents a path to a kubeconfig file, which will be used
+	// to authenticate against Gardener APIs.
 	Kubeconfig string `yaml:"kubeconfig"`
-	// Environment is the environment of the running Garden
-	Environment string `yaml:"environment"`
+
 	// ExcludedSeeds is a list of seed cluster names, from which collection
 	// will be skipped.
 	ExcludedSeeds []string `yaml:"excluded_seeds"`
+
+	// SoilClusters provides a mapping between Gardener seed clusters and
+	// soils.
+	SoilClusters GardenerSoilClustersConfig `yaml:"soil_clusters"`
+}
+
+// GardenerSoilClustersConfig provides a mapping between Gardener seed clusters
+// and soils.
+type GardenerSoilClustersConfig struct {
+	// GCP specifies the name of the GCP regional soil cluster.
+	GCP string `yaml:"gcp"`
 }
 
 // DashboardConfig provides the Dashboard service configuration.
