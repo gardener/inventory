@@ -5,9 +5,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strings"
 
 	"k8s.io/client-go/rest"
@@ -15,7 +17,39 @@ import (
 
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
+	"github.com/gardener/inventory/pkg/version"
 )
+
+// errNoGardenerEndpoint is an error which is returned when no API endpoint has
+// been specified.
+var errNoGardenerEndpoint = errors.New("no API endpoint specified")
+
+// validateGardenerConfig validates the Gardener configuration
+func validateGardenerConfig(conf *config.Config) error {
+	if conf.Gardener.UserAgent == "" {
+		conf.Gardener.UserAgent = fmt.Sprintf("gardener-inventory/%s", version.Version)
+	}
+
+	if conf.Gardener.Endpoint == "" {
+		return fmt.Errorf("gardener: %w", errNoGardenerEndpoint)
+	}
+
+	supportedAuthnMethods := []string{
+		config.GardenerAuthenticationMethodInCluster,
+		config.GardenerAuthenticationMethodToken,
+		config.GardenerAuthenticationMethodKubeconfig,
+	}
+
+	if conf.Gardener.Authentication == "" {
+		return fmt.Errorf("gardener: %w", errNoAuthenticationMethod)
+	}
+
+	if !slices.Contains(supportedAuthnMethods, conf.Gardener.Authentication) {
+		return fmt.Errorf("gardener: %w: uses %s", errUnknownAuthenticationMethod, conf.Gardener.Authentication)
+	}
+
+	return nil
+}
 
 func newGardenConfigs(conf *config.Config) (map[string]*rest.Config, error) {
 	// 1. Check for token according the configuration
