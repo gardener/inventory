@@ -478,15 +478,27 @@ scheduler:
       payload: >-
         queue: "default"
 
-virtual_garden:
-  # Path to token for Virtual Garden cluster authentication
-  token_path:
+# Gardener specific configuration
+gardener:
+  # Specifies the endpoint of the Gardener APIs.
+  endpoint: http://localhostst:6443/
 
-  # Path to Virtual Garden kubeconfig
-  kubeconfig:
+  # Authentication mechanism to use when communicating with the Gardener APIs.
+  # Supported mechanisms are `in_cluster', `token_path' and `kubeconfig'.
+  authentication: in_cluster
 
-  # Environment type (dev, staging, canary, live)
-  environment: dev
+  # Path to a token file, which is signed by an Identity Provider trusted by
+  # Gardener. Should be usesd with `token' authentication only.
+  token_path: /path/to/token/file
+
+  # Path to kubeconfig file to use. Should be used with `kubeconfig'
+  # authentication only.
+  kubeconfig: /path/to/kubeconfig
+
+  # The `soil_clusters' provides a mapping between Gardener seed clusters and
+  # soils on the various cloud providers.
+  soil_clusters:
+    gcp: soil-gcp-regional
 
   # The list of excluded seeds specifies seed cluster names, from which
   # collection will be skipped.
