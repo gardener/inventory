@@ -45,6 +45,18 @@ const (
 	//
 	// [Workload Identity Federation]: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
 	AzureAuthenticationMethodWorkloadIdentity = "workload_identity"
+
+	// GardenerAuthenticationMethodInCluster is the name of the method for
+	// `in_cluster' authentication.
+	GardenerAuthenticationMethodInCluster = "in_cluster"
+
+	// GardenerAuthenticationMethodToken is the name of the method for
+	// `token' authentication.
+	GardenerAuthenticationMethodToken = "token"
+
+	// GardenerAuthenticationMethodKubeconfig is the name of the method for
+	// `kubeconfig' authentication.
+	GardenerAuthenticationMethodKubeconfig = "kubeconfig"
 )
 
 // ErrNoConfigVersion error is returned when the configuration does not specify
