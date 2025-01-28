@@ -499,8 +499,9 @@ gardener:
   kubeconfig: /path/to/kubeconfig
 
   # The `soil_clusters' provides a mapping between Gardener seed clusters and
-  # soils on the various cloud providers.
+  # soils in the various cloud providers.
   soil_clusters:
+    # The name of the seed, which corresponds to the GKE soil cluster
     gcp: soil-gcp-regional
 
   # The list of excluded seeds specifies seed cluster names, from which

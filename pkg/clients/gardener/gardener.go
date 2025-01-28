@@ -68,14 +68,23 @@ type Client struct {
 	// collection will be skipped and no client config is created for.
 	excludedSeeds []string
 
-	// gkeSoilClusterName specifies the name of the GKE Regional Soil
-	// cluster.
-	gkeSoilClusterName string
+	// gkeSoilCluster provides the settings for the GKE soil cluster.
+	gkeSoilCluster *GKESoilCluster
+}
 
-	// gkeSoilCredentialsFile specifies the credentials file to use when
-	// performing the OAuth2 token exchange in order to access the GKE
-	// Regional Soil cluster.
-	gkeSoilCredentialsFile string
+// GKESoilCluster provides information about a GKE soil cluster, which is
+// registered as a Gardener Seed cluster.
+type GKESoilCluster struct {
+	// SeedName is the name of the seed as registered in Gardener
+	SeedName string
+
+	// ClusterName is the name of the GKE cluster.
+	ClusterName string
+
+	// CredentialsFile specifies the credentials file to use when performing
+	// the OAuth2 token exchange in order to access the GKE Regional Soil
+	// cluster.
+	CredentialsFile string
 }
 
 // DefaultClient is the default client for interfacing with the Gardener APIs.
@@ -132,22 +141,11 @@ func WithExcludedSeeds(seeds []string) Option {
 	return opt
 }
 
-// WithGKESoilClusterName is an [Option], which configures the [Client] to use
-// the given GKE cluster name for the GKE Regional Soil cluster.
-func WithGKESoilClusterName(name string) Option {
+// WithGKESoilCluster is an [Option], which configures the [Client] to use the
+// given GKE soil cluster.
+func WithGKESoilCluster(settings *GKESoilCluster) Option {
 	opt := func(c *Client) {
-		c.gkeSoilClusterName = name
-	}
-
-	return opt
-}
-
-// WithGKESoilCredentialsFile is an [Option], which configures the [Client] to
-// use the given credentials file when performing the OAuth2 token exchange in
-// order to access the GKE Regional Soil cluster.
-func WithGKESoilCredentialsFile(path string) Option {
-	opt := func(c *Client) {
-		c.gkeSoilCredentialsFile = path
+		c.gkeSoilCluster = settings
 	}
 
 	return opt
@@ -202,7 +200,7 @@ func (c *Client) SeedRestConfig(ctx context.Context, name string) (*rest.Config,
 	// During upgrades of the GKE clusters the CA and public IP address may
 	// have changed, while the CA is still valid, and for that reason we
 	// create a new [rest.Config] from the latest discovered data.
-	if name == c.gkeSoilClusterName {
+	if name == c.gkeSoilCluster.SeedName {
 		return c.getGKESoilClusterRestConfig(ctx)
 	}
 
@@ -281,7 +279,7 @@ func (c *Client) ViewerKubeconfig(ctx context.Context, projectNamespace string, 
 		Do(ctx)
 
 	if result.Error() != nil {
-		return nil, fmt.Errorf("viewerkubeconfig: %w", err)
+		return nil, fmt.Errorf("viewerkubeconfig: %w", result.Error())
 	}
 
 	if err := result.Into(req); err != nil {
@@ -297,11 +295,11 @@ func (c *Client) getGKESoilClusterRestConfig(ctx context.Context) (*rest.Config,
 	// Get the GKE cluster from the data already collected by Inventory,
 	// which has already discovered the control-plane endpoint and the CA
 	// root of trust for us.
-	cluster, err := gcputils.GetGKEClusterFromDB(ctx, c.gkeSoilClusterName)
+	cluster, err := gcputils.GetGKEClusterFromDB(ctx, c.gkeSoilCluster.ClusterName)
 	if err != nil {
 		// Cluster does not exist
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("GKE cluster not found in db: %s", c.gkeSoilClusterName)
+			return nil, fmt.Errorf("GKE cluster not found in db: %s", c.gkeSoilCluster.ClusterName)
 		}
 		// Something else occurred
 		return nil, err
@@ -315,7 +313,7 @@ func (c *Client) getGKESoilClusterRestConfig(ctx context.Context) (*rest.Config,
 			"https://www.googleapis.com/auth/cloud-platform",
 			"openid",
 		},
-		CredentialsFile: c.gkeSoilCredentialsFile,
+		CredentialsFile: c.gkeSoilCluster.CredentialsFile,
 	}
 
 	creds, err := credentials.DetectDefault(opts)
