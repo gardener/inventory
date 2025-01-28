@@ -112,14 +112,20 @@ func configureGardenerClient(_ context.Context, conf *config.Config) error {
 	}
 
 	restConfig.UserAgent = conf.Gardener.UserAgent
-	gkeSoilCredsFile := conf.GCP.Credentials[conf.GCP.SoilCluster.UseCredentials].KeyFile.Path
+
+	gkeSoilClusterConf := &gardenerclient.GKESoilCluster{
+		SeedName:        conf.Gardener.SoilClusters.GCP,
+		ClusterName:     conf.GCP.SoilCluster.ClusterName,
+		CredentialsFile: conf.GCP.Credentials[conf.GCP.SoilCluster.UseCredentials].KeyFile.Path,
+	}
+
 	gardenerClientOpts := []gardenerclient.Option{
 		gardenerclient.WithRestConfig(restConfig),
 		gardenerclient.WithExcludedSeeds(conf.Gardener.ExcludedSeeds),
-		gardenerclient.WithGKESoilClusterName(conf.GCP.SoilCluster.ClusterName),
-		gardenerclient.WithGKESoilCredentialsFile(gkeSoilCredsFile),
+		gardenerclient.WithGKESoilCluster(gkeSoilClusterConf),
 		gardenerclient.WithUserAgent(conf.Gardener.UserAgent),
 	}
+
 	gardenClient, err := gardenerclient.New(gardenerClientOpts...)
 	if err != nil {
 		return err
