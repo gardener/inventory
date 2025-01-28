@@ -265,7 +265,9 @@ func (c *Client) ViewerKubeconfig(ctx context.Context, projectNamespace string, 
 	)
 
 	scheme := runtime.NewScheme()
-	authenticationv1alpha1.AddToScheme(scheme)
+	if err := authenticationv1alpha1.AddToScheme(scheme); err != nil {
+		return nil, err
+	}
 	encoder := serializer.NewCodecFactory(scheme).LegacyCodec(authenticationv1alpha1.SchemeGroupVersion)
 	body, err := runtime.Encode(encoder, req)
 	if err != nil {
