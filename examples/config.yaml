@@ -481,7 +481,7 @@ scheduler:
 # Gardener specific configuration
 gardener:
   # Specifies the endpoint of the Gardener APIs.
-  endpoint: http://localhost:6443/
+  endpoint: https://localhost:6443/
 
   # User-Agent to set for the API clients
   user_agent: gardener-inventory/0.1.0
@@ -491,7 +491,7 @@ gardener:
   authentication: in_cluster
 
   # Path to a token file, which is signed by an Identity Provider trusted by
-  # Gardener. Should be usesd with `token' authentication only.
+  # Gardener. Should be used with `token' authentication only.
   token_path: /path/to/token/file
 
   # Path to kubeconfig file to use. Should be used with `kubeconfig'
