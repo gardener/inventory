@@ -6,10 +6,6 @@ package tasks
 
 import "errors"
 
-// ErrNoVirtualGardenClientFound is an error, which is returned when no Virtual
-// Garden client was found.
-var ErrNoVirtualGardenClientFound = errors.New("no virtual garden client found")
-
 // ErrNoSeedCluster is an error, which is returned when an expected Seed Cluster
 // was not specified.
 var ErrNoSeedCluster = errors.New("no seed cluster specified")

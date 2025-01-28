@@ -5,12 +5,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"slices"
-	"strings"
 
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -23,6 +23,14 @@ import (
 // errNoGardenerEndpoint is an error which is returned when no API endpoint has
 // been specified.
 var errNoGardenerEndpoint = errors.New("no API endpoint specified")
+
+// errNoGardenerKubeconfig is an error, which is returned when an expected
+// kubeconfig file was not specified.
+var errNoGardenerKubeconfig = errors.New("no kubeconfig file specified")
+
+// errNoGardenerTokenFile is an error, which is returned when an expected token
+// file was not specified.
+var errNoGardenerTokenFile = errors.New("no token file specified")
 
 // validateGardenerConfig validates the Gardener configuration
 func validateGardenerConfig(conf *config.Config) error {
@@ -45,90 +53,82 @@ func validateGardenerConfig(conf *config.Config) error {
 	}
 
 	if !slices.Contains(supportedAuthnMethods, conf.Gardener.Authentication) {
-		return fmt.Errorf("gardener: %w: uses %s", errUnknownAuthenticationMethod, conf.Gardener.Authentication)
+		return fmt.Errorf("gardener: %w: %s", errUnknownAuthenticationMethod, conf.Gardener.Authentication)
 	}
 
 	return nil
 }
 
-func newGardenConfigs(conf *config.Config) (map[string]*rest.Config, error) {
-	// 1. Check for token according the configuration
-	if conf.VirtualGarden.TokenPath != "" {
-		return constructGardenConfigWithToken(conf)
-	}
-
-	// 2. Check for kubeconfig in the configuration or an env variable
-	// Attempt to read the kubeconfig from the configuration file
-	configs := make(map[string]*rest.Config)
-	kubeconfig := virtualGardenKubeconfig(conf)
-	if kubeconfig != "" {
-		// Add any additional contexts from the kubeconfig, if present
-		apiConfig, err := clientcmd.LoadFromFile(kubeconfig)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load kubeconfig: %w", err)
-		}
-		for name := range apiConfig.Contexts {
-			contextName := fetchContextName(name, conf.VirtualGarden.Environment)
-			clientConfig := clientcmd.NewNonInteractiveClientConfig(*apiConfig, name, &clientcmd.ConfigOverrides{}, nil)
-			restConfig, err := clientConfig.ClientConfig()
-			if err != nil {
-				slog.Error("failed to create rest config, skipping", "context", contextName, "err", err)
-				continue
+// getGardenerRestConfig creates a [rest.Config] based on the provided
+// [config.Config] settings.
+func getGardenerRestConfig(conf *config.Config) (*rest.Config, error) {
+	switch conf.Gardener.Authentication {
+	case config.GardenerAuthenticationMethodInCluster:
+		// In-cluster authentication
+		return rest.InClusterConfig()
+	case config.GardenerAuthenticationMethodKubeconfig:
+		// Kubeconfig authentication
+		if conf.Gardener.Kubeconfig == "" {
+			kubeconfigFromEnv := os.Getenv("KUBECONFIG")
+			if kubeconfigFromEnv == "" {
+				return nil, errNoGardenerKubeconfig
 			}
-			configs[contextName] = restConfig
+			slog.Info(
+				"Gardener API client configured via KUBECONFIG",
+				"kubeconfig", kubeconfigFromEnv,
+			)
+			conf.Gardener.Kubeconfig = kubeconfigFromEnv
 		}
-		if _, found := configs[gardenerclient.VIRTUAL_GARDEN]; !found {
-			return nil, fmt.Errorf("no context found for the virtual garden in the kubeconfig")
+		return clientcmd.BuildConfigFromFlags("", conf.Gardener.Kubeconfig)
+	case config.GardenerAuthenticationMethodToken:
+		// Token file authentication
+		if conf.Gardener.TokenPath == "" {
+			return nil, errNoGardenerTokenFile
 		}
-		return configs, nil
-	}
+		restConfig := &rest.Config{
+			Host:            conf.Gardener.Endpoint,
+			BearerTokenFile: conf.Gardener.TokenPath,
+		}
 
-	// If there is no token and the kubeconfig is not set, we are running in a testing environment
-	// 3. Check for in-cluster config - for testing purposes
-	inClusterConfig, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create in-cluster config: %w", err)
+		return restConfig, nil
+	default:
+		return nil, fmt.Errorf("%w: %s", errUnknownAuthenticationMethod, conf.Gardener.Authentication)
 	}
-	configs[gardenerclient.VIRTUAL_GARDEN] = inClusterConfig
-	return configs, nil
-
 }
 
-func constructGardenConfigWithToken(conf *config.Config) (map[string]*rest.Config, error) {
-	// Check if the token file exists
-	configs := make(map[string]*rest.Config)
-	var (
-		f   os.FileInfo
-		err error
+// configureGardenerClient configures the API client for interfacing with the
+// Gardener APIs.
+func configureGardenerClient(_ context.Context, conf *config.Config) error {
+	slog.Info(
+		"configuring Gardener API client",
+		"authentication", conf.Gardener.Authentication,
+		"kubeconfig", conf.Gardener.Kubeconfig,
+		"token_path", conf.Gardener.TokenPath,
 	)
 
-	if f, err = os.Stat(conf.VirtualGarden.TokenPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("token file not found: %w", err)
-	}
-	//check the length of the token file
-	if f.Size() == 0 {
-		return nil, fmt.Errorf("token file is empty")
+	restConfig, err := getGardenerRestConfig(conf)
+	if err != nil {
+		return fmt.Errorf("gardener: %w", err)
 	}
 
-	// Create a rest.Config for the Virtual Garden
-	restConfig := &rest.Config{
-		Host:            fmt.Sprintf("https://api.%s.gardener.cloud.sap", conf.VirtualGarden.Environment),
-		BearerTokenFile: conf.VirtualGarden.TokenPath,
+	restConfig.UserAgent = conf.Gardener.UserAgent
+	gkeSoilCredsFile := conf.GCP.Credentials[conf.GCP.SoilCluster.UseCredentials].KeyFile.Path
+	gardenerClientOpts := []gardenerclient.Option{
+		gardenerclient.WithRestConfig(restConfig),
+		gardenerclient.WithExcludedSeeds(conf.Gardener.ExcludedSeeds),
+		gardenerclient.WithGKESoilClusterName(conf.GCP.SoilCluster.ClusterName),
+		gardenerclient.WithGKESoilCredentialsFile(gkeSoilCredsFile),
+		gardenerclient.WithUserAgent(conf.Gardener.UserAgent),
 	}
-	configs[gardenerclient.VIRTUAL_GARDEN] = restConfig
-	return configs, nil
-}
+	gardenClient, err := gardenerclient.New(gardenerClientOpts...)
+	if err != nil {
+		return err
+	}
+	gardenerclient.SetDefaultClient(gardenClient)
+	slog.Info(
+		"configured Gardener API client",
+		"host", restConfig.Host,
+	)
 
-func fetchContextName(name string, prefix string) string {
-	if strings.HasPrefix(name, prefix+"-") {
-		return strings.TrimPrefix(name, prefix+"-")
-	}
-	return name
-}
-
-func virtualGardenKubeconfig(conf *config.Config) string {
-	if conf.VirtualGarden.Kubeconfig != "" {
-		return conf.VirtualGarden.Kubeconfig
-	}
-	return os.Getenv("KUBECONFIG")
+	return nil
 }

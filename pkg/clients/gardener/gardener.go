@@ -5,7 +5,6 @@
 package gardener
 
 import (
-	"bytes"
 	"context"
 	"crypto/x509"
 	"database/sql"
@@ -21,6 +20,7 @@ import (
 
 	"cloud.google.com/go/auth/credentials"
 	"github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
+	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	machineversioned "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned"
@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/pager"
@@ -36,60 +35,53 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
-
-// ErrClientNotFound is returned when attempting to get a client, which does not
-// exist in the registry.
-var ErrClientNotFound = errors.New("client not found")
-
-// ErrNoSeeds is returned when there are no seeds registered in the virtual
-// garden cluster.
-var ErrNoSeeds = errors.New("no seeds found")
-
-// ErrSeedNotFound is an error, which is returned when a given seed is not found
-// in the virtual garden cluster.
-var ErrSeedNotFound = errors.New("seed not found")
 
 // ErrSeedIsExcluded is an error, which is returned when attempting to get a
 // [*rest.Config] for a seed cluster, which is excluded in the configuration.
 var ErrSeedIsExcluded = errors.New("seed is excluded")
 
-const (
-	// VIRTUAL_GARDEN is the name of the virtual garden
-	VIRTUAL_GARDEN = "virtual-garden"
+// ErrNoRestConfig is an error, which is returned when an expected [rest.Config]
+// was not configured.
+var ErrNoRestConfig = errors.New("no rest.Config specified")
 
-	// SOIL_GCP is the name of the GKE soil cluster, which requires Workload Identity Federation to perform OAuth2 token exchange
-	SOIL_GCP_REGIONAL = "soil-gcp-regional"
+// The namespace of managed seeds
+const managedSeedsNamespace = "garden"
 
-	// VIEWERKUBECONFIG_SUBRESOURCE_PATH is the path to the viewerkubeconfig subresource of a shoot
-	// All managed seeds are registered as shoots resources in the virtual-garden in garden namespace
-	VIEWERKUBECONFIG_SUBRESOURCE_PATH = "/apis/core.gardener.cloud/v1beta1/namespaces/garden/shoots/%s/viewerkubeconfig"
-
-	// EXPIRATION_SECONDS is the expiration time for the viewkubeconfig client certificate in seconds
-	EXPIRATION_SECONDS = `{"spec":{"expirationSeconds":86400}}` // 24h
-)
-
-// Client provides the Gardener clients.
+// Client represents the API client used to interface with the Gardener APIs.
 type Client struct {
-	// restConfigs contains the [rest.Config] items for the various
-	// contexts.
-	restConfigs *registry.Registry[string, *rest.Config]
+	// restConfig represents the [rest.Config] used to create the
+	// Gardener API client.
+	restConfig *rest.Config
+
+	// gardenerClient is the API client for interfacing with Gardener
+	gardenerClient *gardenerversioned.Clientset
+
+	// userAgent is the User-Agent HTTP header, which will be set on newly
+	// created API clients.
+	userAgent string
+
+	// seedRestConfigs contains the [rest.Config] items for the known
+	// managed seed clusters.
+	seedRestConfigs *registry.Registry[string, *rest.Config]
 
 	// excludedSeeds represents a list of seed cluster names, from which
 	// collection will be skipped and no client config is created for.
 	excludedSeeds []string
 
-	// soilClusterName specifies the name of the GKE Regional Soil cluster.
-	soilClusterName string
+	// gkeSoilClusterName specifies the name of the GKE Regional Soil
+	// cluster.
+	gkeSoilClusterName string
 
-	// soilCredentialsFile specifies the credentials file to use when
+	// gkeSoilCredentialsFile specifies the credentials file to use when
 	// performing the OAuth2 token exchange in order to access the GKE
 	// Regional Soil cluster.
-	soilCredentialsFile string
+	gkeSoilCredentialsFile string
 }
 
-// DefaultClient is the default client for interacting with the Gardener APIs.
-var DefaultClient = New()
+// DefaultClient is the default client for interfacing with the Gardener APIs.
+var DefaultClient *Client
 
 // SetDefaultClient sets the [DefaultClient] to the specified [Client].
 func SetDefaultClient(c *Client) {
@@ -100,29 +92,33 @@ func SetDefaultClient(c *Client) {
 type Option func(c *Client)
 
 // New creates a new [Client].
-func New(opts ...Option) *Client {
+func New(opts ...Option) (*Client, error) {
 	c := &Client{
-		restConfigs: registry.New[string, *rest.Config](),
+		seedRestConfigs: registry.New[string, *rest.Config](),
 	}
 
 	for _, opt := range opts {
 		opt(c)
 	}
 
-	return c
+	if c.restConfig == nil {
+		return nil, ErrNoRestConfig
+	}
+
+	gardenerClient, err := gardenerversioned.NewForConfig(c.restConfig)
+	if err != nil {
+		return nil, err
+	}
+	c.gardenerClient = gardenerClient
+
+	return c, nil
 }
 
-// WithRestConfigs is an [Option], which configures the [Client] with the
-// specified map of [*rest.Config] items.
-func WithRestConfigs(items map[string]*rest.Config) Option {
+// WithRestConfig is an [Option], which configures the [Client] with the
+// specified [rest.Config].
+func WithRestConfig(restConfig *rest.Config) Option {
 	opt := func(c *Client) {
-		if items == nil {
-			return
-		}
-
-		for name, config := range items {
-			c.restConfigs.Overwrite(name, config)
-		}
+		c.restConfig = restConfig
 	}
 
 	return opt
@@ -138,59 +134,49 @@ func WithExcludedSeeds(seeds []string) Option {
 	return opt
 }
 
-// WithSoilClusterName is an [Option], which configures the [Client] to use the
-// given GKE cluster name for the Regional Soil cluster.
-func WithSoilClusterName(name string) Option {
+// WithGKESoilClusterName is an [Option], which configures the [Client] to use
+// the given GKE cluster name for the GKE Regional Soil cluster.
+func WithGKESoilClusterName(name string) Option {
 	opt := func(c *Client) {
-		c.soilClusterName = name
+		c.gkeSoilClusterName = name
 	}
 
 	return opt
 }
 
-// WithSoilCredentialsFile is an [Option], which configures the [Client] to use
-// the given credentials file when performing the OAuth2 token exchange in order
-// to access the GKE Regional Soil cluster.
-func WithSoilCredentialsFile(path string) Option {
+// WithGKESoilCredentialsFile is an [Option], which configures the [Client] to
+// use the given credentials file when performing the OAuth2 token exchange in
+// order to access the GKE Regional Soil cluster.
+func WithGKESoilCredentialsFile(path string) Option {
 	opt := func(c *Client) {
-		c.soilCredentialsFile = path
+		c.gkeSoilCredentialsFile = path
 	}
 
 	return opt
 }
 
-// VirtualGarden returns a versioned clientset for the Virtual Garden cluster
-func (c *Client) VirtualGardenClient() (*gardenerversioned.Clientset, error) {
-	config, found := c.restConfigs.Get(VIRTUAL_GARDEN)
-	if !found || config == nil {
-		return nil, fmt.Errorf("%w: %s", ErrClientNotFound, VIRTUAL_GARDEN)
+// WithUserAgent is an [Option], which configures the [Client] to set the
+// User-Agent header to newly created API clients to the given value.
+func WithUserAgent(userAgent string) Option {
+	opt := func(c *Client) {
+		c.userAgent = userAgent
 	}
 
-	client, err := gardenerversioned.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
+	return opt
 }
 
-// VirtualGardenClient returns the Virtual Garden cluster client using the
-// [DefaultClient].
-func VirtualGardenClient() (*gardenerversioned.Clientset, error) {
-	return DefaultClient.VirtualGardenClient()
+// GardenClient returns a [gardenerversioned.Clientset] for interfacing with the
+// Gardener APIs.
+func (c *Client) GardenClient() *gardenerversioned.Clientset {
+	return c.gardenerClient
 }
 
-// Seeds returns the list of seeds registered in the Virtual Garden cluster.
+// Seeds returns the list of seeds registered in the Garden cluster.
 func (c *Client) Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
-	client, err := c.VirtualGardenClient()
-	if err != nil {
-		return nil, err
-	}
-
 	seeds := make([]*v1beta1.Seed, 0)
-	err = pager.New(
+	err := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return client.CoreV1beta1().Seeds().List(ctx, opts)
+			return c.gardenerClient.CoreV1beta1().Seeds().List(ctx, opts)
 		}),
 	).EachListItem(ctx, metav1.ListOptions{Limit: constants.PageSize}, func(obj runtime.Object) error {
 		s, ok := obj.(*v1beta1.Seed)
@@ -203,57 +189,51 @@ func (c *Client) Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("could not list seeds: %w", err)
+		return nil, err
 	}
 
 	return seeds, nil
 }
 
-// Seeds returns the list of seeds registered in the Virtual Garden cluster
-// using the [DefaultClient].
-func Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
-	return DefaultClient.Seeds(ctx)
-}
-
-// RestConfig returns a REST client config for the given seed name
-func (c *Client) RestConfig(ctx context.Context, name string) (*rest.Config, error) {
+// SeedRestConfig returns a [rest.Config] for the given seed cluster name
+func (c *Client) SeedRestConfig(ctx context.Context, name string) (*rest.Config, error) {
 	if slices.Contains(c.excludedSeeds, name) {
 		return nil, fmt.Errorf("%w: %s", ErrSeedIsExcluded, name)
 	}
 
-	if name == SOIL_GCP_REGIONAL {
-		return c.fetchSoilGCPRegionalClientConfig(ctx)
+	// During upgrades of the GKE clusters the CA and public IP address may
+	// have changed, while the CA is still valid, and for that reason we
+	// create a new [rest.Config] from the latest discovered data.
+	if name == c.gkeSoilClusterName {
+		return c.getGKESoilClusterRestConfig(ctx)
 	}
 
-	// Check to see if there is a rest.Config with such name, and create
-	// config for it, if that's the first time we see it.
-	config, found := c.restConfigs.Get(name)
-	if !found {
-		config, err := c.createGardenConfig(ctx, name)
-		if err != nil {
-			return nil, err
-		}
-		c.restConfigs.Overwrite(name, config)
+	// Check if we have a config and it is still valid
+	config, found := c.seedRestConfigs.Get(name)
+	if found && !goneIn60Seconds(config) {
 		return config, nil
 	}
 
-	// Make sure our config has not expired
-	if goneIn60Seconds(config) {
-		config, err := c.createGardenConfig(ctx, name)
-		if err != nil {
-			return nil, err
-		}
-		c.restConfigs.Overwrite(name, config)
-		return config, nil
+	// Config is either not found, or no longer valid, so we create a new one
+	kubeConfig, err := c.ViewerKubeconfig(ctx, managedSeedsNamespace, name, 1*time.Hour)
+	if err != nil {
+		return nil, err
 	}
 
-	// If we reach this far, we still have a valid config
-	return config, nil
+	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	restConfig.UserAgent = c.userAgent
+	c.seedRestConfigs.Overwrite(name, restConfig)
+
+	return restConfig, nil
 }
 
-// KubeClient returns a Kubernetes client for the given seed name
-func (c *Client) KubeClient(ctx context.Context, name string) (*kubernetes.Clientset, error) {
-	config, err := c.RestConfig(ctx, name)
+// SeedClient returns a [kubernetes.Clientset] for the given seed cluster name.
+func (c *Client) SeedClient(ctx context.Context, name string) (*kubernetes.Clientset, error) {
+	config, err := c.SeedRestConfig(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -261,15 +241,10 @@ func (c *Client) KubeClient(ctx context.Context, name string) (*kubernetes.Clien
 	return kubernetes.NewForConfig(config)
 }
 
-// KubeClient returns a kubernetes client for the given seed name using
-// the [DefaultClient].
-func KubeClient(ctx context.Context, name string) (*kubernetes.Clientset, error) {
-	return DefaultClient.KubeClient(ctx, name)
-}
-
-// MCMClient returns a machine versioned clientset for the given seed name
+// MCMClient returns a [machineversioned.Clientset] for the given seed cluster
+// name.
 func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.Clientset, error) {
-	config, err := c.RestConfig(ctx, name)
+	config, err := c.SeedRestConfig(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -277,113 +252,116 @@ func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.
 	return machineversioned.NewForConfig(config)
 }
 
-// MCMClient returns a machine versioned clientset for the given seed name using
-// the [DefaultClient].
-func MCMClient(ctx context.Context, name string) (*machineversioned.Clientset, error) {
-	return DefaultClient.MCMClient(ctx, name)
-}
+// ViewerKubeconfig generates a new kubeconfig with read-only access for a shoot
+// cluster from a given project namespace.
+func (c *Client) ViewerKubeconfig(ctx context.Context, projectNamespace string, shootName string, expiration time.Duration) ([]byte, error) {
+	expirationSeconds := int64(expiration.Seconds())
+	req := &authenticationv1alpha1.ViewerKubeconfigRequest{
+		Spec: v1alpha1.ViewerKubeconfigRequestSpec{
+			ExpirationSeconds: &expirationSeconds,
+		},
+	}
 
-// createGardenConfig creates a [*rest.Config] for the given seed name and
-// returns it.
-func (c *Client) createGardenConfig(ctx context.Context, name string) (*rest.Config, error) {
-	seeds, err := c.Seeds(ctx)
+	absPath := fmt.Sprintf(
+		"/apis/core.gardener.cloud/v1beta1/namespaces/%s/shoots/%s/viewerkubeconfig",
+		projectNamespace,
+		shootName,
+	)
+
+	scheme := runtime.NewScheme()
+	authenticationv1alpha1.AddToScheme(scheme)
+	encoder := serializer.NewCodecFactory(scheme).LegacyCodec(authenticationv1alpha1.SchemeGroupVersion)
+	body, err := runtime.Encode(encoder, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list seeds: %w", err)
+		return nil, fmt.Errorf("viewerkubeconfig: %w", err)
 	}
 
-	if len(seeds) == 0 {
-		return nil, ErrNoSeeds
-	}
-
-	for _, seed := range seeds {
-		if seed.Name != name {
-			continue
-		}
-
-		// send a http request to the viewerkubeconfig subresources
-		kubeconfigStr, err := c.fetchSeedKubeconfig(ctx, name)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch kubeconfig: %w", err)
-		}
-		// Shall we add more checks?
-		if kubeconfigStr == "" {
-			return nil, fmt.Errorf("kubeconfig is empty")
-		}
-
-		apiConfig, err := clientcmd.Load([]byte(kubeconfigStr))
-		if err != nil {
-			return nil, fmt.Errorf("failed to load config: %w", err)
-		}
-		if apiConfig == nil {
-			return nil, fmt.Errorf("config is nil")
-		}
-
-		clientConfig := clientcmd.NewNonInteractiveClientConfig(*apiConfig, "garden--"+name+"-external",
-			&clientcmd.ConfigOverrides{}, nil)
-
-		restConfig, err := clientConfig.ClientConfig()
-		if err != nil {
-			return nil, fmt.Errorf("failed to create rest config: %w", err)
-		}
-
-		return restConfig, nil
-	}
-
-	return nil, fmt.Errorf("%w: %s", ErrSeedNotFound, name)
-}
-
-// fetchSeedKubeconfig sends a http request to the viewerkubeconfig subresource
-// of a managed seed.
-func (c *Client) fetchSeedKubeconfig(ctx context.Context, name string) (string, error) {
-	config, found := c.restConfigs.Get(VIRTUAL_GARDEN)
-	if !found || config == nil {
-		return "", fmt.Errorf("garden config not found")
-	}
-
-	if config.ContentConfig.GroupVersion == nil {
-		config.ContentConfig = rest.ContentConfig{
-			GroupVersion:         &v1alpha1.SchemeGroupVersion,
-			NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
-		}
-	}
-
-	client, err := rest.RESTClientFor(config)
-	if err != nil {
-		return "", fmt.Errorf("failed to create rest client: %w", err)
-	}
-
-	// Prepare the path to the viewerkubeconfig subresource
-	path := fmt.Sprintf(VIEWERKUBECONFIG_SUBRESOURCE_PATH, name)
-	body := bytes.NewBufferString(EXPIRATION_SECONDS) //one week
-	result := client.Post().
-		AbsPath(path).
-		SetHeader("Accept", "application/json").
+	result := c.gardenerClient.RESTClient().
+		Post().
+		AbsPath(absPath).
 		Body(body).
 		Do(ctx)
+
 	if result.Error() != nil {
-		return "", fmt.Errorf("failed to send viewerkubeconfigrequest: %w, path:%s", result.Error(), path)
-	}
-	request := &v1alpha1.ViewerKubeconfigRequest{}
-	if err = result.Into(request); err != nil {
-		return "", fmt.Errorf("failed to unmarshal viewerkubeconfigrequest response: %w", err)
+		return nil, fmt.Errorf("viewerkubeconfig: %w", err)
 	}
 
-	return string(request.Status.Kubeconfig), nil
+	if err := result.Into(req); err != nil {
+		return nil, fmt.Errorf("viewerkubeconfig: %w", err)
+	}
+
+	return req.Status.Kubeconfig, nil
 }
 
-// goneIn60Seconds checks the expiration time of the ClientCertificate or the BearerToken if present
-// otherwise returns false
+// getGKESoilClusterRestConfig returns a [rest.Config] which is configured
+// against the GKE Regional cluster (soil cluster).
+func (c *Client) getGKESoilClusterRestConfig(ctx context.Context) (*rest.Config, error) {
+	// Get the GKE cluster from the data already collected by Inventory,
+	// which has already discovered the control-plane endpoint and the CA
+	// root of trust for us.
+	cluster, err := gcputils.GetGKEClusterFromDB(ctx, c.gkeSoilClusterName)
+	if err != nil {
+		// Cluster does not exist
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("GKE cluster not found in db: %s", c.gkeSoilClusterName)
+		}
+		// Something else occurred
+		return nil, err
+	}
+
+	// Perform OAuth2 token exchange and use the token to access the GKE
+	// cluster.
+	opts := &credentials.DetectOptions{
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/cloud-platform",
+			"openid",
+		},
+		CredentialsFile: c.gkeSoilCredentialsFile,
+	}
+
+	creds, err := credentials.DetectDefault(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := creds.TokenProvider.Token(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	caData, err := base64.StdEncoding.DecodeString(cluster.CAData)
+	if err != nil {
+		return nil, err
+	}
+
+	config := &rest.Config{
+		Host:        fmt.Sprintf("https://%s", cluster.Endpoint),
+		BearerToken: token.Value,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: false,
+			CAData:   caData,
+		},
+		UserAgent: c.userAgent,
+	}
+
+	return config, nil
+}
+
+// goneIn60Seconds is a predicate, which returns true when the expiration time
+// of the ClientCertificate or BearerToken is approaching, otherwise it returns
+// false.
 func goneIn60Seconds(config *rest.Config) bool {
 	if config == nil {
 		return false
 	}
 
-	//check for the presence of client certificate and its expiration
+	// Check for the presence of client certificate and its expiration
 	if config.TLSClientConfig.CertData != nil {
 		return certIsAboutToExpire(config.TLSClientConfig.CertData)
 	}
 
-	//check for the presence of file containing a client certificate and its expiration
+	// Check for the presence of file containing a client certificate and its expiration
 	if config.TLSClientConfig.CertFile != "" {
 		certData, err := os.ReadFile(config.TLSClientConfig.CertFile)
 		if err != nil {
@@ -393,12 +371,12 @@ func goneIn60Seconds(config *rest.Config) bool {
 		return certIsAboutToExpire(certData)
 	}
 
-	//check the presence of BearerToken
+	// Check the presence of BearerToken
 	if config.BearerToken != "" {
 		return tokenIsAboutToExpire(config.BearerToken)
 	}
 
-	//check the presence of file containing a BearerToken
+	// Check the presence of file containing a BearerToken
 	if config.BearerTokenFile != "" {
 		tokenData, err := os.ReadFile(config.BearerTokenFile)
 		if err != nil {
@@ -445,58 +423,4 @@ func tokenIsAboutToExpire(token string) bool {
 	}
 
 	return (time.Now().UTC().Unix() + 60) > tokenPayload.Exp // gone in 60 seconds
-}
-
-// fetchSoilGCPRegionalClientConfig returns a [rest.Config] which is
-// configured against the GKE Regional cluster (soil cluster).
-func (c *Client) fetchSoilGCPRegionalClientConfig(ctx context.Context) (*rest.Config, error) {
-	// Get the GKE cluster from the data already collected by Inventory,
-	// which has already discovered the control-plane endpoint and the CA
-	// root of trust for us.
-	cluster, err := gcputils.GetGKEClusterFromDB(ctx, c.soilClusterName)
-	if err != nil {
-		// Cluster does not exist
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("GKE cluster not found in db: %s", c.soilClusterName)
-		}
-		// Something else occurred
-		return nil, err
-	}
-
-	// Perform OAuth2 token exchange and use the token to access the GKE
-	// cluster.
-	opts := &credentials.DetectOptions{
-		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.email",
-			"https://www.googleapis.com/auth/cloud-platform",
-			"openid",
-		},
-		CredentialsFile: c.soilCredentialsFile,
-	}
-
-	creds, err := credentials.DetectDefault(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := creds.TokenProvider.Token(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	caData, err := base64.StdEncoding.DecodeString(cluster.CAData)
-	if err != nil {
-		return nil, err
-	}
-
-	config := &rest.Config{
-		Host:        fmt.Sprintf("https://%s", cluster.Endpoint),
-		BearerToken: token.Value,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: false,
-			CAData:   caData,
-		},
-	}
-
-	return config, nil
 }

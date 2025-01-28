@@ -28,20 +28,35 @@ const (
 	TaskCollectProjects = "g:task:collect-projects"
 )
 
-// NewCollectProjectsTask creates a new [asynq.Task] for collecting
-// Gardener projects, without specifying a payload.
+// CollectProjectsPayload represents the payload used for collecting Gardener
+// Projects.
+type CollectProjectsPayload struct {
+	// ProjectName specifies name of the Gardener Project to be collected.
+	ProjectName string `json:"project_name" yaml:"project_name"`
+}
+
+// NewCollectProjectsTask creates a new [asynq.Task] for collecting Gardener
+// projects, without specifying a payload.
 func NewCollectProjectsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectProjects, nil)
 }
 
-// HandleCollectProjectsTask is the handler that collects Gardener
-// projects.
+// HandleCollectProjectsTask is the handler that collects Gardener projects.
 func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
-	client, err := gardenerclient.VirtualGardenClient()
-	if err != nil {
-		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
+	// If we were called without a payload then we collect all projects.
+	data := t.Payload()
+	if data == nil {
+		return collectAllProjects(ctx)
 	}
 
+	// TODO: implement support for collecting specific projects only
+
+	return nil
+}
+
+// collectAllProjects collects all projects from Gardener.
+func collectAllProjects(ctx context.Context) error {
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener projects")
 	projects := make([]models.Project, 0)
@@ -53,7 +68,7 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		}),
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
-	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
+	err := p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		p, ok := obj.(*v1beta1.Project)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
@@ -87,13 +102,25 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list projects: %w", err)
 	}
 
-	// Persist projects
-	if len(projects) == 0 {
+	if err := persistProjects(ctx, projects); err != nil {
+		return err
+	}
+
+	if err := persistProjectMembers(ctx, members); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// persistProjects persists the provided projects into the database.
+func persistProjects(ctx context.Context, items []models.Project) error {
+	if len(items) == 0 {
 		return nil
 	}
 
 	out, err := db.DB.NewInsert().
-		Model(&projects).
+		Model(&items).
 		On("CONFLICT (name) DO UPDATE").
 		Set("namespace = EXCLUDED.namespace").
 		Set("status = EXCLUDED.status").
@@ -113,15 +140,20 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
+	logger := asynqutils.GetLogger(ctx)
 	logger.Info("populated gardener projects", "count", count)
 
-	// Persist project members
-	if len(members) == 0 {
+	return nil
+}
+
+// persistProjectMembers persists the given project members into the database.
+func persistProjectMembers(ctx context.Context, items []models.ProjectMember) error {
+	if len(items) == 0 {
 		return nil
 	}
 
-	out, err = db.DB.NewInsert().
-		Model(&members).
+	out, err := db.DB.NewInsert().
+		Model(&items).
 		On("CONFLICT (name, project_name) DO UPDATE").
 		Set("kind = EXCLUDED.kind").
 		Set("role = EXCLUDED.role").
@@ -133,11 +165,12 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
-	count, err = out.RowsAffected()
+	count, err := out.RowsAffected()
 	if err != nil {
 		return err
 	}
 
+	logger := asynqutils.GetLogger(ctx)
 	logger.Info("populated gardener project members", "count", count)
 
 	return nil

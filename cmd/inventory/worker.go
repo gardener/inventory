@@ -16,7 +16,6 @@ import (
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	dbclient "github.com/gardener/inventory/pkg/clients/db"
-	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -150,21 +149,9 @@ func NewWorkerCommand() *cli.Command {
 					defer inspector.Close()
 
 					// Gardener client configs
-					slog.Info("configuring gardener clients")
-					gardenConfigs, err := newGardenConfigs(conf)
-					if err != nil {
+					if err := configureGardenerClient(ctx.Context, conf); err != nil {
 						return err
 					}
-
-					soilCredsFile := conf.GCP.Credentials[conf.GCP.SoilCluster.UseCredentials].KeyFile.Path
-					gardenClientOpts := []gardenerclient.Option{
-						gardenerclient.WithRestConfigs(gardenConfigs),
-						gardenerclient.WithExcludedSeeds(conf.VirtualGarden.ExcludedSeeds),
-						gardenerclient.WithSoilCredentialsFile(soilCredsFile),
-						gardenerclient.WithSoilClusterName(conf.GCP.SoilCluster.ClusterName),
-					}
-					gardenClient := gardenerclient.New(gardenClientOpts...)
-					gardenerclient.SetDefaultClient(gardenClient)
 
 					// Initialize DB and asynq client
 					slog.Info("configuring db client")
@@ -173,7 +160,7 @@ func NewWorkerCommand() *cli.Command {
 					slog.Info("configuring asynq client")
 					asynqclient.SetClient(client)
 
-					// Initialize async inspector, for queue related tasks
+					// Initialize async inspector
 					slog.Info("configuring asynq inspector")
 					asynqclient.SetInspector(inspector)
 

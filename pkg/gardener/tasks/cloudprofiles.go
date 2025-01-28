@@ -68,11 +68,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		cpProviderTypeAzure: TaskCollectAzureMachineImages,
 	}
 
-	client, err := gardenerclient.VirtualGardenClient()
-	if err != nil {
-		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
-	}
-
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener cloud profiles")
 	cloudProfiles := make([]models.CloudProfile, 0)
@@ -82,7 +78,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		}),
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
-	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
+	err := p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		cp, ok := obj.(*gardenerv1beta1.CloudProfile)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
