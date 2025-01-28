@@ -22,10 +22,12 @@ import (
 	"github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	gardenerversioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	machineversioned "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -35,7 +37,6 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
 // ErrSeedIsExcluded is an error, which is returned when attempting to get a
@@ -45,9 +46,6 @@ var ErrSeedIsExcluded = errors.New("seed is excluded")
 // ErrNoRestConfig is an error, which is returned when an expected [rest.Config]
 // was not configured.
 var ErrNoRestConfig = errors.New("no rest.Config specified")
-
-// The namespace of managed seeds
-const managedSeedsNamespace = "garden"
 
 // Client represents the API client used to interface with the Gardener APIs.
 type Client struct {
@@ -215,7 +213,7 @@ func (c *Client) SeedRestConfig(ctx context.Context, name string) (*rest.Config,
 	}
 
 	// Config is either not found, or no longer valid, so we create a new one
-	kubeConfig, err := c.ViewerKubeconfig(ctx, managedSeedsNamespace, name, 1*time.Hour)
+	kubeConfig, err := c.ViewerKubeconfig(ctx, v1beta1constants.GardenNamespace, name, 1*time.Hour)
 	if err != nil {
 		return nil, err
 	}
