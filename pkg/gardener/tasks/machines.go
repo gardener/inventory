@@ -119,7 +119,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 func collectMachines(ctx context.Context, payload CollectMachinesPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener machines", "seed", payload.Seed)
-	client, err := gardenerclient.MCMClient(ctx, payload.Seed)
+	client, err := gardenerclient.DefaultClient.MCMClient(ctx, payload.Seed)
 	if err != nil {
 		if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
 			// Don't treat excluded seeds as errors, in order to

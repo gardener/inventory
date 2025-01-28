@@ -36,11 +36,7 @@ func NewCollectSeedsTask() *asynq.Task {
 
 // HandleCollectSeedsTask is the handler for collecting Gardener Seeds.
 func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
-	client, err := gardenerclient.VirtualGardenClient()
-	if err != nil {
-		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
-	}
-
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener seeds")
 	seeds := make([]models.Seed, 0)
@@ -50,7 +46,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 		}),
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
-	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
+	err := p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		s, ok := obj.(*v1beta1.Seed)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)

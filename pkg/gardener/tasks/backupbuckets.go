@@ -36,11 +36,7 @@ func NewCollectBackupBucketsTask() *asynq.Task {
 
 // HandleCollectBackupBucketsTask is the handler for collecting BackupBuckets.
 func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
-	client, err := gardenerclient.VirtualGardenClient()
-	if err != nil {
-		return asynqutils.SkipRetry(ErrNoVirtualGardenClientFound)
-	}
-
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("Collecting Gardener backup buckets")
 	buckets := make([]models.BackupBucket, 0)
@@ -50,7 +46,7 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 		}),
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
-	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
+	err := p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		b, ok := obj.(*v1beta1.BackupBucket)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
