@@ -203,6 +203,10 @@ func NewWorkerCommand() *cli.Command {
 					}
 
 					slog.Info("worker concurrency", "level", conf.Worker.Concurrency)
+					for queue, priority := range conf.Worker.Queues {
+						slog.Info("queue configuration", "name", queue, "priority", priority)
+					}
+
 					return server.Run(mux)
 				},
 			},

@@ -213,19 +213,27 @@ func newInspector(conf *config.Config) *asynq.Inspector {
 // newServer creates a new [asynq.Server] from the given config.
 func newServer(conf *config.Config) *asynq.Server {
 	redisClientOpt := newRedisClientOpt(conf)
+	defaultQueues := map[string]int{
+		config.DefaultQueueName: 1,
+	}
 
-	// TODO: Logger, priority queues, etc.
 	logLevel := asynq.InfoLevel
 	if conf.Debug {
 		logLevel = asynq.DebugLevel
 	}
 
-	config := asynq.Config{
-		Concurrency:  conf.Worker.Concurrency,
-		LogLevel:     logLevel,
-		ErrorHandler: asynqutils.NewDefaultErrorHandler(),
+	queues := conf.Worker.Queues
+	if len(queues) == 0 {
+		queues = defaultQueues
 	}
 
+	config := asynq.Config{
+		Concurrency:    conf.Worker.Concurrency,
+		LogLevel:       logLevel,
+		ErrorHandler:   asynqutils.NewDefaultErrorHandler(),
+		Queues:         queues,
+		StrictPriority: conf.Worker.StrictPriority,
+	}
 	server := asynq.NewServer(redisClientOpt, config)
 
 	return server
