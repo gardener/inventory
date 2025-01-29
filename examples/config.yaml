@@ -250,7 +250,13 @@ aws:
         role_arn: arn:aws:iam::account:role/name
         role_session_name: gardener-inventory-worker
 
+# Scheduler configuration
 scheduler:
+  # The queue to submit tasks when no queue has been explicitely specified for a
+  # periodic job.
+  default_queue: default
+
+  # Periodic jobs enqueued by the scheduler
   jobs:
     # AWS tasks
     - name: "aws:task:collect-regions"
