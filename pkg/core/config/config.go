@@ -57,6 +57,11 @@ const (
 	// GardenerAuthenticationMethodKubeconfig is the name of the method for
 	// `kubeconfig' authentication.
 	GardenerAuthenticationMethodKubeconfig = "kubeconfig"
+
+	// DefaultQueueName is the name of the queue which will be used by the
+	// client, scheduler and workers, when no queue has been specified
+	// explicitly.
+	DefaultQueueName = "default"
 )
 
 // ErrNoConfigVersion error is returned when the configuration does not specify
@@ -434,6 +439,11 @@ type WorkerConfig struct {
 
 // SchedulerConfig provides scheduler specific configuration settings.
 type SchedulerConfig struct {
+	// DefaultQueue specifies the queue name to which tasks will be
+	// submitted, if a periodic job does not specify a queue explicitly
+	DefaultQueue string `yaml:"default_queue"`
+
+	// Jobs represents the periodic jobs managed by the scheduler
 	Jobs []*PeriodicJob `yaml:"jobs"`
 }
 
@@ -451,6 +461,11 @@ type PeriodicJob struct {
 
 	// Payload is an optional payload to use when submitting the task.
 	Payload string `yaml:"payload"`
+
+	// Queue specifies the name of the queue to which the task will be
+	// submitted. If it is not specified, then the task will be submitted to
+	// the [DefaultQueueName] queue.
+	Queue string `yaml:"queue"`
 }
 
 // GardenerConfig represents the Gardener specific configuration.
