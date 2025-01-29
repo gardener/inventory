@@ -7,8 +7,11 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -54,18 +57,27 @@ func NewWorkerCommand() *cli.Command {
 						"PID",
 						"CONCURRENCY",
 						"STATUS",
+						"PROCESSING",
 						"UPTIME",
+						"QUEUES",
 					}
 					table := newTableWriter(os.Stdout, headers)
 
 					for _, item := range servers {
 						uptime := time.Since(item.Started)
+						queuesInfo := make([]string, 0)
+						queueNames := slices.Sorted(maps.Keys(item.Queues))
+						for _, qname := range queueNames {
+							queuesInfo = append(queuesInfo, fmt.Sprintf("%s:%d", qname, item.Queues[qname]))
+						}
 						row := []string{
 							item.Host,
 							strconv.Itoa(item.PID),
 							strconv.Itoa(item.Concurrency),
 							item.Status,
+							strconv.Itoa(len(item.ActiveWorkers)),
 							uptime.String(),
+							strings.Join(queuesInfo, ","),
 						}
 						table.Append(row)
 					}
@@ -203,6 +215,7 @@ func NewWorkerCommand() *cli.Command {
 					}
 
 					slog.Info("worker concurrency", "level", conf.Worker.Concurrency)
+					slog.Info("queue priority", "strict", conf.Worker.StrictPriority)
 					for queue, priority := range conf.Worker.Queues {
 						slog.Info("queue configuration", "name", queue, "priority", priority)
 					}
