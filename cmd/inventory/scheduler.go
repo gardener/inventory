@@ -37,7 +37,14 @@ func NewSchedulerCommand() *cli.Command {
 
 					// Add the periodic tasks from the registry
 					walker := func(spec string, task *asynq.Task) error {
-						id, err := scheduler.Register(spec, task)
+						// TODO(dnaeon): add support for specifying queue for tasks
+						// originating from the registry.
+						queue := conf.Scheduler.DefaultQueue
+						id, err := scheduler.Register(
+							spec,
+							task,
+							asynq.Queue(queue),
+						)
 						if err != nil {
 							return err
 						}
@@ -46,6 +53,7 @@ func NewSchedulerCommand() *cli.Command {
 							"id", id,
 							"name", task.Type(),
 							"spec", spec,
+							"queue", queue,
 							"source", "registry",
 						)
 						return nil
@@ -57,7 +65,12 @@ func NewSchedulerCommand() *cli.Command {
 					// Add tasks from configuration file as well
 					for _, job := range conf.Scheduler.Jobs {
 						task := asynq.NewTask(job.Name, []byte(job.Payload))
-						id, err := scheduler.Register(job.Spec, task)
+						queue := conf.Scheduler.DefaultQueue
+						if job.Queue != "" {
+							queue = job.Queue
+						}
+
+						id, err := scheduler.Register(job.Spec, task, asynq.Queue(queue))
 						if err != nil {
 							return err
 						}
@@ -68,6 +81,7 @@ func NewSchedulerCommand() *cli.Command {
 							"name", task.Type(),
 							"spec", job.Spec,
 							"desc", job.Desc,
+							"queue", queue,
 							"source", "config",
 						)
 					}
