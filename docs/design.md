@@ -4,29 +4,29 @@ The Inventory system is based on the following design goals.
 
 ## Data Model
 
-The data model used by the Inventory system looks like this.
+The data model used by the Inventory system looks like this:
 
 ![Data Model](../images/data-model.png)
 
-Each entity within the system (e.g. Virtual Machine, AWS VPC, etc.) is
+Each entity within the system (e.g., Virtual Machine, AWS VPC) is
 represented by separate table in the database, where connection between
 different entities is done via a link table.
 
 ## Data Collection
 
 The following diagram illustrates the high-level overview of how data collection
-works.
+works:
 
 ![Collection Flow](../images/collection-flow.png)
 
-The data collection flow from above diagram provides the following benefits.
+The data collection flow provides the following benefits:
 
 * A message queue is used for submitting messages, which represent tasks to be
-  executed by workers.
-* Messages may be submitted on regular basis (e.g. via a scheduler), or ad-hoc via
+  run by workers.
+* Messages may be submitted on regular basis (e.g., via a scheduler), or ad-hoc via
   clients of the system.
-* Colletion of resources is done independently from each other and concurrently.
-* Resource collection may be prioritized
+* Collection of resources is done independently from each other and concurrently.
+* Resource collection may be prioritized.
 
 Since collection happens concurrently and independently from each other, linking
 resources is also represented as a separate, independent task.
@@ -41,13 +41,13 @@ component should exist.
 This requirement would enable rolling upgrades of the various components of the
 system, without causing service disruption.
 
-Tasks which fail (e.g. remote endpoints are not reachable), should be retried
+Tasks which fail (e.g., remote endpoints are not reachable), should be retried
 and eventually successfully processed by the workers.
 
 ## Scalable
 
 The system should be able to scale horizontally in situations where we have many
-data sources, and many messages to process.
+data sources and many messages to process.
 
 The tasks processed by workers are mainly I/O related, and not CPU intensive.
 

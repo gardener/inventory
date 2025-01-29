@@ -14,55 +14,55 @@ The development flow in summary is:
 
 For more details on each point, please read the rest of this document.
 
-# Components
+## Components
 
 The Inventory system consists of the following components.
 
 Please refer to the [Design Goals](./design.md) document for more details about
 the overall design.
 
-## API
+### API
 
 The API service exposes collected and normalized data over a REST API.
 
-## Persistence
+### Persistence
 
 For persisting the collected data the Inventory system uses a PostgreSQL
 database.
 
 The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
 
-## Worker
+### Worker
 
 Workers are based on [hibiken/asynq](https://github.com/hibiken/asynq) and use
-Redis (or any of the available alternatives such as Valkey and Redict) as a
+Redis (or any of the available alternatives, such as Valkey and Redict) as a
 message passing interface.
 
-## Scheduler
+### Scheduler
 
 The scheduler is based on [hibiken/asynq](https://github.com/hibiken/asynq) and
 is used to trigger the execution of periodic tasks.
 
-## Message Queue
+### Message Queue
 
 Redis (or Valkey, or Redict) is used as a message queue for async communication
 between the scheduler and workers.
 
-## CLI
+### CLI
 
 The CLI application is used for interfacing with the inventory system and
-provides various sub-commands such as migrating the database schema, starting up
+provides various sub-commands, such as migrating the database schema, starting up
 services, etc.
 
-# Code Structure
+## Code Structure
 
-The code is structured in the following way. Each data source (e.g. `aws`,
-`gcp`, etc.) resides in it's own package. When introducing a new data source we
+The code is structured in the following way. Each data source (e.g., `aws`,
+`gcp`) resides in it's own package. When introducing a new data source we
 should follow the same pattern in order to keep the code consistent.
 
-This is what the `pkg/aws` package looks like as of writing this document.
+This is what the `pkg/aws` package looks like, as of writing this document.
 
-``` shell
+```sh
 pkg/aws
 ├── api        # API routes
 ├── client     # API clients
@@ -73,14 +73,14 @@ pkg/aws
 └── utils      # Utilities
 ```
 
-# Models
+## Models
 
 The database models are based on [uptrace/bun](https://github.com/uptrace/bun).
 
 The following sections provide additional details about naming conventions and
 other hints to follow when creating a new model, or updating an existing one.
 
-## Base Model
+### Base Model
 
 The [pkg/core/models](../pkg/core/models) package provides base models, which are
 meant to be used by other models.
@@ -90,17 +90,17 @@ into your models, so that we have a consistent models structure.
 
 In additional to our core model, we should also embed the
 [bun.BaseModel](https://pkg.go.dev/github.com/uptrace/bun#BaseModel) model,
-which would allow us to customize the model further, e.g. specifying a
-different table name, alias, view name, etc.
+which would allow us to customize the model further, e.g., specifying a
+different table name, alias, view name.
 
-Customizing the table name, alias and view name for a model can only be
-configured on the `bun.BaseModel`. See the
+Customizing the table name, alias, and view name for a model can only be
+configured on the `bun.BaseModel`. For more information, see the
 [Struct Tags](https://bun.uptrace.dev/guide/models.html#struct-tags) section from the
 [uptrace/bun](https://bun.uptrace.dev/guide/) documentation.
 
-## Example Model
+### Example Model
 
-An example model would look like this.
+An example model would look like this:
 
 ``` go
 package my_package
@@ -119,13 +119,13 @@ type MyModel struct {
 }
 ```
 
-Make sure to check the documentation about [defining
-models](https://bun.uptrace.dev/guide/models.html) for additional information
+Make sure to check the documentation about
+[defining models](https://bun.uptrace.dev/guide/models.html) for additional information
 and examples.
 
-Also, once you've created the model you should create a migration for it.
+Also, once you've created the model, you should create a migration for it:
 
-``` shell
+```sh
 inventory db create <description-of-your-migration>
 ```
 
@@ -143,25 +143,25 @@ func init() {
 
 The naming convention we follow when defining new models is
 `<datasource>:model:<modelname>`. For example, if you are defining a new AWS
-model called `Foo` you should register the model using the `aws:model:foo` name.
+model called `Foo`, you should register the model using the `aws:model:foo` name.
 
-## Model Retention
+### Model Retention
 
 Each data model registers itself with the
 [default model registry](../pkg/core/registry).
 
-In order to keep the database clean from stale records the Inventory system runs
+In order to keep the database clean from stale records, the Inventory system runs
 a periodic housekeeper task, which cleans up records based on a retention
 period.
 
-In order to define a retention period for an object you should update the
+In order to define a retention period for an object, you should update the
 `common:task:housekeeper` task payload in your
 [config.yaml](../examples/config.yaml) and add an entry for your object.
 
 The following example snippet configures retention for the `foo:model:bar`
 model, which will remove records that were not updated in the last 4 hours.
 
-In this configuration the housekeeper task will be invoked every 1 hour.
+In this configuration, the housekeeper task will be invoked every 1 hour.
 
 ``` yaml
 scheduler:
@@ -175,49 +175,49 @@ scheduler:
             duration: 4h
 ```
 
-## Link / Nexus Tables
+### Link / Nexus Tables
 
 Relationships between models in the database are established with the help of
 [link tables](https://en.wikipedia.org/wiki/Associative_entity).
 
-Even though some relationships might be one-to-one, or one-to-many we still use
-separate link tables to connect the models for a few reasons.
+Even though some relationships might be one-to-one or one-to-many, we still use
+separate link tables to connect the models for a few reasons:
 
-- Keep the codebase and database more consistent and cleaner
+- Keep the codebase and database more consistent and cleaner.
 - Be able to enhance the model with additional attributes, by having properties
-  on the link table
+  on the link table.
 
-Since data collection runs concurrently and indendently from each other, linking
-usually happens on a later stage, e.g. when all relevant data is collected.
+Since data collection runs concurrently and independently from each other, linking
+usually happens on a later stage, e.g., when all relevant data is collected.
 
 Another benefit of having a separate link table is that we can extend the model
 by having additional properties on the link table itself, and this way we don't
-have to modify the base models, e.g. have columns which identify when the link
-was created, updated, etc. This allows us to keep our collectors simple at the
+have to modify the base models, e.g., have columns which identify when the link
+was created or updated. This allows us to keep our collectors simple at the
 same time.
 
 There are two kinds of _link tables_ we use in the Inventory system, and both
 serve the same purpose, but are called differently.
 
-When we create links between models within the same data source (e.g. AWS) we create
+When we create links between models within the same data source (e.g., AWS) we create
 relationships between the models by following this naming convention:
 
 - `l_<datasource>_<model_a>_to_<model_b>`
 
 For instance, the following link table contains the relationships between the
 AWS Region and the AWS VPCs, where both models are defined in the same Go
-package.
+package:
 
 - `l_aws_region_to_vpc`
 
-When creating cross-package relationships we create a
+When creating cross-package relationships, we create a
 [nexus](https://en.wiktionary.org/wiki/nexus) table instead, which follows this
-naming convention.
+naming convention:
 
 - `n_<datasource_a>_<model_a>_to_<datasource_b>_<model_b>`
 
 For instance, the following _nexus_ table contains the relationships between the
-AWS VPCs and Gardener Shoots.
+AWS VPCs and Gardener Shoots"
 
 - `n_aws_vpc_to_g_shoot`
 
@@ -225,14 +225,14 @@ Both tables -- _link_ and _nexus_ -- serve the same purpose, but are named
 differently in order to make it easier to distinguish between _in-package_ and
 _cross-package_ relationships.
 
-# Tasks
+## Tasks
 
 Tasks are based on [hibiken/asynq](https://github.com/hibiken/asynq).
 
 Each task should be defined in the respective `tasks` package of the data source
-you are working on, e.g. `pkg/aws/tasks/tasks.go`.
+you are working on, e.g., `pkg/aws/tasks/tasks.go`.
 
-An example task looks like this.
+An example task looks like this:
 
 ``` go
 package tasks
@@ -257,13 +257,13 @@ The task must implement the
 [asynq.Handler](https://pkg.go.dev/github.com/hibiken/asynq#Handler) interface.
 
 Before we can use such a task in the workers, we need to register it. Only
-tasks, which are registered will be considered by the workers, when we start
+tasks which are registered will be considered by the workers when we start
 them up.
 
 Task registration is done via the registry defined in
 [pkg/core/registry](../pkg/core/registry).
 
-The following example registers our sample task with the default task registry.
+The following example registers our sample task with the default task registry:
 
 ``` go
 package tasks
@@ -288,17 +288,17 @@ similar to the one below.
 import _ "github.com/gardener/inventory/pkg/mydatasource/tasks"
 ```
 
-We add this import solely for it's side-effects, so that task registration may
+We add this import solely for its side-effects, so that task registration may
 happen.
 
-# Periodic Tasks
+## Periodic Tasks
 
 Periodic tasks are registered in a way similar to how we register worker tasks.
 
 The following example registers a periodic task, which will be scheduled every
 `30 seconds`.
 
-In the `init()` function of your tasks package.
+In the `init()` function of your tasks package run:
 
 ``` go
 package tasks
@@ -316,11 +316,11 @@ func init() {
 }
 ```
 
-Periodic tasks can be defined externally as well by adding an entry to the
+Periodic tasks can be defined externally, as well by adding an entry to the
 scheduler configuration.
 
 The following snippet adds a periodic job, which the scheduler will enqueue
-every 1 hour.
+every 1 hour:
 
 ``` yaml
 # config.yaml
@@ -333,7 +333,7 @@ scheduler:
 ```
 
 If a task requires a payload you can also specify the payload for it. For
-example the following job will be invoked every 1 hour with the specified JSON
+example, the following job will be invoked every 1 hour with the specified JSON
 payload.
 
 ``` yaml
@@ -356,11 +356,11 @@ name: `aws:task:foo`.
 Make sure to check the [examples/config.yaml](../examples/config.yaml) file for
 additional examples.
 
-When running with multiple schedulers the example task above would be scheduled
+When running with multiple schedulers, the example task above would be scheduled
 by each instance of the scheduler, which would lead to tasks being duplicated
 when being enqueued.
 
-In order to avoid duplicating tasks by different instances of the scheduler you
+In order to avoid duplicating tasks by different instances of the scheduler, you
 should use the
 [asynq.TaskID](https://pkg.go.dev/github.com/hibiken/asynq#TaskID) and
 [asynq.Retention](https://pkg.go.dev/github.com/hibiken/asynq#Retention)
@@ -369,16 +369,16 @@ options.
 For additional context and details, please refer to
 [this asynq discussion](https://github.com/hibiken/asynq/discussions/376).
 
-In the future we may explore different schedulers such as
+In the future, we may explore different schedulers such as
 [go-co-op/gocron](https://github.com/go-co-op/gocron), or use
 [go-redsync/redsync](https://github.com/go-redsync/redsync) with `asynq`'s
 scheduler.
 
-# Local Environment
+## Local Environment
 
 Local development environment can be started either in
 [Docker Compose](https://docs.docker.com/compose/), a Kubernetes cluster via
-[minikube](https://minikube.sigs.k8s.io/), or run the services in
+[minikube](https://minikube.sigs.k8s.io/) or run the services in
 standalone mode locally.
 
 If you are running the services in standalone mode on the local system, then
@@ -391,23 +391,23 @@ starting point. The configuration file can be specified via the
 The `inventory` CLI app accepts multiple configuration files via the
 `--config|--file <path>` options. This allows to separate configuration into
 multiple files, if needed. When specifying multiple configuration files via the
-`INVENTORY_CONFIG` env var you need to separate the files using a comma, e.g.
+`INVENTORY_CONFIG` env var, you need to separate the files using a comma, e.g.:
 
-``` shell
+```sh
 env INVENTORY_CONFIG=foo.yaml,bar.yaml,baz.yaml inventory ...
 ```
 
-In order to make development easier it is recommended to use
+In order to make development easier, it is recommended to use
 [direnv](https://direnv.net/) along with a `.envrc` file.
 
 Here's a sample `.envrc` file, which you can customize.
 
-``` shell
+```sh
 # .envrc
 export INVENTORY_CONFIG=/path/to/inventory/config.yaml
 ```
 
-## Docker Compose
+### Docker Compose
 
 You can start a dev environment using the provided
 [Docker Compose](https://docs.docker.com/compose/) manifest.
@@ -416,9 +416,9 @@ The AWS tasks expect that you already have a shared configuration and
 credentials files configured in `~/.aws/config` and `~/.aws/credentials`
 respectively.
 
-In order to start all services, execute the following command.
+In order to start all services, run the following command:
 
-``` shell
+```sh
 make docker-compose-up
 ```
 
@@ -435,7 +435,7 @@ The services which will be started are summarized in the table below.
 | `prometheus` | Prometheus instance                       |
 | `pgadmin`    | PostgreSQL Admin Interface                |
 
-Once the services are up and running you can access the following endpoints from
+Once the services are up and running, you can access the following endpoints from
 your local system.
 
 | Endpoint                      | Description                 |
@@ -448,40 +448,40 @@ your local system.
 | http://localhost:9090/        | Prometheus UI               |
 | http://localhost:7080/        | pgAdmin UI                  |
 
-## minikube
+### minikube
 
 In order to start a dev environment with
-[minikube](https://minikube.sigs.k8s.io/) execute the following command.
+[minikube](https://minikube.sigs.k8s.io/), run the following command:
 
-``` shell
+```sh
 make minikube-up
 ```
 
-> NOTE: The kustomize manifests for Grafana, Prometheus, PostgreSQL and Redis,
+> NOTE: The kustomize manifests for Grafana, Prometheus, PostgreSQL, and Redis,
 > which can be found in the [deployment/kustomize](../deployment/kustomize)
-> directory are meant to be used in local dev environments only. For production
-> environments it is recommended that you use the respective Kubernetes
+> directory, are meant to be used in local dev environments only. For production
+> environments, it is recommended that you use the respective Kubernetes
 > operators instead.
 
-The command above will create a new `minikube` cluster with profile `inventory`,
-build the latest image, load it into the node and deploy the services.
+The command above will create a new `minikube` cluster with an `inventory` profile,
+build the latest image, load it into the node, and deploy the services.
 
-By default the `minikube-up` target will use the
+By default, the `minikube-up` target will use the
 [deployment/kustomize/local](../deployment/kustomize/local) overlay to
 bring up the services. If you want to use a different overlay instead, you
 should set the `KUSTOMIZE_OVERLAY` variable to the name of the overlay you want
 to use.
 
-In order to tear down the environment execute the following command.
+In order to tear down the environment, run the following command:
 
-``` shell
+```sh
 make minikube-down
 ```
 
-# Testing
+## Testing
 
-In order to run the unit tests execute the following command.
+In order to run the unit tests, run the following command:
 
-``` shell
+```sh
 make test
 ```

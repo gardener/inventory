@@ -1,7 +1,6 @@
 # OpenID Connect Trust between Azure and Inventory
 
-This document describes how to establish [OpenID
-Connect](http://openid.net/connect/) Trust between Azure and Inventory running
+This document describes how to establish [OpenID Connect](http://openid.net/connect/) Trust between Azure and Inventory running
 in a Kubernetes cluster.
 
 Having OIDC Trust between Azure and Inventory means that you don't have to worry
@@ -13,20 +12,18 @@ signed by the Kubernetes API server (the IdP trusted by Azure), which will then
 be exchanged for Azure access tokens.
 
 In this document we will be establishing OIDC Trust between Azure and Kubernetes
-cluster running outside of Azure. In this setup we will [register a new Azure
-App](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app),
-then create [configure the app to trust an external identity
+cluster running outside of Azure. In this setup we will [register a new Azure App](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app),
+then [configure the app to trust an external identity
 provider](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust)
 by creating `Federated credentials` for our Kubernetes cluster, where Inventory
-is running on.
+is running.
 
-For additional information on the topic, please refer to the [Workload Identity
-Federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation)
+For additional information on the topic, please refer to the [Workload Identity Federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation)
 documentation.
 
-# Requirements
+## Requirements
 
-You need a Kubernetes cluster with
+You need a Kubernetes cluster with the
 [ServiceAccountIssuerDiscovery](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-issuer-discovery)
 flag enabled.
 
@@ -36,13 +33,13 @@ The Inventory system will be deployed in the Kubernetes cluster. Check the
 Inventory.
 
 In order to find out the OpenID Connect Provider URL for your Kubernetes
-cluster, execute the following command.
+cluster, run the following command:
 
-``` shell
+```sh
 kubectl get --raw /.well-known/openid-configuration
 ```
 
-Sample response looks like this.
+Sample response:
 
 ``` javascript
 {
@@ -63,42 +60,41 @@ Sample response looks like this.
 Since our Kubernetes cluster will be running outside of Azure, we need to
 [register a new Azure App](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app).
 
-After that we need to [configure the app to trust an external identity
-provider](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust).
+After that, we need to [configure the app to trust an external identity provider](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust):
 
-In order to do that navigate to your app, then on the left-hand side click on
+1. Navigate to your app, then on the left-hand side click on
 `Certficates & secrets`, and then select the `Federated credentials` tab.
-Click on `Add credential` button.
 
-Select `Kubernetes accessing Azure resources` for the `Federated credential scenario`,
+1. Click on `Add credential` button.
+
+1. Select `Kubernetes accessing Azure resources` for the `Federated credential scenario`,
 and then fill in the `Cluster issuer URL`, `Namespace`, `Service account name`, etc.
 
-![Azure Federated Client Kubernetes](../images/azure-oidc-kubernetes.png)
+    ![Azure Federated Client Kubernetes](../images/azure-oidc-kubernetes.png)
 
-Once we have the `Federated client` created for our Kubernetes cluster we need
-to configure IAM permissions for our Azure App.
+    Once we have the `Federated client` created for our Kubernetes cluster, we need to configure IAM permissions for our Azure App.
 
-Navigate to `Subscriptions` and select the `Subscription` to which we want to
-give our App access to. Click on the `Add > Add role assignment` button.
+1. Navigate to `Subscriptions` and select the `Subscription` to which we want to
+give our App access to.
 
-Select the `Reader` role and add the App as a member.
+1. Click on the `Add > Add role assignment` button.
 
-# Configuration
+1. Select the `Reader` role and add the App as a member.
+
+## Configuration
 
 The Azure specific configuration used by the Inventory system resides in the `azure`
 section of the [configuration file](../examples/config.yaml).
 
 The Azure API clients used by the Inventory workers may be initialized either by
-using the [DefaultAzureCredential chain of credential
-providers](https://learn.microsoft.com/en-us/azure/developer/go/sdk/authentication-overview#use-defaultazurecredential-in-an-application),
-or by using OIDC trust via [Workload Identity
-Federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation)
+using the [DefaultAzureCredential chain of credential providers](https://learn.microsoft.com/en-us/azure/developer/go/sdk/authentication-overview#use-defaultazurecredential-in-an-application),
+or by using OIDC trust via [Workload Identity Federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation)
 
 The `azure.credentials` config section provides the _named_ credentials, which
-will be used when accessing the various Azure services (e.g. Compute, Resource Manager, etc.).
+will be used when accessing the various Azure services (e.g., Compute, Resource Manager).
 
 The `azure.services` config section provides service-specific configuration,
-e.g. we can configure which named credentials to be used when accessing the
+e.g., we can configure which named credentials to be used when accessing the
 Azure API services from Inventory.
 
 The following example configures two _named_ credentials - `foo` and `bar`, and
@@ -163,23 +159,19 @@ use are:
 - `default`
 - `workload_identity`
 
-With `default` authentication mechanism the Azure API clients will be initialized
-using [DefaultAzureCredential chain of credential
-providers](https://learn.microsoft.com/en-us/azure/developer/go/sdk/authentication-overview#use-defaultazurecredential-in-an-application).
+With `default` authentication mechanism, the Azure API clients will be initialized
+using [DefaultAzureCredential chain of credential providers](https://learn.microsoft.com/en-us/azure/developer/go/sdk/authentication-overview#use-defaultazurecredential-in-an-application).
 
-When using `workload_identity` authentication mechanism the Azure API clients
-will use OIDC Trust via [Workload Identity
-Federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation).
+When using `workload_identity` authentication mechanism, the Azure API clients
+will use OIDC Trust via [Workload Identity Federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation).
 
 With `workload_identity` you can configure the path to the token file to use
-[service account token
-projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#launch-a-pod-using-service-account-token-projection),
-so that your Kubernetes tokens are automatically refreshed and ready to use by
-Inventory.
+[service account token projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#launch-a-pod-using-service-account-token-projection),
+so that your Kubernetes tokens are automatically refreshed and ready to use by Inventory.
 
-# References
+## References
 
-Please refer to the following links for additional information on the topic.
+Please refer to the following links for additional information on the topic:
 
 - [What is OpenID Connect](https://openid.net/developers/how-connect-works/)
 - [OpenID Connect Core 1.0 spec](https://openid.net/specs/openid-connect-core-1_0.html)
