@@ -19,12 +19,30 @@ logging:
 redis:
   endpoint: redis:6379
 
+# Database settings
 database:
   dsn: "postgresql://inventory:p4ssw0rd@postgres:5432/inventory?sslmode=disable"
   migration_dir: ./internal/pkg/migrations
 
+# Worker settings
 worker:
+  # Concurrency level
   concurrency: 100
+
+  # Priority queue configuration.
+  #
+  # Check the following documentation for more details about how priority queues
+  # work.
+  # See https://github.com/hibiken/asynq/wiki/Queue-Priority
+  queues:
+    default: 1
+
+  # Strict priority specifies whether queue priority is treated strictly.
+  #
+  # When set to true tasks from queues with higher priority are always processed
+  # first, and tasks from queues with lower priority are processed only after
+  # higher priority queues are empty.
+  strict_priority: false
 
 dashboard:
   address: ":8080"
