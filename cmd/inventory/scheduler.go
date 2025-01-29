@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -128,6 +129,7 @@ func NewSchedulerCommand() *cli.Command {
 						"TYPE",
 						"PREV",
 						"NEXT",
+						"OPTS",
 					}
 
 					table := newTableWriter(os.Stdout, headers)
@@ -137,12 +139,19 @@ func NewSchedulerCommand() *cli.Command {
 						if item.Prev.IsZero() {
 							prev = na
 						}
+
+						opts := make([]string, 0)
+						for _, opt := range item.Opts {
+							opts = append(opts, opt.String())
+						}
+
 						row := []string{
 							item.ID,
 							item.Spec,
 							item.Task.Type(),
 							prev,
 							fmt.Sprintf("In %s", nextIn.String()),
+							strings.Join(opts, ", "),
 						}
 						table.Append(row)
 					}
