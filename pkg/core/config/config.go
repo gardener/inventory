@@ -435,6 +435,20 @@ type DatabaseConfig struct {
 type WorkerConfig struct {
 	// Concurrency specifies the concurrency level for workers.
 	Concurrency int `yaml:"concurrency"`
+
+	// Queues specifies the priority queue configuration for the worker.
+	//
+	// See [1] for more details about how priority queues work.
+	//
+	// [1]: https://github.com/hibiken/asynq/wiki/Queue-Priority
+	Queues map[string]int `yaml:"queues"`
+
+	// StrictPriority specifies whether queue priority is treated strictly.
+	//
+	// When it is set to true tasks from queues with higher priority are
+	// always processed first, and tasks from queues with lower priority are
+	// processed only after higher priority queues are empty.
+	StrictPriority bool `yaml:"strict_priority"`
 }
 
 // SchedulerConfig provides scheduler specific configuration settings.
