@@ -296,6 +296,10 @@ func newScheduler(conf *config.Config) *asynq.Scheduler {
 		LogLevel:            logLevel,
 	}
 
+	if conf.Scheduler.DefaultQueue == "" {
+		conf.Scheduler.DefaultQueue = config.DefaultQueueName
+	}
+
 	scheduler := asynq.NewScheduler(redisClientOpt, opts)
 	return scheduler
 }
