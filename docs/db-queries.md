@@ -19,7 +19,7 @@ ORDER BY total DESC;
 
 ## AWS Instances Grouped By Type
 
-Returns the AWS instances grouped by type.
+The following query returns the AWS instances grouped by type.
 
 ``` sql
 SELECT
@@ -48,6 +48,8 @@ ORDER BY instances DESC;
 
 ## AWS EC2 Instances Grouped By Arch
 
+The following query returns the AWS EC2 instances grouped by arch.
+
 ``` sql
 SELECT
         arch,
@@ -71,7 +73,7 @@ Time: 2.631 ms
 
 ## AWS EC2 Instances Uptime
 
-Filter out EC2 instances with an uptime of more than 30 days.
+The following query filters out EC2 instances with an uptime of more than 30 days.
 
 ``` sql
 SELECT * FROM aws_instance WHERE launch_time < NOW() - INTERVAL '30 days';
@@ -127,10 +129,10 @@ FROM aws_instance AS i
 INNER JOIN aws_net_interface AS ni ON i.instance_id = ni.instance_id AND i.account_id = ni.account_id
 ```
 
-## AWS EC2 Instances which are using unknown CloudProfile image
+## AWS EC2 Instances Using Unknown CloudProfile Images
 
-The following query will return the set of EC2 instances, which are using
-images, which are not defined in the respective CloudProfile for the shoot they
+The following query will return a set of EC2 instances, which are using
+images not defined in the respective CloudProfile for the shoot they
 belong to.
 
 ``` sql
@@ -198,7 +200,7 @@ GROUP BY s.cloud_profile
 ORDER BY total DESC;
 ```
 
-Sample result.
+Sample output:
 
 ``` text
 ┌────────────────────┬───────┐
@@ -247,7 +249,7 @@ GROUP BY seed.name
 ORDER BY total DESC;
 ```
 
-Sample result.
+Sample output:
 
 ``` text
 ┌────────────────────────┬───────┐
@@ -272,7 +274,7 @@ Time: 1.440 ms
 
 ## Number of Shoots per User
 
-The following query will return the number of shoots grouped by the user, who
+The following query will return the number of shoots grouped by the user who
 created them.
 
 ``` sql
@@ -305,7 +307,7 @@ INNER JOIN aws_vpc AS v ON s.technical_id = v.name;
 
 ## Match AWS VPCs with Gardener Shoots
 
-This query is similar to the `Match Gardener Shoots with AWS VPCs`, but slightly
+This query is similar to `Match Gardener Shoots with AWS VPCs`, but slightly
 different, as it allows us to find VPCs for which there is no corresponding
 shoot.
 
@@ -324,8 +326,8 @@ LEFT JOIN g_shoot AS s ON v.name = s.technical_id;
 
 ## Find Leaked AWS VPCs
 
-Using the query from `Match AWS VPCs with Gardener Shoots` we can filter out the
-results for VPCs, which do not have a corresponding shoot in Gardener, e.g.
+Using the query from `Match AWS VPCs with Gardener Shoots`, we can filter out the
+results for VPCs which do not have a corresponding shoot in Gardener.
 
 ``` sql
 SELECT
@@ -364,7 +366,10 @@ FROM aws_instance AS i
 LEFT JOIN g_machine AS m ON i.name = m.name;
 ```
 
-## Match AWS EC2 Instance with Machine, VPC and Shoot
+## Match AWS EC2 Instance with Machine, VPC, and Shoot
+
+The following query will match the AWS EC2 instances with Gardener Machine
+objects, VPCs, and shoots.
 
 ``` sql
 SELECT
@@ -392,7 +397,7 @@ LEFT JOIN g_shoot AS s ON v.name = s.technical_id;
 ## Find Leaked AWS EC2 Instances
 
 Using the query from `Match AWS EC2 Instance with Machine, VPC and Shoot` as a
-starting point we can filter out the results to get a list of EC2 Instances
+starting , we can filter out the results to get a list of EC2 Instances
 which do not have a corresponding Gardener Machine.
 
 ``` sql
