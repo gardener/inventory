@@ -36,8 +36,13 @@ func NewCollectSeedsTask() *asynq.Task {
 
 // HandleCollectSeedsTask is the handler for collecting Gardener Seeds.
 func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
-	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info("collecting Gardener seeds")
 	seeds := make([]models.Seed, 0)
 	p := pager.New(

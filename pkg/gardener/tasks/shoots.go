@@ -51,8 +51,13 @@ func NewCollectShootsTask() *asynq.Task {
 
 // HandleCollectShootsTask is a handler that collects Gardener Shoots.
 func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
-	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info("collecting Gardener shoots")
 	shoots := make([]models.Shoot, 0)
 	p := pager.New(

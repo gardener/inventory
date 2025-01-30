@@ -127,6 +127,11 @@ func enqueueCollectPersistentVolumes(ctx context.Context) error {
 // specified in the payload.
 func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolumesPayload) error {
 	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
 	logger.Info("collecting Gardener Persistent Volumes", "seed", payload.Seed)
 	client, err := gardenerclient.DefaultClient.SeedClient(ctx, payload.Seed)
 	if err != nil {

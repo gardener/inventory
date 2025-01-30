@@ -118,6 +118,11 @@ func enqueueCollectMachines(ctx context.Context) error {
 // specified in the payload.
 func collectMachines(ctx context.Context, payload CollectMachinesPayload) error {
 	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
 	logger.Info("collecting Gardener machines", "seed", payload.Seed)
 	client, err := gardenerclient.DefaultClient.MCMClient(ctx, payload.Seed)
 	if err != nil {
