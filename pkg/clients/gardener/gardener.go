@@ -90,6 +90,12 @@ type GKESoilCluster struct {
 // DefaultClient is the default client for interfacing with the Gardener APIs.
 var DefaultClient *Client
 
+// IsDefaultClientSet is a predicate which returns true when the [DefaultClient]
+// has been configured, and returns false otherwise.
+func IsDefaultClientSet() bool {
+	return DefaultClient != nil
+}
+
 // SetDefaultClient sets the [DefaultClient] to the specified [Client].
 func SetDefaultClient(c *Client) {
 	DefaultClient = c
