@@ -504,6 +504,10 @@ scheduler:
 
 # Gardener specific configuration
 gardener:
+  # Setting `is_enabled' to false would not create a Gardener API client, and as
+  # a result Inventory will not process any of the Gardener collection tasks.
+  is_enabled: true
+
   # Specifies the endpoint of the Gardener APIs.
   endpoint: https://localhost:6443/
 

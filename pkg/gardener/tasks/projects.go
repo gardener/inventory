@@ -63,8 +63,13 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 
 // collectProject collects a single Gardener Project.
 func collectProject(ctx context.Context, payload CollectProjectsPayload) error {
-	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info("collecting Gardener project", "project", payload.ProjectName)
 
 	result, err := client.CoreV1beta1().Projects().Get(ctx, payload.ProjectName, metav1.GetOptions{})
@@ -86,8 +91,13 @@ func collectProject(ctx context.Context, payload CollectProjectsPayload) error {
 
 // collectAllProjects collects all projects from Gardener.
 func collectAllProjects(ctx context.Context) error {
-	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info("collecting Gardener projects")
 	items := make([]*v1beta1.Project, 0)
 

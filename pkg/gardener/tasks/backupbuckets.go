@@ -36,8 +36,13 @@ func NewCollectBackupBucketsTask() *asynq.Task {
 
 // HandleCollectBackupBucketsTask is the handler for collecting BackupBuckets.
 func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
-	client := gardenerclient.DefaultClient.GardenClient()
 	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
+	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info("Collecting Gardener backup buckets")
 	buckets := make([]models.BackupBucket, 0)
 	p := pager.New(

@@ -57,6 +57,12 @@ func NewCollectCloudProfilesTask() *asynq.Task {
 // Profiles. This handler will also enqueue tasks for collecting and persisting
 // the machine images for each supported Cloud Profile type.
 func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
+	logger := asynqutils.GetLogger(ctx)
+	if !gardenerclient.IsDefaultClientSet() {
+		logger.Warn("gardener client not configured")
+		return nil
+	}
+
 	// After collecting the Cloud Profiles we will enqueue a separate task
 	// for persisting the Machine Images for each supported Cloud Profile
 	// type. The following is the mapping between the Cloud Profile type,
@@ -69,7 +75,6 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	client := gardenerclient.DefaultClient.GardenClient()
-	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Gardener cloud profiles")
 	cloudProfiles := make([]models.CloudProfile, 0)
 	p := pager.New(
