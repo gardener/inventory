@@ -484,6 +484,10 @@ type PeriodicJob struct {
 
 // GardenerConfig represents the Gardener specific configuration.
 type GardenerConfig struct {
+	// IsEnabled specifies whether the Gardener collection is enabled or
+	// not.  Setting this to false will not configure a Gardener API client.
+	IsEnabled bool `yaml:"is_enabled"`
+
 	// UserAgent is the User-Agent header to configure for the API client.
 	UserAgent string `yaml:"user_agent"`
 
