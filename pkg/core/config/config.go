@@ -113,6 +113,83 @@ type Config struct {
 
 	// Azure represents the Azure specific configuration settings.
 	Azure AzureConfig `yaml:"azure"`
+
+	// OpenStack represents the OpenStack specific configuration settings.
+	OpenStack OpenStackConfig `yaml:"openstack"`
+}
+
+type OpenStackConfig struct {
+    // IsEnabled specifies whether the OpenStack collection is enabled or not.
+    // Setting this to false will not create any OpenStack client.
+    IsEnabled bool `yaml:"is_enabled"`
+
+    // Services provides the OpenStack service-specific configuration.
+    Services OpenStackServices `yaml:"services"`
+
+    // Credentials specifies the OpenStack named credentials configuration,
+    // which is used by the various OpenStack services.
+    Credentials map[string]OpenStackCredentialsConfig `yaml:"credentials"`
+}
+
+type OpenStackServices struct {
+    // Compute provides the Compute service configuration.
+    Compute OpenStackServiceConfig `yaml:"compute"`
+
+    // Network provides the Network service configuration.
+    Network OpenStackServiceConfig `yaml:"network"`
+
+    // BlockStorage provides the Block Storage service configuration.
+    BlockStorage OpenStackServiceConfig `yaml:"block_storage"`
+
+    // ObjectStorage provides the Object Storage service configuration.
+    ObjectStorage OpenStackServiceConfig `yaml:"object_storage"`
+}
+
+type OpenStackServiceConfig struct {
+    // UseCredentials specifies the name of the credentials to use.
+    UseCredentials []string `yaml:"use_credentials"`
+
+    // Region specifies the region to use when initializing the OpenStack client.
+    Region string `yaml:"region"`
+
+    // Domain specifies the domain to use when initializing the OpenStack client.
+    Domain string `yaml:"domain"`
+
+    // AuthURL specifies the authentication URL to use when initializing the OpenStack client.
+    AuthURL string `yaml:"auth_url"`
+}
+
+type OpenStackCredentialsConfig struct {
+    // Authentication specifies the authentication method/strategy to use
+    // when creating OpenStack API clients. 
+	// The currently supported authentication mechanisms are `user' for username/password 
+    // and `application_credentials'.
+    Authentication string `yaml:"authentication"`
+
+    // User provides the settings to use for authentication when using username/password.
+    User OpenStackUserConfig `yaml:"user"`
+
+    // ApplicationCredentials provides the settings to use for authentication when using application credentials.
+    ApplicationCredentials OpenStackApplicationCredentialsConfig `yaml:"application_credentials"`
+}
+
+type OpenStackUserConfig struct {
+    // Username specifies the username to use when authenticating.
+    Username string `yaml:"username"`
+
+    // Password specifies the password to use when authenticating.
+    Password string `yaml:"password"`
+}
+
+type OpenStackApplicationCredentialsConfig struct {
+    // ApplicationCredentialsID specifies the application credential ID to use when authenticating.
+    ApplicationCredentialsID string `yaml:"application_credentials_id"`
+
+    // ApplicationCredentialsSecret specifies the application credential secret to use when authenticating.
+    ApplicationCredentialsSecret string `yaml:"application_credentials_secret"`
+
+    // ApplicationCredentialsName specifies the application credential name to use when authenticating.
+    ApplicationCredentialsName string `yaml:"application_credentials_name"`
 }
 
 // AzureConfig provides Azure specific configuration settings.
