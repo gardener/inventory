@@ -99,6 +99,11 @@ func getGardenerRestConfig(conf *config.Config) (*rest.Config, error) {
 // configureGardenerClient configures the API client for interfacing with the
 // Gardener APIs.
 func configureGardenerClient(_ context.Context, conf *config.Config) error {
+	if !conf.Gardener.IsEnabled {
+		slog.Warn("Gardener is not enabled, will not create API client")
+		return nil
+	}
+
 	slog.Info(
 		"configuring Gardener API client",
 		"authentication", conf.Gardener.Authentication,
