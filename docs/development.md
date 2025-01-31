@@ -6,11 +6,11 @@ Inventory system.
 The development flow in summary is:
 
 1. Define models and then register them
-2. Create schema migration for the models
-3. Define tasks and register them
-4. Configure retention policy for the models
-5. Define scheduler entries for any periodic tasks
-6. Add test cases
+1. Create schema migration for the models
+1. Define tasks and register them
+1. Configure retention policy for the models
+1. Define scheduler entries for any periodic tasks
+1. Add test cases
 
 For more details on each point, please read the rest of this document.
 

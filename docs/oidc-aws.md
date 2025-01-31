@@ -1,4 +1,4 @@
-# OpenID Connect Trust between AWS and Inventory
+# OpenID Connect Trust Between AWS and Inventory
 
 This document describes how to establish trust between an [OpenID
 Connect](http://openid.net/connect/) IdP and your AWS account.
@@ -130,7 +130,7 @@ aws:
 
   # The `credentials' section provides named credentials, which are used by the
   # various AWS services. The currently supported token retrievers are `none',
-  # `kube_sa_token' and `token_file'. See docs/oidc-aws.md for more details.
+  # `kube_sa_token', and `token_file'. See docs/oidc-aws.md for more details.
   credentials:
     default:
       # When using `none' as the token retriever, only the shared AWS
@@ -139,9 +139,9 @@ aws:
 
     account-foo:
       # Example configuration for `kube_sa_token' retriever. When using this
-      # token retriever the Inventory will request a Kubernetes Service Account
+      # token retriever, the Inventory will request a Kubernetes Service Account
       # token using the specified kubeconfig, which is then exchanged for
-      # temporary security credentials via the AWS STS service.  It is expected
+      # temporary security credentials via the AWS STS service. It is expected
       # that OIDC Trust is already established between Inventory and AWS when
       # using this token retriever.
       token_retriever: kube_sa_token
@@ -157,7 +157,7 @@ aws:
 
     account-bar:
       # Example configuration for `token_file' retriever. When using this token
-      # retriever the Inventory will exchange the token contained within the
+      # retriever, the Inventory will exchange the token contained within the
       # specified file for temporary security credentials via the AWS STS
       # service. It is expected that OIDC Trust is already established between
       # Inventory and AWS when using this token retriever.

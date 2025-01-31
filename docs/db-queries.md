@@ -1,4 +1,4 @@
-# Querying the database
+# Querying the Database
 
 The following section provides some sample queries you can use with the data
 collected by the Inventory system.
@@ -7,7 +7,7 @@ collected by the Inventory system.
 
 The following query will give you the number of VPCs per Region.
 
-``` sql
+```sql
 SELECT
         v.region_name AS region_name,
         v.account_id AS account_id,
@@ -21,7 +21,7 @@ ORDER BY total DESC;
 
 The following query returns the AWS instances grouped by type.
 
-``` sql
+```sql
 SELECT
         instance_type,
         account_id,
@@ -34,7 +34,7 @@ GROUP BY (instance_type, account_id) ORDER BY total DESC;
 
 The following query returns the list of instances grouped by Region and VPC.
 
-``` sql
+```sql
 SELECT
         v.name AS vpc_name,
         v.region_name AS region_name,
@@ -50,7 +50,7 @@ ORDER BY instances DESC;
 
 The following query returns the AWS EC2 instances grouped by arch.
 
-``` sql
+```sql
 SELECT
         arch,
         COUNT(id) AS total
@@ -75,7 +75,7 @@ Time: 2.631 ms
 
 The following query filters out EC2 instances with an uptime of more than 30 days.
 
-``` sql
+```sql
 SELECT * FROM aws_instance WHERE launch_time < NOW() - INTERVAL '30 days';
 ```
 
@@ -83,7 +83,7 @@ SELECT * FROM aws_instance WHERE launch_time < NOW() - INTERVAL '30 days';
 
 The following query returns the total number of public IP addresses per AWS Region.
 
-``` sql
+```sql
 SELECT
         region_name,
         account_id,
@@ -99,7 +99,7 @@ The following query will return the Elastic Load Balancers, along with their
 private and public IPv4 addresses, by joining the ELB and NetworkInterface using
 the link table.
 
-``` sql
+```sql
 SELECT
         lb.id AS lb_id,
         lb.dns_name AS dns,
@@ -118,7 +118,7 @@ INNER JOIN aws_net_interface AS ni ON ni.id = link.ni_id;
 The following query will join the EC2 instances with the Elastic Network
 Interfaces.
 
-``` sql
+```sql
 SELECT
         i.*,
         ni.id AS net_interface_id,
@@ -135,7 +135,7 @@ The following query will return a set of EC2 instances, which are using
 images not defined in the respective CloudProfile for the shoot they
 belong to.
 
-``` sql
+```sql
 SELECT DISTINCT
        i.*,
        s.name AS shoot_name,
@@ -152,7 +152,7 @@ WHERE cpaw.ami IS NULL;
 The following query will join the GCP Compute Engine Instances with the Network
 Interfaces.
 
-``` sql
+```sql
 SELECT
         i.*,
         nic.id AS nic_id,
@@ -171,7 +171,7 @@ INNER JOIN gcp_nic AS nic ON i.instance_id = nic.instance_id AND i.project_id = 
 The following query selects the GCP Public IP Addresses by making a `UNION` of
 the `gcp_address` and `gcp_forwarding_rule` tables.
 
-``` sql
+```sql
 SELECT
         ga.address AS ip_address,
         ga.region AS region,
@@ -191,7 +191,7 @@ FROM gcp_forwarding_rule AS gfr WHERE gfr.load_balancing_scheme = 'EXTERNAL';
 
 The following query will give you the shoots grouped by cloud profile.
 
-``` sql
+```sql
 SELECT
         s.cloud_profile AS cloud_profile,
         COUNT(id) AS total
@@ -223,7 +223,7 @@ Time: 0.725 ms
 
 The following query will give you the top 10 projects with shoots.
 
-``` sql
+```sql
 SELECT
         s.project_name AS project_name,
         p.owner AS project_owner,
@@ -239,7 +239,7 @@ LIMIT 10;
 
 The following query will group the number of shoots per seed cluster.
 
-``` sql
+```sql
 SELECT
         seed.name,
         COUNT(shoot.id) AS total
@@ -277,7 +277,7 @@ Time: 1.440 ms
 The following query will return the number of shoots grouped by the user who
 created them.
 
-``` sql
+```sql
 SELECT
         s.created_by,
         COUNT(s.id) AS total
@@ -290,7 +290,7 @@ ORDER BY total DESC;
 
 The following query will match the Gardener Shoots with the AWS VPCs.
 
-``` sql
+```sql
 SELECT
         s.name AS shoot_name,
         s.namespace AS shoot_ns,
@@ -311,7 +311,7 @@ This query is similar to `Match Gardener Shoots with AWS VPCs`, but slightly
 different, as it allows us to find VPCs for which there is no corresponding
 shoot.
 
-``` sql
+```sql
 SELECT
         v.name AS vpc_name,
         v.region_name AS region_name,
@@ -329,7 +329,7 @@ LEFT JOIN g_shoot AS s ON v.name = s.technical_id;
 Using the query from `Match AWS VPCs with Gardener Shoots`, we can filter out the
 results for VPCs which do not have a corresponding shoot in Gardener.
 
-``` sql
+```sql
 SELECT
         v.name AS vpc_name,
         v.region_name AS region_name,
@@ -351,7 +351,7 @@ We can further filter the results by `v.is_default` to exclude the default VPCs.
 The following query will match the AWS EC2 instances with Gardener Machine
 objects.
 
-``` sql
+```sql
 SELECT
         i.name AS instance_name,
         i.instance_id AS instance_id,
@@ -371,7 +371,7 @@ LEFT JOIN g_machine AS m ON i.name = m.name;
 The following query will match the AWS EC2 instances with Gardener Machine
 objects, VPCs, and shoots.
 
-``` sql
+```sql
 SELECT
         i.name AS inst_name,
         i.instance_id AS inst_id,
@@ -400,7 +400,7 @@ Using the query from `Match AWS EC2 Instance with Machine, VPC and Shoot` as a
 starting , we can filter out the results to get a list of EC2 Instances
 which do not have a corresponding Gardener Machine.
 
-``` sql
+```sql
 SELECT
         i.name AS inst_name,
         i.instance_id AS inst_id,
@@ -429,7 +429,7 @@ WHERE i.state <> 'terminated' AND m.name IS NULL;
 The following query will report AWS S3 buckets which do not have a corresponding
 Gardener `BackupBucket`.
 
-``` sql
+```sql
 SELECT
         b.name,
         b.region_name,

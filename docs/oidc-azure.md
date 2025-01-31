@@ -1,4 +1,4 @@
-# OpenID Connect Trust between Azure and Inventory
+# OpenID Connect Trust Between Azure and Inventory
 
 This document describes how to establish [OpenID Connect](http://openid.net/connect/) Trust between Azure and Inventory running
 in a Kubernetes cluster.
@@ -115,9 +115,9 @@ azure:
   # service, which means that collection will happen against each configured
   # named credential.
   #
-  # For instance, if `compute' service specifies named credentials `foo' and
+  # For instance, if the `compute' service specifies named credentials `foo' and
   # `bar', then Inventory will connect and collect Compute resources from the
-  # Subscriptions and Resource Groups, for which `foo' and `bar' credentials
+  # Subscriptions and Resource Groups, for which the `foo' and `bar' credentials
   # have access to.
   services:
     compute:
@@ -129,10 +129,10 @@ azure:
   # various Azure services. The currently supported authentication mechanisms
   # are `default' and `workload_identity'.
   #
-  # When using `default' as the authentication mechanism the API clients will be
+  # When using `default' as the authentication mechanism, the API clients will be
   # initialized using the `DefaultAzureCredential' chain of credential providers [1].
   #
-  # When using `workload_identity' the API clients will be configured to
+  # When using `workload_identity', the API clients will be configured to
   # authenticate using Workload Identity Federation [2]. For more details,
   # please refer to the docs/oidc-azure.md document.
   #
@@ -144,7 +144,7 @@ azure:
       authentication: default
 
     bar:
-      # With `workload_identity' authentication the API client will be
+      # With `workload_identity' authentication, the API client will be
       # configured to authenticate using Workload Identity Federation.
       authentication: workload_identity
       workload_identity:
