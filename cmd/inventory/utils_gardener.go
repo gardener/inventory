@@ -111,6 +111,10 @@ func configureGardenerClient(_ context.Context, conf *config.Config) error {
 		"token_path", conf.Gardener.TokenPath,
 	)
 
+	if err := validateGardenerConfig(conf); err != nil {
+		return err
+	}
+
 	restConfig, err := getGardenerRestConfig(conf)
 	if err != nil {
 		return fmt.Errorf("gardener: %w", err)

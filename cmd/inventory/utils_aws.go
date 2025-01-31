@@ -351,6 +351,10 @@ func configureAWSClients(ctx context.Context, conf *config.Config) error {
 	}
 
 	slog.Info("configuring AWS clients")
+	if err := validateAWSConfig(conf); err != nil {
+		return err
+	}
+
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"ec2":   configureEC2Clientset,
 		"elb":   configureELBClientset,

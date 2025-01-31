@@ -90,6 +90,10 @@ func configureAzureClients(ctx context.Context, conf *config.Config) error {
 	}
 
 	slog.Info("configuring Azure clients")
+	if err := validateAzureConfig(conf); err != nil {
+		return err
+	}
+
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"compute":          configureAzureComputeClientsets,
 		"resource_manager": configureAzureResourceManagerClientsets,
