@@ -431,6 +431,10 @@ func configureGCPClients(ctx context.Context, conf *config.Config) error {
 	}
 
 	slog.Info("configuring GCP clients")
+	if err := validateGCPConfig(conf); err != nil {
+		return err
+	}
+
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"resource_manager": configureGCPResourceManagerClientsets,
 		"compute":          configureGCPComputeClientsets,

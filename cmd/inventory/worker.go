@@ -136,10 +136,6 @@ func NewWorkerCommand() *cli.Command {
 					validatorFuncs := []func(c *config.Config) error{
 						validateWorkerConfig,
 						validateDBConfig,
-						validateGardenerConfig,
-						validateAWSConfig,
-						validateGCPConfig,
-						validateAzureConfig,
 					}
 
 					for _, validator := range validatorFuncs {
