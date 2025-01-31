@@ -1,4 +1,4 @@
-# OpenID Connect Trust between GCP and Inventory
+# OpenID Connect Trust Between GCP and Inventory
 
 Workload identity federation is a secure mechanism allowing access to GCP services without a service account key. The latter is an unsecure and potentially dangerous authentication mechanism. Instead of using service account keys to authenticate, the requesting client presents an identity token which, after a successful validation on the service side, is exchanged to a short-lived access token.
 
@@ -7,7 +7,7 @@ In the inventory case there is a need to establish trust between the inventory s
 Inventory identity, when running in a K8S cluster, is carried by OIDC identity tokens issued by the K8S cluster. To
 allow trust between a GKE cluster and the inventory workload, the inventory service account tokens need to be exchanged with short lived access tokens carrying an identity issued by GCP.
 
-As an exampl,e here is a token of an inventory pod instance with the subject `system:serviceaccount:namespace:inventory`:
+As an example, here is a token of an inventory pod instance with the subject `system:serviceaccount:namespace:inventory`:
 
 ```json
 {
@@ -99,6 +99,8 @@ subjects:
 The concrete configurations to achieve trust between a GKE cluster and an external K8S cluster are thoroughly described in the GCP documentation, with the following references.
 
 ## References
+
+Please refer to the following links for additional information on the topic:
 
 - [RFC 8693 OAuth 2.0 Token Exchange](https://www.rfc-editor.org/rfc/rfc8693)
 - [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation)
