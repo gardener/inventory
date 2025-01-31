@@ -431,6 +431,8 @@ scheduler:
           # Gardener
           - name: "g:model:project"
             duration: 24h
+          - name: "g:model:project_member"
+            duration: 24h
           - name: "g:model:seed"
             duration: 24h
           - name: "g:model:shoot"
