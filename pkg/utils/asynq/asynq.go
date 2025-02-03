@@ -14,6 +14,8 @@ import (
 
 	"github.com/hibiken/asynq"
 	"gopkg.in/yaml.v3"
+
+	"github.com/gardener/inventory/pkg/core/config"
 )
 
 // SkipRetry wraps the provided error with [asynq.SkipRetry] in order to signal
@@ -123,4 +125,15 @@ func NewDefaultErrorHandler() asynq.ErrorHandlerFunc {
 	}
 
 	return asynq.ErrorHandlerFunc(handler)
+}
+
+// GetQueueName returns the queue name from the specified context, if present.
+// Otherwise it returns [config.DefaultQueueName].
+func GetQueueName(ctx context.Context) string {
+	queue, ok := asynq.GetQueueName(ctx)
+	if ok {
+		return queue
+	}
+
+	return config.DefaultQueueName
 }
