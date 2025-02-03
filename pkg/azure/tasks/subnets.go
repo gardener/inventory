@@ -81,6 +81,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 
 	// Enqueue task for each resource group
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 	for _, vpc := range vpcs {
 		if !azureclients.SubnetsClientset.Exists(vpc.SubscriptionID) {
 			logger.Warn(
@@ -109,7 +110,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			continue
 		}
 		task := asynq.NewTask(TaskCollectSubnets, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

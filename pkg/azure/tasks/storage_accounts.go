@@ -75,6 +75,7 @@ func enqueueCollectStorageAccounts(ctx context.Context) error {
 
 	// Enqueue task for each resource group
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 	for _, rg := range resourceGroups {
 		if !azureclients.StorageAccountsClientset.Exists(rg.SubscriptionID) {
 			logger.Warn(
@@ -101,7 +102,7 @@ func enqueueCollectStorageAccounts(ctx context.Context) error {
 			continue
 		}
 		task := asynq.NewTask(TaskCollectStorageAccounts, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

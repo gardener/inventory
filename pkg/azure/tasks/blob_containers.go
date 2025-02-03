@@ -82,6 +82,7 @@ func enqueueCollectBlobContainers(ctx context.Context) error {
 
 	// Enqueue task for each resource group
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 	for _, acc := range storageAccounts {
 		if !azureclients.BlobContainersClientset.Exists(acc.SubscriptionID) {
 			logger.Warn(
@@ -111,7 +112,7 @@ func enqueueCollectBlobContainers(ctx context.Context) error {
 			continue
 		}
 		task := asynq.NewTask(TaskCollectBlobContainers, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
