@@ -77,6 +77,7 @@ func enqueueCollectVirtualMachines(ctx context.Context) error {
 
 	// Enqueue task for each resource group
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 	for _, rg := range resourceGroups {
 		if !azureclients.VirtualMachinesClientset.Exists(rg.SubscriptionID) {
 			logger.Warn(
@@ -103,7 +104,7 @@ func enqueueCollectVirtualMachines(ctx context.Context) error {
 			continue
 		}
 		task := asynq.NewTask(TaskCollectVirtualMachines, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

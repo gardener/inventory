@@ -70,6 +70,7 @@ func enqueueCollectResourceGroups(ctx context.Context) error {
 		return nil
 	}
 
+	queue := asynqutils.GetQueueName(ctx)
 	err := azureclients.ResourceGroupsClientset.Range(func(subscriptionID string, _ *azureclients.Client[*armresources.ResourceGroupsClient]) error {
 		payload := CollectResourceGroupsPayload{
 			SubscriptionID: subscriptionID,
@@ -84,7 +85,7 @@ func enqueueCollectResourceGroups(ctx context.Context) error {
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectResourceGroups, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
