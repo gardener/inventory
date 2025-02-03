@@ -18,11 +18,11 @@ import (
 type TaskConstructor func() *asynq.Task
 
 // Enqueue enqueues the tasks produced by the given task constructors.
-func Enqueue(ctx context.Context, items []TaskConstructor) error {
+func Enqueue(ctx context.Context, items []TaskConstructor, opts ...asynq.Option) error {
 	logger := asynqutils.GetLogger(ctx)
 	for _, fn := range items {
 		task := fn()
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, opts...)
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
