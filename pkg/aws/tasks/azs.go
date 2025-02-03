@@ -175,6 +175,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 	}
 
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 
 	// Enqueue a task for each region
 	for _, r := range regions {
@@ -203,7 +204,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectAvailabilityZones, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

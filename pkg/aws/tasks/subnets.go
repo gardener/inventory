@@ -81,6 +81,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 	}
 
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
 			logger.Warn(
@@ -106,7 +107,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			continue
 		}
 		task := asynq.NewTask(TaskCollectSubnets, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

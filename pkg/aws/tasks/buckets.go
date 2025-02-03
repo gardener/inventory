@@ -71,6 +71,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 		return nil
 	}
 
+	queue := asynqutils.GetQueueName(ctx)
 	err := awsclients.S3Clientset.Range(func(accountID string, _ *awsclients.Client[*s3.Client]) error {
 		p := CollectBucketsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)
@@ -84,7 +85,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectBuckets, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
