@@ -77,6 +77,7 @@ func enqueueCollectAddresses(ctx context.Context) error {
 	// Enqueue tasks for all registered GCP Projects. Same projects are
 	// registered for the regional and global addresses clients, so here we
 	// can iterate through just one of the registries.
+	queue := asynqutils.GetQueueName(ctx)
 	err := gcpclients.AddressesClientset.Range(func(projectID string, _ *gcpclients.Client[*compute.AddressesClient]) error {
 		payload := CollectAddressesPayload{ProjectID: projectID}
 		data, err := json.Marshal(payload)
@@ -89,7 +90,7 @@ func enqueueCollectAddresses(ctx context.Context) error {
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectAddresses, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

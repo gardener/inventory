@@ -71,6 +71,7 @@ func HandleCollectDisksTask(ctx context.Context, t *asynq.Task) error {
 func enqueueCollectDisks(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
+	queue := asynqutils.GetQueueName(ctx)
 	err := gcpclients.DisksClientset.Range(func(projectID string, c *gcpclients.Client[*compute.DisksClient]) error {
 		p := &CollectDisksPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
@@ -84,7 +85,7 @@ func enqueueCollectDisks(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectDisks, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

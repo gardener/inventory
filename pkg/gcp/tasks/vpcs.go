@@ -78,6 +78,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 		return nil
 	}
 
+	queue := asynqutils.GetQueueName(ctx)
 	err := gcpclients.NetworksClientset.Range(func(projectID string, _ *gcpclients.Client[*compute.NetworksClient]) error {
 		p := &CollectVPCsPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
@@ -91,7 +92,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectVPCs, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

@@ -68,6 +68,7 @@ func HandleCollectBucketsTask(ctx context.Context, t *asynq.Task) error {
 func enqueueCollectBuckets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
+	queue := asynqutils.GetQueueName(ctx)
 	err := gcpclients.StorageClientset.Range(func(projectID string, c *gcpclients.Client[*storage.Client]) error {
 		p := &CollectBucketsPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
@@ -81,7 +82,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectBuckets, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

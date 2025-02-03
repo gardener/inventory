@@ -79,6 +79,7 @@ func enqueueCollectTargetPools(ctx context.Context) error {
 	}
 
 	// Enqueue tasks for all registered GCP Projects
+	queue := asynqutils.GetQueueName(ctx)
 	err := gcpclients.TargetPoolsClientset.Range(func(projectID string, _ *gcpclients.Client[*compute.TargetPoolsClient]) error {
 		payload := CollectTargetPoolsPayload{
 			ProjectID: projectID,
@@ -93,7 +94,7 @@ func enqueueCollectTargetPools(ctx context.Context) error {
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectTargetPools, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
