@@ -76,6 +76,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 		return nil
 	}
 
+	queue := asynqutils.GetQueueName(ctx)
 	err := gcpclients.SubnetworksClientset.Range(func(projectID string, c *gcpclients.Client[*compute.SubnetworksClient]) error {
 		p := &CollectSubnetsPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
@@ -89,7 +90,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectSubnets, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

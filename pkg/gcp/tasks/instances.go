@@ -84,6 +84,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 	}
 
 	// Enqueue tasks for all registered GCP Projects
+	queue := asynqutils.GetQueueName(ctx)
 	err := gcpclients.InstancesClientset.Range(func(projectID string, _ *gcpclients.Client[*compute.InstancesClient]) error {
 		payload := CollectInstancesPayload{
 			ProjectID: projectID,
@@ -98,7 +99,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectInstances, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
