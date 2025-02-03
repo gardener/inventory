@@ -75,6 +75,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 	}
 
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 
 	// Create a task for each known seed cluster
 	for _, s := range seeds {
@@ -92,7 +93,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectMachines, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

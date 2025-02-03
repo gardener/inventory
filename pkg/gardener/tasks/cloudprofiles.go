@@ -83,6 +83,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		}),
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
+	queue := asynqutils.GetQueueName(ctx)
 	err := p.EachListItem(ctx, opts, func(obj runtime.Object) error {
 		cp, ok := obj.(*gardenerv1beta1.CloudProfile)
 		if !ok {
@@ -135,7 +136,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		}
 
 		task := asynq.NewTask(miTaskName, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
