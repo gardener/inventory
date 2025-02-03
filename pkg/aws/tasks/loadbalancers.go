@@ -83,6 +83,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 	}
 
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 
 	// Enqueue ELB collection tasks for each region
 	for _, r := range regions {
@@ -102,7 +103,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectLoadBalancers, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

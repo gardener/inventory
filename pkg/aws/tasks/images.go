@@ -81,6 +81,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 	}
 
 	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
 	// Enqueue task for each known region
 	for _, r := range regions {
 		if !awsclients.EC2Clientset.Exists(r.AccountID) {
@@ -115,7 +116,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 		}
 
 		task := asynq.NewTask(TaskCollectImages, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",

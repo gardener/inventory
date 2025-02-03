@@ -71,6 +71,7 @@ func enqueueCollectRegions(ctx context.Context) error {
 		return nil
 	}
 
+	queue := asynqutils.GetQueueName(ctx)
 	err := awsclients.EC2Clientset.Range(func(accountID string, _ *awsclients.Client[*ec2.Client]) error {
 		p := &CollectRegionsPayload{AccountID: accountID}
 		data, err := json.Marshal(p)
@@ -84,7 +85,7 @@ func enqueueCollectRegions(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectRegions, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
