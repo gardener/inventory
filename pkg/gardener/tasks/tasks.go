@@ -12,6 +12,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/common/utils"
 	"github.com/gardener/inventory/pkg/core/registry"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 const (
@@ -27,6 +28,8 @@ const (
 // HandleCollectAllTask is the handler, which enqueues tasks for collecting all
 // known Gardener resources.
 func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
+	queue := asynqutils.GetQueueName(ctx)
+
 	// Task constructors
 	taskFns := []utils.TaskConstructor{
 		NewCollectProjectsTask,
@@ -38,7 +41,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectPersistentVolumesTask,
 	}
 
-	return utils.Enqueue(ctx, taskFns)
+	return utils.Enqueue(ctx, taskFns, asynq.Queue(queue))
 }
 
 // HandleLinkAllTask is the handler, which establishes relationships between the
