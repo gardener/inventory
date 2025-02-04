@@ -21,6 +21,13 @@ func GetSeedsFromDB(ctx context.Context) ([]models.Seed, error) {
 	return items, err
 }
 
+// GetProjectsFromDB fetches the [models.Project] items from the database.
+func GetProjectsFromDB(ctx context.Context) ([]models.Project, error) {
+	items := make([]models.Project, 0)
+	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+	return items, err
+}
+
 // ErrCannotInferShoot is an error which is returned when a shoot cannot be
 // inferred from the specified instance name.
 var ErrCannotInferShoot = errors.New("cannot infer shoot")
