@@ -268,6 +268,55 @@ aws:
         role_arn: arn:aws:iam::account:role/name
         role_session_name: gardener-inventory-worker
 
+openstack:
+  is_enabled: true
+  
+  # The `credentials' section provides named credentials, which are used by the
+  # various OpenStack services. The currently supported authentication mechanisms are `user' for username and password
+  # and `app_credentials' for application credentials.
+  credentials:
+    local:
+      authentication: user
+      user:
+        username_file: "<path-to-username-file>"
+        password_file: "<path-to-password-file>"
+    sa:
+      authentication: app_credentials
+      user:
+        username_file: "<path-to-username-file>"
+        password_file: "<path-to-password-file>"
+  services:
+    compute:
+    - domain: <domain>
+      auth_endpoint: <endpoint>
+      # needed for differentiating between projects with the same name
+      # in different domains.
+      project_id: <project_id>
+      # needed for client creation
+      project: <project_name>
+      region: <region>
+      use_credential: local
+    network:
+    - domain: <domain>
+      auth_endpoint: <endpoint>
+      # needed for differentiating between projects with the same name
+      # in different domains.
+      project_id: <project_id>
+      # needed for client creation
+      project: <project_name>
+      region: <region>
+      use_credential: sa
+    block_storage:
+    - domain: <domain>
+      auth_endpoint: <endpoint>
+      # needed for differentiating between projects with the same name
+      # in different domains.
+      project_id: <project_id>
+      # needed for client creation
+      project: <project_name>
+      region: <region>
+      use_credential: sa
+
 # Scheduler configuration
 scheduler:
   # The queue to submit tasks when no queue has been explicitely specified for a
