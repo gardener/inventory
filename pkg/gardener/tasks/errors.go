@@ -10,6 +10,10 @@ import "errors"
 // was not specified as part of the task payload.
 var ErrNoProjectName = errors.New("no project name specified")
 
+// ErrNoProjectNamespace is an error, which is returned when an expected Project
+// namespace was not specified as part of the task payload.
+var ErrNoProjectNamespace = errors.New("no project namespace specified")
+
 // ErrNoSeedCluster is an error, which is returned when an expected Seed Cluster
 // was not specified.
 var ErrNoSeedCluster = errors.New("no seed cluster specified")
