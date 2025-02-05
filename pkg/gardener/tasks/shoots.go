@@ -6,6 +6,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -15,10 +16,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
 
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	gutils "github.com/gardener/inventory/pkg/gardener/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -30,6 +33,26 @@ const (
 	// shootProjectPrefix is the prefix for the shoot project namespace
 	shootProjectPrefix = "garden-"
 )
+
+// CollectShootsPayload represents the payload, which is used for collecting
+// Gardener Shoot clusters.
+type CollectShootsPayload struct {
+	// ProjectName specifies the name of the project from which to collect
+	// shoots.
+	ProjectName string `yaml:"project_name" json:"project_name"`
+
+	// ProjectNamespace represents the namespace associated with the
+	// project. When creating a new project via the Gardener Dashboard a
+	// namespace will be chosen automatically for the user, which follows
+	// the `garden-<project_name>' convention.
+	//
+	// However, if a Project is created via the API and no .spec.namespace
+	// is set for the project then the Gardener API will determine a
+	// namespace for the user. See the link below for more details.
+	//
+	// https://github.com/gardener/gardener/blob/2c445773fc3f34681e2b755f5c2c74fbee86933c/pkg/controllermanager/controller/project/project/reconciler.go#L187-L199
+	ProjectNamespace string `yaml:"project_namespace" json:"project_namespace"`
+}
 
 func getCloudProfileName(s v1beta1.Shoot) (string, error) {
 	if s.Spec.CloudProfile != nil {
@@ -51,6 +74,86 @@ func NewCollectShootsTask() *asynq.Task {
 
 // HandleCollectShootsTask is a handler that collects Gardener Shoots.
 func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
+	// If we were called without a payload, then we enqueue tasks for
+	// collecting shoots from all known projects.
+	data := t.Payload()
+	if data == nil {
+		return enqueueCollectShoots(ctx)
+	}
+
+	var payload CollectShootsPayload
+	if err := asynqutils.Unmarshal(data, &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if payload.ProjectName == "" {
+		return asynqutils.SkipRetry(ErrNoProjectName)
+	}
+
+	if payload.ProjectNamespace == "" {
+		return asynqutils.SkipRetry(ErrNoProjectNamespace)
+	}
+
+	return collectShoots(ctx, payload)
+}
+
+// enqueueCollectShoots enqueues tasks for collecting Gardener shoots from all
+// locally known projects.
+func enqueueCollectShoots(ctx context.Context) error {
+	projects, err := gutils.GetProjectsFromDB(ctx)
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	queue := asynqutils.GetQueueName(ctx)
+
+	// Create a task for each known project
+	for _, p := range projects {
+		payload := CollectShootsPayload{
+			ProjectName:      p.Name,
+			ProjectNamespace: p.Namespace,
+		}
+		data, err := json.Marshal(payload)
+		if err != nil {
+			logger.Error(
+				"failed to marshal payload for Gardener Shoots",
+				"project", p.Name,
+				"namespace", p.Namespace,
+				"reason", err,
+			)
+			continue
+		}
+
+		task := asynq.NewTask(TaskCollectShoots, data)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
+		if err != nil {
+			logger.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"project", p.Name,
+				"namespace", p.Namespace,
+				"reason", err,
+			)
+			continue
+		}
+
+		logger.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+			"project", p.Name,
+			"namespace", p.Namespace,
+		)
+	}
+
+	return nil
+}
+
+// collectShoots collects Gardener shoot clusters from the project specified in
+// the payload.
+func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
@@ -58,11 +161,15 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	client := gardenerclient.DefaultClient.GardenClient()
-	logger.Info("collecting Gardener shoots")
+	logger.Info(
+		"collecting Gardener shoots",
+		"project", payload.ProjectName,
+		"namespace", payload.ProjectNamespace,
+	)
 	shoots := make([]models.Shoot, 0)
 	p := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return client.CoreV1beta1().Shoots("").List(ctx, opts)
+			return client.CoreV1beta1().Shoots(payload.ProjectNamespace).List(ctx, opts)
 		}),
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
