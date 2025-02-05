@@ -127,80 +127,85 @@ type Config struct {
 }
 
 type OpenStackConfig struct {
-    // IsEnabled specifies whether the OpenStack collection is enabled or not.
-    // Setting this to false will not create any OpenStack client.
-    IsEnabled bool `yaml:"is_enabled"`
+	// IsEnabled specifies whether the OpenStack collection is enabled or not.
+	// Setting this to false will not create any OpenStack client.
+	IsEnabled bool `yaml:"is_enabled"`
 
-    // Services provides the OpenStack service-specific configuration.
-    Services OpenStackServices `yaml:"services"`
+	// Services provides the OpenStack service-specific configuration.
+	Services OpenStackServices `yaml:"services"`
 
-    // Credentials specifies the OpenStack named credentials configuration,
-    // which is used by the various OpenStack services.
-    Credentials map[string]OpenStackCredentialsConfig `yaml:"credentials"`
+	// Credentials specifies the OpenStack named credentials configuration,
+	// which is used by the various OpenStack services.
+	Credentials map[string]OpenStackCredentialsConfig `yaml:"credentials"`
 }
 
 type OpenStackServices struct {
-    // Compute provides the Compute service configuration.
-    Compute []OpenStackServiceConfig `yaml:"compute"`
+	// Compute provides the Compute service configuration.
+	Compute []OpenStackServiceConfig `yaml:"compute"`
 
-    // Network provides the Network service configuration.
-    Network []OpenStackServiceConfig `yaml:"network"`
+	// Network provides the Network service configuration.
+	Network []OpenStackServiceConfig `yaml:"network"`
 
-    // BlockStorage provides the Block Storage service configuration.
-    BlockStorage []OpenStackServiceConfig `yaml:"block_storage"`
+	// BlockStorage provides the Block Storage service configuration.
+	BlockStorage []OpenStackServiceConfig `yaml:"block_storage"`
 
-    // // ObjectStorage provides the Object Storage service configuration.
-    // ObjectStorage OpenStackServiceConfig `yaml:"object_storage"`
+	// // ObjectStorage provides the Object Storage service configuration.
+	// ObjectStorage OpenStackServiceConfig `yaml:"object_storage"`
 }
 
 type OpenStackServiceConfig struct {
-    // UseCredentials specifies the name of the credentials to use.
-    UseCredentials []string `yaml:"use_credentials"`
+	// UseCredentials specifies the named credentials to use.
+	UseCredentials string `yaml:"use_credential"`
 
-    // Domain specifies the domain to use when initializing the OpenStack client.
-    Domain string `yaml:"domain"`
+	// Domain specifies the domain to use when initializing the OpenStack client.
+	Domain string `yaml:"domain"`
 
-    // Project specifies the project to use when initializing the OpenStack client.
-    Project string `yaml:"project"`
+	// TODO: remove if project_id is enough. Will choose project ID, since it is unique
+	// across realms and can be used as a registry key.
+	// Project specifies the project to use when initializing the OpenStack client.
+	Project string `yaml:"project"`
 
-    // Region specifies the region to use when initializing the OpenStack client.
-    Region string `yaml:"region"`
+	// ProjectID specifies the project ID to use when initializing the OpenStack client.
+	ProjectID string `yaml:"project_id"`
 
-    // AuthEndpoint specifies the authentication endpoint to use when initializing an OpenStack client.
-    AuthEndpoint string `yaml:"auth_url"`
+	// Region specifies the region to use when initializing the OpenStack client.
+	Region string `yaml:"region"`
+
+	// AuthEndpoint specifies the authentication endpoint to use when initializing an OpenStack client.
+	AuthEndpoint string `yaml:"auth_endpoint"`
 }
 
 type OpenStackCredentialsConfig struct {
-    // Authentication specifies the authentication method/strategy to use
-    // when creating OpenStack API clients. 
-	// The currently supported authentication mechanisms are `user' for username/password 
-    // and `app_credentials'.
-    Authentication string `yaml:"authentication"`
+	// Authentication specifies the authentication method/strategy to use
+	// when creating OpenStack API clients.
+	// The currently supported authentication mechanisms are `user' for username/password
+	// and `app_credentials'.
+	Authentication string `yaml:"authentication"`
 
-    // User provides the settings to use for authentication when using username/password.
-    User OpenStackUserConfig `yaml:"user"`
+	// User provides the settings to use for authentication when using username/password.
+	User OpenStackUserConfig `yaml:"user"`
 
-    // AppCredentials provides the settings to use for authentication when using application credentials.
-    AppCredentials OpenStackAppCredentialsConfig `yaml:"app_credentials"`
+	// AppCredentials provides the settings to use for authentication when using application credentials.
+	AppCredentials OpenStackAppCredentialsConfig `yaml:"app_credentials"`
 }
 
 type OpenStackUserConfig struct {
-    // Username specifies the file path of the file containing the username to use.
-    UsernameFile string `yaml:"username_file"`
+	// Username specifies the file path of the file containing the username to use.
+	UsernameFile string `yaml:"username_file"`
 
-    // Username specifies the file path of the file containing the password to use.
-    PasswordFile string `yaml:"password_file"`
+	// Username specifies the file path of the file containing the password to use.
+	PasswordFile string `yaml:"password_file"`
 }
 
 type OpenStackAppCredentialsConfig struct {
-    // AppCredentialsIDFile specifies the file path containing the application credential ID to use when authenticating.
-    AppCredentialsIDFile string `yaml:"app_credentials_id_file"`
+	// AppCredentialsIDFile specifies the file path containing the application credential ID to use when authenticating.
+	AppCredentialsIDFile string `yaml:"app_credentials_id_file"`
 
-    // AppCredentialsSecretFile specifies the file path containing the application credential secret to use when authenticating.
-    AppCredentialsSecretFile string `yaml:"app_credentials_secret_file"`
+	// AppCredentialsSecretFile specifies the file path containing the application credential secret to use when authenticating.
+	AppCredentialsSecretFile string `yaml:"app_credentials_secret_file"`
 
-    // AppCredentialsNameFile specifies the file path containing the application credential name to use when authenticating.
-    AppCredentialsNameFile string `yaml:"app_credentials_name_file"`
+	// AppCredentialsNameFile specifies the file path containing the application credential name to use when authenticating.
+	AppCredentialsNameFile string `yaml:"app_credentials_name_file"`
 }
 
 // AzureConfig provides Azure specific configuration settings.
