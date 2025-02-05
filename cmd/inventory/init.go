@@ -14,4 +14,6 @@ import (
 	_ "github.com/gardener/inventory/pkg/gardener/tasks"
 	_ "github.com/gardener/inventory/pkg/gcp/models"
 	_ "github.com/gardener/inventory/pkg/gcp/tasks"
+	_ "github.com/gardener/inventory/pkg/openstack/models"
+	_ "github.com/gardener/inventory/pkg/openstack/tasks"
 )
