@@ -10,6 +10,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hibiken/asynq"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
@@ -153,8 +154,12 @@ func toProjectModels(items []*v1beta1.Project) ([]models.Project, []models.Proje
 
 		// Collect project members
 		for _, member := range p.Spec.Members {
+			name := member.Name
+			if member.Kind == rbacv1.ServiceAccountKind {
+				name = fmt.Sprintf("system:serviceaccount:%s:%s", member.Namespace, member.Name)
+			}
 			memberItem := models.ProjectMember{
-				Name:        member.Name,
+				Name:        name,
 				Kind:        member.Kind,
 				Role:        member.Role,
 				ProjectName: p.Name,
