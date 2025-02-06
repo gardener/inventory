@@ -30,6 +30,7 @@ require (
 	github.com/gardener/gardener-extension-provider-gcp v1.38.0
 	github.com/gardener/machine-controller-manager v0.53.1
 	github.com/google/uuid v1.6.0
+	github.com/gophercloud/gophercloud/v2 v2.4.0
 	github.com/hibiken/asynq v0.25.1
 	github.com/hibiken/asynq/x v0.0.0-20240506061152-d04888e74845
 	github.com/hibiken/asynqmon v0.7.2
@@ -101,7 +102,6 @@ require (
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
-	github.com/gophercloud/gophercloud/v2 v2.4.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
