@@ -149,9 +149,6 @@ type OpenStackServices struct {
 
 	// BlockStorage provides the Block Storage service configuration.
 	BlockStorage []OpenStackServiceConfig `yaml:"block_storage"`
-
-	// // ObjectStorage provides the Object Storage service configuration.
-	// ObjectStorage OpenStackServiceConfig `yaml:"object_storage"`
 }
 
 // OpenStackServiceConfig provides configuration specific for an OpenStack service.
