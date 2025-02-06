@@ -63,9 +63,9 @@ const (
 	// explicitly.
 	DefaultQueueName = "default"
 
-	// OpenStackAuthenticationMethodUser is the name of the
+	// OpenStackAuthenticationMethodPassword is the name of the
 	// authentication mechanism for OpenStack, which uses username/password.
-	OpenStackAuthenticationMethodUser = "user"
+	OpenStackAuthenticationMethodPassword = "password"
 
 	// OpenStackAuthenticationMethodAppCredentials is the name of the
 	// authentication mechanism for OpenStack, which uses application credentials.
@@ -139,6 +139,7 @@ type OpenStackConfig struct {
 	Credentials map[string]OpenStackCredentialsConfig `yaml:"credentials"`
 }
 
+// OpenStackServices repsesents the known OpenStack services and their config.
 type OpenStackServices struct {
 	// Compute provides the Compute service configuration.
 	Compute []OpenStackServiceConfig `yaml:"compute"`
@@ -153,6 +154,7 @@ type OpenStackServices struct {
 	// ObjectStorage OpenStackServiceConfig `yaml:"object_storage"`
 }
 
+// OpenStackServiceConfig provides configuration specific for an OpenStack service.
 type OpenStackServiceConfig struct {
 	// UseCredentials specifies the named credentials to use.
 	UseCredentials string `yaml:"use_credential"`
@@ -160,8 +162,6 @@ type OpenStackServiceConfig struct {
 	// Domain specifies the domain to use when initializing the OpenStack client.
 	Domain string `yaml:"domain"`
 
-	// TODO: remove if project_id is enough. Will choose project ID, since it is unique
-	// across realms and can be used as a registry key.
 	// Project specifies the project to use when initializing the OpenStack client.
 	Project string `yaml:"project"`
 
@@ -175,28 +175,32 @@ type OpenStackServiceConfig struct {
 	AuthEndpoint string `yaml:"auth_endpoint"`
 }
 
+// OpenStackCredentialsConfig provides named credentials configuration for the OpenStack
+// API clients.
 type OpenStackCredentialsConfig struct {
 	// Authentication specifies the authentication method/strategy to use
 	// when creating OpenStack API clients.
-	// The currently supported authentication mechanisms are `user' for username/password
+	// The currently supported authentication mechanisms are `password' for username/password
 	// and `app_credentials'.
 	Authentication string `yaml:"authentication"`
 
-	// User provides the settings to use for authentication when using username/password.
-	User OpenStackUserConfig `yaml:"user"`
+	// Password provides the settings to use for authentication when using username/password.
+	Password OpenStackPasswordConfig `yaml:"password"`
 
 	// AppCredentials provides the settings to use for authentication when using application credentials.
 	AppCredentials OpenStackAppCredentialsConfig `yaml:"app_credentials"`
 }
 
-type OpenStackUserConfig struct {
-	// Username specifies the file path of the file containing the username to use.
+// OpenStackPasswordConfig provides the settings to use for authentication when using username/password.
+type OpenStackPasswordConfig struct {
+	// UsernameFile specifies the file path of the file containing the username to use.
 	UsernameFile string `yaml:"username_file"`
 
-	// Username specifies the file path of the file containing the password to use.
+	// PasswordFile specifies the file path of the file containing the password to use.
 	PasswordFile string `yaml:"password_file"`
 }
 
+// OpenStackAppCredentialsConfig provides the settings to use for authentication when using application credentials.
 type OpenStackAppCredentialsConfig struct {
 	// AppCredentialsIDFile specifies the file path containing the application credential ID to use when authenticating.
 	AppCredentialsIDFile string `yaml:"app_credentials_id_file"`

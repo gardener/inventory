@@ -272,7 +272,7 @@ openstack:
   is_enabled: true
   
   # The `credentials' section provides named credentials, which are used by the
-  # various OpenStack services. The currently supported authentication mechanisms are `user' for username and password
+  # various OpenStack services. The currently supported authentication mechanisms are `password' for username and password
   # and `app_credentials' for application credentials.
   credentials:
     local:
