@@ -90,7 +90,6 @@ func validateOpenStackConfig(conf *config.Config) error {
 				if creds.User.PasswordFile == "" {
 					return fmt.Errorf("OpenStack: %w: %s", errNoPasswordFile, name)
 				}
-				break
 			case config.OpenStackAuthenticationMethodAppCredentials:
 				if creds.AppCredentials.AppCredentialsIDFile == "" {
 					return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsIDFile, name)
@@ -101,7 +100,6 @@ func validateOpenStackConfig(conf *config.Config) error {
 				if creds.AppCredentials.AppCredentialsNameFile == "" {
 					return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsNameFile, name)
 				}
-				break
 			default:
 				return fmt.Errorf("OpenStack: %w: %s uses %s", errUnknownAuthenticationMethod, name, creds.Authentication)
 			}
@@ -120,6 +118,12 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 	}
 
 	slog.Info("configuring OpenStack clients")
+
+	err := validateOpenStackConfig(conf)
+	if err != nil {
+		return fmt.Errorf("invalid OpenStack configuration: %w", err)
+	}
+
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
 		"compute":       configureOpenStackComputeClientsets,
 		"network":       configureOpenStackNetworkClientsets,
@@ -204,7 +208,7 @@ func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Confi
 				ApplicationCredentialName:   appName,
 			}
 		default:
-			fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
+			return fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
 		}
 
 		providerClient, err := gophercloudconfig.NewProviderClient(ctx, authOpts)
@@ -215,6 +219,10 @@ func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Confi
 		computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{
 			Region: region,
 		})
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for compute service with credentials %s: %w", cred, err)
+		}
 
 		client := openstackclients.Client[*gophercloud.ServiceClient]{
 			NamedCredentials: cred,
@@ -305,7 +313,7 @@ func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Confi
 				ApplicationCredentialName:   appName,
 			}
 		default:
-			fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
+			return fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
 		}
 
 		providerClient, err := gophercloudconfig.NewProviderClient(ctx, authOpts)
@@ -316,6 +324,10 @@ func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Confi
 		networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
 			Region: region,
 		})
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for network service with credentials %s: %w", cred, err)
+		}
 
 		client := openstackclients.Client[*gophercloud.ServiceClient]{
 			NamedCredentials: cred,
@@ -406,7 +418,7 @@ func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.
 				ApplicationCredentialName:   appName,
 			}
 		default:
-			fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
+			return fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
 		}
 
 		providerClient, err := gophercloudconfig.NewProviderClient(ctx, authOpts)
@@ -417,6 +429,10 @@ func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.
 		blockStorageClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{
 			Region: region,
 		})
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for block storage service with credentials %s: %w", cred, err)
+		}
 
 		client := openstackclients.Client[*gophercloud.ServiceClient]{
 			NamedCredentials: cred,
