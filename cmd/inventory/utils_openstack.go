@@ -37,7 +37,7 @@ func validateOpenStackConfig(conf *config.Config) error {
 	services := map[string][]config.OpenStackServiceConfig{
 		"compute": conf.OpenStack.Services.Compute,
 		"network": conf.OpenStack.Services.Network,
-		"storage": conf.OpenStack.Services.BlockStorage,
+		"block_storage": conf.OpenStack.Services.BlockStorage,
 	}
 
 	for service, serviceConfigs := range services {
