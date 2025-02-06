@@ -83,11 +83,11 @@ func validateOpenStackConfig(conf *config.Config) error {
 			}
 
 			switch creds.Authentication {
-			case config.OpenStackAuthenticationMethodUser:
-				if creds.User.UsernameFile == "" {
+            case config.OpenStackAuthenticationMethodPassword:
+				if creds.Password.UsernameFile == "" {
 					return fmt.Errorf("OpenStack: %w: %s", errNoUsernameFile, name)
 				}
-				if creds.User.PasswordFile == "" {
+				if creds.Password.PasswordFile == "" {
 					return fmt.Errorf("OpenStack: %w: %s", errNoPasswordFile, name)
 				}
 			case config.OpenStackAuthenticationMethodAppCredentials:
@@ -159,14 +159,14 @@ func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Confi
 
 		var authOpts gophercloud.AuthOptions
 		switch namedCreds.Authentication {
-		case config.OpenStackAuthenticationMethodUser:
-			rawUsername, err := os.ReadFile(namedCreds.User.UsernameFile)
+        case config.OpenStackAuthenticationMethodPassword:
+			rawUsername, err := os.ReadFile(namedCreds.Password.UsernameFile)
 			if err != nil {
 				return fmt.Errorf("unable to read username file: %w", err)
 			}
 			username := strings.TrimSpace(string(rawUsername))
 
-			rawPassword, err := os.ReadFile(namedCreds.User.PasswordFile)
+			rawPassword, err := os.ReadFile(namedCreds.Password.PasswordFile)
 			password := strings.TrimSpace(string(rawPassword))
 
 			if err != nil {
@@ -264,14 +264,14 @@ func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Confi
 
 		var authOpts gophercloud.AuthOptions
 		switch namedCreds.Authentication {
-		case config.OpenStackAuthenticationMethodUser:
-			rawUsername, err := os.ReadFile(namedCreds.User.UsernameFile)
+        case config.OpenStackAuthenticationMethodPassword:
+			rawUsername, err := os.ReadFile(namedCreds.Password.UsernameFile)
 			if err != nil {
 				return fmt.Errorf("unable to read username file: %w", err)
 			}
 			username := strings.TrimSpace(string(rawUsername))
 
-			rawPassword, err := os.ReadFile(namedCreds.User.PasswordFile)
+			rawPassword, err := os.ReadFile(namedCreds.Password.PasswordFile)
 			password := strings.TrimSpace(string(rawPassword))
 
 			if err != nil {
@@ -369,14 +369,14 @@ func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.
 
 		var authOpts gophercloud.AuthOptions
 		switch namedCreds.Authentication {
-		case config.OpenStackAuthenticationMethodUser:
-			rawUsername, err := os.ReadFile(namedCreds.User.UsernameFile)
+		case config.OpenStackAuthenticationMethodPassword:
+			rawUsername, err := os.ReadFile(namedCreds.Password.UsernameFile)
 			if err != nil {
 				return fmt.Errorf("unable to read username file: %w", err)
 			}
 			username := strings.TrimSpace(string(rawUsername))
 
-			rawPassword, err := os.ReadFile(namedCreds.User.PasswordFile)
+			rawPassword, err := os.ReadFile(namedCreds.Password.PasswordFile)
 			password := strings.TrimSpace(string(rawPassword))
 
 			if err != nil {
