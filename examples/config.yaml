@@ -278,13 +278,13 @@ openstack:
     local:
       authentication: user
       user:
-        username_file: "<path-to-username-file>"
+        username: "<username>"
         password_file: "<path-to-password-file>"
     sa:
       authentication: app_credentials
       user:
-        username_file: "<path-to-username-file>"
-        password_file: "<path-to-password-file>"
+        app_credentials_id: "<app-id>"
+        app_credentials_secret_file: "<path-to-secret-file>"
   services:
     compute:
     - domain: <domain>
