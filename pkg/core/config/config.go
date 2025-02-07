@@ -190,8 +190,8 @@ type OpenStackCredentialsConfig struct {
 
 // OpenStackPasswordConfig provides the settings to use for authentication when using username/password.
 type OpenStackPasswordConfig struct {
-	// UsernameFile specifies the file path of the file containing the username to use.
-	UsernameFile string `yaml:"username_file"`
+	// Username specifies the username to use.
+	Username string `yaml:"username"`
 
 	// PasswordFile specifies the file path of the file containing the password to use.
 	PasswordFile string `yaml:"password_file"`
@@ -199,14 +199,11 @@ type OpenStackPasswordConfig struct {
 
 // OpenStackAppCredentialsConfig provides the settings to use for authentication when using application credentials.
 type OpenStackAppCredentialsConfig struct {
-	// AppCredentialsIDFile specifies the file path containing the application credential ID to use when authenticating.
-	AppCredentialsIDFile string `yaml:"app_credentials_id_file"`
+	// AppCredentialsID specifies the application credential ID to use when authenticating.
+	AppCredentialsID string `yaml:"app_credentials_id"`
 
 	// AppCredentialsSecretFile specifies the file path containing the application credential secret to use when authenticating.
 	AppCredentialsSecretFile string `yaml:"app_credentials_secret_file"`
-
-	// AppCredentialsNameFile specifies the file path containing the application credential name to use when authenticating.
-	AppCredentialsNameFile string `yaml:"app_credentials_name_file"`
 }
 
 // AzureConfig provides Azure specific configuration settings.
