@@ -1,7 +1,11 @@
 # Querying the Database
 
-The following section provides some sample queries you can use with the data
-collected by the Inventory system.
+The following document provides example SQL queries, which you can run against
+the data collected by the Inventory system.
+
+For querying data via the `inventory` CLI tool, please refer to the [Querying
+Models](./ops-guide.md#querying-models) section from the [Operations
+Guide](./ops-guide.md).
 
 ## AWS VPCs Per Region
 
