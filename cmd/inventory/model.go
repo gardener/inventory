@@ -59,26 +59,35 @@ func NewModelCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "model",
+						Aliases:  []string{"m"},
 						Usage:    "model name to query",
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:  "template",
-						Usage: "template body to render",
+						Name:    "template",
+						Aliases: []string{"t"},
+						Usage:   "template body to render",
 					},
 					&cli.PathFlag{
 						Name:  "template-file",
 						Usage: "template file to render",
 					},
 					&cli.IntFlag{
-						Name:  "limit",
-						Usage: "fetch up to this number of records",
-						Value: 0,
+						Name:    "limit",
+						Aliases: []string{"l"},
+						Usage:   "fetch up to this number of records",
+						Value:   0,
 					},
 					&cli.IntFlag{
-						Name:  "offset",
-						Usage: "fetch records starting from this offset",
-						Value: 0,
+						Name:    "offset",
+						Aliases: []string{"o"},
+						Usage:   "fetch records starting from this offset",
+						Value:   0,
+					},
+					&cli.StringSliceFlag{
+						Name:    "relation",
+						Aliases: []string{"r"},
+						Usage:   "relationship to load for the model",
 					},
 				},
 				Before: func(ctx *cli.Context) error {
@@ -137,13 +146,24 @@ func NewModelCommand() *cli.Command {
 					// Prepare options to apply to the base query
 					type queryOpt func(q *bun.SelectQuery) *bun.SelectQuery
 					opts := make([]queryOpt, 0)
+
+					// Offset option
 					opts = append(opts, func(q *bun.SelectQuery) *bun.SelectQuery {
 						return q.Offset(offset)
 					})
 
+					// Limit option
 					if limit > 0 {
 						opts = append(opts, func(q *bun.SelectQuery) *bun.SelectQuery {
 							return q.Limit(limit)
+						})
+					}
+
+					// Relationship options
+					relationships := ctx.StringSlice("relation")
+					for _, relation := range relationships {
+						opts = append(opts, func(q *bun.SelectQuery) *bun.SelectQuery {
+							return q.Relation(relation)
 						})
 					}
 
