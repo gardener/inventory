@@ -5,8 +5,9 @@
 package openstack
 
 import (
-	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gophercloud/gophercloud/v2"
+
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 // NetworkClientset provides the registry of OpenStack Network API clients

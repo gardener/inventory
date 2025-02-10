@@ -154,7 +154,7 @@ type OpenStackServices struct {
 // OpenStackServiceConfig provides configuration specific for an OpenStack service.
 type OpenStackServiceConfig struct {
 	// UseCredentials specifies the named credentials to use.
-	UseCredentials string `yaml:"use_credential"`
+	UseCredentials string `yaml:"use_credentials"`
 
 	// Domain specifies the domain to use when initializing the OpenStack client.
 	Domain string `yaml:"domain"`
