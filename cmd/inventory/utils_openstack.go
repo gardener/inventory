@@ -12,12 +12,12 @@ import (
 	"os"
 	"strings"
 
-	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
-	"github.com/gardener/inventory/pkg/core/config"
-
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack"
 	gophercloudconfig "github.com/gophercloud/gophercloud/v2/openstack/config"
+
+	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/core/config"
 )
 
 var errNoUsername = errors.New("no username specified")
@@ -139,88 +139,104 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 	return nil
 }
 
+func newOpenStackProviderClient(
+	ctx context.Context,
+	clientConfig *config.OpenStackServiceConfig,
+	creds config.OpenStackCredentialsConfig,
+) (*gophercloud.ProviderClient, error) {
+	var authOpts gophercloud.AuthOptions
+
+	switch creds.Authentication {
+	case config.OpenStackAuthenticationMethodPassword:
+		username := strings.TrimSpace(creds.Password.Username)
+		if username == "" {
+			return nil, fmt.Errorf("no username specified for project %s", clientConfig.Project)
+		}
+
+		rawPassword, err := os.ReadFile(creds.Password.PasswordFile)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read password file: %w", err)
+		}
+		password := strings.TrimSpace(string(rawPassword))
+		if password == "" {
+			return nil, fmt.Errorf("no password specified for project %s", clientConfig.Project)
+		}
+
+		authOpts = gophercloud.AuthOptions{
+			IdentityEndpoint: clientConfig.AuthEndpoint,
+			DomainName:       clientConfig.Domain,
+			TenantName:       clientConfig.Project,
+			Username:         username,
+			Password:         password,
+		}
+	case config.OpenStackAuthenticationMethodAppCredentials:
+		appID := strings.TrimSpace(creds.AppCredentials.AppCredentialsID)
+		if appID == "" {
+			return nil, fmt.Errorf("no app credentials id specified for project %s", clientConfig.Project)
+		}
+
+		rawAppSecret, err := os.ReadFile(creds.AppCredentials.AppCredentialsSecretFile)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read app credentials secret file: %w", err)
+		}
+		appSecret := strings.TrimSpace(string(rawAppSecret))
+
+		if appSecret == "" {
+			return nil, fmt.Errorf("no app credentials secret specified for project %s", clientConfig.Project)
+		}
+
+		authOpts = gophercloud.AuthOptions{
+			IdentityEndpoint:            clientConfig.AuthEndpoint,
+			ApplicationCredentialID:     appID,
+			ApplicationCredentialSecret: appSecret,
+		}
+	default:
+		return nil, fmt.Errorf("unknown authentication method: %s", creds.Authentication)
+	}
+
+	return gophercloudconfig.NewProviderClient(ctx, authOpts)
+}
+
 // configureOpenStackComputeClientsets configures the OpenStack Compute API clientsets.
 func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Config) error {
 	for _, clientConfig := range conf.OpenStack.Services.Compute {
-		domain := clientConfig.Domain
-		region := clientConfig.Region
-		project := clientConfig.Project
-		projectID := clientConfig.ProjectID
-		authEndpoint := clientConfig.AuthEndpoint
+		creds := clientConfig.UseCredentials
+		namedCreds := conf.OpenStack.Credentials[creds]
 
-		cred := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[cred]
+		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
 
-		var authOpts gophercloud.AuthOptions
-		switch namedCreds.Authentication {
-		case config.OpenStackAuthenticationMethodPassword:
-			username := strings.TrimSpace(namedCreds.Password.Username)
-
-			rawPassword, err := os.ReadFile(namedCreds.Password.PasswordFile)
-			password := strings.TrimSpace(string(rawPassword))
-
-			if err != nil {
-				return fmt.Errorf("unable to read password file for service %s: %w", cred, err)
-			}
-
-			authOpts = gophercloud.AuthOptions{
-				IdentityEndpoint: authEndpoint,
-				DomainName:       domain,
-				TenantName:       project,
-				Username:         username,
-				Password:         password,
-			}
-		case config.OpenStackAuthenticationMethodAppCredentials:
-			appID := strings.TrimSpace(namedCreds.AppCredentials.AppCredentialsID)
-
-			rawAppSecret, err := os.ReadFile(namedCreds.AppCredentials.AppCredentialsSecretFile)
-			if err != nil {
-				return fmt.Errorf("unable to read app credentials secret file: %w", err)
-			}
-			appSecret := strings.TrimSpace(string(rawAppSecret))
-
-			authOpts = gophercloud.AuthOptions{
-				IdentityEndpoint:            authEndpoint,
-				ApplicationCredentialID:     appID,
-				ApplicationCredentialSecret: appSecret,
-			}
-		default:
-			return fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
-		}
-
-		providerClient, err := gophercloudconfig.NewProviderClient(ctx, authOpts)
 		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", cred, err)
+			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
 		}
 
 		computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{
-			Region: region,
+			Region: clientConfig.Region,
 		})
 
 		if err != nil {
-			return fmt.Errorf("unable to create client for compute service with credentials %s: %w", cred, err)
+			return fmt.Errorf("unable to create client for compute service with credentials %s: %w", creds, err)
 		}
 
 		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: cred,
-			ProjectID:        projectID,
-			Region:           region,
-			Domain:           domain,
+			NamedCredentials: creds,
+			ProjectID:        clientConfig.ProjectID,
+			Region:           clientConfig.Region,
+			Domain:           clientConfig.Domain,
 			Client:           computeClient,
 		}
 		openstackclients.ComputeClientset.Overwrite(
-			projectID,
+			clientConfig.ProjectID,
 			client,
 		)
 
 		slog.Info(
 			"configured OpenStack client",
 			"service", "compute",
-			"credentials", cred,
-			"region", region,
-			"domain", domain,
-			"project", project,
-			"auth_endpoint", authEndpoint,
+			"credentials", creds,
+			"region", clientConfig.Region,
+			"domain", clientConfig.Domain,
+			"project", clientConfig.Project,
+			"auth_endpoint", clientConfig.AuthEndpoint,
 			"auth_method", namedCreds.Authentication,
 		)
 	}
@@ -230,83 +246,43 @@ func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Confi
 // configureOpenStackNetworkClientsets configures the OpenStack Network API clientsets.
 func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Config) error {
 	for _, clientConfig := range conf.OpenStack.Services.Network {
-		domain := clientConfig.Domain
-		region := clientConfig.Region
-		project := clientConfig.Project
-		projectID := clientConfig.ProjectID
-		authEndpoint := clientConfig.AuthEndpoint
+		creds := clientConfig.UseCredentials
+		namedCreds := conf.OpenStack.Credentials[creds]
 
-		cred := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[cred]
-
-		var authOpts gophercloud.AuthOptions
-		switch namedCreds.Authentication {
-		case config.OpenStackAuthenticationMethodPassword:
-			username := strings.TrimSpace(namedCreds.Password.Username)
-
-			rawPassword, err := os.ReadFile(namedCreds.Password.PasswordFile)
-			password := strings.TrimSpace(string(rawPassword))
-
-			if err != nil {
-				return fmt.Errorf("unable to read password file for service %s: %w", cred, err)
-			}
-
-			authOpts = gophercloud.AuthOptions{
-				IdentityEndpoint: authEndpoint,
-				DomainName:       domain,
-				TenantName:       project,
-				Username:         username,
-				Password:         password,
-			}
-		case config.OpenStackAuthenticationMethodAppCredentials:
-			appID := strings.TrimSpace(namedCreds.AppCredentials.AppCredentialsID)
-
-			rawAppSecret, err := os.ReadFile(namedCreds.AppCredentials.AppCredentialsSecretFile)
-			if err != nil {
-				return fmt.Errorf("unable to read app credentials secret file: %w", err)
-			}
-			appSecret := string(rawAppSecret)
-
-			authOpts = gophercloud.AuthOptions{
-				IdentityEndpoint:            authEndpoint,
-				ApplicationCredentialID:     appID,
-				ApplicationCredentialSecret: appSecret,
-			}
-		default:
-			return fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
-		}
-
-		providerClient, err := gophercloudconfig.NewProviderClient(ctx, authOpts)
-		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", cred, err)
-		}
-
-		networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{})
+		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
 
 		if err != nil {
-			return fmt.Errorf("unable to create client for network service with credentials %s: %w", cred, err)
+			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
+		}
+
+		networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+			Region: clientConfig.Region,
+		})
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for network service with credentials %s: %w", creds, err)
 		}
 
 		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: cred,
-			ProjectID:        projectID,
-			Region:           region,
-			Domain:           domain,
+			NamedCredentials: creds,
+			ProjectID:        clientConfig.ProjectID,
+			Region:           clientConfig.Region,
+			Domain:           clientConfig.Domain,
 			Client:           networkClient,
 		}
 		openstackclients.NetworkClientset.Overwrite(
-			projectID,
+			clientConfig.ProjectID,
 			client,
 		)
 
 		slog.Info(
 			"configured OpenStack client",
 			"service", "network",
-			"credentials", cred,
-			"region", region,
-			"domain", domain,
-			"project", project,
-			"auth_endpoint", authEndpoint,
+			"credentials", creds,
+			"region", clientConfig.Region,
+			"domain", clientConfig.Domain,
+			"project", clientConfig.Project,
+			"auth_endpoint", clientConfig.AuthEndpoint,
 			"auth_method", namedCreds.Authentication,
 		)
 	}
@@ -316,85 +292,43 @@ func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Confi
 // configureOpenStackBlockStorageClientsets configures the OpenStack Block Storage API clientsets.
 func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.Config) error {
 	for _, clientConfig := range conf.OpenStack.Services.BlockStorage {
-		domain := clientConfig.Domain
-		region := clientConfig.Region
-		project := clientConfig.Project
-		projectID := clientConfig.ProjectID
-		authEndpoint := clientConfig.AuthEndpoint
+		creds := clientConfig.UseCredentials
+		namedCreds := conf.OpenStack.Credentials[creds]
 
-		cred := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[cred]
+		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
 
-		var authOpts gophercloud.AuthOptions
-		switch namedCreds.Authentication {
-		case config.OpenStackAuthenticationMethodPassword:
-			username := strings.TrimSpace(namedCreds.Password.Username)
-
-			rawPassword, err := os.ReadFile(namedCreds.Password.PasswordFile)
-			password := strings.TrimSpace(string(rawPassword))
-
-			if err != nil {
-				return fmt.Errorf("unable to read password file for service %s: %w", cred, err)
-			}
-
-			authOpts = gophercloud.AuthOptions{
-				IdentityEndpoint: authEndpoint,
-				DomainName:       domain,
-				TenantName:       project,
-				Username:         username,
-				Password:         password,
-			}
-		case config.OpenStackAuthenticationMethodAppCredentials:
-			appID := strings.TrimSpace(namedCreds.AppCredentials.AppCredentialsID)
-
-			rawAppSecret, err := os.ReadFile(namedCreds.AppCredentials.AppCredentialsSecretFile)
-			if err != nil {
-				return fmt.Errorf("unable to read app credentials secret file: %w", err)
-			}
-			appSecret := string(rawAppSecret)
-
-			authOpts = gophercloud.AuthOptions{
-				IdentityEndpoint:            authEndpoint,
-				ApplicationCredentialID:     appID,
-				ApplicationCredentialSecret: appSecret,
-			}
-		default:
-			return fmt.Errorf("unknown authentication method: %s", namedCreds.Authentication)
-		}
-
-		providerClient, err := gophercloudconfig.NewProviderClient(ctx, authOpts)
 		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", cred, err)
+			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
 		}
 
 		blockStorageClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{
-			Region: region,
+			Region: clientConfig.Region,
 		})
 
 		if err != nil {
-			return fmt.Errorf("unable to create client for block storage service with credentials %s: %w", cred, err)
+			return fmt.Errorf("unable to create client for block storage service with credentials %s: %w", creds, err)
 		}
 
 		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: cred,
-			ProjectID:        projectID,
-			Region:           region,
-			Domain:           domain,
+			NamedCredentials: creds,
+			ProjectID:        clientConfig.ProjectID,
+			Region:           clientConfig.Region,
+			Domain:           clientConfig.Domain,
 			Client:           blockStorageClient,
 		}
 		openstackclients.BlockStorageClientset.Overwrite(
-			projectID,
+			clientConfig.ProjectID,
 			client,
 		)
 
 		slog.Info(
 			"configured OpenStack client",
 			"service", "block_storage",
-			"credentials", cred,
-			"region", region,
-			"domain", domain,
-			"project", project,
-			"auth_endpoint", authEndpoint,
+			"credentials", creds,
+			"region", clientConfig.Region,
+			"domain", clientConfig.Domain,
+			"project", clientConfig.Project,
+			"auth_endpoint", clientConfig.AuthEndpoint,
 			"auth_method", namedCreds.Authentication,
 		)
 	}
