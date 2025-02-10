@@ -384,7 +384,7 @@ The message types which can be drained are:
 
 `inventory task` provides various commands for managing and inspecting tasks.
 
-## List Registered Tasks
+### List Registered Tasks
 
 The following command will list the tasks which are registered with the
 [default task registry](../pkg/core/registry/tasks.go):
@@ -503,6 +503,126 @@ Retention           : 0s
 Last Failed At      : N/A
 Next Process At     : 2024-06-03 14:48:58 +0300 EEST
 Completed At        : N/A
+```
+
+## Models
+
+`inventory model` provides various commands for looking up registered models and
+querying data from the database.
+
+### List Registered Models
+
+The following command will list the models which are registered with the
+[default models registry](../pkg/core/registry/models.go):
+
+```sh
+inventory model list
+```
+
+Example output:
+
+```sh
+aws:model:az
+aws:model:bucket
+aws:model:image
+aws:model:instance
+aws:model:link_image_to_region
+aws:model:link_instance_to_image
+aws:model:link_instance_to_net_interface
+aws:model:link_instance_to_region
+aws:model:link_instance_to_subnet
+aws:model:link_lb_to_net_interface
+```
+
+### Querying Models
+
+The following command allows querying models from the database, which can later
+be used to generate a report using a
+[text/template](https://pkg.go.dev/text/template) body.
+
+``` sh
+inventory model query --model <model-name> --template '{{ text/template body ... }}'
+```
+
+The following example command will print all Gardener Projects and their
+associated namespace.
+
+``` sh
+inventory model query \
+    --model g:model:project \
+    --template '{{ range . }}{{ printf "%s: %s\n" .Name .Namespace }}{{end}}'
+```
+
+This example command will print the total number of GCE Instances collected by
+Inventory.
+
+``` sh
+inventory model query \
+    --model gcp:model:instance \
+    --template 'Number of GCE instance(s): {{ len . }}'
+```
+
+This example will print the GCE instances which belong to a GKE cluster.
+
+``` sh
+inventory model query \
+    --model gcp:model:instance \
+    --template '{{ range . }}{{ if .GKEClusterName }}{{printf "Instance %s is a member of %s cluster\n" .Name .GKEClusterName}}{{end}}{{end}}'
+```
+
+Using the `--limit` options allows you to control how many items will be
+fetched. When no limit is specified `inventory model query` will fetch all
+records from the database by default.
+
+This example shows how to print the names of just 10 AWS Instances stored in the
+Inventory database.
+
+``` sh
+inventory model query \
+    --model aws:model:instance \
+    --limit 10 \
+    --template '{{ range . }}{{ printf "Instance %s is running in %s region\n" .Name .RegionName }}{{end}}'
+```
+
+This example here prints the list of unique users in a Gardener landscape.
+
+``` sh
+inventory model query \
+    --model g:model:project_member \
+    --template '{{range .}}{{if eq .Kind "User"}}{{println .Name}}{{end}}{{end}}' | sort | uniq
+```
+
+Instead of using a one-line template body specified via the `--template` option,
+you can specify a path to a template file to render using the `--template-file`
+option.
+
+By default any relationships defined for a model are not loaded, unless
+explicitly specified via the `--relation` option. The following example command
+creates a simple report for each [Gardener
+Project](https://pkg.go.dev/github.com/gardener/inventory/pkg/gardener/models#Project)
+by printing the number of shoot clusters and project members.
+
+First we will define what our simple report template file looks like.
+
+``` go
+{{- /* gardener-projects-report.tmpl: simple report of Gardener Projects */ -}}
+{{ range . }}
+{{- $numMembers := .Members | len -}}
+{{- $numShoots := .Shoots | len -}}
+{{- printf "Project %s has %d shoot(s) and %d member(s)\n" .Name $numShoots $numMembers -}}
+{{- end -}}
+```
+
+And now we can render our template by fetching the Gardener Projects. We will
+also need to load the `Shoots` and `Members` relationships in order to properly
+display the number of shoots and project members respectively.
+
+``` sh
+inventory model query \
+    --model g:model:project \
+    --relation Shoots \
+    --relation Members \
+    --template-file gardener-projects-report.tmpl
 ```
 
 ## Monitoring
