@@ -5,7 +5,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -17,10 +16,6 @@ import (
 
 	"github.com/gardener/inventory/pkg/core/registry"
 )
-
-// errNoQueryTemplate is an error which is returned by the query sub-command,
-// when an expected [text/template] body was not specified.
-var errNoQueryTemplate = errors.New("no query template specified")
 
 // NewModelCommand returns a new command for interfacing with the models.
 func NewModelCommand() *cli.Command {
