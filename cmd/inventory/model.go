@@ -12,6 +12,7 @@ import (
 	"sort"
 	"text/template"
 
+	"github.com/uptrace/bun"
 	"github.com/urfave/cli/v2"
 
 	"github.com/gardener/inventory/pkg/core/registry"
@@ -65,6 +66,16 @@ func NewModelCommand() *cli.Command {
 						Name:  "template",
 						Usage: "template body to render",
 					},
+					&cli.IntFlag{
+						Name:  "limit",
+						Usage: "fetch up to this number of records",
+						Value: 0,
+					},
+					&cli.IntFlag{
+						Name:  "offset",
+						Usage: "fetch records starting from this offset",
+						Value: 0,
+					},
 				},
 				Before: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
@@ -82,6 +93,15 @@ func NewModelCommand() *cli.Command {
 						return fmt.Errorf("Model %q not found in registry", modelName)
 					}
 
+					offset := ctx.Int("offset")
+					if offset < 0 {
+						return fmt.Errorf("Invalid offset %d", offset)
+					}
+					limit := ctx.Int("limit")
+					if limit < 0 {
+						return fmt.Errorf("Invalid limit %d", limit)
+					}
+
 					// Configure database connection
 					conf := getConfig(ctx)
 					db := newDB(conf)
@@ -96,10 +116,26 @@ func NewModelCommand() *cli.Command {
 					items := reflect.New(slice.Type())
 					items.Elem().Set(slice)
 
-					err := db.NewSelect().
-						Model(items.Interface()).
-						Scan(ctx.Context)
-					if err != nil {
+					// Prepare options to apply to the base query
+					type queryOpt func(q *bun.SelectQuery) *bun.SelectQuery
+					opts := make([]queryOpt, 0)
+					opts = append(opts, func(q *bun.SelectQuery) *bun.SelectQuery {
+						return q.Offset(offset)
+					})
+
+					if limit > 0 {
+						opts = append(opts, func(q *bun.SelectQuery) *bun.SelectQuery {
+							return q.Limit(limit)
+						})
+					}
+
+					// Create base query and apply options
+					query := db.NewSelect().Model(items.Interface())
+					for _, opt := range opts {
+						query = opt(query)
+					}
+
+					if err := query.Scan(ctx.Context); err != nil {
 						return err
 					}
 
