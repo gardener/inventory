@@ -66,6 +66,10 @@ func NewModelCommand() *cli.Command {
 						Name:  "template",
 						Usage: "template body to render",
 					},
+					&cli.PathFlag{
+						Name:  "template-file",
+						Usage: "template file to render",
+					},
 					&cli.IntFlag{
 						Name:  "limit",
 						Usage: "fetch up to this number of records",
@@ -82,9 +86,23 @@ func NewModelCommand() *cli.Command {
 					return validateDBConfig(conf)
 				},
 				Action: func(ctx *cli.Context) error {
-					templateBody := ctx.String("template")
-					if templateBody == "" {
-						return errNoQueryTemplate
+					var templateBody string
+					templateData := ctx.String("template")
+					templateFile := ctx.Path("template-file")
+
+					switch {
+					case templateData != "" && templateFile != "":
+						return fmt.Errorf("Cannot use --template and --template-file at the same time")
+					case templateData == "" && templateFile == "":
+						return fmt.Errorf("Must specify --template or --template-file")
+					case templateData != "":
+						templateBody = templateData
+					case templateFile != "":
+						data, err := os.ReadFile(templateFile)
+						if err != nil {
+							return err
+						}
+						templateBody = string(data)
 					}
 
 					modelName := ctx.String("model")
