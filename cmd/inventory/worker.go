@@ -185,6 +185,10 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 
+					if err := configureOpenStackClients(ctx.Context, conf); err != nil {
+						return err
+					}
+
 					// Configure logging and middlewares
 					slog.Info("configuring logging and middlewares")
 					logger, err := newLogger(os.Stdout, conf)
