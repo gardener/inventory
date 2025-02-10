@@ -5,13 +5,21 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"reflect"
 	"sort"
+	"text/template"
 
 	"github.com/urfave/cli/v2"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 )
+
+// errNoQueryTemplate is an error which is returned by the query sub-command,
+// when an expected [text/template] body was not specified.
+var errNoQueryTemplate = errors.New("no query template specified")
 
 // NewModelCommand returns a new command for interfacing with the models.
 func NewModelCommand() *cli.Command {
@@ -38,6 +46,70 @@ func NewModelCommand() *cli.Command {
 					sort.Strings(models)
 					for _, model := range models {
 						fmt.Println(model)
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:    "query",
+				Usage:   "query data for a given model",
+				Aliases: []string{"q"},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "model",
+						Usage:    "model name to query",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:  "template",
+						Usage: "template body to render",
+					},
+				},
+				Before: func(ctx *cli.Context) error {
+					conf := getConfig(ctx)
+					return validateDBConfig(conf)
+				},
+				Action: func(ctx *cli.Context) error {
+					templateBody := ctx.String("template")
+					if templateBody == "" {
+						return errNoQueryTemplate
+					}
+
+					modelName := ctx.String("model")
+					model, ok := registry.ModelRegistry.Get(modelName)
+					if !ok {
+						return fmt.Errorf("Model %q not found in registry", modelName)
+					}
+
+					// Configure database connection
+					conf := getConfig(ctx)
+					db := newDB(conf)
+					defer db.Close()
+
+					// Create a new slice of the type we have in the registry
+					// for the specified model name. This slice will then be
+					// used to store the result from the database query and later
+					// passed to the template.
+					modelType := reflect.TypeOf(model).Elem()
+					slice := reflect.MakeSlice(reflect.SliceOf(modelType), 0, 0)
+					items := reflect.New(slice.Type())
+					items.Elem().Set(slice)
+
+					err := db.NewSelect().
+						Model(items.Interface()).
+						Scan(ctx.Context)
+					if err != nil {
+						return err
+					}
+
+					tmpl, err := template.New("inventory").Parse(templateBody)
+					if err != nil {
+						return err
+					}
+
+					if err := tmpl.Execute(os.Stdout, items.Interface()); err != nil {
+						return err
 					}
 
 					return nil
