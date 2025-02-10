@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.17
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.10
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.14
 	github.com/aws/smithy-go v1.22.2
 	github.com/gardener/gardener v1.103.0
 	github.com/gardener/gardener-extension-provider-aws v1.56.1
@@ -69,7 +69,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.26 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.11 // indirect
