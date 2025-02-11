@@ -51,7 +51,7 @@ type RetentionConfig struct {
 func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 	var payload HousekeeperPayload
 	if err := asynqutils.Unmarshal(task.Payload(), &payload); err != nil {
-		return err
+		return asynqutils.SkipRetry(err)
 	}
 
 	logger := asynqutils.GetLogger(ctx)
