@@ -254,6 +254,10 @@ func NewTaskCommand() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "payload",
+						Usage: "task payload",
+					},
+					&cli.PathFlag{
+						Name:  "payload-file",
 						Usage: "path to a payload file",
 					},
 					&cli.StringFlag{
@@ -269,7 +273,6 @@ func NewTaskCommand() *cli.Command {
 
 					taskName := ctx.String("task")
 					queue := ctx.String("queue")
-					payloadFile := ctx.String("payload")
 
 					_, ok := registry.TaskRegistry.Get(taskName)
 					if !ok {
@@ -277,7 +280,14 @@ func NewTaskCommand() *cli.Command {
 					}
 
 					var payload []byte
-					if payloadFile != "" {
+					payloadData := ctx.String("payload")
+					payloadFile := ctx.Path("payload-file")
+					switch {
+					case payloadData != "" && payloadFile != "":
+						return fmt.Errorf("Cannot use --payload and --payload-file at the same time")
+					case payloadData != "":
+						payload = []byte(payloadData)
+					case payloadFile != "":
 						data, err := os.ReadFile(payloadFile)
 						if err != nil {
 							return fmt.Errorf("Cannot read payload file: %w", err)
