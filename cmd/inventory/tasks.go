@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/urfave/cli/v2"
@@ -286,6 +287,11 @@ func NewTaskCommand() *cli.Command {
 						Usage:   "name of queue to use",
 						Value:   "default",
 					},
+					&cli.DurationFlag{
+						Name:  "timeout",
+						Usage: "set timeout for task",
+						Value: 30 * time.Minute,
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
@@ -293,6 +299,7 @@ func NewTaskCommand() *cli.Command {
 					defer client.Close()
 
 					taskName := ctx.String("task")
+					timeout := ctx.Duration("timeout")
 					queue := ctx.String("queue")
 
 					_, ok := registry.TaskRegistry.Get(taskName)
@@ -317,7 +324,11 @@ func NewTaskCommand() *cli.Command {
 					}
 
 					task := asynq.NewTask(taskName, payload)
-					info, err := client.EnqueueContext(ctx.Context, task, asynq.Queue(queue))
+					opts := []asynq.Option{
+						asynq.Queue(queue),
+						asynq.Timeout(timeout),
+					}
+					info, err := client.EnqueueContext(ctx.Context, task, opts...)
 					if err != nil {
 						return fmt.Errorf("Cannot enqueue %q task: %w", taskName, err)
 					}
