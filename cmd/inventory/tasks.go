@@ -79,9 +79,10 @@ func NewTaskCommand() *cli.Command {
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -99,19 +100,22 @@ func NewTaskCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 					&cli.IntFlag{
-						Name:  "page",
-						Usage: "page number to retrieve",
-						Value: 1,
+						Name:    "page",
+						Aliases: []string{"p"},
+						Usage:   "page number to retrieve",
+						Value:   1,
 					},
 					&cli.IntFlag{
-						Name:  "size",
-						Usage: "page size to use",
-						Value: 50,
+						Name:    "size",
+						Aliases: []string{"s"},
+						Usage:   "page size to use",
+						Value:   50,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -124,19 +128,22 @@ func NewTaskCommand() *cli.Command {
 				Aliases: []string{"p"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 					&cli.IntFlag{
-						Name:  "page",
-						Usage: "page number to retrieve",
-						Value: 1,
+						Name:    "page",
+						Aliases: []string{"p"},
+						Usage:   "page number to retrieve",
+						Value:   1,
 					},
 					&cli.IntFlag{
-						Name:  "size",
-						Usage: "page size to use",
-						Value: 50,
+						Name:    "size",
+						Aliases: []string{"s"},
+						Usage:   "page size to use",
+						Value:   50,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -149,19 +156,22 @@ func NewTaskCommand() *cli.Command {
 				Aliases: []string{"ar"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 					&cli.IntFlag{
-						Name:  "page",
-						Usage: "page number to retrieve",
-						Value: 1,
+						Name:    "page",
+						Aliases: []string{"p"},
+						Usage:   "page number to retrieve",
+						Value:   1,
 					},
 					&cli.IntFlag{
-						Name:  "size",
-						Usage: "page size to use",
-						Value: 50,
+						Name:    "size",
+						Aliases: []string{"s"},
+						Usage:   "page size to use",
+						Value:   50,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -173,19 +183,22 @@ func NewTaskCommand() *cli.Command {
 				Usage: "list completed tasks",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 					&cli.IntFlag{
-						Name:  "page",
-						Usage: "page number to retrieve",
-						Value: 1,
+						Name:    "page",
+						Aliases: []string{"q"},
+						Usage:   "page number to retrieve",
+						Value:   1,
 					},
 					&cli.IntFlag{
-						Name:  "size",
-						Usage: "page size to use",
-						Value: 50,
+						Name:    "size",
+						Aliases: []string{"s"},
+						Usage:   "page size to use",
+						Value:   50,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -198,19 +211,22 @@ func NewTaskCommand() *cli.Command {
 				Aliases: []string{"r"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 					&cli.IntFlag{
-						Name:  "page",
-						Usage: "page number to retrieve",
-						Value: 1,
+						Name:    "page",
+						Aliases: []string{"p"},
+						Usage:   "page number to retrieve",
+						Value:   1,
 					},
 					&cli.IntFlag{
-						Name:  "size",
-						Usage: "page size to use",
-						Value: 50,
+						Name:    "size",
+						Aliases: []string{"s"},
+						Usage:   "page size to use",
+						Value:   50,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -223,19 +239,22 @@ func NewTaskCommand() *cli.Command {
 				Aliases: []string{"s"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 					&cli.IntFlag{
-						Name:  "page",
-						Usage: "page number to retrieve",
-						Value: 1,
+						Name:    "page",
+						Aliases: []string{"p"},
+						Usage:   "page number to retrieve",
+						Value:   1,
 					},
 					&cli.IntFlag{
-						Name:  "size",
-						Usage: "page size to use",
-						Value: 50,
+						Name:    "size",
+						Aliases: []string{"s"},
+						Usage:   "page size to use",
+						Value:   50,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -249,6 +268,7 @@ func NewTaskCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "task",
+						Aliases:  []string{"t"},
 						Usage:    "name of task to enqueue",
 						Required: true,
 					},
@@ -261,9 +281,10 @@ func NewTaskCommand() *cli.Command {
 						Usage: "path to a payload file",
 					},
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -311,9 +332,10 @@ func NewTaskCommand() *cli.Command {
 				Aliases: []string{"i"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "queue",
-						Usage: "name of queue to use",
-						Value: "default",
+						Name:    "queue",
+						Aliases: []string{"q"},
+						Usage:   "name of queue to use",
+						Value:   "default",
 					},
 					&cli.StringFlag{
 						Name:     "id",
