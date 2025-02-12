@@ -31,7 +31,24 @@ type Server struct {
 	TimeUpdated      time.Time `bun:"server_updated_at,notnull"`
 }
 
+// Network represents an OpenStack Network.
+type Network struct {
+	bun.BaseModel `bun:"table:openstack_network"`
+	coremodels.Model
+
+	NetworkID   string    `bun:"network_id"`
+	Name        string    `bun:"name,notnull,unique"`
+	ProjectID   string    `bun:"project_id,notnull,unique"`
+	Domain      string    `bun:"domain,notnull"`
+	Region      string    `bun:"region,notnull"`
+	Status      string    `bun:"status"`
+	Description string    `bun:"description"`
+	TimeCreated time.Time `bun:"network_created_at"`
+	TimeUpdated time.Time `bun:"network_updated_at"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
+	registry.ModelRegistry.MustRegister("openstack:model:network", &Network{})
 }
