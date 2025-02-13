@@ -31,7 +31,9 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	queue := asynqutils.GetQueueName(ctx)
 
 	// Task constructors
-	taskFns := []utils.TaskConstructor{}
+	taskFns := []utils.TaskConstructor{
+		NewCollectServersTask,
+	}
 
 	return utils.Enqueue(ctx, taskFns, asynq.Queue(queue))
 }
@@ -47,6 +49,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 // init registers our task handlers and periodic tasks with the registries.
 func init() {
 	// Task handlers
+	registry.TaskRegistry.MustRegister(TaskCollectServers, asynq.HandlerFunc(HandleCollectServersTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
