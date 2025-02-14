@@ -12,6 +12,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/common/utils"
 	"github.com/gardener/inventory/pkg/core/registry"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 const (
@@ -27,18 +28,18 @@ const (
 // HandleCollectAllTask is a handler, which enqueues tasks for collecting all
 // OpenStack objects.
 func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
-	// Task constructors
-	taskFns := []utils.TaskConstructor{
-	}
+	queue := asynqutils.GetQueueName(ctx)
 
-	return utils.Enqueue(ctx, taskFns)
+	// Task constructors
+	taskFns := []utils.TaskConstructor{}
+
+	return utils.Enqueue(ctx, taskFns, asynq.Queue(queue))
 }
 
 // HandleLinkAllTask is a handler, which establishes links between the various
 // OpenStack models.
 func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
-	linkFns := []utils.LinkFunction{
-	}
+	linkFns := []utils.LinkFunction{}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
 }
