@@ -127,10 +127,6 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 	client, ok := openstackclients.ComputeClientset.Get(payload.ProjectID)
 	if !ok {
-		logger.Error(
-			"no client for given project",
-			"project_id", payload.ProjectID,
-		)
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
 
