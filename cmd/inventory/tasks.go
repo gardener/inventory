@@ -191,7 +191,7 @@ func NewTaskCommand() *cli.Command {
 					},
 					&cli.IntFlag{
 						Name:    "page",
-						Aliases: []string{"q"},
+						Aliases: []string{"p"},
 						Usage:   "page number to retrieve",
 						Value:   1,
 					},
