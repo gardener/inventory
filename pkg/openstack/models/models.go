@@ -36,15 +36,15 @@ type Network struct {
 	bun.BaseModel `bun:"table:openstack_network"`
 	coremodels.Model
 
-	NetworkID   string    `bun:"network_id"`
-	Name        string    `bun:"name,notnull,unique"`
-	ProjectID   string    `bun:"project_id,notnull,unique"`
+    NetworkID   string    `bun:"network_id,unique:openstack_network_key"`
+	Name        string    `bun:"name,notnull"`
+    ProjectID   string    `bun:"project_id,notnull,unique:openstack_network_key"`
 	Domain      string    `bun:"domain,notnull"`
 	Region      string    `bun:"region,notnull"`
-	Status      string    `bun:"status"`
-	Description string    `bun:"description"`
-	TimeCreated time.Time `bun:"network_created_at"`
-	TimeUpdated time.Time `bun:"network_updated_at"`
+	Status      string    `bun:"status,notnull"`
+	Description string    `bun:"description,notnull"`
+	TimeCreated time.Time `bun:"network_created_at,notnull"`
+	TimeUpdated time.Time `bun:"network_updated_at,notnull"`
 }
 
 func init() {
