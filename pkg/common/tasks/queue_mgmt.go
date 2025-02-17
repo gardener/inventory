@@ -45,7 +45,7 @@ func HandleDeleteArchivedTask(ctx context.Context, task *asynq.Task) error {
 
 	count, err := asynqclient.Inspector.DeleteAllArchivedTasks(payload.Queue)
 	if err != nil {
-		logger.Error("failed to delete archived tasks", "queue", payload.Queue, "reason", err)
+		return err
 	}
 
 	logger.Info("deleted archived tasks", "count", count)
@@ -68,7 +68,7 @@ func HandleDeleteCompletedTask(ctx context.Context, task *asynq.Task) error {
 
 	count, err := asynqclient.Inspector.DeleteAllCompletedTasks(payload.Queue)
 	if err != nil {
-		logger.Error("failed to delete completed tasks", "queue", payload.Queue, "reason", err)
+		return err
 	}
 
 	logger.Info("deleted completed tasks", "count", count)
