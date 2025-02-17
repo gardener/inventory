@@ -214,7 +214,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 		out, err := db.DB.NewInsert().
 			Model(&items).
-			On("CONFLICT (server_id) DO UPDATE").
+			On("CONFLICT (server_id, project_id) DO UPDATE").
 			Set("name = EXCLUDED.name").
 			Set("project_id = EXCLUDED.project_id").
 			Set("domain = EXCLUDED.domain").
