@@ -67,6 +67,11 @@ func HandleCollectServersTask(ctx context.Context, t *asynq.Task) error {
 func enqueueCollectServers(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
+	if openstackclients.ComputeClientset.Length() == 0 {
+		logger.Warn("no OpenStack compute clients found")
+		return nil
+	}
+
 	err := openstackclients.ComputeClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectServersPayload{
 			ProjectID: projectID,
@@ -124,7 +129,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 	client, ok := openstackclients.ComputeClientset.Get(payload.ProjectID)
 	if !ok {
 		logger.Error(
-			"no project client",
+			"no client for given project",
 			"project_id", payload.ProjectID,
 		)
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
@@ -201,7 +206,6 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 		Model(&items).
 		On("CONFLICT (server_id, project_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
-		Set("project_id = EXCLUDED.project_id").
 		Set("domain = EXCLUDED.domain").
 		Set("region = EXCLUDED.region").
 		Set("user_id = EXCLUDED.user_id").
