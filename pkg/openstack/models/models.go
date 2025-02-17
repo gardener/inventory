@@ -18,17 +18,17 @@ type Server struct {
 	bun.BaseModel `bun:"table:openstack_server"`
 	coremodels.Model
 
-	ServerID         string    `bun:"server_id"`
-	Name             string    `bun:"name,notnull,unique"`
-	ProjectID        string    `bun:"project_id,notnull,unique"`
+	ServerID         string    `bun:"server_id,unique:openstack_server_key"`
+	Name             string    `bun:"name,notnull"`
+	ProjectID        string    `bun:"project_id,unique:openstack_server_key"`
 	Domain           string    `bun:"domain,notnull"`
 	Region           string    `bun:"region,notnull"`
-	UserID           string    `bun:"user_id"`
-	AvailabilityZone string    `bun:"availability_zone"`
-	Status           string    `bun:"status"`
-	ImageID          string    `bun:"image_id"`
-	TimeCreated      time.Time `bun:"server_created_at"`
-	TimeUpdated      time.Time `bun:"server_updated_at"`
+	UserID           string    `bun:"user_id,nullzero"`
+	AvailabilityZone string    `bun:"availability_zone,nullzero"`
+	Status           string    `bun:"status,nullzero"`
+	ImageID          string    `bun:"image_id,nullzero"`
+	TimeCreated      time.Time `bun:"server_created_at,nullzero"`
+	TimeUpdated      time.Time `bun:"server_updated_at,nullzero"`
 }
 
 func init() {
