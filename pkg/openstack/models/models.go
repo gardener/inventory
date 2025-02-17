@@ -23,12 +23,12 @@ type Server struct {
 	ProjectID        string    `bun:"project_id,unique:openstack_server_key"`
 	Domain           string    `bun:"domain,notnull"`
 	Region           string    `bun:"region,notnull"`
-	UserID           string    `bun:"user_id,nullzero"`
-	AvailabilityZone string    `bun:"availability_zone,nullzero"`
-	Status           string    `bun:"status,nullzero"`
-	ImageID          string    `bun:"image_id,nullzero"`
-	TimeCreated      time.Time `bun:"server_created_at,nullzero"`
-	TimeUpdated      time.Time `bun:"server_updated_at,nullzero"`
+	UserID           string    `bun:"user_id,notnull"`
+	AvailabilityZone string    `bun:"availability_zone,notnull"`
+	Status           string    `bun:"status,notnull"`
+	ImageID          string    `bun:"image_id,notnull"`
+	TimeCreated      time.Time `bun:"server_created_at,notnull"`
+	TimeUpdated      time.Time `bun:"server_updated_at,notnull"`
 }
 
 func init() {
