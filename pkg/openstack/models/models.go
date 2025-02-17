@@ -18,9 +18,9 @@ type Server struct {
 	bun.BaseModel `bun:"table:openstack_server"`
 	coremodels.Model
 
-	ServerID         string    `bun:"server_id,unique:openstack_server_key"`
+	ServerID         string    `bun:"server_id,notnull,unique:openstack_server_key"`
 	Name             string    `bun:"name,notnull"`
-	ProjectID        string    `bun:"project_id,unique:openstack_server_key"`
+	ProjectID        string    `bun:"project_id,notnull,unique:openstack_server_key"`
 	Domain           string    `bun:"domain,notnull"`
 	Region           string    `bun:"region,notnull"`
 	UserID           string    `bun:"user_id,notnull"`
