@@ -81,8 +81,10 @@ func enqueueCollectServers(ctx context.Context) error {
 			return err
 		}
 
+		queue := asynqutils.GetQueueName(ctx)
+
 		task := asynq.NewTask(TaskCollectServers, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
