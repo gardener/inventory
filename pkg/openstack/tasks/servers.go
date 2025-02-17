@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
@@ -55,7 +54,7 @@ func HandleCollectServersTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(errors.New("no project ID specified"))
+		return asynqutils.SkipRetry(ErrNoProjectID)
 	}
 
 	return collectServers(ctx, payload)
