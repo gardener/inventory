@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS "openstack_network" (
     "domain" varchar NOT NULL,
     "region" varchar NOT NULL,
     "status" varchar NOT NULL,
+    "shared" boolean NOT NULL,
     "description" varchar NOT NULL,
     "network_created_at" timestamptz NOT NULL,
     "network_updated_at" timestamptz NOT NULL,
