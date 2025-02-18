@@ -71,7 +71,9 @@ func enqueueCollectServers(ctx context.Context) error {
 		return nil
 	}
 
-	err := openstackclients.ComputeClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	queue := asynqutils.GetQueueName(ctx)
+
+	return openstackclients.ComputeClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectServersPayload{
 			ProjectID: projectID,
 		}
@@ -84,8 +86,6 @@ func enqueueCollectServers(ctx context.Context) error {
 			)
 			return err
 		}
-
-		queue := asynqutils.GetQueueName(ctx)
 
 		task := asynq.NewTask(TaskCollectServers, data)
 		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
@@ -109,15 +109,6 @@ func enqueueCollectServers(ctx context.Context) error {
 
 		return nil
 	})
-
-	if err != nil {
-		logger.Error(
-			"couldn't enqueue collection of servers",
-			"reason", err,
-		)
-	}
-
-	return nil
 }
 
 // collectServer collects the OpenStack servers from the specified project,
