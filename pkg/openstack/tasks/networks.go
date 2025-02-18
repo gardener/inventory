@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -54,7 +53,7 @@ func HandleCollectNetworksTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(errors.New("no project ID specified"))
+		return asynqutils.SkipRetry(ErrNoProjectID)
 	}
 
 	return collectNetworks(ctx, payload)
@@ -72,7 +71,9 @@ func enqueueCollectNetworks(ctx context.Context) error {
 		return nil
 	}
 
-	err := openstackclients.NetworkClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	queue := asynqutils.GetQueueName(ctx)
+
+	return openstackclients.NetworkClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectNetworksPayload{
 			ProjectID: projectID,
 		}
@@ -87,7 +88,7 @@ func enqueueCollectNetworks(ctx context.Context) error {
 		}
 
 		task := asynq.NewTask(TaskCollectNetworks, data)
-		info, err := asynqclient.Client.Enqueue(task)
+		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
@@ -108,15 +109,6 @@ func enqueueCollectNetworks(ctx context.Context) error {
 
 		return nil
 	})
-
-	if err != nil {
-		logger.Error(
-			"could not enqueue collection of networks",
-			"reason", err,
-		)
-	}
-
-	return nil
 }
 
 // collectNetworks collects the OpenStack Networks from the specified project id,
@@ -126,10 +118,6 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 
 	client, ok := openstackclients.NetworkClientset.Get(payload.ProjectID)
 	if !ok {
-		logger.Error(
-			"no client for given project",
-			"project_id", payload.ProjectID,
-		)
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
 
@@ -168,6 +156,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 						Domain:      domain,
 						Region:      region,
 						Status:      n.Status,
+						Shared:      n.Shared,
 						Description: n.Description,
 						TimeCreated: n.CreatedAt,
 						TimeUpdated: n.UpdatedAt,
@@ -198,6 +187,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 		Set("domain = EXCLUDED.domain").
 		Set("region = EXCLUDED.region").
 		Set("status = EXCLUDED.status").
+		Set("shared = EXCLUDED.shared").
 		Set("description = EXCLUDED.description").
 		Set("network_created_at = EXCLUDED.network_created_at").
 		Set("network_updated_at = EXCLUDED.network_updated_at").
