@@ -8,15 +8,16 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/v2/pagination"
+	"github.com/hibiken/asynq"
+
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
-	"github.com/gophercloud/gophercloud/v2/pagination"
-	"github.com/hibiken/asynq"
 )
 
 const (
