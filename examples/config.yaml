@@ -453,6 +453,17 @@ scheduler:
       spec: "@every 1h"
       desc: "Link all Azure models"
 
+    # OpenStack tasks
+    - name: "openstack:task:collect-servers"
+      spec: "@every 1h"
+      desc: "Collect OpenStack Servers"
+    - name: "openstack:task:collect-networks"
+      spec: "@every 1h"
+      desc: "Collect OpenStack Networks"
+    - name: "openstack:task:collect-loadbalancers"
+      spec: "@every 1h"
+      desc: "Collect AWS LoadBalancers"
+
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
       spec: "@every 12h"
