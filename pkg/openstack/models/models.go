@@ -48,8 +48,29 @@ type Network struct {
 	TimeUpdated time.Time `bun:"network_updated_at,notnull"`
 }
 
+// LoadBalancer represents an OpenStack LoadBalancer.
+type LoadBalancer struct {
+	bun.BaseModel `bun:"table:openstack_loadbalancer"`
+	coremodels.Model
+
+	LoadBalancerID string    `bun:"loadbalancer_id,notnull,unique:openstack_loadbalancer_key"`
+	Name           string    `bun:"name,notnull"`
+	ProjectID      string    `bun:"project_id,notnull,unique:openstack_loadbalancer_key"`
+	Domain         string    `bun:"domain,notnull"`
+	Region         string    `bun:"region,notnull"`
+	Status         string    `bun:"status,notnull"`
+	Provider       string    `bun:"provider,notnull"`
+	VipAddress     string    `bun:"vip_address,notnull"`
+	VipNetworkID   string    `bun:"vip_network_id,notnull"`
+	VipSubnetID    string    `bun:"vip_subnet_id,notnull"`
+	Description    string    `bun:"description,notnull"`
+	TimeCreated    time.Time `bun:"loadbalancer_created_at,notnull"`
+	TimeUpdated    time.Time `bun:"loadbalancer_updated_at,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
 	registry.ModelRegistry.MustRegister("openstack:model:network", &Network{})
+	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer", &LoadBalancer{})
 }
