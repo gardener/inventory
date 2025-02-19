@@ -149,6 +149,9 @@ type OpenStackServices struct {
 
 	// BlockStorage provides the Block Storage service configuration.
 	BlockStorage []OpenStackServiceConfig `yaml:"block_storage"`
+
+	// LoadBalancer provides the LoadBalancer service configuration.
+	LoadBalancer []OpenStackServiceConfig `yaml:"load_balancer"`
 }
 
 // OpenStackServiceConfig provides configuration specific for an OpenStack service.
