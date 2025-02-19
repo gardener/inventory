@@ -37,6 +37,7 @@ func validateOpenStackConfig(conf *config.Config) error {
 		"compute":       conf.OpenStack.Services.Compute,
 		"network":       conf.OpenStack.Services.Network,
 		"block_storage": conf.OpenStack.Services.BlockStorage,
+		"load_balancer": conf.OpenStack.Services.LoadBalancer,
 	}
 
 	for service, serviceConfigs := range services {
@@ -122,6 +123,7 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 		"compute":       configureOpenStackComputeClientsets,
 		"network":       configureOpenStackNetworkClientsets,
 		"block_storage": configureOpenStackBlockStorageClientsets,
+		"load_balancer":  configureOpenStackLoadBalancerClientsets,
 	}
 
 	if conf.Debug {
@@ -324,6 +326,52 @@ func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.
 		slog.Info(
 			"configured OpenStack client",
 			"service", "block_storage",
+			"credentials", creds,
+			"region", clientConfig.Region,
+			"domain", clientConfig.Domain,
+			"project", clientConfig.Project,
+			"auth_endpoint", clientConfig.AuthEndpoint,
+			"auth_method", namedCreds.Authentication,
+		)
+	}
+	return nil
+}
+
+// configureOpenStackLoadBalancerClientsets configures the OpenStack LoadBalancer API clientsets.
+func configureOpenStackLoadBalancerClientsets(ctx context.Context, conf *config.Config) error {
+	for _, clientConfig := range conf.OpenStack.Services.LoadBalancer {
+		creds := clientConfig.UseCredentials
+		namedCreds := conf.OpenStack.Credentials[creds]
+
+		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
+		}
+
+		loadbalancerClient, err := openstack.NewLoadBalancerV2(providerClient, gophercloud.EndpointOpts{
+			Region: clientConfig.Region,
+		})
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for load_balancer service with credentials %s: %w", creds, err)
+		}
+
+		client := openstackclients.Client[*gophercloud.ServiceClient]{
+			NamedCredentials: creds,
+			ProjectID:        clientConfig.ProjectID,
+			Region:           clientConfig.Region,
+			Domain:           clientConfig.Domain,
+			Client:           loadbalancerClient,
+		}
+		openstackclients.LoadBalancerClientset.Overwrite(
+			clientConfig.ProjectID,
+			client,
+		)
+
+		slog.Info(
+			"configured OpenStack client",
+			"service", "load_balancer",
 			"credentials", creds,
 			"region", clientConfig.Region,
 			"domain", clientConfig.Domain,
