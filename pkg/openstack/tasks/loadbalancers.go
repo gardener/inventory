@@ -8,15 +8,16 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
+	"github.com/gophercloud/gophercloud/v2/pagination"
+	"github.com/hibiken/asynq"
+
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
-	"github.com/gophercloud/gophercloud/v2/pagination"
-	"github.com/hibiken/asynq"
 )
 
 const (
@@ -52,9 +53,9 @@ func HandleCollectLoadBalancersTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-    if payload.ProjectID == "" {
-        return asynqutils.SkipRetry(ErrNoProjectID)
-    }
+	if payload.ProjectID == "" {
+		return asynqutils.SkipRetry(ErrNoProjectID)
+	}
 
 	return collectLoadBalancers(ctx, payload)
 }
@@ -70,7 +71,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 		return nil
 	}
 
-	err := openstackclients.LoadBalancerClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.LoadBalancerClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectLoadBalancersPayload{
 			ProjectID: projectID,
 		}
@@ -106,15 +107,6 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 
 		return nil
 	})
-
-	if err != nil {
-		logger.Error(
-			"could not get network clients",
-			"reason", err,
-		)
-	}
-
-	return nil
 }
 
 // collectLoadBalancers collects the OpenStack LoadBalancers from the specified project id,

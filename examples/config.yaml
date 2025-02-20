@@ -555,6 +555,13 @@ scheduler:
             duration: 24h
           - name: "az:model:blob_container"
             duration: 24h
+          # OpenStack
+          - name: "openstack:model:server"
+            duration: 24h
+          - name: "openstack:model:network"
+            duration: 24h
+          - name: "openstack:model:loadbalancer"
+            duration: 24h
     - name: "common:task:delete-archived-tasks"
       spec: "@every 24h"
       payload: >-
