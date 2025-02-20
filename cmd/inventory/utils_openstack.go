@@ -123,7 +123,7 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 		"compute":       configureOpenStackComputeClientsets,
 		"network":       configureOpenStackNetworkClientsets,
 		"block_storage": configureOpenStackBlockStorageClientsets,
-		"load_balancer":  configureOpenStackLoadBalancerClientsets,
+		"load_balancer": configureOpenStackLoadBalancerClientsets,
 	}
 
 	if conf.Debug {
