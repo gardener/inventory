@@ -52,6 +52,10 @@ func HandleCollectLoadBalancersTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
+    if payload.ProjectID == "" {
+        return asynqutils.SkipRetry(ErrNoProjectID)
+    }
+
 	return collectLoadBalancers(ctx, payload)
 }
 
