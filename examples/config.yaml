@@ -286,6 +286,7 @@ openstack:
         app_credentials_id: "<app-id>"
         app_credentials_secret_file: "<path-to-secret-file>"
   services:
+    # Used for collecting OpenStack Servers
     compute:
     - domain: <domain>
       auth_endpoint: <endpoint>
@@ -296,6 +297,7 @@ openstack:
       project: <project_name>
       region: <region>
       use_credentials: local
+    # Used for collecting OpenStack Networks and Subnets
     network:
     - domain: <domain>
       auth_endpoint: <endpoint>
@@ -307,6 +309,17 @@ openstack:
       region: <region>
       use_credentials: sa
     block_storage:
+    - domain: <domain>
+      auth_endpoint: <endpoint>
+      # needed for differentiating between projects with the same name
+      # in different domains.
+      project_id: <project_id>
+      # needed for client creation
+      project: <project_name>
+      region: <region>
+      use_credentials: sa
+    # Used for collecting OpenStack LoadBalancers
+    load_balancer:
     - domain: <domain>
       auth_endpoint: <endpoint>
       # needed for differentiating between projects with the same name
@@ -462,7 +475,10 @@ scheduler:
       desc: "Collect OpenStack Networks"
     - name: "openstack:task:collect-loadbalancers"
       spec: "@every 1h"
-      desc: "Collect AWS LoadBalancers"
+      desc: "Collect OpenStack LoadBalancers"
+    - name: "openstack:task:collect-subnets"
+      spec: "@every 1h"
+      desc: "Collect OpenStack Subnets"
 
     # The housekeeper takes care of cleaning up stale records
     - name: "common:task:housekeeper"
@@ -561,6 +577,8 @@ scheduler:
           - name: "openstack:model:network"
             duration: 24h
           - name: "openstack:model:loadbalancer"
+            duration: 24h
+          - name: "openstack:model:subnet"
             duration: 24h
     - name: "common:task:delete-archived-tasks"
       spec: "@every 24h"
