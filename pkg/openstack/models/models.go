@@ -68,9 +68,29 @@ type LoadBalancer struct {
 	TimeUpdated    time.Time `bun:"loadbalancer_updated_at,notnull"`
 }
 
+// Subnet represents an OpenStack Subnet.
+type Subnet struct {
+	bun.BaseModel `bun:"table:openstack_subnet"`
+	coremodels.Model
+
+	SubnetID     string `bun:"subnet_id,notnull,unique:openstack_subnet_key"`
+	Name         string `bun:"name,notnull"`
+	ProjectID    string `bun:"project_id,notnull,unique:openstack_subnet_key"`
+	Domain       string `bun:"domain,notnull"`
+	Region       string `bun:"region,notnull"`
+	NetworkID    string `bun:"network_id,notnull"`
+	GatewayIP    string `bun:"gateway_ip,notnull"`
+	CIDR         string `bun:"cidr,notnull"`
+	SubnetPoolID string `bun:"subnet_pool_id,notnull"`
+	EnableDHCP   bool   `bun:"enable_dhcp,notnull"`
+	IPVersion    int    `bun:"ip_version,notnull"`
+	Description  string `bun:"description,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
 	registry.ModelRegistry.MustRegister("openstack:model:network", &Network{})
 	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer", &LoadBalancer{})
+	registry.ModelRegistry.MustRegister("openstack:model:subnet", &Subnet{})
 }
