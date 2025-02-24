@@ -7,6 +7,7 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
 	coremodels "github.com/gardener/inventory/pkg/core/models"
@@ -66,6 +67,7 @@ type LoadBalancer struct {
 	Description    string    `bun:"description,notnull"`
 	TimeCreated    time.Time `bun:"loadbalancer_created_at,notnull"`
 	TimeUpdated    time.Time `bun:"loadbalancer_updated_at,notnull"`
+	Subnet         *Subnet   `bun:"rel:has-one,join:vip_subnet_id=subnet_id,join:project_id=project_id"`
 }
 
 // Subnet represents an OpenStack Subnet.
@@ -73,18 +75,37 @@ type Subnet struct {
 	bun.BaseModel `bun:"table:openstack_subnet"`
 	coremodels.Model
 
-	SubnetID     string `bun:"subnet_id,notnull,unique:openstack_subnet_key"`
-	Name         string `bun:"name,notnull"`
-	ProjectID    string `bun:"project_id,notnull,unique:openstack_subnet_key"`
-	Domain       string `bun:"domain,notnull"`
-	Region       string `bun:"region,notnull"`
-	NetworkID    string `bun:"network_id,notnull"`
-	GatewayIP    string `bun:"gateway_ip,notnull"`
-	CIDR         string `bun:"cidr,notnull"`
-	SubnetPoolID string `bun:"subnet_pool_id,notnull"`
-	EnableDHCP   bool   `bun:"enable_dhcp,notnull"`
-	IPVersion    int    `bun:"ip_version,notnull"`
-	Description  string `bun:"description,notnull"`
+	SubnetID     string   `bun:"subnet_id,notnull,unique:openstack_subnet_key"`
+	Name         string   `bun:"name,notnull"`
+	ProjectID    string   `bun:"project_id,notnull,unique:openstack_subnet_key"`
+	Domain       string   `bun:"domain,notnull"`
+	Region       string   `bun:"region,notnull"`
+	NetworkID    string   `bun:"network_id,notnull"`
+	GatewayIP    string   `bun:"gateway_ip,notnull"`
+	CIDR         string   `bun:"cidr,notnull"`
+	SubnetPoolID string   `bun:"subnet_pool_id,notnull"`
+	EnableDHCP   bool     `bun:"enable_dhcp,notnull"`
+	IPVersion    int      `bun:"ip_version,notnull"`
+	Description  string   `bun:"description,notnull"`
+	Network      *Network `bun:"rel:has-one,join:network_id=network_id,join:project_id=project_id"`
+}
+
+// SubnetToNetwork represents a link table connecting Subnets with Networks.
+type SubnetToNetwork struct {
+	bun.BaseModel `bun:"table:l_openstack_subnet_to_network"`
+	coremodels.Model
+
+	SubnetID  uuid.UUID `bun:"subnet_id,notnull"`
+	NetworkID uuid.UUID `bun:"network_id,notnull"`
+}
+
+// LoadBalancerToSubnet represents a link table connecting LoadBalancers with Subnets.
+type LoadBalancerToSubnet struct {
+	bun.BaseModel `bun:"table:l_openstack_loadbalancer_to_subnet"`
+	coremodels.Model
+
+	LoadBalancerID uuid.UUID `bun:"lb_id,notnull"`
+	SubnetID       uuid.UUID `bun:"subnet_id,notnull"`
 }
 
 func init() {
