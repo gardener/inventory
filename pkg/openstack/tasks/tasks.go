@@ -44,7 +44,10 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 // HandleLinkAllTask is a handler, which establishes links between the various
 // OpenStack models.
 func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
-	linkFns := []utils.LinkFunction{}
+	linkFns := []utils.LinkFunction{
+		LinkSubnetsWithNetworks,
+		LinkLoadBalancersWithSubnets,
+	}
 
 	return utils.LinkObjects(ctx, db.DB, linkFns)
 }
