@@ -661,24 +661,16 @@ type LoggingConfig struct {
 	Attributes map[string]string `yaml:"attributes"`
 }
 
-// parseFile parses the configuration from the given path and unmarshals it into
-// the specified [Config].
-func parseFile(path string, conf *Config) error {
+// ParseFileInto parses the configuration from the given path and unmarshals it
+// into the specified out value.
+func ParseFileInto(path string, out any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("%w: %s", err, path)
 	}
 
-	if err := yaml.Unmarshal(data, &conf); err != nil {
+	if err := yaml.Unmarshal(data, out); err != nil {
 		return fmt.Errorf("%w: %s", err, path)
-	}
-
-	if conf.Version == "" {
-		return fmt.Errorf("%w: %s", ErrNoConfigVersion, path)
-	}
-
-	if conf.Version != ConfigFormatVersion {
-		return fmt.Errorf("%w: %s (%s)", ErrUnsupportedVersion, conf.Version, path)
 	}
 
 	return nil
@@ -691,8 +683,16 @@ func Parse(paths []string) (*Config, error) {
 	var conf Config
 
 	for _, path := range paths {
-		if err := parseFile(path, &conf); err != nil {
+		if err := ParseFileInto(path, &conf); err != nil {
 			return nil, err
+		}
+
+		if conf.Version == "" {
+			return nil, fmt.Errorf("%w: %s", ErrNoConfigVersion, path)
+		}
+
+		if conf.Version != ConfigFormatVersion {
+			return nil, fmt.Errorf("%w: %s (%s)", ErrUnsupportedVersion, conf.Version, path)
 		}
 	}
 
