@@ -4,9 +4,14 @@
 
 package asynq
 
-import "github.com/hibiken/asynq"
+import (
+	"github.com/hibiken/asynq"
+)
 
+// Client is the [asynq.Client] used by workers during runtime.
 var Client *asynq.Client
+
+// Inspector is the [asynq.Inspector] used by workers during runtime.
 var Inspector *asynq.Inspector
 
 // SetClient shall be invoked from cli commands to set the asynq client for the workers.
