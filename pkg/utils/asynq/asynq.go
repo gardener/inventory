@@ -137,3 +137,14 @@ func GetQueueName(ctx context.Context) string {
 
 	return config.DefaultQueueName
 }
+
+// NewRedisClientOptFromConfig returns an [asynq.RedisClientOpt] from the
+// provided [config.RedisConfig] configuration.
+func NewRedisClientOptFromConfig(conf config.RedisConfig) asynq.RedisClientOpt {
+	// TODO: Handle authentication, TLS, etc.
+	opts := asynq.RedisClientOpt{
+		Addr: conf.Endpoint,
+	}
+
+	return opts
+}
