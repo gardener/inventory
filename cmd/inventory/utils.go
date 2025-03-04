@@ -190,12 +190,7 @@ func newLogger(w io.Writer, conf *config.Config) (*slog.Logger, error) {
 
 // newRedisClientOpt returns a new [asynq.RedisClientOpt] from the given config.
 func newRedisClientOpt(conf *config.Config) asynq.RedisClientOpt {
-	// TODO: Handle authentication, TLS, etc.
-	opts := asynq.RedisClientOpt{
-		Addr: conf.Redis.Endpoint,
-	}
-
-	return opts
+	return asynqutils.NewRedisClientOptFromConfig(conf.Redis)
 }
 
 // newAsynqClient creates a new [asynq.Client] from the given config
