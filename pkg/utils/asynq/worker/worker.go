@@ -10,6 +10,7 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/core/config"
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 // Option is a function, which configures the [Worker].
@@ -79,7 +80,21 @@ func NewFromConfig(r asynq.RedisClientOpt, conf config.WorkerConfig, opts ...Opt
 }
 
 // UseMiddlewares configures the [Worker] multiplexer to use the specified
-// [asynq.MiddlewareFunc]
+// [asynq.MiddlewareFunc].
 func (w *Worker) UseMiddlewares(middlewares ...asynq.MiddlewareFunc) {
 	w.mux.Use(middlewares...)
+}
+
+// Handle registers a new handler with the [Worker]'s multiplexer.
+func (w *Worker) Handle(pattern string, handler asynq.Handler) {
+	w.mux.Handle(pattern, handler)
+}
+
+// HandlersFromRegistry registers task handlers with the [Worker] multiplexer
+// using the given registry.
+func (w *Worker) HandlersFromRegistry(reg *registry.Registry[string, asynq.Handler]) {
+	reg.Range(func(pattern string, handler asynq.Handler) error {
+		w.Handle(pattern, handler)
+		return nil
+	})
 }
