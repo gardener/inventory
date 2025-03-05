@@ -48,8 +48,8 @@ func main() {
 			},
 		},
 		Before: func(ctx *cli.Context) error {
-			configFile := ctx.StringSlice("config")
-			conf, err := config.Parse(configFile)
+			configPaths := ctx.StringSlice("config")
+			conf, err := config.Parse(configPaths...)
 			if err != nil {
 				return fmt.Errorf("Cannot parse config: %w", err)
 			}
