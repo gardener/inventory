@@ -77,3 +77,9 @@ func NewFromConfig(r asynq.RedisClientOpt, conf config.WorkerConfig, opts ...Opt
 
 	return worker
 }
+
+// UseMiddlewares configures the [Worker] multiplexer to use the specified
+// [asynq.MiddlewareFunc]
+func (w *Worker) UseMiddlewares(middlewares ...asynq.MiddlewareFunc) {
+	w.mux.Use(middlewares...)
+}
