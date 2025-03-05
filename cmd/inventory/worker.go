@@ -21,7 +21,6 @@ import (
 	dbclient "github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
-	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 // NewWorkerCommand returns a new command for interfacing with the workers.
@@ -152,9 +151,13 @@ func NewWorkerCommand() *cli.Command {
 					defer db.Close()
 					client := newAsynqClient(conf)
 					defer client.Close()
-					server := newServer(conf)
 					inspector := newInspector(conf)
 					defer inspector.Close()
+
+					worker, err := newWorker(conf)
+					if err != nil {
+						return err
+					}
 
 					// Gardener client configs
 					if err := configureGardenerClient(ctx.Context, conf); err != nil {
@@ -189,30 +192,12 @@ func NewWorkerCommand() *cli.Command {
 						return err
 					}
 
-					// Configure logging and middlewares
-					slog.Info("configuring logging and middlewares")
-					logger, err := newLogger(os.Stdout, conf)
-					if err != nil {
-						return err
-					}
-					middlewares := []asynq.MiddlewareFunc{
-						asynqutils.NewLoggerMiddleware(logger),
-						asynqutils.NewMeasuringMiddleware(),
-					}
-
-					// Register our task handlers
-					mux := asynq.NewServeMux()
-					mux.Use(middlewares...)
-
-					walker := func(name string, handler asynq.Handler) error {
-						slog.Info("registering task", "name", name)
-						mux.Handle(name, handler)
+					// Register our task handlers using the default registry
+					worker.HandlersFromRegistry(registry.TaskRegistry)
+					registry.TaskRegistry.Range(func(name string, _ asynq.Handler) error {
+						slog.Info("registered task", "name", name)
 						return nil
-					}
-
-					if err := registry.TaskRegistry.Range(walker); err != nil {
-						return err
-					}
+					})
 
 					slog.Info("worker concurrency", "level", conf.Worker.Concurrency)
 					slog.Info("queue priority", "strict", conf.Worker.StrictPriority)
@@ -220,7 +205,7 @@ func NewWorkerCommand() *cli.Command {
 						slog.Info("queue configuration", "name", queue, "priority", priority)
 					}
 
-					return server.Run(mux)
+					return worker.Run()
 				},
 			},
 		},
