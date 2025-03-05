@@ -23,10 +23,6 @@ func NewDatabaseCommand() *cli.Command {
 		Name:    "database",
 		Usage:   "database operations",
 		Aliases: []string{"db"},
-		Before: func(ctx *cli.Context) error {
-			conf := getConfig(ctx)
-			return validateDBConfig(conf)
-		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "init",
@@ -34,7 +30,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"i"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -54,7 +53,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"m"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -91,7 +93,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"r"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -129,7 +134,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"l"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -145,7 +153,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"u"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -160,7 +171,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"c"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -190,7 +204,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"s"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -223,7 +240,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {
@@ -252,7 +272,10 @@ func NewDatabaseCommand() *cli.Command {
 				Aliases: []string{"p"},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					migrator, err := newMigrator(conf, db)
 					if err != nil {

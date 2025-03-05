@@ -22,10 +22,6 @@ func NewTaskCommand() *cli.Command {
 		Name:    "task",
 		Usage:   "task operations",
 		Aliases: []string{"t"},
-		Before: func(ctx *cli.Context) error {
-			conf := getConfig(ctx)
-			return validateRedisConfig(conf)
-		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "list",

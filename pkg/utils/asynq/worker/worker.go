@@ -93,7 +93,7 @@ func (w *Worker) Handle(pattern string, handler asynq.Handler) {
 // HandlersFromRegistry registers task handlers with the [Worker] multiplexer
 // using the given registry.
 func (w *Worker) HandlersFromRegistry(reg *registry.Registry[string, asynq.Handler]) {
-	reg.Range(func(pattern string, handler asynq.Handler) error {
+	_ = reg.Range(func(pattern string, handler asynq.Handler) error {
 		w.Handle(pattern, handler)
 		return nil
 	})

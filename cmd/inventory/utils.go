@@ -34,18 +34,6 @@ const na = "N/A"
 // configKey is the key used to store the parsed configuration in the context
 type configKey struct{}
 
-// errInvalidDSN error is returned, if the DSN configuration is incorrect, or
-// empty.
-var errInvalidDSN = errors.New("invalid or missing database configuration")
-
-// errInvalidWorkerConcurrency error is returned when the worker concurrency
-// setting is invalid, e.g. it is <= 0.
-var errInvalidWorkerConcurrency = errors.New("invalid worker concurrency")
-
-// errInvalidRedisEndpoint is returned when Redis is configured with an invalid
-// endpoint.
-var errInvalidRedisEndpoint = errors.New("invalid or missing redis endpoint")
-
 // errNoDashboardAddress is an error, which is returned when the Dashboard
 // service was not configured with a bind address.
 var errNoDashboardAddress = errors.New("no bind address specified")
@@ -73,24 +61,6 @@ func getConfig(ctx *cli.Context) *config.Config {
 	return conf
 }
 
-// validateDBConfig validates the database configuration settings.
-func validateDBConfig(conf *config.Config) error {
-	if conf.Database.DSN == "" {
-		return errInvalidDSN
-	}
-
-	return nil
-}
-
-// validateWorkerConfig validates the worker configuration settings.
-func validateWorkerConfig(conf *config.Config) error {
-	if conf.Worker.Concurrency <= 0 {
-		return fmt.Errorf("%w: %d", errInvalidWorkerConcurrency, conf.Worker.Concurrency)
-	}
-
-	return nil
-}
-
 // validateDashboardConfig validates the Dashboard service configuration.
 func validateDashboardConfig(conf *config.Config) error {
 	if conf.Dashboard.Address == "" {
@@ -99,15 +69,6 @@ func validateDashboardConfig(conf *config.Config) error {
 
 	_, err := url.Parse(conf.Dashboard.PrometheusEndpoint)
 	return err
-}
-
-// validateRedisConfig validates the Redis configuration settings.
-func validateRedisConfig(conf *config.Config) error {
-	if conf.Redis.Endpoint == "" {
-		return errInvalidRedisEndpoint
-	}
-
-	return nil
 }
 
 // newLogger creates a new [slog.Logger] based on the provided [config.Config]
@@ -157,11 +118,14 @@ func newWorker(conf *config.Config) *workerutils.Worker {
 }
 
 // newDB returns a new [bun.DB] database from the given config.
-func newDB(conf *config.Config) *bun.DB {
-	db := dbutils.NewFromConfig(conf.Database)
+func newDB(conf *config.Config) (*bun.DB, error) {
+	db, err := dbutils.NewFromConfig(conf.Database)
+	if err != nil {
+		return nil, err
+	}
 	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(conf.Debug)))
 
-	return db
+	return db, nil
 }
 
 // newMigrator creates a new [github.com/uptrace/bun/migrate.Migrator] from the
