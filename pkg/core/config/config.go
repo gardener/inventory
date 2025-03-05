@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -694,11 +693,6 @@ func Parse(paths []string) (*Config, error) {
 		if conf.Version != ConfigFormatVersion {
 			return nil, fmt.Errorf("%w: %s (%s)", ErrUnsupportedVersion, conf.Version, path)
 		}
-	}
-
-	// Worker defaults
-	if conf.Worker.Concurrency <= 0 {
-		conf.Worker.Concurrency = runtime.NumCPU()
 	}
 
 	// AWS defaults
