@@ -153,11 +153,7 @@ func NewWorkerCommand() *cli.Command {
 					defer client.Close()
 					inspector := newInspector(conf)
 					defer inspector.Close()
-
-					worker, err := newWorker(conf)
-					if err != nil {
-						return err
-					}
+					worker := newWorker(conf)
 
 					// Gardener client configs
 					if err := configureGardenerClient(ctx.Context, conf); err != nil {

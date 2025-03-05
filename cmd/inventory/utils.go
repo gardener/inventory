@@ -205,7 +205,7 @@ func newInspector(conf *config.Config) *asynq.Inspector {
 }
 
 // newWorker creates a new [workerutils.Worker] from the given config.
-func newWorker(conf *config.Config) (*workerutils.Worker, error) {
+func newWorker(conf *config.Config) *workerutils.Worker {
 	redisClientOpt := newRedisClientOpt(conf)
 	opts := make([]workerutils.Option, 0)
 	logLevel := asynq.InfoLevel
@@ -218,18 +218,13 @@ func newWorker(conf *config.Config) (*workerutils.Worker, error) {
 	worker := workerutils.NewFromConfig(redisClientOpt, conf.Worker, opts...)
 
 	// Configure middlewares
-	logger, err := newLogger(os.Stdout, conf)
-	if err != nil {
-		return nil, err
-	}
-
 	middlewares := []asynq.MiddlewareFunc{
-		asynqutils.NewLoggerMiddleware(logger),
+		asynqutils.NewLoggerMiddleware(slog.Default()),
 		asynqutils.NewMeasuringMiddleware(),
 	}
 	worker.UseMiddlewares(middlewares...)
 
-	return worker, nil
+	return worker
 }
 
 // newDB returns a new [bun.DB] database from the given config.
