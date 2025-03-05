@@ -25,6 +25,7 @@ import (
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	workerutils "github.com/gardener/inventory/pkg/utils/asynq/worker"
 	dbutils "github.com/gardener/inventory/pkg/utils/db"
+	slogutils "github.com/gardener/inventory/pkg/utils/slog"
 )
 
 // na is the const used to represent N/A values
@@ -48,14 +49,6 @@ var errInvalidRedisEndpoint = errors.New("invalid or missing redis endpoint")
 // errNoDashboardAddress is an error, which is returned when the Dashboard
 // service was not configured with a bind address.
 var errNoDashboardAddress = errors.New("no bind address specified")
-
-// errInvalidLogLevel is an error, which is returned when an invalid log level
-// has been configured.
-var errInvalidLogLevel = errors.New("invalid log level")
-
-// errInvalidLogFormat is an error, which is returned when an invalid log format
-// has been configured.
-var errInvalidLogFormat = errors.New("invalid log format")
 
 // errNoServiceCredentials is an error, which is returned when an cloud provider
 // API service (e.g. AWS, GCP, etc.)  does not have any named credentials
@@ -117,74 +110,10 @@ func validateRedisConfig(conf *config.Config) error {
 	return nil
 }
 
-// logLevel represents the log level
-type logLevel string
-
-var (
-	// The supported log levels
-	levelInfo  logLevel = "info"
-	levelWarn  logLevel = "warn"
-	levelError logLevel = "error"
-	levelDebug logLevel = "debug"
-)
-
-// logFormat represents the format of log events
-type logFormat string
-
-var (
-	// The supported log formats
-	logFormatText logFormat = "text"
-	logFormatJSON logFormat = "json"
-)
-
 // newLogger creates a new [slog.Logger] based on the provided [config.Config]
 // spec, which outputs to the given [io.Writer].
 func newLogger(w io.Writer, conf *config.Config) (*slog.Logger, error) {
-	// Defaults, if we don't have any logging settings
-	if conf.Logging.Level == "" {
-		conf.Logging.Level = string(levelInfo)
-	}
-
-	if conf.Logging.Format == "" {
-		conf.Logging.Format = string(logFormatText)
-	}
-
-	// Supported log levels
-	levels := map[logLevel]slog.Level{
-		levelInfo:  slog.LevelInfo,
-		levelWarn:  slog.LevelWarn,
-		levelError: slog.LevelError,
-		levelDebug: slog.LevelDebug,
-	}
-
-	level, ok := levels[logLevel(conf.Logging.Level)]
-	if !ok {
-		return nil, fmt.Errorf("%w: %s", errInvalidLogLevel, conf.Logging.Level)
-	}
-
-	var handler slog.Handler
-	handlerOpts := &slog.HandlerOptions{
-		AddSource: conf.Logging.AddSource,
-		Level:     level,
-	}
-
-	switch logFormat(conf.Logging.Format) {
-	case logFormatText:
-		handler = slog.NewTextHandler(w, handlerOpts)
-	case logFormatJSON:
-		handler = slog.NewJSONHandler(w, handlerOpts)
-	default:
-		return nil, fmt.Errorf("%w: %s", errInvalidLogFormat, conf.Logging.Format)
-	}
-
-	// Add default attributes to the logger
-	attrs := make([]slog.Attr, 0)
-	for k, v := range conf.Logging.Attributes {
-		attrs = append(attrs, slog.Any(k, v))
-	}
-	logger := slog.New(handler.WithAttrs(attrs))
-
-	return logger, nil
+	return slogutils.NewFromConfig(w, conf.Logging)
 }
 
 // newRedisClientOpt returns a new [asynq.RedisClientOpt] from the given config.
