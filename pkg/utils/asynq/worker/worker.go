@@ -98,3 +98,14 @@ func (w *Worker) HandlersFromRegistry(reg *registry.Registry[string, asynq.Handl
 		return nil
 	})
 }
+
+// Run starts the task processing by calling [asynq.Server.Start] and blocks
+// until an OS signal is received.
+func (w *Worker) Run() error {
+	return w.server.Run(w.mux)
+}
+
+// Shutdown gracefully shuts down the server by calling [asynq.Server.Shutdown].
+func (w *Worker) Shutdown() {
+	w.server.Shutdown()
+}
