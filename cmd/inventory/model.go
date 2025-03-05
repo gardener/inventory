@@ -85,10 +85,6 @@ func NewModelCommand() *cli.Command {
 						Usage:   "relationship to load for the model",
 					},
 				},
-				Before: func(ctx *cli.Context) error {
-					conf := getConfig(ctx)
-					return validateDBConfig(conf)
-				},
 				Action: func(ctx *cli.Context) error {
 					var templateBody string
 					templateData := ctx.String("template")
@@ -126,7 +122,10 @@ func NewModelCommand() *cli.Command {
 
 					// Configure database connection
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 
 					// Create a new slice of the type we have in the registry

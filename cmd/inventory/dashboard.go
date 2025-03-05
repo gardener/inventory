@@ -28,7 +28,6 @@ func NewDashboardCommand() *cli.Command {
 		Before: func(ctx *cli.Context) error {
 			conf := getConfig(ctx)
 			validatorFuncs := []func(c *config.Config) error{
-				validateRedisConfig,
 				validateDashboardConfig,
 			}
 

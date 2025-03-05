@@ -17,10 +17,6 @@ func NewQueueCommand() *cli.Command {
 		Name:    "queue",
 		Usage:   "queue operations",
 		Aliases: []string{"q"},
-		Before: func(ctx *cli.Context) error {
-			conf := getConfig(ctx)
-			return validateRedisConfig(conf)
-		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "list",

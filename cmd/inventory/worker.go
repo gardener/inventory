@@ -19,7 +19,6 @@ import (
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	dbclient "github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
@@ -29,10 +28,6 @@ func NewWorkerCommand() *cli.Command {
 		Name:    "worker",
 		Usage:   "worker operations",
 		Aliases: []string{"w"},
-		Before: func(ctx *cli.Context) error {
-			conf := getConfig(ctx)
-			return validateRedisConfig(conf)
-		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "list",
@@ -130,24 +125,12 @@ func NewWorkerCommand() *cli.Command {
 				Name:    "start",
 				Usage:   "start worker",
 				Aliases: []string{"s"},
-				Before: func(ctx *cli.Context) error {
-					conf := getConfig(ctx)
-					validatorFuncs := []func(c *config.Config) error{
-						validateWorkerConfig,
-						validateDBConfig,
-					}
-
-					for _, validator := range validatorFuncs {
-						if err := validator(conf); err != nil {
-							return err
-						}
-					}
-
-					return nil
-				},
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
-					db := newDB(conf)
+					db, err := newDB(conf)
+					if err != nil {
+						return err
+					}
 					defer db.Close()
 					client := newAsynqClient(conf)
 					defer client.Close()
@@ -190,7 +173,7 @@ func NewWorkerCommand() *cli.Command {
 
 					// Register our task handlers using the default registry
 					worker.HandlersFromRegistry(registry.TaskRegistry)
-					registry.TaskRegistry.Range(func(name string, _ asynq.Handler) error {
+					_ = registry.TaskRegistry.Range(func(name string, _ asynq.Handler) error {
 						slog.Info("registered task", "name", name)
 						return nil
 					})

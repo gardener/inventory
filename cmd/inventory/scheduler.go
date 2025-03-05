@@ -23,10 +23,6 @@ func NewSchedulerCommand() *cli.Command {
 		Name:    "scheduler",
 		Usage:   "scheduler operations",
 		Aliases: []string{"s"},
-		Before: func(ctx *cli.Context) error {
-			conf := getConfig(ctx)
-			return validateRedisConfig(conf)
-		},
 		Subcommands: []*cli.Command{
 			{
 				Name:    "start",
