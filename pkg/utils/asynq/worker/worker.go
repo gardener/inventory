@@ -22,6 +22,25 @@ type Worker struct {
 	mux    *asynq.ServeMux
 }
 
+// WithLogLevel is an [Option], which configures the log level of the [Worker].
+func WithLogLevel(level asynq.LogLevel) Option {
+	opt := func(conf *asynq.Config) {
+		conf.LogLevel = level
+	}
+
+	return opt
+}
+
+// WithErrorHandler is an [Option], which configures the [Worker] to use the
+// specified [asynq.ErrorHandler].
+func WithErrorHandler(handler asynq.ErrorHandler) Option {
+	opt := func(conf *asynq.Config) {
+		conf.ErrorHandler = handler
+	}
+
+	return opt
+}
+
 // NewFromConfig creates a new [Worker] based on the provided
 // [config.WorkerConfig] spec.
 func NewFromConfig(r asynq.RedisClientOpt, conf config.WorkerConfig, opts ...Option) *Worker {
