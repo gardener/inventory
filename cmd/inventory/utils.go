@@ -26,6 +26,7 @@ import (
 	"github.com/gardener/inventory/internal/pkg/migrations"
 	"github.com/gardener/inventory/pkg/core/config"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	workerutils "github.com/gardener/inventory/pkg/utils/asynq/worker"
 )
 
 // na is the const used to represent N/A values
@@ -205,33 +206,32 @@ func newInspector(conf *config.Config) *asynq.Inspector {
 	return asynq.NewInspector(redisClientOpt)
 }
 
-// newServer creates a new [asynq.Server] from the given config.
-func newServer(conf *config.Config) *asynq.Server {
+// newWorker creates a new [workerutils.Worker] from the given config.
+func newWorker(conf *config.Config) (*workerutils.Worker, error) {
 	redisClientOpt := newRedisClientOpt(conf)
-	defaultQueues := map[string]int{
-		config.DefaultQueueName: 1,
-	}
-
+	opts := make([]workerutils.Option, 0)
 	logLevel := asynq.InfoLevel
 	if conf.Debug {
 		logLevel = asynq.DebugLevel
 	}
 
-	queues := conf.Worker.Queues
-	if len(queues) == 0 {
-		queues = defaultQueues
+	opts = append(opts, workerutils.WithLogLevel(logLevel))
+	opts = append(opts, workerutils.WithErrorHandler(asynqutils.NewDefaultErrorHandler()))
+	worker := workerutils.NewFromConfig(redisClientOpt, conf.Worker, opts...)
+
+	// Configure middlewares
+	logger, err := newLogger(os.Stdout, conf)
+	if err != nil {
+		return nil, err
 	}
 
-	config := asynq.Config{
-		Concurrency:    conf.Worker.Concurrency,
-		LogLevel:       logLevel,
-		ErrorHandler:   asynqutils.NewDefaultErrorHandler(),
-		Queues:         queues,
-		StrictPriority: conf.Worker.StrictPriority,
+	middlewares := []asynq.MiddlewareFunc{
+		asynqutils.NewLoggerMiddleware(logger),
+		asynqutils.NewMeasuringMiddleware(),
 	}
-	server := asynq.NewServer(redisClientOpt, config)
+	worker.UseMiddlewares(middlewares...)
 
-	return server
+	return worker, nil
 }
 
 // newDB returns a new [bun.DB] database from the given config.
