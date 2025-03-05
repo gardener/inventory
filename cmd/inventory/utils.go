@@ -5,7 +5,6 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -17,8 +16,6 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
@@ -27,6 +24,7 @@ import (
 	"github.com/gardener/inventory/pkg/core/config"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	workerutils "github.com/gardener/inventory/pkg/utils/asynq/worker"
+	dbutils "github.com/gardener/inventory/pkg/utils/db"
 )
 
 // na is the const used to represent N/A values
@@ -236,8 +234,7 @@ func newWorker(conf *config.Config) (*workerutils.Worker, error) {
 
 // newDB returns a new [bun.DB] database from the given config.
 func newDB(conf *config.Config) *bun.DB {
-	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(conf.Database.DSN)))
-	db := bun.NewDB(pgdb, pgdialect.New())
+	db := dbutils.NewFromConfig(conf.Database)
 	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(conf.Debug)))
 
 	return db
