@@ -298,11 +298,6 @@ func NewTaskCommand() *cli.Command {
 					timeout := ctx.Duration("timeout")
 					queue := ctx.String("queue")
 
-					_, ok := registry.TaskRegistry.Get(taskName)
-					if !ok {
-						return fmt.Errorf("Task %q not found in the registry", taskName)
-					}
-
 					var payload []byte
 					payloadData := ctx.String("payload")
 					payloadFile := ctx.Path("payload-file")
