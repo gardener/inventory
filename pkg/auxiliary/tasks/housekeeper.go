@@ -18,7 +18,7 @@ import (
 const (
 	// HousekeeperTaskType is the name of the task responsible for cleaning
 	// up stale records from the database.
-	HousekeeperTaskType = "common:task:housekeeper"
+	HousekeeperTaskType = "aux:task:housekeeper"
 )
 
 // HousekeeperPayload represents the payload of the housekeeper task.

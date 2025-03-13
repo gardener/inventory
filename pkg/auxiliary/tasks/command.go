@@ -23,7 +23,7 @@ var ErrNoCommand = errors.New("no command specified")
 const (
 	// CommandTaskType is the name of the task for executing external
 	// commands.
-	CommandTaskType = "common:task:command"
+	CommandTaskType = "aux:task:command"
 )
 
 // CommandPayload represents the payload of the task for executing external
