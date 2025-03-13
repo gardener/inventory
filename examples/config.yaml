@@ -270,7 +270,7 @@ aws:
 
 openstack:
   is_enabled: true
-  
+
   # The `credentials' section provides named credentials, which are used by the
   # various OpenStack services. The currently supported authentication mechanisms are `password' for username and password
   # and `app_credentials' for application credentials.
@@ -480,8 +480,10 @@ scheduler:
       spec: "@every 1h"
       desc: "Collect OpenStack Subnets"
 
+    # Auxiliary task
+    #
     # The housekeeper takes care of cleaning up stale records
-    - name: "common:task:housekeeper"
+    - name: "aux:task:housekeeper"
       spec: "@every 12h"
       payload: >-
         retention:
@@ -580,11 +582,14 @@ scheduler:
             duration: 24h
           - name: "openstack:model:subnet"
             duration: 24h
-    - name: "common:task:delete-archived-tasks"
+
+    # Clean up archived and completed tasks from the queues
+    - name: "aux:task:delete-archived-tasks"
       spec: "@every 24h"
       payload: >-
         queue: "default"
-    - name: "common:task:delete-completed-tasks"
+
+    - name: "aux:task:delete-completed-tasks"
       spec: "@every 24h"
       payload: >-
         queue: "default"

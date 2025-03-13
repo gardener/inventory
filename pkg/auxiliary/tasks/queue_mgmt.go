@@ -18,10 +18,10 @@ import (
 const (
 	// DeleteArchivedTaskType is the name of the task responsible for deleting
 	// archived tasks from a task queue
-	DeleteArchivedTaskType = "common:task:delete-archived-tasks"
+	DeleteArchivedTaskType = "aux:task:delete-archived-tasks"
 	// DeleteCompletedTaskType is the name of the task responsible for deleting
 	// completed tasks from a task queue
-	DeleteCompletedTaskType = "common:task:delete-completed-tasks"
+	DeleteCompletedTaskType = "aux:task:delete-completed-tasks"
 )
 
 // DeleteQueuePayload represents the payload of a task management task.
