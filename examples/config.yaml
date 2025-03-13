@@ -582,6 +582,9 @@ scheduler:
             duration: 24h
           - name: "openstack:model:subnet"
             duration: 24h
+          # Auxiliary
+          - name: "aux:model:housekeeper_run"
+            duration: 24h
 
     # Clean up archived and completed tasks from the queues
     - name: "aux:task:delete-archived-tasks"
