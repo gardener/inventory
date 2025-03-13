@@ -10,9 +10,9 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/common/utils"
 	"github.com/gardener/inventory/pkg/core/registry"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	dbutils "github.com/gardener/inventory/pkg/utils/db"
 )
 
 const (
@@ -49,7 +49,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 // HandleLinkAllTask is a handler, which establishes links between the various
 // AWS models.
 func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
-	linkFns := []utils.LinkFunction{
+	linkFns := []dbutils.LinkFunction{
 		LinkAvailabilityZoneWithRegion,
 		LinkInstanceWithRegion,
 		LinkInstanceWithSubnet,
@@ -65,7 +65,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkNetworkInterfaceWithLoadBalancer,
 	}
 
-	return utils.LinkObjects(ctx, db.DB, linkFns)
+	return dbutils.LinkObjects(ctx, db.DB, linkFns)
 }
 
 // init registers our task handlers and periodic tasks with the registries.
