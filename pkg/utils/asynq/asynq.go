@@ -14,6 +14,7 @@ import (
 	"github.com/hibiken/asynq"
 	"gopkg.in/yaml.v3"
 
+	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/core/config"
 )
 
@@ -95,4 +96,33 @@ func NewRedisClientOptFromConfig(conf config.RedisConfig) asynq.RedisClientOpt {
 	}
 
 	return opts
+}
+
+// TaskConstructor is a function which creates and returns a new [asynq.Task].
+type TaskConstructor func() *asynq.Task
+
+// Enqueue enqueues the tasks produced by the given task constructors.
+func Enqueue(ctx context.Context, items []TaskConstructor, opts ...asynq.Option) error {
+	logger := GetLogger(ctx)
+	for _, fn := range items {
+		task := fn()
+		info, err := asynqclient.Client.Enqueue(task, opts...)
+		if err != nil {
+			logger.Error(
+				"failed to enqueue task",
+				"type", task.Type(),
+				"reason", err,
+			)
+			return err
+		}
+
+		logger.Info(
+			"enqueued task",
+			"type", task.Type(),
+			"id", info.ID,
+			"queue", info.Queue,
+		)
+	}
+
+	return nil
 }
