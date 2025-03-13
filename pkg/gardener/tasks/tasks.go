@@ -10,9 +10,9 @@ import (
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/clients/db"
-	"github.com/gardener/inventory/pkg/common/utils"
 	"github.com/gardener/inventory/pkg/core/registry"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	dbutils "github.com/gardener/inventory/pkg/utils/db"
 )
 
 const (
@@ -47,7 +47,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 // HandleLinkAllTask is the handler, which establishes relationships between the
 // various Gardener models.
 func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
-	linkFns := []utils.LinkFunction{
+	linkFns := []dbutils.LinkFunction{
 		LinkShootWithProject,
 		LinkShootWithSeed,
 		LinkMachineWithShoot,
@@ -57,7 +57,7 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 		LinkProjectWithMember,
 	}
 
-	return utils.LinkObjects(ctx, db.DB, linkFns)
+	return dbutils.LinkObjects(ctx, db.DB, linkFns)
 }
 
 func init() {

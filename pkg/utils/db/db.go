@@ -5,6 +5,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 
 	"github.com/gardener/inventory/pkg/core/config"
+	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
 // ErrInvalidDSN error is returned, when the DSN configuration is incorrect, or
@@ -30,4 +32,20 @@ func NewFromConfig(conf config.DatabaseConfig) (*bun.DB, error) {
 	db := bun.NewDB(pgdb, pgdialect.New())
 
 	return db, nil
+}
+
+// LinkFunction is a function, which establishes relationships between models.
+type LinkFunction func(ctx context.Context, db *bun.DB) error
+
+// LinkObjects links objects by using the provided [LinkFunction] items.
+func LinkObjects(ctx context.Context, db *bun.DB, items []LinkFunction) error {
+	logger := asynqutils.GetLogger(ctx)
+	for _, linkFunc := range items {
+		if err := linkFunc(ctx, db); err != nil {
+			logger.Error("failed to link objects", "reason", err)
+			continue
+		}
+	}
+
+	return nil
 }
