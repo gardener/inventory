@@ -31,7 +31,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	queue := asynqutils.GetQueueName(ctx)
 
 	// Task constructors
-	taskFns := []utils.TaskConstructor{
+	taskFns := []asynqutils.TaskConstructor{
 		NewCollectProjectsTask,
 		NewCollectSeedsTask,
 		NewCollectShootsTask,
@@ -41,7 +41,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectPersistentVolumesTask,
 	}
 
-	return utils.Enqueue(ctx, taskFns, asynq.Queue(queue))
+	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
 }
 
 // HandleLinkAllTask is the handler, which establishes relationships between the

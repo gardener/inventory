@@ -29,7 +29,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 	queue := asynqutils.GetQueueName(ctx)
 
 	// Task constructors
-	taskFns := []utils.TaskConstructor{
+	taskFns := []asynqutils.TaskConstructor{
 		NewCollectProjectsTask,
 		NewCollectInstancesTask,
 		NewCollectVPCsTask,
@@ -42,7 +42,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectTargetPoolsTask,
 	}
 
-	return utils.Enqueue(ctx, taskFns, asynq.Queue(queue))
+	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
 }
 
 // HandleLinkAllTask is a handler, which establishes links between the various
