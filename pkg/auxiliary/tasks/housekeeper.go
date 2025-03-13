@@ -24,11 +24,11 @@ const (
 // HousekeeperPayload represents the payload of the housekeeper task.
 type HousekeeperPayload struct {
 	// Retention provides the retention configuration of objects.
-	Retention []RetentionConfig `yaml:"retention" json:"retention"`
+	Retention []HousekeeperRetentionConfig `yaml:"retention" json:"retention"`
 }
 
-// RetentionConfig represents the retention configuration for a given model.
-type RetentionConfig struct {
+// HousekeeperRetentionConfig represents the retention configuration for a given model.
+type HousekeeperRetentionConfig struct {
 	// Name specifies the model name.
 	Name string `yaml:"name" json:"name"`
 
