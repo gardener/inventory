@@ -269,7 +269,7 @@ aws:
         role_session_name: gardener-inventory-worker
 
 openstack:
-  is_enabled: true
+  is_enabled: false
 
   # The `credentials' section provides named credentials, which are used by the
   # various OpenStack services. The currently supported authentication mechanisms are `password' for username and password
@@ -357,7 +357,7 @@ scheduler:
     - name: "aws:task:collect-images"
       spec: "@every 1h"
       desc: "Collect AWS AMIs"
-      payload: >-
+      payload: |
         owners:
           - 0123456789012
     - name: "aws:task:collect-loadbalancers"
@@ -485,7 +485,7 @@ scheduler:
     # The housekeeper takes care of cleaning up stale records
     - name: "aux:task:housekeeper"
       spec: "@every 12h"
-      payload: >-
+      payload: |
         retention:
           # AWS
           - name: "aws:model:region"
@@ -589,12 +589,12 @@ scheduler:
     # Clean up archived and completed tasks from the queues
     - name: "aux:task:delete-archived-tasks"
       spec: "@every 24h"
-      payload: >-
+      payload: |
         queue: "default"
 
     - name: "aux:task:delete-completed-tasks"
       spec: "@every 24h"
-      payload: >-
+      payload: |
         queue: "default"
 
 # Gardener specific configuration
