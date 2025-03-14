@@ -5,6 +5,7 @@
 package models
 
 import (
+	"net"
 	"time"
 
 	"github.com/google/uuid"
@@ -90,6 +91,25 @@ type Subnet struct {
 	Network      *Network `bun:"rel:has-one,join:network_id=network_id,join:project_id=project_id"`
 }
 
+// FloatingIP represents an OpenStack Floating IP.
+type FloatingIP struct {
+	bun.BaseModel `bun:"table:openstack_floating_ip"`
+	coremodels.Model
+
+	FloatingIPID      string    `bun:"floating_ip_id,notnull,unique:openstack_floating_ip_key"`
+	ProjectID         string    `bun:"project_id,notnull,unique:openstack_floating_ip_key"`
+	Domain            string    `bun:"domain,notnull"`
+	Region            string    `bun:"region,notnull"`
+	FloatingIP        net.IP    `bun:"floating_ip,notnull"`
+	FloatingNetworkID string    `bun:"floating_network_id,notnull"`
+	PortID            string    `bun:"port_id,notnull"`
+	RouterID          string    `bun:"router_id,notnull"`
+	FixedIP           net.IP    `bun:"fixed_ip,notnull"`
+	Description       string    `bun:"description,notnull"`
+	TimeCreated       time.Time `bun:"ip_created_at,notnull"`
+	TimeUpdated       time.Time `bun:"ip_updated_at,notnull"`
+}
+
 // SubnetToNetwork represents a link table connecting Subnets with Networks.
 type SubnetToNetwork struct {
 	bun.BaseModel `bun:"table:l_openstack_subnet_to_network"`
@@ -114,4 +134,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:network", &Network{})
 	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer", &LoadBalancer{})
 	registry.ModelRegistry.MustRegister("openstack:model:subnet", &Subnet{})
+	registry.ModelRegistry.MustRegister("openstack:model:floating_ip", &FloatingIP{})
 }
