@@ -42,15 +42,20 @@ type CollectShootsPayload struct {
 	ProjectName string `yaml:"project_name" json:"project_name"`
 
 	// ProjectNamespace represents the namespace associated with the
-	// project. When creating a new project via the Gardener Dashboard a
-	// namespace will be chosen automatically for the user, which follows
-	// the `garden-<project_name>' convention.
+	// project.
+	//
+	// When creating a new project via the Gardener Dashboard a namespace
+	// will be chosen automatically for the user, which follows the
+	// `garden-<project_name>' convention.
 	//
 	// However, if a Project is created via the API and no .spec.namespace
 	// is set for the project then the Gardener API will determine a
 	// namespace for the user. See the link below for more details.
 	//
 	// https://github.com/gardener/gardener/blob/2c445773fc3f34681e2b755f5c2c74fbee86933c/pkg/controllermanager/controller/project/project/reconciler.go#L187-L199
+	//
+	// In order to collect all shoots via the cluster-scoped API an empty
+	// project namespace may be used.
 	ProjectNamespace string `yaml:"project_namespace" json:"project_namespace"`
 }
 
@@ -88,10 +93,6 @@ func HandleCollectShootsTask(ctx context.Context, t *asynq.Task) error {
 
 	if payload.ProjectName == "" {
 		return asynqutils.SkipRetry(ErrNoProjectName)
-	}
-
-	if payload.ProjectNamespace == "" {
-		return asynqutils.SkipRetry(ErrNoProjectNamespace)
 	}
 
 	return collectShoots(ctx, payload)
