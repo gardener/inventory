@@ -55,8 +55,9 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	startedAt := time.Now()
-	isOK := true
+	// Record each model processed by the housekeeper
+	hkRuns := make([]models.HousekeeperRun, 0)
+
 	logger := asynqutils.GetLogger(ctx)
 	for _, item := range payload.Retention {
 		// Look up the registry for the actual model type
@@ -73,38 +74,35 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 			Where("date_part('epoch', updated_at) < ?", past.Unix()).
 			Exec(ctx)
 
+		completedAt := time.Now()
 		switch err {
 		case nil:
 			count, err := out.RowsAffected()
 			if err != nil {
-				isOK = false
 				logger.Error("failed to get number of deleted rows", "name", item.Name, "reason", err)
 				continue
 			}
 			logger.Info("deleted stale records", "name", item.Name, "count", count)
+			hkRun := models.HousekeeperRun{
+				ModelName:   item.Name,
+				StartedAt:   now,
+				CompletedAt: completedAt,
+				Count:       count,
+			}
+			hkRuns = append(hkRuns, hkRun)
 		default:
 			// Simply log the error here and keep going with the
 			// rest of the objects to cleanup
 			logger.Error("failed to delete stale records", "name", item.Name, "reason", err)
-			isOK = false
 		}
 	}
 
-	// Record housekeeper run
-	completedAt := time.Now()
-	housekeeperRun := models.HousekeeperRun{
-		StartedAt:   startedAt,
-		CompletedAt: completedAt,
-		IsOK:        isOK,
-	}
-
 	_, err := db.DB.NewInsert().
-		Model(&housekeeperRun).
+		Model(&hkRuns).
 		Returning("id").
 		Exec(ctx)
 
 	return err
-
 }
 
 func init() {
