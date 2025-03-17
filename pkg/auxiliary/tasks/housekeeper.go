@@ -97,6 +97,10 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		}
 	}
 
+	if len(hkRuns) == 0 {
+		return nil
+	}
+
 	_, err := db.DB.NewInsert().
 		Model(&hkRuns).
 		Returning("id").
