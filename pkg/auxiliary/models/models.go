@@ -18,6 +18,10 @@ type HousekeeperRun struct {
 	bun.BaseModel `bun:"table:aux_housekeeper_run"`
 	coremodels.Model
 
+	// ModelName specifies the name of the model processed by the
+	// housekeeper.
+	ModelName string `bun:"model_name,notnull"`
+
 	// StartedAt specifies when the housekeeper started processing stale
 	// records.
 	StartedAt time.Time `bun:"started_at,notnull"`
@@ -26,9 +30,9 @@ type HousekeeperRun struct {
 	// records.
 	CompletedAt time.Time `bun:"completed_at,notnull"`
 
-	// IsOK specifies whether the housekeeper run was successful, and
-	// completed without any errors.
-	IsOK bool `bun:"is_ok,notnull"`
+	// Count specifies the number of stale records that were cleaned up by
+	// the housekeeper.
+	Count int64 `bun:"count,notnull"`
 }
 
 func init() {
