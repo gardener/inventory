@@ -179,7 +179,18 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
+
 		projectName, _ := strings.CutPrefix(s.Namespace, shootProjectPrefix)
+		// Skip shoots which don't have a technical id yet.
+		if s.Status.TechnicalID == "" {
+			logger.Warn(
+				"skipping shoot",
+				"name", s.Name,
+				"project", projectName,
+			)
+			return nil
+		}
+
 		cloudProfileName, err := getCloudProfileName(*s)
 		if err != nil {
 			logger.Error(
