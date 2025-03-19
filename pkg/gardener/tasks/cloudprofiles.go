@@ -34,6 +34,8 @@ const (
 	cpProviderTypeGCP = "gcp"
 	// providerTypeAzure is the name of the provider for Azure Cloud Profile
 	cpProviderTypeAzure = "azure"
+	// providerTypeOpenStack is the name of the provider for OpenStack Cloud Profile
+	cpProviderTypeOpenStack = "openstack"
 )
 
 // CollectCPMachineImagesPayload is the payload for collecting the Machine
@@ -69,9 +71,10 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 	// and the task name responsible for decoding and persisting the Machine
 	// Images.
 	providerTypeToTask := map[string]string{
-		cpProviderTypeAWS:   TaskCollectAWSMachineImages,
-		cpProviderTypeGCP:   TaskCollectGCPMachineImages,
-		cpProviderTypeAzure: TaskCollectAzureMachineImages,
+		cpProviderTypeAWS:       TaskCollectAWSMachineImages,
+		cpProviderTypeGCP:       TaskCollectGCPMachineImages,
+		cpProviderTypeAzure:     TaskCollectAzureMachineImages,
+		cpProviderTypeOpenStack: TaskCollectOpenStackMachineImages,
 	}
 
 	client := gardenerclient.DefaultClient.GardenClient()
