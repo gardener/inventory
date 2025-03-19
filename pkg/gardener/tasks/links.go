@@ -302,6 +302,54 @@ func LinkAzureImageWithCloudProfile(ctx context.Context, db *bun.DB) error {
 	return nil
 }
 
+// LinkOpenStackImageWithCloudProfile creates the relationship between the CloudProfileOpenStackImage and CloudProfile
+func LinkOpenStackImageWithCloudProfile(ctx context.Context, db *bun.DB) error {
+	var openstackImages []models.CloudProfileOpenStackImage
+	err := db.NewSelect().
+		Model(&openstackImages).
+		Relation("CloudProfile").
+		Where("cloud_profile.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.OpenStackImageToCloudProfile, 0, len(openstackImages))
+	for _, image := range openstackImages {
+		link := models.OpenStackImageToCloudProfile{
+			OpenStackImageID: image.ID,
+			CloudProfileID:   image.CloudProfile.ID,
+		}
+		links = append(links, link)
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (openstack_image_id, cloud_profile_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked gardener cloud profile openstack image with cloud profile", "count", count)
+
+	return nil
+}
+
 // LinkProjectWithMember creates the relationship between the [models.Project]
 // and [models.ProjectMember] models.
 func LinkProjectWithMember(ctx context.Context, db *bun.DB) error {
