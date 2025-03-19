@@ -54,6 +54,7 @@ func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
 		LinkAWSImageWithCloudProfile,
 		LinkGCPImageWithCloudProfile,
 		LinkAzureImageWithCloudProfile,
+		LinkOpenStackImageWithCloudProfile,
 		LinkProjectWithMember,
 	}
 
@@ -71,6 +72,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectAWSMachineImages, asynq.HandlerFunc(HandleCollectAWSMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectGCPMachineImages, asynq.HandlerFunc(HandleCollectGCPMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAzureMachineImages, asynq.HandlerFunc(HandleCollectAzureMachineImagesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectOpenStackMachineImages, asynq.HandlerFunc(HandleCollectOpenStackMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectPersistentVolumes, asynq.HandlerFunc(HandleCollectPersistentVolumesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
