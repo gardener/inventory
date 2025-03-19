@@ -226,6 +226,29 @@ type AzureImageToCloudProfile struct {
 	CloudProfileID uuid.UUID `bun:"cloud_profile_id,notnull,type:uuid,unique:l_g_azure_image_to_cloud_profile_key"`
 }
 
+// CloudProfileOpenStackImage represents an OpenStack Machine Image listed in a CloudProfile.
+type CloudProfileOpenStackImage struct {
+	bun.BaseModel `bun:"table:g_cloud_profile_openstack_image"`
+	coremodels.Model
+
+	Name             string        `bun:"name,notnull,unique:g_cloud_profile_openstack_image_key"`
+	Version          string        `bun:"version,notnull,unique:g_cloud_profile_openstack_image_key"`
+	RegionName       string        `bun:"region_name,notnull,unique:g_cloud_profile_openstack_image_key"`
+	ImageID          string        `bun:"image_id,notnull,unique:g_cloud_profile_openstack_image_key"`
+	Architecture     string        `bun:"architecture,notnull"`
+	CloudProfileName string        `bun:"cloud_profile_name,notnull,unique:g_cloud_profile_openstack_image_key"`
+	CloudProfile     *CloudProfile `bun:"rel:has-one,join:cloud_profile_name=name"`
+}
+
+// OpenStackImageToCloudProfile represents a link table connecting the CloudProfileOpenStackImage with CloudProfile.
+type OpenStackImageToCloudProfile struct {
+	bun.BaseModel `bun:"table:l_g_openstack_image_to_cloud_profile"`
+	coremodels.Model
+
+	OpenStackImageID uuid.UUID `bun:"openstack_image_id,notnull,type:uuid,unique:l_g_openstack_image_to_cloud_profile_key"`
+	CloudProfileID   uuid.UUID `bun:"cloud_profile_id,notnull,type:uuid,unique:l_g_openstack_image_to_cloud_profile_key"`
+}
+
 // PersistentVolume represents a Kubernetes PV in Gardener
 type PersistentVolume struct {
 	bun.BaseModel `bun:"table:g_persistent_volume"`
