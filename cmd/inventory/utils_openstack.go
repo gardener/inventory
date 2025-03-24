@@ -38,6 +38,7 @@ func validateOpenStackConfig(conf *config.Config) error {
 		"network":       conf.OpenStack.Services.Network,
 		"block_storage": conf.OpenStack.Services.BlockStorage,
 		"load_balancer": conf.OpenStack.Services.LoadBalancer,
+		"identity":      conf.OpenStack.Services.Identity,
 	}
 
 	for service, serviceConfigs := range services {
@@ -124,6 +125,7 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 		"network":       configureOpenStackNetworkClientsets,
 		"block_storage": configureOpenStackBlockStorageClientsets,
 		"load_balancer": configureOpenStackLoadBalancerClientsets,
+		"identity":      configureOpenStackIdentityClientsets,
 	}
 
 	if conf.Debug {
@@ -372,6 +374,52 @@ func configureOpenStackLoadBalancerClientsets(ctx context.Context, conf *config.
 		slog.Info(
 			"configured OpenStack client",
 			"service", "load_balancer",
+			"credentials", creds,
+			"region", clientConfig.Region,
+			"domain", clientConfig.Domain,
+			"project", clientConfig.Project,
+			"auth_endpoint", clientConfig.AuthEndpoint,
+			"auth_method", namedCreds.Authentication,
+		)
+	}
+	return nil
+}
+
+// configureOpenStackIdentityClientsets configures the OpenStack Identity API clientsets.
+func configureOpenStackIdentityClientsets(ctx context.Context, conf *config.Config) error {
+	for _, clientConfig := range conf.OpenStack.Services.Identity {
+		creds := clientConfig.UseCredentials
+		namedCreds := conf.OpenStack.Credentials[creds]
+
+		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
+		}
+
+		identityClient, err := openstack.NewIdentityV3(providerClient, gophercloud.EndpointOpts{
+			Region: clientConfig.Region,
+		})
+
+		if err != nil {
+			return fmt.Errorf("unable to create client for identity service with credentials %s: %w", creds, err)
+		}
+
+		client := openstackclients.Client[*gophercloud.ServiceClient]{
+			NamedCredentials: creds,
+			ProjectID:        clientConfig.ProjectID,
+			Region:           clientConfig.Region,
+			Domain:           clientConfig.Domain,
+			Client:           identityClient,
+		}
+		openstackclients.IdentityClientset.Overwrite(
+			clientConfig.ProjectID,
+			client,
+		)
+
+		slog.Info(
+			"configured OpenStack client",
+			"service", "identity",
 			"credentials", creds,
 			"region", clientConfig.Region,
 			"domain", clientConfig.Domain,
