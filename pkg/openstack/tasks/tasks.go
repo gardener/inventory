@@ -37,6 +37,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectLoadBalancersTask,
 		NewCollectSubnetsTask,
 		NewCollectFloatingIPsTask,
+		NewCollectProjectsTask,
 	}
 
 	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
@@ -61,6 +62,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectLoadBalancers, asynq.HandlerFunc(HandleCollectLoadBalancersTask))
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectFloatingIPs, asynq.HandlerFunc(HandleCollectFloatingIPsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
