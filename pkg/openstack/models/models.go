@@ -128,6 +128,21 @@ type LoadBalancerToSubnet struct {
 	SubnetID       uuid.UUID `bun:"subnet_id,notnull"`
 }
 
+// Project represents an OpenStack Project.
+type Project struct {
+	bun.BaseModel `bun:"table:openstack_project"`
+	coremodels.Model
+
+	ProjectID   string `bun:"project_id,notnull,unique:openstack_project_key"`
+	Name        string `bun:"name,notnull"`
+	Domain      string `bun:"domain,notnull"`
+	Region      string `bun:"region,notnull"`
+	ParentID    string `bun:"parent_id,notnull"`
+	Description string `bun:"description,notnull"`
+	Enabled     bool   `bun:"enabled,notnull"`
+	IsDomain    bool   `bun:"is_domain,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
@@ -135,4 +150,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer", &LoadBalancer{})
 	registry.ModelRegistry.MustRegister("openstack:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("openstack:model:floating_ip", &FloatingIP{})
+	registry.ModelRegistry.MustRegister("openstack:model:project", &Project{})
 }
