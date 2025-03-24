@@ -151,6 +151,9 @@ type OpenStackServices struct {
 
 	// LoadBalancer provides the LoadBalancer service configuration.
 	LoadBalancer []OpenStackServiceConfig `yaml:"load_balancer"`
+
+	// Identity provides the Identity service configuration.
+	Identity []OpenStackServiceConfig `yaml:"identity"`
 }
 
 // OpenStackServiceConfig provides configuration specific for an OpenStack service.
