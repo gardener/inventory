@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
+	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -28,10 +29,10 @@ const (
 )
 
 // CollectFloatingIPsPayload represents the payload, which specifies
-// from which project to collect OpenStack Floating IPs.
+// the scope for collecting OpenStack Floating IPs.
 type CollectFloatingIPsPayload struct {
-	// Project specifies the project from which to collect.
-	ProjectID string `json:"project_id" yaml:"project_id"`
+	// Scope specifies the client scope to use for collection.
+	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 }
 
 // NewCollectFloatingIPsTask creates a new [asynq.Task] for collecting OpenStack
@@ -43,7 +44,7 @@ func NewCollectFloatingIPsTask() *asynq.Task {
 // HandleCollectFloatingIPsTask handles the task for collecting OpenStack FloatingIPs.
 func HandleCollectFloatingIPsTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
-	// collecting OpenStack Floating IPs from all known projects.
+	// collecting OpenStack Floating IPs for all configured clients.
 	data := t.Payload()
 	if data == nil {
 		return enqueueCollectFloatingIPs(ctx)
@@ -54,17 +55,17 @@ func HandleCollectFloatingIPsTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(ErrNoProjectID)
+	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
+		return asynqutils.SkipRetry(ErrInvalidScope)
 	}
 
 	return collectFloatingIPs(ctx, payload)
 
 }
 
-// enqueueCollectFloatingIPs enqueues tasks for collecting OpenStack Floating IPs from
+// enqueueCollectFloatingIPs enqueues tasks for collecting OpenStack Floating IPs for
 // all configured OpenStack network clients by creating a payload with the respective
-// project ID.
+// client scope.
 func enqueueCollectFloatingIPs(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
@@ -75,15 +76,15 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.NetworkClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectFloatingIPsPayload{
-			ProjectID: projectID,
+			Scope: scope,
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack floating IPs",
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -95,7 +96,7 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -106,7 +107,7 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"project_id", projectID,
+			"scope", scope,
 		)
 
 		return nil
@@ -114,25 +115,18 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 }
 
 // collectFloatingIPs collects the OpenStack Floating IPs,
-// using the client associated with the project ID in the given payload.
+// using the client associated with the client scope in the given payload.
 func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	client, ok := openstackclients.NetworkClientset.Get(payload.ProjectID)
+	client, ok := openstackclients.NetworkClientset.Get(payload.Scope)
 	if !ok {
-		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.Scope.Project))
 	}
-
-	region := client.Region
-	domain := client.Domain
-	projectID := payload.ProjectID
 
 	logger.Info(
 		"collecting OpenStack floating IPs",
-		"project_id", client.ProjectID,
-		"domain", client.Domain,
-		"region", client.Region,
-		"named_credentials", client.NamedCredentials,
+		"scope", payload.Scope,
 	)
 
 	items := make([]models.FloatingIP, 0)
@@ -175,8 +169,8 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 					item := models.FloatingIP{
 						FloatingIPID:      ip.ID,
 						ProjectID:         ip.TenantID,
-						Domain:            domain,
-						Region:            region,
+						Domain:            client.Domain,
+						Region:            client.Region,
 						PortID:            ip.PortID,
 						FixedIP:           fixedIP,
 						RouterID:          ip.RouterID,
@@ -224,9 +218,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 	if err != nil {
 		logger.Error(
 			"could not insert floating IPs into db",
-			"project_id", projectID,
-			"region", region,
-			"domain", domain,
+			"scope", payload.Scope,
 			"reason", err,
 		)
 		return err
@@ -239,9 +231,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 
 	logger.Info(
 		"populated openstack floating IPs",
-		"project_id", projectID,
-		"region", region,
-		"domain", domain,
+		"scope", payload.Scope,
 		"count", count,
 	)
 

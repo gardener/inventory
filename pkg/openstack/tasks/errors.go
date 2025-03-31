@@ -13,9 +13,9 @@ import (
 // found in the clientset registries.
 var ErrClientNotFound = errors.New("client not found")
 
-// ErrNoProjectID is an error which is returned when an project id was not
+// ErrInvalidScope is an error which is returned when a valid scope was not
 // specified in a task payload.
-var ErrNoProjectID = errors.New("no project ID specified")
+var ErrInvalidScope = errors.New("invalid scope specified")
 
 // ClientNotFound wraps [ErrClientNotFound] with the given name.
 func ClientNotFound(name string) error {

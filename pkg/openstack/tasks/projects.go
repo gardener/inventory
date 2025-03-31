@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
+	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -29,8 +30,8 @@ const (
 // CollectProjectsPayload represents the payload, which specifies
 // where to collect OpenStack Projects from.
 type CollectProjectsPayload struct {
-	// Project specifies the project from which to collect.
-	ProjectID string `json:"project_id" yaml:"project_id"`
+	// Scope specifies the scope of the client to be used.
+	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 }
 
 // NewCollectProjectsTask creates a new [asynq.Task] for collecting OpenStack
@@ -42,7 +43,7 @@ func NewCollectProjectsTask() *asynq.Task {
 // HandleCollectProjectsTask handles the task for collecting OpenStack Projects.
 func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
-	// collecting OpenStack Projects from all configured projects.
+	// collecting OpenStack Projects for all configured identity clients.
 	data := t.Payload()
 	if data == nil {
 		return enqueueCollectProjects(ctx)
@@ -53,8 +54,8 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(ErrNoProjectID)
+	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
+		return asynqutils.SkipRetry(ErrInvalidScope)
 	}
 
 	return collectProjects(ctx, payload)
@@ -73,15 +74,15 @@ func enqueueCollectProjects(ctx context.Context) error {
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.IdentityClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.IdentityClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectProjectsPayload{
-			ProjectID: projectID,
+			Scope: scope,
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack projects",
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -93,7 +94,7 @@ func enqueueCollectProjects(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -104,7 +105,7 @@ func enqueueCollectProjects(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"project_id", projectID,
+			"scope", scope,
 		)
 
 		return nil
@@ -116,21 +117,14 @@ func enqueueCollectProjects(ctx context.Context) error {
 func collectProjects(ctx context.Context, payload CollectProjectsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	client, ok := openstackclients.IdentityClientset.Get(payload.ProjectID)
+	client, ok := openstackclients.IdentityClientset.Get(payload.Scope)
 	if !ok {
-		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.Scope.Project))
 	}
-
-	region := client.Region
-	domain := client.Domain
-	projectID := payload.ProjectID
 
 	logger.Info(
 		"collecting OpenStack projects",
-		"project_id", client.ProjectID,
-		"domain", client.Domain,
-		"region", client.Region,
-		"named_credentials", client.NamedCredentials,
+		"scope", payload.Scope,
 	)
 
 	items := make([]models.Project, 0)
@@ -152,8 +146,8 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 					item := models.Project{
 						ProjectID:   p.ID,
 						Name:        p.Name,
-						Domain:      domain,
-						Region:      region,
+						Domain:      client.Domain,
+						Region:      client.Region,
 						ParentID:    p.ParentID,
 						Description: p.Description,
 						Enabled:     p.Enabled,
@@ -195,9 +189,7 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 	if err != nil {
 		logger.Error(
 			"could not insert projects into db",
-			"project_id", projectID,
-			"region", region,
-			"domain", domain,
+			"scope", payload.Scope,
 			"reason", err,
 		)
 		return err
@@ -210,9 +202,7 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 
 	logger.Info(
 		"populated openstack projects",
-		"project_id", projectID,
-		"region", region,
-		"domain", domain,
+		"scope", payload.Scope,
 		"count", count,
 	)
 

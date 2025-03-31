@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
+	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -29,8 +30,8 @@ const (
 // CollectSubnetsPayload represents the payload, which specifies
 // where to collect OpenStack Subnets from.
 type CollectSubnetsPayload struct {
-	// Project specifies the project from which to collect.
-	ProjectID string `json:"project_id" yaml:"project_id"`
+	// Scope specifies the client scope from which to collect.
+	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 }
 
 // NewCollectSubnetsTask creates a new [asynq.Task] for collecting OpenStack
@@ -42,7 +43,7 @@ func NewCollectSubnetsTask() *asynq.Task {
 // HandleCollectSubnetsTask handles the task for collecting OpenStack Subnets.
 func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
-	// collecting OpenStack Subnets from all known projects.
+	// collecting OpenStack Subnets from all configured network clients.
 	data := t.Payload()
 	if data == nil {
 		return enqueueCollectSubnets(ctx)
@@ -53,17 +54,16 @@ func HandleCollectSubnetsTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(ErrNoProjectID)
+	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
+		return asynqutils.SkipRetry(ErrInvalidScope)
 	}
 
 	return collectSubnets(ctx, payload)
-
 }
 
 // enqueueCollectSubnets enqueues tasks for collecting OpenStack Subnets from
 // all configured OpenStack network clients by creating a payload with the respective
-// project ID.
+// client scope.
 func enqueueCollectSubnets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
@@ -74,15 +74,15 @@ func enqueueCollectSubnets(ctx context.Context) error {
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.NetworkClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectSubnetsPayload{
-			ProjectID: projectID,
+			Scope: scope,
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack subnets",
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -94,7 +94,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -105,33 +105,26 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"project_id", projectID,
+			"scope", scope,
 		)
 
 		return nil
 	})
 }
 
-// collectSubnets collects the OpenStack Subnets from the specified project id,
-// using the client associated with the project ID in the given payload.
+// collectSubnets collects the OpenStack Subnets,
+// using the client associated with the client scope in the given payload.
 func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	client, ok := openstackclients.NetworkClientset.Get(payload.ProjectID)
+	client, ok := openstackclients.NetworkClientset.Get(payload.Scope)
 	if !ok {
-		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.Scope.Project))
 	}
-
-	region := client.Region
-	domain := client.Domain
-	projectID := payload.ProjectID
 
 	logger.Info(
 		"collecting OpenStack subnets",
-		"project_id", client.ProjectID,
-		"domain", client.Domain,
-		"region", client.Region,
-		"named_credentials", client.NamedCredentials,
+		"scope", payload.Scope,
 	)
 
 	items := make([]models.Subnet, 0)
@@ -154,8 +147,8 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 						SubnetID:     s.ID,
 						Name:         s.Name,
 						ProjectID:    s.TenantID,
-						Domain:       domain,
-						Region:       region,
+						Domain:       client.Domain,
+						Region:       client.Region,
 						NetworkID:    s.NetworkID,
 						GatewayIP:    s.GatewayIP,
 						CIDR:         s.CIDR,
@@ -203,9 +196,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 	if err != nil {
 		logger.Error(
 			"could not insert Subnets into db",
-			"project_id", projectID,
-			"region", region,
-			"domain", domain,
+			"scope", payload.Scope,
 			"reason", err,
 		)
 		return err
@@ -218,9 +209,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	logger.Info(
 		"populated openstack subnets",
-		"project_id", projectID,
-		"region", region,
-		"domain", domain,
+		"scope", payload.Scope,
 		"count", count,
 	)
 
