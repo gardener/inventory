@@ -12,4 +12,4 @@ import (
 
 // ComputeClientset provides the registry of OpenStack Compute API clients
 // for interfacing with compute resources (servers, etc).
-var ComputeClientset = registry.New[string, Client[*gophercloud.ServiceClient]]()
+var ComputeClientset = registry.New[ClientScope, Client[*gophercloud.ServiceClient]]()
