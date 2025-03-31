@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
+	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -29,8 +30,8 @@ const (
 // CollectLoadBalancersPayload represents the payload, which specifies
 // where to collect OpenStack LoadBalancers from.
 type CollectLoadBalancersPayload struct {
-	// Project specifies the project from which to collect.
-	ProjectID string `json:"project_id" yaml:"project_id"`
+	// Scope specifies the project scope to use for collection.
+	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 }
 
 // NewCollectLoadBalancersTask creates a new [asynq.Task] for collecting OpenStack
@@ -42,7 +43,7 @@ func NewCollectLoadBalancersTask() *asynq.Task {
 // HandleCollectLoadBalancersTask handles the task for collecting OpenStack LoadBalancers.
 func HandleCollectLoadBalancersTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
-	// collecting OpenStack LoadBalancers from all known projects.
+	// collecting OpenStack LoadBalancers for all configured clients.
 	data := t.Payload()
 	if data == nil {
 		return enqueueCollectLoadBalancers(ctx)
@@ -53,16 +54,16 @@ func HandleCollectLoadBalancersTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(ErrNoProjectID)
+	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
+		return asynqutils.SkipRetry(ErrInvalidScope)
 	}
 
 	return collectLoadBalancers(ctx, payload)
 }
 
 // enqueueCollectLoadBalancers enqueues tasks for collecting OpenStack Loadbalancers from
-// all configured OpenStack projects by creating a payload with the respective
-// project ID.
+// all configured OpenStack clients by creating a payload with the respective
+// client scope.
 func enqueueCollectLoadBalancers(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
@@ -71,64 +72,58 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 		return nil
 	}
 
-	return openstackclients.LoadBalancerClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
-		payload := CollectLoadBalancersPayload{
-			ProjectID: projectID,
-		}
-		data, err := json.Marshal(payload)
-		if err != nil {
-			logger.Error(
-				"failed to marshal payload for OpenStack load balancers",
-				"project_id", projectID,
-				"reason", err,
-			)
-			return err
-		}
+	return openstackclients.LoadBalancerClientset.
+		Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+			payload := CollectLoadBalancersPayload{
+				Scope: scope,
+			}
+			data, err := json.Marshal(payload)
+			if err != nil {
+				logger.Error(
+					"failed to marshal payload for OpenStack load balancers",
+					"scope", scope,
+					"reason", err,
+				)
+				return err
+			}
 
-		task := asynq.NewTask(TaskCollectLoadBalancers, data)
-		info, err := asynqclient.Client.Enqueue(task)
-		if err != nil {
-			logger.Error(
-				"failed to enqueue task",
+			task := asynq.NewTask(TaskCollectLoadBalancers, data)
+			info, err := asynqclient.Client.Enqueue(task)
+			if err != nil {
+				logger.Error(
+					"failed to enqueue task",
+					"type", task.Type(),
+					"scope", scope,
+					"reason", err,
+				)
+				return err
+			}
+
+			logger.Info(
+				"enqueued task",
 				"type", task.Type(),
-				"project_id", projectID,
-				"reason", err,
+				"id", info.ID,
+				"queue", info.Queue,
+				"scope", scope,
 			)
-			return err
-		}
 
-		logger.Info(
-			"enqueued task",
-			"type", task.Type(),
-			"id", info.ID,
-			"queue", info.Queue,
-			"project_id", projectID,
-		)
-
-		return nil
-	})
+			return nil
+		})
 }
 
-// collectLoadBalancers collects the OpenStack LoadBalancers from the specified project id,
-// using the client associated with the project ID in the given payload.
+// collectLoadBalancers collects the OpenStack LoadBalancers,
+// using the client associated with the client scope in the given payload.
 func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	client, ok := openstackclients.LoadBalancerClientset.Get(payload.ProjectID)
+	client, ok := openstackclients.LoadBalancerClientset.Get(payload.Scope)
 	if !ok {
-		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.Scope.Project))
 	}
-
-	region := client.Region
-	domain := client.Domain
-	projectID := payload.ProjectID
 
 	logger.Info(
 		"collecting OpenStack load balancers",
-		"project_id", client.ProjectID,
-		"domain", client.Domain,
-		"region", client.Region,
-		"named_credentials", client.NamedCredentials,
+		"scope", payload.Scope,
 	)
 
 	items := make([]models.LoadBalancer, 0)
@@ -141,6 +136,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 				if err != nil {
 					logger.Error(
 						"could not extract load balancers pages",
+						"scope", payload.Scope,
 						"reason", err,
 					)
 					return false, err
@@ -151,8 +147,8 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 						LoadBalancerID: lb.ID,
 						Name:           lb.Name,
 						ProjectID:      lb.ProjectID,
-						Domain:         domain,
-						Region:         region,
+						Domain:         client.Domain,
+						Region:         client.Region,
 						Status:         lb.OperatingStatus,
 						Description:    lb.Description,
 						Provider:       lb.Provider,
@@ -202,9 +198,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 	if err != nil {
 		logger.Error(
 			"could not insert load balancers into db",
-			"project_id", projectID,
-			"region", region,
-			"domain", domain,
+			"scope", payload.Scope,
 			"reason", err,
 		)
 		return err
@@ -217,9 +211,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 
 	logger.Info(
 		"populated openstack load balancers",
-		"project_id", projectID,
-		"region", region,
-		"domain", domain,
+		"scope", payload.Scope,
 		"count", count,
 	)
 

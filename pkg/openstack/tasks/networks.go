@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
+	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -27,10 +28,10 @@ const (
 )
 
 // CollectNetworksPayload represents the payload, which specifies
-// where to collect OpenStack Networks from.
+// which client to collect OpenStack Networks with.
 type CollectNetworksPayload struct {
-	// Project specifies the project from which to collect.
-	ProjectID string `json:"project_id" yaml:"project_id"`
+	// Scope specifies the client scope for which to collect.
+	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 }
 
 // NewCollectNetworksTask creates a new [asynq.Task] for collecting OpenStack
@@ -42,7 +43,7 @@ func NewCollectNetworksTask() *asynq.Task {
 // HandleCollectNetworksTask handles the task for collecting OpenStack Networks.
 func HandleCollectNetworksTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
-	// collecting OpenStack Networks from all known projects.
+	// collecting OpenStack Networks for all configured clients.
 	data := t.Payload()
 	if data == nil {
 		return enqueueCollectNetworks(ctx)
@@ -53,8 +54,8 @@ func HandleCollectNetworksTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(ErrNoProjectID)
+	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
+		return asynqutils.SkipRetry(ErrInvalidScope)
 	}
 
 	return collectNetworks(ctx, payload)
@@ -62,8 +63,8 @@ func HandleCollectNetworksTask(ctx context.Context, t *asynq.Task) error {
 }
 
 // enqueueCollectNetworks enqueues tasks for collecting OpenStack Networks from
-// all configured OpenStack projects by creating a payload with the respective
-// project ID.
+// all configured OpenStack network clients by creating a payload with the respective
+// client scope.
 func enqueueCollectNetworks(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
@@ -74,15 +75,15 @@ func enqueueCollectNetworks(ctx context.Context) error {
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.NetworkClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectNetworksPayload{
-			ProjectID: projectID,
+			Scope: scope,
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack networks",
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -94,7 +95,7 @@ func enqueueCollectNetworks(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -105,33 +106,26 @@ func enqueueCollectNetworks(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"project_id", projectID,
+			"scope", scope,
 		)
 
 		return nil
 	})
 }
 
-// collectNetworks collects the OpenStack Networks from the specified project id,
-// using the client associated with the project ID in the given payload.
+// collectNetworks collects the OpenStack Networks,
+// using the client associated with the scope in the given payload.
 func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	client, ok := openstackclients.NetworkClientset.Get(payload.ProjectID)
+	client, ok := openstackclients.NetworkClientset.Get(payload.Scope)
 	if !ok {
-		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.Scope.Project))
 	}
-
-	region := client.Region
-	domain := client.Domain
-	projectID := payload.ProjectID
 
 	logger.Info(
 		"collecting OpenStack networks",
-		"project_id", client.ProjectID,
-		"domain", client.Domain,
-		"region", client.Region,
-		"named_credentials", client.NamedCredentials,
+		"scope", payload.Scope,
 	)
 
 	items := make([]models.Network, 0)
@@ -154,8 +148,8 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 						NetworkID:   n.ID,
 						Name:        n.Name,
 						ProjectID:   n.TenantID,
-						Domain:      domain,
-						Region:      region,
+						Domain:      client.Domain,
+						Region:      client.Region,
 						Status:      n.Status,
 						Shared:      n.Shared,
 						Description: n.Description,
@@ -199,9 +193,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 	if err != nil {
 		logger.Error(
 			"could not insert networks into db",
-			"project_id", projectID,
-			"region", region,
-			"domain", domain,
+			"scope", payload.Scope,
 			"reason", err,
 		)
 		return err
@@ -214,9 +206,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 
 	logger.Info(
 		"populated openstack networks",
-		"project_id", projectID,
-		"region", region,
-		"domain", domain,
+		"scope", payload.Scope,
 		"count", count,
 	)
 

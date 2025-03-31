@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
+	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -29,8 +30,8 @@ const (
 // CollectServersPayload represents the payload, which specifies
 // where to collect OpenStack Servers from.
 type CollectServersPayload struct {
-	// Project specifies the project from which to collect.
-	ProjectID string `json:"project_id" yaml:"project_id"`
+	// Scope specifies the client scope for which to collect.
+	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 }
 
 // NewCollectServersTask creates a new [asynq.Task] for collecting OpenStack
@@ -42,7 +43,7 @@ func NewCollectServersTask() *asynq.Task {
 // HandleCollectServersTask handles the task for collecting OpenStack Servers.
 func HandleCollectServersTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
-	// collecting OpenStack Servers from all known projects.
+	// collecting OpenStack Servers from all configured server clients.
 	data := t.Payload()
 	if data == nil {
 		return enqueueCollectServers(ctx)
@@ -53,16 +54,16 @@ func HandleCollectServersTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	if payload.ProjectID == "" {
-		return asynqutils.SkipRetry(ErrNoProjectID)
+	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
+		return asynqutils.SkipRetry(ErrInvalidScope)
 	}
 
 	return collectServers(ctx, payload)
 }
 
 // enqueueCollectServers enqueues tasks for collecting OpenStack Servers from
-// all configured OpenStack projects by creating a payload with the respective
-// project ID.
+// all configured OpenStack server clients by creating a payload with the respective
+// client scope.
 func enqueueCollectServers(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
@@ -73,15 +74,15 @@ func enqueueCollectServers(ctx context.Context) error {
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.ComputeClientset.Range(func(projectID string, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.ComputeClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectServersPayload{
-			ProjectID: projectID,
+			Scope: scope,
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack servers",
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -93,7 +94,7 @@ func enqueueCollectServers(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"project_id", projectID,
+				"scope", scope,
 				"reason", err,
 			)
 			return err
@@ -104,33 +105,26 @@ func enqueueCollectServers(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"project_id", projectID,
+			"scope", scope,
 		)
 
 		return nil
 	})
 }
 
-// collectServer collects the OpenStack servers from the specified project,
-// using the client associated with the project ID in the given payload.
+// collectServer collects the OpenStack servers,
+// using the client associated with the client scope in the given payload.
 func collectServers(ctx context.Context, payload CollectServersPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 
-	client, ok := openstackclients.ComputeClientset.Get(payload.ProjectID)
+	client, ok := openstackclients.ComputeClientset.Get(payload.Scope)
 	if !ok {
-		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
+		return asynqutils.SkipRetry(ClientNotFound(payload.Scope.Project))
 	}
-
-	region := client.Region
-	domain := client.Domain
-	projectID := payload.ProjectID
 
 	logger.Info(
 		"collecting OpenStack servers",
-		"project_id", client.ProjectID,
-		"domain", client.Domain,
-		"region", client.Region,
-		"named_credentials", client.NamedCredentials,
+		"scope", payload.Scope,
 	)
 
 	items := make([]models.Server, 0)
@@ -153,8 +147,8 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 						ServerID:         s.ID,
 						Name:             s.Name,
 						ProjectID:        s.TenantID,
-						Domain:           domain,
-						Region:           region,
+						Domain:           client.Domain,
+						Region:           client.Region,
 						UserID:           s.UserID,
 						AvailabilityZone: s.AvailabilityZone,
 						Status:           s.Status,
@@ -207,9 +201,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 	if err != nil {
 		logger.Error(
 			"could not insert servers into db",
-			"project_id", projectID,
-			"region", region,
-			"domain", domain,
+			"scope", payload.Scope,
 			"reason", err,
 		)
 		return err
@@ -222,9 +214,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 	logger.Info(
 		"populated openstack servers",
-		"project_id", projectID,
-		"region", region,
-		"domain", domain,
+		"scope", payload.Scope,
 		"count", count,
 	)
 
