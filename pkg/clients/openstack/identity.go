@@ -11,4 +11,4 @@ import (
 )
 
 // IdentityClientset provides the registry of OpenStack Identity API clients
-var IdentityClientset = registry.New[string, Client[*gophercloud.ServiceClient]]()
+var IdentityClientset = registry.New[ClientScope, Client[*gophercloud.ServiceClient]]()

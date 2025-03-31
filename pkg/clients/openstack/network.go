@@ -12,4 +12,4 @@ import (
 
 // NetworkClientset provides the registry of OpenStack Network API clients
 // for interfacing with network resoures.
-var NetworkClientset = registry.New[string, Client[*gophercloud.ServiceClient]]()
+var NetworkClientset = registry.New[ClientScope, Client[*gophercloud.ServiceClient]]()
