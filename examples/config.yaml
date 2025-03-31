@@ -276,11 +276,28 @@ openstack:
   # and `app_credentials' for application credentials.
   credentials:
     local:
+      domain: <domain>
+      auth_endpoint: <endpoint>
+      project: <project_name>
+      region: <region>
       authentication: password
       password:
         username: "<username>"
         password_file: "<path-to-password-file>"
-    sa:
+    sa1:
+      domain: <domain>
+      auth_endpoint: <endpoint>
+      project: <project_name>
+      region: <region>
+      authentication: app_credentials
+      app_credentials:
+        app_credentials_id: "<app-id>"
+        app_credentials_secret_file: "<path-to-secret-file>"
+    sa2:
+      domain: <domain>
+      auth_endpoint: <endpoint>
+      project: <project_name>
+      region: <region>
       authentication: app_credentials
       app_credentials:
         app_credentials_id: "<app-id>"
@@ -288,58 +305,26 @@ openstack:
   services:
     # Used for collecting OpenStack Servers
     compute:
-    - domain: <domain>
-      auth_endpoint: <endpoint>
-      # needed for differentiating between projects with the same name
-      # in different domains.
-      project_id: <project_id>
-      # needed for client creation
-      project: <project_name>
-      region: <region>
-      use_credentials: local
+      use_credentials:
+        - local
+        - sa1
     # Used for collecting OpenStack Networks and Subnets
     network:
-    - domain: <domain>
-      auth_endpoint: <endpoint>
-      # needed for differentiating between projects with the same name
-      # in different domains.
-      project_id: <project_id>
-      # needed for client creation
-      project: <project_name>
-      region: <region>
-      use_credentials: sa
+      use_credentials: 
+        - local
+        - sa2
     block_storage:
-    - domain: <domain>
-      auth_endpoint: <endpoint>
-      # needed for differentiating between projects with the same name
-      # in different domains.
-      project_id: <project_id>
-      # needed for client creation
-      project: <project_name>
-      region: <region>
-      use_credentials: sa
+      use_credentials: 
+        - sa1
+        - sa2
     # Used for collecting OpenStack LoadBalancers
     load_balancer:
-    - domain: <domain>
-      auth_endpoint: <endpoint>
-      # needed for differentiating between projects with the same name
-      # in different domains.
-      project_id: <project_id>
-      # needed for client creation
-      project: <project_name>
-      region: <region>
-      use_credentials: sa
+      use_credentials: 
+        - local
     # Used for collecting OpenStack Project metadata
     identity:
-    - domain: <domain>
-      auth_endpoint: <endpoint>
-      # needed for differentiating between projects with the same name
-      # in different domains.
-      project_id: <project_id>
-      # needed for client creation
-      project: <project_name>
-      region: <region>
-      use_credentials: sa
+      use_credentials: 
+        - local
 
 # Scheduler configuration
 scheduler:
