@@ -18,6 +18,7 @@ import (
 
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/core/config"
+	"github.com/gardener/inventory/pkg/core/registry"
 )
 
 var errNoUsername = errors.New("no username specified")
@@ -28,12 +29,11 @@ var errNoAuthEndpoint = errors.New("no authentication endpoint specified")
 var errNoDomain = errors.New("no domain specified")
 var errNoRegion = errors.New("no region specified")
 var errNoProject = errors.New("no project specified")
-var errNoProjectID = errors.New("no project id specified")
 
 // validateOpenStackConfig validates the OpenStack configuration settings.
 func validateOpenStackConfig(conf *config.Config) error {
 	// Make sure that the services have named credentials configured.
-	services := map[string][]config.OpenStackServiceConfig{
+	services := map[string]config.OpenStackServiceCredentials{
 		"compute":       conf.OpenStack.Services.Compute,
 		"network":       conf.OpenStack.Services.Network,
 		"block_storage": conf.OpenStack.Services.BlockStorage,
@@ -41,44 +41,41 @@ func validateOpenStackConfig(conf *config.Config) error {
 		"identity":      conf.OpenStack.Services.Identity,
 	}
 
-	for service, serviceConfigs := range services {
-		if len(serviceConfigs) == 0 {
+	for service, serviceCredentials := range services {
+		credentials := serviceCredentials.UseCredentials
+
+		if len(credentials) == 0 {
 			continue
 		}
 
 		// Validate that the named credentials are actually defined.
-		for _, config := range serviceConfigs {
-			namedCreds := config.UseCredentials
-			if namedCreds == "" {
+		for _, cred := range credentials {
+			if cred == "" {
 				return fmt.Errorf("OpenStack: %w: %s", errNoServiceCredentials, service)
 			}
 
-			if _, ok := conf.OpenStack.Credentials[namedCreds]; !ok {
-				return fmt.Errorf("OpenStack: %w: service %s refers to %s", errUnknownNamedCredentials, service, namedCreds)
-			}
-
-			if config.AuthEndpoint == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoAuthEndpoint, service)
-			}
-
-			if config.Domain == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoDomain, service)
-			}
-
-			if config.Region == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoRegion, service)
-			}
-
-			if config.Project == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoProject, service)
-			}
-
-			if config.ProjectID == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoProjectID, service)
+			if _, ok := conf.OpenStack.Credentials[cred]; !ok {
+				return fmt.Errorf("OpenStack: %w: service %s refers to %s", errUnknownNamedCredentials, service, cred)
 			}
 		}
 
 		for name, creds := range conf.OpenStack.Credentials {
+			if creds.AuthEndpoint == "" {
+				return fmt.Errorf("OpenStack: %w: credentials %s", errNoAuthEndpoint, name)
+			}
+
+			if creds.Domain == "" {
+				return fmt.Errorf("OpenStack: %w: credentials %s", errNoDomain, name)
+			}
+
+			if creds.Region == "" {
+				return fmt.Errorf("OpenStack: %w: credentials %s", errNoRegion, name)
+			}
+
+			if creds.Project == "" {
+				return fmt.Errorf("OpenStack: %w: credentials %s", errNoProject, name)
+			}
+
 			if creds.Authentication == "" {
 				return fmt.Errorf("OpenStack: %w: credentials %s", errNoAuthenticationMethod, name)
 			}
@@ -115,6 +112,12 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 		return nil
 	}
 
+	if conf.Debug {
+		if err := os.Setenv("OS_DEBUG", "all"); err != nil {
+			return err
+		}
+	}
+
 	slog.Info("configuring OpenStack clients")
 	if err := validateOpenStackConfig(conf); err != nil {
 		return fmt.Errorf("invalid OpenStack configuration: %w", err)
@@ -128,12 +131,6 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 		"identity":      configureOpenStackIdentityClientsets,
 	}
 
-	if conf.Debug {
-		if err := os.Setenv("OS_DEBUG", "all"); err != nil {
-			return err
-		}
-	}
-
 	for svc, configFunc := range configFuncs {
 		if err := configFunc(ctx, conf); err != nil {
 			return fmt.Errorf("unable to configure OpenStack clients for %s: %w", svc, err)
@@ -145,8 +142,7 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 
 func newOpenStackProviderClient(
 	ctx context.Context,
-	clientConfig *config.OpenStackServiceConfig,
-	creds config.OpenStackCredentialsConfig,
+	creds *config.OpenStackCredentialsConfig,
 ) (*gophercloud.ProviderClient, error) {
 	var authOpts gophercloud.AuthOptions
 
@@ -154,7 +150,7 @@ func newOpenStackProviderClient(
 	case config.OpenStackAuthenticationMethodPassword:
 		username := strings.TrimSpace(creds.Password.Username)
 		if username == "" {
-			return nil, fmt.Errorf("no username specified for project %s", clientConfig.Project)
+			return nil, fmt.Errorf("no username specified for project %s", creds.Project)
 		}
 
 		rawPassword, err := os.ReadFile(creds.Password.PasswordFile)
@@ -163,20 +159,20 @@ func newOpenStackProviderClient(
 		}
 		password := strings.TrimSpace(string(rawPassword))
 		if password == "" {
-			return nil, fmt.Errorf("no password specified for project %s", clientConfig.Project)
+			return nil, fmt.Errorf("no password specified for project %s", creds.Project)
 		}
 
 		authOpts = gophercloud.AuthOptions{
-			IdentityEndpoint: clientConfig.AuthEndpoint,
-			DomainName:       clientConfig.Domain,
-			TenantName:       clientConfig.Project,
+			IdentityEndpoint: creds.AuthEndpoint,
+			DomainName:       creds.Domain,
+			TenantName:       creds.Project,
 			Username:         username,
 			Password:         password,
 		}
 	case config.OpenStackAuthenticationMethodAppCredentials:
 		appID := strings.TrimSpace(creds.AppCredentials.AppCredentialsID)
 		if appID == "" {
-			return nil, fmt.Errorf("no app credentials id specified for project %s", clientConfig.Project)
+			return nil, fmt.Errorf("no app credentials id specified for project %s", creds.Project)
 		}
 
 		rawAppSecret, err := os.ReadFile(creds.AppCredentials.AppCredentialsSecretFile)
@@ -186,11 +182,11 @@ func newOpenStackProviderClient(
 		appSecret := strings.TrimSpace(string(rawAppSecret))
 
 		if appSecret == "" {
-			return nil, fmt.Errorf("no app credentials secret specified for project %s", clientConfig.Project)
+			return nil, fmt.Errorf("no app credentials secret specified for project %s", creds.Project)
 		}
 
 		authOpts = gophercloud.AuthOptions{
-			IdentityEndpoint:            clientConfig.AuthEndpoint,
+			IdentityEndpoint:            creds.AuthEndpoint,
 			ApplicationCredentialID:     appID,
 			ApplicationCredentialSecret: appSecret,
 		}
@@ -201,232 +197,94 @@ func newOpenStackProviderClient(
 	return gophercloudconfig.NewProviderClient(ctx, authOpts)
 }
 
-// configureOpenStackComputeClientsets configures the OpenStack Compute API clientsets.
-func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Config) error {
-	for _, clientConfig := range conf.OpenStack.Services.Compute {
-		creds := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[creds]
+func configureClientset(
+	ctx context.Context,
+	serviceName string,
+	clientset *registry.Registry[openstackclients.ClientScope, openstackclients.Client[*gophercloud.ServiceClient]],
+	serviceConfig config.OpenStackServiceCredentials,
+	conf *config.Config,
+	serviceFunc func(
+		providerClient *gophercloud.ProviderClient,
+		eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error)) error {
 
-		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
+	// set of credentialNames to create clients from
+	credentialNames := make(map[string]struct{}, len(serviceConfig.UseCredentials))
+
+	for _, credName := range serviceConfig.UseCredentials {
+		credentialNames[credName] = struct{}{}
+	}
+
+	for credentials := range credentialNames {
+		namedCreds := conf.OpenStack.Credentials[credentials]
+		providerClient, err := newOpenStackProviderClient(ctx, &namedCreds)
 
 		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
+			return fmt.Errorf("unable to create client for service with credentials %s: %w", credentials, err)
 		}
 
-		computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{
-			Region: clientConfig.Region,
+		serviceClient, err := serviceFunc(providerClient, gophercloud.EndpointOpts{
+			Region: namedCreds.Region,
 		})
 
 		if err != nil {
-			return fmt.Errorf("unable to create client for compute service with credentials %s: %w", creds, err)
+			return fmt.Errorf("unable to create client for %s service with credentials %s: %w", serviceName, credentials, err)
+		}
+
+		clientScope := openstackclients.ClientScope{
+			NamedCredentials: credentials,
+			Project:          namedCreds.Project,
+			Domain:           namedCreds.Domain,
+			Region:           namedCreds.Region,
 		}
 
 		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: creds,
-			ProjectID:        clientConfig.ProjectID,
-			Region:           clientConfig.Region,
-			Domain:           clientConfig.Domain,
-			Client:           computeClient,
+			ClientScope: clientScope,
+			Client:      serviceClient,
 		}
-		openstackclients.ComputeClientset.Overwrite(
-			clientConfig.ProjectID,
+
+		clientset.Overwrite(
+			clientScope,
 			client,
 		)
 
 		slog.Info(
 			"configured OpenStack client",
-			"service", "compute",
-			"credentials", creds,
-			"region", clientConfig.Region,
-			"domain", clientConfig.Domain,
-			"project", clientConfig.Project,
-			"auth_endpoint", clientConfig.AuthEndpoint,
+			"service", serviceName,
+			"credentials", credentials,
+			"region", namedCreds.Region,
+			"domain", namedCreds.Domain,
+			"project", namedCreds.Project,
+			"auth_endpoint", namedCreds.AuthEndpoint,
 			"auth_method", namedCreds.Authentication,
 		)
 	}
+
 	return nil
+}
+
+// configureOpenStackComputeClientsets configures the OpenStack Compute API clientsets.
+func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Config) error {
+	return configureClientset(ctx, "compute", openstackclients.ComputeClientset, conf.OpenStack.Services.Compute, conf, openstack.NewComputeV2)
 }
 
 // configureOpenStackNetworkClientsets configures the OpenStack Network API clientsets.
 func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Config) error {
-	for _, clientConfig := range conf.OpenStack.Services.Network {
-		creds := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[creds]
-
-		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
-		}
-
-		networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
-			Region: clientConfig.Region,
-		})
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for network service with credentials %s: %w", creds, err)
-		}
-
-		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: creds,
-			ProjectID:        clientConfig.ProjectID,
-			Region:           clientConfig.Region,
-			Domain:           clientConfig.Domain,
-			Client:           networkClient,
-		}
-		openstackclients.NetworkClientset.Overwrite(
-			clientConfig.ProjectID,
-			client,
-		)
-
-		slog.Info(
-			"configured OpenStack client",
-			"service", "network",
-			"credentials", creds,
-			"region", clientConfig.Region,
-			"domain", clientConfig.Domain,
-			"project", clientConfig.Project,
-			"auth_endpoint", clientConfig.AuthEndpoint,
-			"auth_method", namedCreds.Authentication,
-		)
-	}
-	return nil
+	return configureClientset(ctx, "network", openstackclients.NetworkClientset, conf.OpenStack.Services.Network, conf, openstack.NewNetworkV2)
 }
 
 // configureOpenStackBlockStorageClientsets configures the OpenStack Block Storage API clientsets.
 func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.Config) error {
-	for _, clientConfig := range conf.OpenStack.Services.BlockStorage {
-		creds := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[creds]
-
-		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
-		}
-
-		blockStorageClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{
-			Region: clientConfig.Region,
-		})
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for block storage service with credentials %s: %w", creds, err)
-		}
-
-		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: creds,
-			ProjectID:        clientConfig.ProjectID,
-			Region:           clientConfig.Region,
-			Domain:           clientConfig.Domain,
-			Client:           blockStorageClient,
-		}
-		openstackclients.BlockStorageClientset.Overwrite(
-			clientConfig.ProjectID,
-			client,
-		)
-
-		slog.Info(
-			"configured OpenStack client",
-			"service", "block_storage",
-			"credentials", creds,
-			"region", clientConfig.Region,
-			"domain", clientConfig.Domain,
-			"project", clientConfig.Project,
-			"auth_endpoint", clientConfig.AuthEndpoint,
-			"auth_method", namedCreds.Authentication,
-		)
-	}
-	return nil
+	return configureClientset(ctx, "block_storage", openstackclients.BlockStorageClientset,
+		conf.OpenStack.Services.BlockStorage, conf, openstack.NewBlockStorageV3)
 }
 
 // configureOpenStackLoadBalancerClientsets configures the OpenStack LoadBalancer API clientsets.
 func configureOpenStackLoadBalancerClientsets(ctx context.Context, conf *config.Config) error {
-	for _, clientConfig := range conf.OpenStack.Services.LoadBalancer {
-		creds := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[creds]
-
-		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
-		}
-
-		loadbalancerClient, err := openstack.NewLoadBalancerV2(providerClient, gophercloud.EndpointOpts{
-			Region: clientConfig.Region,
-		})
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for load_balancer service with credentials %s: %w", creds, err)
-		}
-
-		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: creds,
-			ProjectID:        clientConfig.ProjectID,
-			Region:           clientConfig.Region,
-			Domain:           clientConfig.Domain,
-			Client:           loadbalancerClient,
-		}
-		openstackclients.LoadBalancerClientset.Overwrite(
-			clientConfig.ProjectID,
-			client,
-		)
-
-		slog.Info(
-			"configured OpenStack client",
-			"service", "load_balancer",
-			"credentials", creds,
-			"region", clientConfig.Region,
-			"domain", clientConfig.Domain,
-			"project", clientConfig.Project,
-			"auth_endpoint", clientConfig.AuthEndpoint,
-			"auth_method", namedCreds.Authentication,
-		)
-	}
-	return nil
+	return configureClientset(ctx, "load_balancer", openstackclients.LoadBalancerClientset,
+		conf.OpenStack.Services.LoadBalancer, conf, openstack.NewLoadBalancerV2)
 }
 
 // configureOpenStackIdentityClientsets configures the OpenStack Identity API clientsets.
 func configureOpenStackIdentityClientsets(ctx context.Context, conf *config.Config) error {
-	for _, clientConfig := range conf.OpenStack.Services.Identity {
-		creds := clientConfig.UseCredentials
-		namedCreds := conf.OpenStack.Credentials[creds]
-
-		providerClient, err := newOpenStackProviderClient(ctx, &clientConfig, namedCreds)
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for service with credentials %s: %w", creds, err)
-		}
-
-		identityClient, err := openstack.NewIdentityV3(providerClient, gophercloud.EndpointOpts{
-			Region: clientConfig.Region,
-		})
-
-		if err != nil {
-			return fmt.Errorf("unable to create client for identity service with credentials %s: %w", creds, err)
-		}
-
-		client := openstackclients.Client[*gophercloud.ServiceClient]{
-			NamedCredentials: creds,
-			ProjectID:        clientConfig.ProjectID,
-			Region:           clientConfig.Region,
-			Domain:           clientConfig.Domain,
-			Client:           identityClient,
-		}
-		openstackclients.IdentityClientset.Overwrite(
-			clientConfig.ProjectID,
-			client,
-		)
-
-		slog.Info(
-			"configured OpenStack client",
-			"service", "identity",
-			"credentials", creds,
-			"region", clientConfig.Region,
-			"domain", clientConfig.Domain,
-			"project", clientConfig.Project,
-			"auth_endpoint", clientConfig.AuthEndpoint,
-			"auth_method", namedCreds.Authentication,
-		)
-	}
-	return nil
+	return configureClientset(ctx, "identity", openstackclients.IdentityClientset, conf.OpenStack.Services.Identity, conf, openstack.NewIdentityV3)
 }

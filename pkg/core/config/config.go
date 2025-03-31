@@ -141,40 +141,25 @@ type OpenStackConfig struct {
 // OpenStackServices repsesents the known OpenStack services and their config.
 type OpenStackServices struct {
 	// Compute provides the Compute service configuration.
-	Compute []OpenStackServiceConfig `yaml:"compute"`
+	Compute OpenStackServiceCredentials `yaml:"compute"`
 
 	// Network provides the Network service configuration.
-	Network []OpenStackServiceConfig `yaml:"network"`
+	Network OpenStackServiceCredentials `yaml:"network"`
 
 	// BlockStorage provides the Block Storage service configuration.
-	BlockStorage []OpenStackServiceConfig `yaml:"block_storage"`
+	BlockStorage OpenStackServiceCredentials `yaml:"block_storage"`
 
 	// LoadBalancer provides the LoadBalancer service configuration.
-	LoadBalancer []OpenStackServiceConfig `yaml:"load_balancer"`
+	LoadBalancer OpenStackServiceCredentials `yaml:"load_balancer"`
 
 	// Identity provides the Identity service configuration.
-	Identity []OpenStackServiceConfig `yaml:"identity"`
+	Identity OpenStackServiceCredentials `yaml:"identity"`
 }
 
-// OpenStackServiceConfig provides configuration specific for an OpenStack service.
-type OpenStackServiceConfig struct {
-	// UseCredentials specifies the named credentials to use.
-	UseCredentials string `yaml:"use_credentials"`
-
-	// Domain specifies the domain to use when initializing the OpenStack client.
-	Domain string `yaml:"domain"`
-
-	// Project specifies the project to use when initializing the OpenStack client.
-	Project string `yaml:"project"`
-
-	// ProjectID specifies the project ID to use when initializing the OpenStack client.
-	ProjectID string `yaml:"project_id"`
-
-	// Region specifies the region to use when initializing the OpenStack client.
-	Region string `yaml:"region"`
-
-	// AuthEndpoint specifies the authentication endpoint to use when initializing an OpenStack client.
-	AuthEndpoint string `yaml:"auth_endpoint"`
+// OpenStackServiceCredentials specifies which credentials a service can use.
+type OpenStackServiceCredentials struct {
+	// UseCredentials specifies a list of named credentials to use.
+	UseCredentials []string `yaml:"use_credentials"`
 }
 
 // OpenStackCredentialsConfig provides named credentials configuration for the OpenStack
@@ -191,6 +176,18 @@ type OpenStackCredentialsConfig struct {
 
 	// AppCredentials provides the settings to use for authentication when using application credentials.
 	AppCredentials OpenStackAppCredentialsConfig `yaml:"app_credentials"`
+
+	// Domain specifies the domain to use when initializing an OpenStack client.
+	Domain string `yaml:"domain"`
+
+	// Project specifies the project to use when initializing an OpenStack client.
+	Project string `yaml:"project"`
+
+	// Region specifies the region to use when initializing an OpenStack client.
+	Region string `yaml:"region"`
+
+	// AuthEndpoint specifies the authentication endpoint to use when initializing an OpenStack client.
+	AuthEndpoint string `yaml:"auth_endpoint"`
 }
 
 // OpenStackPasswordConfig provides the settings to use for authentication when using username/password.
