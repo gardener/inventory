@@ -12,4 +12,4 @@ import (
 
 // LoadBalancerClientset provides the registry of OpenStack LoadBalancer API clients
 // for interfacing with load balancer resources.
-var LoadBalancerClientset = registry.New[string, Client[*gophercloud.ServiceClient]]()
+var LoadBalancerClientset = registry.New[ClientScope, Client[*gophercloud.ServiceClient]]()

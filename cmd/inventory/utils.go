@@ -38,7 +38,7 @@ type configKey struct{}
 // service was not configured with a bind address.
 var errNoDashboardAddress = errors.New("no bind address specified")
 
-// errNoServiceCredentials is an error, which is returned when an cloud provider
+// errNoServiceCredentials is an error, which is returned when a cloud provider
 // API service (e.g. AWS, GCP, etc.)  does not have any named credentials
 // configured.
 var errNoServiceCredentials = errors.New("no credentials specified for service")

@@ -12,4 +12,4 @@ import (
 
 // BlockStorageClientset provides the registry of OpenStack Block Storage API clients
 // for interfacing with block storage resources.
-var BlockStorageClientset = registry.New[string, Client[*gophercloud.ServiceClient]]()
+var BlockStorageClientset = registry.New[ClientScope, Client[*gophercloud.ServiceClient]]()
