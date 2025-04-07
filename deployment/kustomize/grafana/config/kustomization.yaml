@@ -27,3 +27,5 @@ configMapGenerator:
       - files/dashboards/inventory/inventory-gcp-leaked.json
       - files/dashboards/inventory/inventory-azure.json
       - files/dashboards/inventory/inventory-azure-leaked.json
+      - files/dashboards/inventory/inventory-openstack.json
+      - files/dashboards/inventory/inventory-leaked-openstack.json
