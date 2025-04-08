@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/auth v0.15.0
 	cloud.google.com/go/compute v1.34.0
 	cloud.google.com/go/container v1.42.2
-	cloud.google.com/go/resourcemanager v1.10.4
+	cloud.google.com/go/resourcemanager v1.10.5
 	cloud.google.com/go/storage v1.51.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.17.1
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.2
