@@ -212,8 +212,7 @@ type CloudProfileAzureImage struct {
 	Version          string        `bun:"version,notnull,unique:g_cloud_profile_azure_image_key"`
 	Architecture     string        `bun:"architecture,notnull,unique:g_cloud_profile_azure_image_key"`
 	CloudProfileName string        `bun:"cloud_profile_name,notnull,unique:g_cloud_profile_azure_image_key"`
-	URN              string        `bun:"urn,notnull"`
-	GalleryImageID   string        `bun:"gallery_image_id,notnull"`
+	ImageID          string        `bun:"image_id,notnull,unique:g_cloud_profile_azure_image_key"`
 	CloudProfile     *CloudProfile `bun:"rel:has-one,join:cloud_profile_name=name"`
 }
 
