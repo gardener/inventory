@@ -22,7 +22,7 @@ MINIKUBE                     := $(TOOLS_BIN)/minikube
 
 GOIMPORTS_VERSION            ?= $(call version_gomod,golang.org/x/tools)
 GOIMPORTS_REVISER_VERSION    ?= v3.6.5
-GOLANGCI_LINT_VERSION        ?= v1.60.1
+GOLANGCI_LINT_VERSION        ?= v1.64.8
 KUSTOMIZE_VERSION            ?= v5.4.2
 MINIKUBE_VERSION 	     ?= v1.33.1
 
