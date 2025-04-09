@@ -82,7 +82,9 @@ func enqueueCollectServers(ctx context.Context) error {
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack servers",
-				"scope", scope,
+				"project", scope.Project,
+				"domain", scope.Domain,
+				"region", scope.Region,
 				"reason", err,
 			)
 			return err
@@ -94,7 +96,9 @@ func enqueueCollectServers(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"scope", scope,
+				"project", scope.Project,
+				"domain", scope.Domain,
+				"region", scope.Region,
 				"reason", err,
 			)
 			return err
@@ -105,7 +109,9 @@ func enqueueCollectServers(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"scope", scope,
+			"project", scope.Project,
+			"domain", scope.Domain,
+			"region", scope.Region,
 		)
 
 		return nil
@@ -124,7 +130,9 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 	logger.Info(
 		"collecting OpenStack servers",
-		"scope", payload.Scope,
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
 	)
 
 	items := make([]models.Server, 0)
@@ -201,7 +209,9 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 	if err != nil {
 		logger.Error(
 			"could not insert servers into db",
-			"scope", payload.Scope,
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
 			"reason", err,
 		)
 		return err
@@ -214,7 +224,9 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 	logger.Info(
 		"populated openstack servers",
-		"scope", payload.Scope,
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
 		"count", count,
 	)
 
