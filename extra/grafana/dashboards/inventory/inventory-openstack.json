@@ -199,7 +199,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "Number of OpenStack Networks, excluding CC managed external networks.",
+      "description": "Number of OpenStack Networks, excluding externally managed networks.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -284,7 +284,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "OpenStack networks grouped by region, excluding external networks managed by CC.",
+      "description": "OpenStack networks grouped by region, excluding externally managed networks.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -370,7 +370,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "Number of OpenStack Subnets, excluding subnets managed by CC.",
+      "description": "Number of OpenStack Subnets, excluding externally managed subnets.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -455,7 +455,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "OpenStack subnets grouped by region, excluding CC managed subnets.",
+      "description": "OpenStack subnets grouped by region, excluding externally managed subnets.",
       "fieldConfig": {
         "defaults": {
           "color": {
