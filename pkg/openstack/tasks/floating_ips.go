@@ -84,7 +84,9 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack floating IPs",
-				"scope", scope,
+				"project", scope.Project,
+				"domain", scope.Domain,
+				"region", scope.Region,
 				"reason", err,
 			)
 			return err
@@ -96,7 +98,9 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"scope", scope,
+				"project", scope.Project,
+				"domain", scope.Domain,
+				"region", scope.Region,
 				"reason", err,
 			)
 			return err
@@ -107,7 +111,9 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"scope", scope,
+			"project", scope.Project,
+			"domain", scope.Domain,
+			"region", scope.Region,
 		)
 
 		return nil
@@ -126,7 +132,9 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 
 	logger.Info(
 		"collecting OpenStack floating IPs",
-		"scope", payload.Scope,
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
 	)
 
 	items := make([]models.FloatingIP, 0)
@@ -218,7 +226,9 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 	if err != nil {
 		logger.Error(
 			"could not insert floating IPs into db",
-			"scope", payload.Scope,
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
 			"reason", err,
 		)
 		return err
@@ -231,7 +241,9 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 
 	logger.Info(
 		"populated openstack floating IPs",
-		"scope", payload.Scope,
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
 		"count", count,
 	)
 

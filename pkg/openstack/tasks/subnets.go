@@ -82,7 +82,9 @@ func enqueueCollectSubnets(ctx context.Context) error {
 		if err != nil {
 			logger.Error(
 				"failed to marshal payload for OpenStack subnets",
-				"scope", scope,
+				"project", scope.Project,
+				"domain", scope.Domain,
+				"region", scope.Region,
 				"reason", err,
 			)
 			return err
@@ -94,7 +96,9 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
-				"scope", scope,
+				"project", scope.Project,
+				"domain", scope.Domain,
+				"region", scope.Region,
 				"reason", err,
 			)
 			return err
@@ -105,7 +109,9 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
-			"scope", scope,
+			"project", scope.Project,
+			"domain", scope.Domain,
+			"region", scope.Region,
 		)
 
 		return nil
@@ -124,7 +130,9 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	logger.Info(
 		"collecting OpenStack subnets",
-		"scope", payload.Scope,
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
 	)
 
 	items := make([]models.Subnet, 0)
@@ -196,7 +204,9 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 	if err != nil {
 		logger.Error(
 			"could not insert Subnets into db",
-			"scope", payload.Scope,
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
 			"reason", err,
 		)
 		return err
@@ -209,7 +219,9 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	logger.Info(
 		"populated openstack subnets",
-		"scope", payload.Scope,
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
 		"count", count,
 	)
 

@@ -197,7 +197,7 @@ func newOpenStackProviderClient(
 	return gophercloudconfig.NewProviderClient(ctx, authOpts)
 }
 
-func configureClientset(
+func configureOpenStackServiceClientset(
 	ctx context.Context,
 	serviceName string,
 	clientset *registry.Registry[openstackclients.ClientScope, openstackclients.Client[*gophercloud.ServiceClient]],
@@ -264,27 +264,27 @@ func configureClientset(
 
 // configureOpenStackComputeClientsets configures the OpenStack Compute API clientsets.
 func configureOpenStackComputeClientsets(ctx context.Context, conf *config.Config) error {
-	return configureClientset(ctx, "compute", openstackclients.ComputeClientset, conf.OpenStack.Services.Compute, conf, openstack.NewComputeV2)
+	return configureOpenStackServiceClientset(ctx, "compute", openstackclients.ComputeClientset, conf.OpenStack.Services.Compute, conf, openstack.NewComputeV2)
 }
 
 // configureOpenStackNetworkClientsets configures the OpenStack Network API clientsets.
 func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Config) error {
-	return configureClientset(ctx, "network", openstackclients.NetworkClientset, conf.OpenStack.Services.Network, conf, openstack.NewNetworkV2)
+	return configureOpenStackServiceClientset(ctx, "network", openstackclients.NetworkClientset, conf.OpenStack.Services.Network, conf, openstack.NewNetworkV2)
 }
 
 // configureOpenStackBlockStorageClientsets configures the OpenStack Block Storage API clientsets.
 func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.Config) error {
-	return configureClientset(ctx, "block_storage", openstackclients.BlockStorageClientset,
+	return configureOpenStackServiceClientset(ctx, "block_storage", openstackclients.BlockStorageClientset,
 		conf.OpenStack.Services.BlockStorage, conf, openstack.NewBlockStorageV3)
 }
 
 // configureOpenStackLoadBalancerClientsets configures the OpenStack LoadBalancer API clientsets.
 func configureOpenStackLoadBalancerClientsets(ctx context.Context, conf *config.Config) error {
-	return configureClientset(ctx, "load_balancer", openstackclients.LoadBalancerClientset,
+	return configureOpenStackServiceClientset(ctx, "load_balancer", openstackclients.LoadBalancerClientset,
 		conf.OpenStack.Services.LoadBalancer, conf, openstack.NewLoadBalancerV2)
 }
 
 // configureOpenStackIdentityClientsets configures the OpenStack Identity API clientsets.
 func configureOpenStackIdentityClientsets(ctx context.Context, conf *config.Config) error {
-	return configureClientset(ctx, "identity", openstackclients.IdentityClientset, conf.OpenStack.Services.Identity, conf, openstack.NewIdentityV3)
+	return configureOpenStackServiceClientset(ctx, "identity", openstackclients.IdentityClientset, conf.OpenStack.Services.Identity, conf, openstack.NewIdentityV3)
 }
