@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 10,
+  "id": 15,
   "links": [],
   "panels": [
     {
@@ -37,7 +37,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "Number of leaked OpenStack Servers",
+          "description": "Number of leaked OpenStack servers.\nLeaked here means server instances that do not have a matching Machine resource.\n\n",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -93,7 +93,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n        COUNT(s.id) AS total\nFROM openstack_orphan_server AS s;",
+              "rawSql": "SELECT\n        COUNT(s.id) AS total\nFROM openstack_orphan_server AS s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -122,7 +122,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "Servers with images that aren't listed in any respective cloud profile.",
+          "description": "Number of servers using images that aren't listed in their respective cloud profile.\nOnly looks at non-leaked servers.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -178,7 +178,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT COUNT(*) FROM openstack_server as s\nLEFT JOIN g_cloud_profile_openstack_image as cpoi\nON s.image_id = cpoi.image_id\nWHERE cpoi.id IS NULL;",
+              "rawSql": "SELECT COUNT(oumi.server_id) FROM openstack_unknown_machine_image as oumi\nJOIN openstack_project as p\nON oumi.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -207,7 +207,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "Leaked OpenStack Servers",
+          "description": "List of leaked OpenStack servers.\nLeaked here means not mapped to a Machine resource.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -282,7 +282,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT s.*\nFROM openstack_orphan_server AS s;\n",
+              "rawSql": "SELECT s.*\nFROM openstack_orphan_server AS s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name in ($openstack_project);\n",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -311,7 +311,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "List of OpenStack Server images not specified in a Cloud Profile.",
+          "description": "List of OpenStack Server using images not specified in their respective Cloud Profile.\nOnly looks at non-leaked servers.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -372,7 +372,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT s.*\nFROM openstack_server as s\nLEFT JOIN g_cloud_profile_openstack_image as cpoi\nON s.image_id = cpoi.image_id\nWHERE cpoi.id IS NULL;\n",
+              "rawSql": "SELECT oumi.*\nFROM openstack_unknown_machine_image as oumi\nJOIN openstack_project as p\nON oumi.project_id = p.project_id\nWHERE p.name in ($openstack_project);\n",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -415,7 +415,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "Number of leaked OpenStack Networks",
+          "description": "Number of leaked OpenStack Networks.\nDoes not include external networks managed by CC.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -471,7 +471,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n        COUNT(n.name) AS total\nFROM openstack_orphan_network AS n;\n",
+              "rawSql": "SELECT\n        COUNT(n.name) AS total\nFROM openstack_orphan_network AS n\nJOIN openstack_project as p\nON n.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -556,7 +556,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT COUNT(subnet_id) FROM openstack_orphan_subnet;",
+              "rawSql": "SELECT COUNT(s.subnet_id) FROM openstack_orphan_subnet as s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -585,7 +585,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "Leaked OpenStack Networks",
+          "description": "Leaked OpenStack Networks.\nDoes not include external networks managed by CC.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -646,7 +646,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT\n        n.*\nFROM openstack_orphan_network as n;",
+              "rawSql": "SELECT\n        n.*\nFROM openstack_orphan_network as n\nJOIN openstack_project as p\nON n.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -675,7 +675,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "",
+          "description": "List of leaked OpenStack subnets.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -736,7 +736,7 @@
               "editorMode": "code",
               "format": "table",
               "rawQuery": true,
-              "rawSql": "SELECT * FROM openstack_orphan_subnet;",
+              "rawSql": "SELECT s.* as project_name \nFROM openstack_orphan_subnet as s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
               "refId": "A",
               "sql": {
                 "columns": [
@@ -765,7 +765,7 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -773,419 +773,449 @@
         "y": 2
       },
       "id": 2,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "description": "Number of OpenStack Load Balancers which are linked to an orphaned network.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 4,
+            "x": 0,
+            "y": 3
+          },
+          "id": 13,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT COUNT(lb.id)\nFROM openstack_orphan_loadbalancer as lb\nJOIN openstack_project as p\nON lb.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Orphaned Load Balancers",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "description": "Number of public (floating) IPs which are linked to leaked networks.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 4,
+            "x": 4,
+            "y": 3
+          },
+          "id": 14,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT COUNT(ip.id)\nFROM openstack_orphan_floating_ip as ip\nJOIN openstack_project as p\nON ip.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Number of Leaked Public (Floating) IPs",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "description": "List of LBs which are linked to orphaned networks.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "description"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 253
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "name"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 366
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 24,
+            "x": 0,
+            "y": 10
+          },
+          "id": 15,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": true,
+              "enablePagination": true,
+              "fields": "",
+              "reducer": [
+                "count"
+              ],
+              "show": true
+            },
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT \n  lb.*,\n  p.name as project_name\nFROM openstack_orphan_loadbalancer as lb\nJOIN openstack_project as p\nON lb.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Orphan Load Balancers",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "ds_gardener_inventory"
+          },
+          "description": "List of IPs which are linked with an orphan network.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "description"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 253
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "name"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 366
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 24,
+            "x": 0,
+            "y": 21
+          },
+          "id": 16,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": true,
+              "enablePagination": true,
+              "fields": "",
+              "reducer": [
+                "count"
+              ],
+              "show": true
+            },
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "11.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "ds_gardener_inventory"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT \n  ip.*,\n  p.name as project_name\nFROM openstack_orphan_floating_ip as ip\nJOIN openstack_project as p\nON ip.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Orphan floating (public) IPs",
+          "type": "table"
+        }
+      ],
       "title": "LoadBalancers & Public IPs",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "description": "OpenStack Load Balancers which are linked to an orphaned network.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "fieldMinMax": false,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 0,
-        "y": 3
-      },
-      "id": 13,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(id)\nFROM openstack_orphan_loadbalancer;\n",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Orphaned Load Balancers",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "description": "Public (Floating) IPs which aren't pointing to networks.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "fieldMinMax": false,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 4,
-        "y": 3
-      },
-      "id": 14,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(id)\nFROM openstack_orphan_floating_ip;\n",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Number of Leaked Public (Floating) IPs",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "description": "List of LBs which are linked to orphaned networks.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": true
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "description"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 253
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "name"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 366
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 24,
-        "x": 0,
-        "y": 10
-      },
-      "id": 15,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": true,
-          "enablePagination": true,
-          "fields": "",
-          "reducer": [
-            "count"
-          ],
-          "show": true
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT * FROM openstack_orphan_loadbalancer;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Orphan Load Balancers",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "ds_gardener_inventory"
-      },
-      "description": "List of IPs which aren't associated with a network.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": true
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "description"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 253
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "name"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 366
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 24,
-        "x": 0,
-        "y": 21
-      },
-      "id": 16,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": true,
-          "enablePagination": true,
-          "fields": "",
-          "reducer": [
-            "count"
-          ],
-          "show": true
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "ds_gardener_inventory"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT * FROM openstack_orphan_floating_ip;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Orphan floating (public) IPs",
-      "type": "table"
     }
   ],
   "schemaVersion": 39,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "ds_gardener_inventory"
+        },
+        "definition": "SELECT name FROM openstack_project",
+        "description": "List of the names of openstack projects  currently collected in the DB.",
+        "hide": 1,
+        "includeAll": true,
+        "multi": true,
+        "name": "openstack_project",
+        "options": [],
+        "query": "SELECT name FROM openstack_project",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
@@ -1196,6 +1226,6 @@
   "timezone": "browser",
   "title": "Inventory: Leaked OpenStack Resources",
   "uid": "deho7mzwbtiwwe",
-  "version": 7,
+  "version": 2,
   "weekStart": ""
 }

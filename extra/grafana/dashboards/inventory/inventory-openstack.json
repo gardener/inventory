@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 9,
+  "id": 18,
   "links": [],
   "panels": [
     {
@@ -27,6 +27,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
+      "description": "Number of OpenStack servers.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -82,7 +83,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(id)\nFROM openstack_server;",
+          "rawSql": "SELECT\n        COUNT(s.id)\nFROM openstack_server as s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name IN ($openstack_project);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -111,7 +112,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "",
+      "description": "OpenStack servers grouped by status.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -169,7 +170,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        s.status AS status,\n        COUNT(s.id) AS total\nFROM openstack_server AS s\nGROUP BY s.status",
+          "rawSql": "SELECT\n        s.status AS status,\n        COUNT(s.id) AS total\nFROM openstack_server AS s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name in ($openstack_project)\nGROUP BY s.status;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -198,7 +199,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "OpenStack Networks",
+      "description": "Number of OpenStack Networks, excluding CC managed external networks.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -254,7 +255,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        COUNT(id)\nFROM openstack_network;",
+          "rawSql": "SELECT\n        COUNT(n.id)\nFROM openstack_network as n\nJOIN openstack_project as p\nON n.project_id = p.project_id\nWHERE p.name in ($openstack_project)",
           "refId": "A",
           "sql": {
             "columns": [
@@ -283,7 +284,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "",
+      "description": "OpenStack networks grouped by region, excluding external networks managed by CC.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -340,7 +341,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n        COUNT(n.id),\n        region \nFROM openstack_network as n\nGROUP BY region;",
+          "rawSql": "SELECT \n        COUNT(n.id),\n        n.region \nFROM openstack_network as n\nJOIN openstack_project as p\nON n.project_id = p.project_id\nWHERE p.name in ($openstack_project)\nGROUP BY n.region;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -369,7 +370,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "OpenStack Subnets",
+      "description": "Number of OpenStack Subnets, excluding subnets managed by CC.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -425,7 +426,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM openstack_subnet;",
+          "rawSql": "SELECT COUNT(s.id) FROM openstack_subnet as s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -454,7 +455,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "",
+      "description": "OpenStack subnets grouped by region, excluding CC managed subnets.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -511,7 +512,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        s.region, COUNT(s.id)\nFROM openstack_subnet as s\nGROUP BY s.region",
+          "rawSql": "SELECT\n        s.region, COUNT(s.id)\nFROM openstack_subnet as s\nJOIN openstack_project as p\nON s.project_id = p.project_id\nWHERE p.name in ($openstack_project)\nGROUP BY s.region",
           "refId": "A",
           "sql": {
             "columns": [
@@ -540,7 +541,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "Number of public (floating) IP Addresses",
+      "description": "Number of public (floating) IPs",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -596,7 +597,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) FROM openstack_floating_ip;",
+          "rawSql": "SELECT COUNT(*) FROM openstack_floating_ip as ip\nJOIN openstack_project as p\nON ip.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -625,7 +626,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "Public (floating) IP Adresses grouped by region",
+      "description": "Public (floating) IPs grouped by region.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -683,7 +684,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n        region, \n        COUNT(floating_ip) \nFROM openstack_floating_ip \nGROUP BY region;",
+          "rawSql": "SELECT \n        ip.region, \n        COUNT(floating_ip) \nFROM openstack_floating_ip as ip\nJOIN openstack_project as p\nON ip.project_id = p.project_id\nWHERE p.name in ($openstack_project)\nGROUP BY ip.region;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -712,7 +713,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "OpenStack Load Balancers",
+      "description": "Number of OpenStack Load Balancers.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -772,7 +773,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(id) FROM openstack_loadbalancer;",
+          "rawSql": "SELECT COUNT(*) FROM openstack_loadbalancer as lb\nJOIN openstack_project as p\nON lb.project_id = p.project_id\nWHERE p.name in ($openstack_project);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -801,7 +802,7 @@
         "type": "grafana-postgresql-datasource",
         "uid": "ds_gardener_inventory"
       },
-      "description": "",
+      "description": "OpenStack Load Balancers grouped by region.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -859,7 +860,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n        region, COUNT(id)\nFROM openstack_loadbalancer\nGROUP BY region;",
+          "rawSql": "SELECT\n        lb.region, COUNT(*)\nFROM openstack_loadbalancer as lb\nJOIN openstack_project as p\nON lb.project_id = p.project_id\nWHERE p.name in ($openstack_project)\nGROUP BY lb.region;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -905,7 +906,7 @@
         },
         "definition": "SELECT name FROM openstack_project",
         "description": "OpenStack Project",
-        "hide": 2,
+        "hide": 1,
         "includeAll": true,
         "label": "OpenStack Project",
         "multi": true,
@@ -929,6 +930,6 @@
   "timezone": "browser",
   "title": "Inventory: OpenStack",
   "uid": "deho7kz3ecxs0f",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
