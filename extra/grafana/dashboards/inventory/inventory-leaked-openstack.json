@@ -415,7 +415,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "Number of leaked OpenStack Networks.\nDoes not include external networks managed by CC.",
+          "description": "Number of leaked OpenStack Networks.\nDoes not include externally managed networks.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -585,7 +585,7 @@
             "type": "grafana-postgresql-datasource",
             "uid": "ds_gardener_inventory"
           },
-          "description": "Leaked OpenStack Networks.\nDoes not include external networks managed by CC.",
+          "description": "Leaked OpenStack Networks.\nDoes not include externally managed networks.",
           "fieldConfig": {
             "defaults": {
               "color": {
