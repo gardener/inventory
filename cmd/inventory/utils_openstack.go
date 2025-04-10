@@ -41,6 +41,47 @@ func validateOpenStackConfig(conf *config.Config) error {
 		"identity":      conf.OpenStack.Services.Identity,
 	}
 
+	for name, creds := range conf.OpenStack.Credentials {
+		if creds.AuthEndpoint == "" {
+			return fmt.Errorf("OpenStack: %w: credentials %s", errNoAuthEndpoint, name)
+		}
+
+		if creds.Domain == "" {
+			return fmt.Errorf("OpenStack: %w: credentials %s", errNoDomain, name)
+		}
+
+		if creds.Region == "" {
+			return fmt.Errorf("OpenStack: %w: credentials %s", errNoRegion, name)
+		}
+
+		if creds.Project == "" {
+			return fmt.Errorf("OpenStack: %w: credentials %s", errNoProject, name)
+		}
+
+		if creds.Authentication == "" {
+			return fmt.Errorf("OpenStack: %w: credentials %s", errNoAuthenticationMethod, name)
+		}
+
+		switch creds.Authentication {
+		case config.OpenStackAuthenticationMethodPassword:
+			if creds.Password.Username == "" {
+				return fmt.Errorf("OpenStack: %w: %s", errNoUsername, name)
+			}
+			if creds.Password.PasswordFile == "" {
+				return fmt.Errorf("OpenStack: %w: %s", errNoPasswordFile, name)
+			}
+		case config.OpenStackAuthenticationMethodAppCredentials:
+			if creds.AppCredentials.AppCredentialsID == "" {
+				return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsID, name)
+			}
+			if creds.AppCredentials.AppCredentialsSecretFile == "" {
+				return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsSecretFile, name)
+			}
+		default:
+			return fmt.Errorf("OpenStack: %w: %s uses %s", errUnknownAuthenticationMethod, name, creds.Authentication)
+		}
+	}
+
 	for service, serviceCredentials := range services {
 		credentials := serviceCredentials.UseCredentials
 
@@ -56,47 +97,6 @@ func validateOpenStackConfig(conf *config.Config) error {
 
 			if _, ok := conf.OpenStack.Credentials[cred]; !ok {
 				return fmt.Errorf("OpenStack: %w: service %s refers to %s", errUnknownNamedCredentials, service, cred)
-			}
-		}
-
-		for name, creds := range conf.OpenStack.Credentials {
-			if creds.AuthEndpoint == "" {
-				return fmt.Errorf("OpenStack: %w: credentials %s", errNoAuthEndpoint, name)
-			}
-
-			if creds.Domain == "" {
-				return fmt.Errorf("OpenStack: %w: credentials %s", errNoDomain, name)
-			}
-
-			if creds.Region == "" {
-				return fmt.Errorf("OpenStack: %w: credentials %s", errNoRegion, name)
-			}
-
-			if creds.Project == "" {
-				return fmt.Errorf("OpenStack: %w: credentials %s", errNoProject, name)
-			}
-
-			if creds.Authentication == "" {
-				return fmt.Errorf("OpenStack: %w: credentials %s", errNoAuthenticationMethod, name)
-			}
-
-			switch creds.Authentication {
-			case config.OpenStackAuthenticationMethodPassword:
-				if creds.Password.Username == "" {
-					return fmt.Errorf("OpenStack: %w: %s", errNoUsername, name)
-				}
-				if creds.Password.PasswordFile == "" {
-					return fmt.Errorf("OpenStack: %w: %s", errNoPasswordFile, name)
-				}
-			case config.OpenStackAuthenticationMethodAppCredentials:
-				if creds.AppCredentials.AppCredentialsID == "" {
-					return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsID, name)
-				}
-				if creds.AppCredentials.AppCredentialsSecretFile == "" {
-					return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsSecretFile, name)
-				}
-			default:
-				return fmt.Errorf("OpenStack: %w: %s uses %s", errUnknownAuthenticationMethod, name, creds.Authentication)
 			}
 		}
 	}
@@ -207,14 +207,7 @@ func configureOpenStackServiceClientset(
 		providerClient *gophercloud.ProviderClient,
 		eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error)) error {
 
-	// set of credentialNames to create clients from
-	credentialNames := make(map[string]struct{}, len(serviceConfig.UseCredentials))
-
-	for _, credName := range serviceConfig.UseCredentials {
-		credentialNames[credName] = struct{}{}
-	}
-
-	for credentials := range credentialNames {
+	for _, credentials := range serviceConfig.UseCredentials {
 		namedCreds := conf.OpenStack.Credentials[credentials]
 		providerClient, err := newOpenStackProviderClient(ctx, &namedCreds)
 
