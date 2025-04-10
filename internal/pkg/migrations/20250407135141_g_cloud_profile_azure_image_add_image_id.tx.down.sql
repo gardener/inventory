@@ -1,5 +1,7 @@
+TRUNCATE "g_cloud_profile_azure_image" CASCADE; 
+
 ALTER TABLE "g_cloud_profile_azure_image" DROP CONSTRAINT "g_cloud_profile_azure_image_key";
--- cascade drops the "az_unknown_image" view
+-- cascade deletes the "az_unknown_image" view
 ALTER TABLE "g_cloud_profile_azure_image" DROP COLUMN "image_id" CASCADE;
 ALTER TABLE "g_cloud_profile_azure_image" ADD COLUMN "gallery_image_id" varchar NOT NULL;
 ALTER TABLE "g_cloud_profile_azure_image" ADD COLUMN "urn" varchar NOT NULL;
