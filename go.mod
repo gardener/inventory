@@ -18,13 +18,13 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.7.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription v1.2.0
 	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/config v1.29.13
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.66
+	github.com/aws/aws-sdk-go-v2/config v1.29.14
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.202.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.2
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.18
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19
 	github.com/aws/smithy-go v1.22.3
 	github.com/gardener/gardener v1.110.2
 	github.com/gardener/gardener-extension-provider-aws v1.56.1
