@@ -201,3 +201,49 @@ func LinkLoadBalancersWithProjects(ctx context.Context, db *bun.DB) error {
 	return nil
 }
 
+// LinkLoadBalancersWithNetworks creates links between the OpenStack LoadBalancers and Networks
+func LinkLoadBalancersWithNetworks(ctx context.Context, db *bun.DB) error {
+	var loadbalancers []models.LoadBalancer
+	err := db.NewSelect().
+		Model(&loadbalancers).
+		Relation("Network").
+		Where("network.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.LoadBalancerToNetwork, 0, len(loadbalancers))
+	for _, lb := range loadbalancers {
+		links = append(links, models.LoadBalancerToNetwork{
+			LoadBalancerID: lb.ID,
+			NetworkID:      lb.Network.ID,
+		})
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (lb_id, network_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked openstack load balancers with networks", "count", count)
+
+	return nil
+}

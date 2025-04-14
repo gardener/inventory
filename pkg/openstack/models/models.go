@@ -71,6 +71,7 @@ type LoadBalancer struct {
 	TimeUpdated    time.Time `bun:"loadbalancer_updated_at,notnull"`
 	Subnet         *Subnet   `bun:"rel:has-one,join:vip_subnet_id=subnet_id,join:project_id=project_id"`
 	Project        *Project  `bun:"rel:has-one,join:project_id=project_id"`
+	Network        *Network  `bun:"rel:has-one,join:vip_network_id=network_id"`
 }
 
 // Subnet represents an OpenStack Subnet.
@@ -137,6 +138,15 @@ type LoadBalancerToProject struct {
 
 	LoadBalancerID uuid.UUID `bun:"lb_id,notnull"`
 	ProjectID      uuid.UUID `bun:"project_id,notnull"`
+}
+
+// LoadBalancerToNetwork represents a link table connecting LoadBalancers with Networks.
+type LoadBalancerToNetwork struct {
+	bun.BaseModel `bun:"table:l_openstack_loadbalancer_to_network"`
+	coremodels.Model
+
+	LoadBalancerID uuid.UUID `bun:"lb_id,notnull"`
+	NetworkID      uuid.UUID `bun:"network_id,notnull"`
 }
 
 // ServerToProject represents a link table connecting Servers with Projects.
