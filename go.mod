@@ -33,7 +33,7 @@ require (
 	github.com/gardener/gardener-extension-provider-openstack v1.46.0
 	github.com/gardener/machine-controller-manager v0.55.1
 	github.com/google/uuid v1.6.0
-	github.com/gophercloud/gophercloud/v2 v2.6.0
+	github.com/gophercloud/gophercloud/v2 v2.7.0
 	github.com/hibiken/asynq v0.25.1
 	github.com/hibiken/asynq/x v0.0.0-20240506061152-d04888e74845
 	github.com/hibiken/asynqmon v0.7.2
