@@ -49,6 +49,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 	linkFns := []dbutils.LinkFunction{
 		LinkSubnetsWithNetworks,
 		LinkLoadBalancersWithSubnets,
+		LinkServersWithProjects,
 	}
 
 	return dbutils.LinkObjects(ctx, db.DB, linkFns)

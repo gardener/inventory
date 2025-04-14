@@ -31,6 +31,7 @@ type Server struct {
 	ImageID          string    `bun:"image_id,notnull"`
 	TimeCreated      time.Time `bun:"server_created_at,notnull"`
 	TimeUpdated      time.Time `bun:"server_updated_at,notnull"`
+	Project          *Project  `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // Network represents an OpenStack Network.
@@ -126,6 +127,15 @@ type LoadBalancerToSubnet struct {
 
 	LoadBalancerID uuid.UUID `bun:"lb_id,notnull"`
 	SubnetID       uuid.UUID `bun:"subnet_id,notnull"`
+}
+
+// ServerToProject represents a link table connecting Servers with Projects.
+type ServerToProject struct {
+	bun.BaseModel `bun:"table:l_openstack_server_to_project"`
+	coremodels.Model
+
+	ServerID  uuid.UUID `bun:"server_id,notnull"`
+	ProjectID uuid.UUID `bun:"project_id,notnull"`
 }
 
 // Project represents an OpenStack Project.
