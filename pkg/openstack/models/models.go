@@ -94,6 +94,7 @@ type Subnet struct {
 	IPVersion    int      `bun:"ip_version,notnull"`
 	Description  string   `bun:"description,notnull"`
 	Network      *Network `bun:"rel:has-one,join:network_id=network_id,join:project_id=project_id"`
+	Project      *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // FloatingIP represents an OpenStack Floating IP.
@@ -122,6 +123,15 @@ type SubnetToNetwork struct {
 
 	SubnetID  uuid.UUID `bun:"subnet_id,notnull"`
 	NetworkID uuid.UUID `bun:"network_id,notnull"`
+}
+
+// SubnetToProject represents a link table connecting Subnets with Projects.
+type SubnetToProject struct {
+	bun.BaseModel `bun:"table:l_openstack_subnet_to_project"`
+	coremodels.Model
+
+	SubnetID  uuid.UUID `bun:"subnet_id,notnull"`
+	ProjectID uuid.UUID `bun:"project_id,notnull"`
 }
 
 // LoadBalancerToSubnet represents a link table connecting LoadBalancers with Subnets.
@@ -197,4 +207,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:server_to_project", &ServerToProject{})
 	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_to_project", &LoadBalancerToProject{})
 	registry.ModelRegistry.MustRegister("openstack:model:network_to_project", &NetworkToProject{})
+	registry.ModelRegistry.MustRegister("openstack:model:subnet_to_project", &SubnetToProject{})
 }

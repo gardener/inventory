@@ -294,3 +294,50 @@ func LinkNetworksWithProjects(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkSubnetsWithProjects creates links between the OpenStack Subnets and Projects
+func LinkSubnetsWithProjects(ctx context.Context, db *bun.DB) error {
+	var subnets []models.Subnet
+	err := db.NewSelect().
+		Model(&subnets).
+		Relation("Project").
+		Where("project.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.SubnetToProject, 0, len(subnets))
+	for _, subnet := range subnets {
+		links = append(links, models.SubnetToProject{
+			SubnetID:  subnet.ID,
+			ProjectID: subnet.Project.ID,
+		})
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (subnet_id, project_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked openstack subnets with projects", "count", count)
+
+	return nil
+}
