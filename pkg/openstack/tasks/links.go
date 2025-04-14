@@ -106,3 +106,50 @@ func LinkLoadBalancersWithSubnets(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkServersWithProjects creates links between the OpenStack Servers and Projects
+func LinkServersWithProjects(ctx context.Context, db *bun.DB) error {
+	var servers []models.Server
+	err := db.NewSelect().
+		Model(&servers).
+		Relation("Project").
+		Where("project.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.ServerToProject, 0, len(servers))
+	for _, server := range servers {
+		links = append(links, models.ServerToProject{
+			ServerID:  server.ID,
+			ProjectID: server.Project.ID,
+		})
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (server_id, project_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked openstack servers with projects", "count", count)
+
+	return nil
+}
