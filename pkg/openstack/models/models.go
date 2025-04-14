@@ -50,6 +50,7 @@ type Network struct {
 	TimeCreated time.Time `bun:"network_created_at,notnull"`
 	TimeUpdated time.Time `bun:"network_updated_at,notnull"`
 	Subnets     []*Subnet `bun:"rel:has-many,join:network_id=network_id"`
+	Project     *Project  `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // LoadBalancer represents an OpenStack LoadBalancer.
@@ -159,6 +160,15 @@ type ServerToProject struct {
 	ProjectID uuid.UUID `bun:"project_id,notnull"`
 }
 
+// NetworkToProject represents a link table connecting Networks with Projects.
+type NetworkToProject struct {
+	bun.BaseModel `bun:"table:l_openstack_network_to_project"`
+	coremodels.Model
+
+	NetworkID uuid.UUID `bun:"network_id,notnull"`
+	ProjectID uuid.UUID `bun:"project_id,notnull"`
+}
+
 // Project represents an OpenStack Project.
 type Project struct {
 	bun.BaseModel `bun:"table:openstack_project"`
@@ -186,4 +196,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_to_subnet", &LoadBalancerToSubnet{})
 	registry.ModelRegistry.MustRegister("openstack:model:server_to_project", &ServerToProject{})
 	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_to_project", &LoadBalancerToProject{})
+	registry.ModelRegistry.MustRegister("openstack:model:network_to_project", &NetworkToProject{})
 }
