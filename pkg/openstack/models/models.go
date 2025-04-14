@@ -49,6 +49,7 @@ type Network struct {
 	Description string    `bun:"description,notnull"`
 	TimeCreated time.Time `bun:"network_created_at,notnull"`
 	TimeUpdated time.Time `bun:"network_updated_at,notnull"`
+	Subnets     []*Subnet `bun:"rel:has-many,join:network_id=network_id"`
 }
 
 // LoadBalancer represents an OpenStack LoadBalancer.
