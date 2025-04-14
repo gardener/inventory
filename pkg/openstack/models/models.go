@@ -70,6 +70,7 @@ type LoadBalancer struct {
 	TimeCreated    time.Time `bun:"loadbalancer_created_at,notnull"`
 	TimeUpdated    time.Time `bun:"loadbalancer_updated_at,notnull"`
 	Subnet         *Subnet   `bun:"rel:has-one,join:vip_subnet_id=subnet_id,join:project_id=project_id"`
+	Project        *Project  `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // Subnet represents an OpenStack Subnet.
@@ -129,6 +130,15 @@ type LoadBalancerToSubnet struct {
 	SubnetID       uuid.UUID `bun:"subnet_id,notnull"`
 }
 
+// LoadBalancerToProject represents a link table connecting LoadBalancers with Projects.
+type LoadBalancerToProject struct {
+	bun.BaseModel `bun:"table:l_openstack_loadbalancer_to_project"`
+	coremodels.Model
+
+	LoadBalancerID uuid.UUID `bun:"lb_id,notnull"`
+	ProjectID      uuid.UUID `bun:"project_id,notnull"`
+}
+
 // ServerToProject represents a link table connecting Servers with Projects.
 type ServerToProject struct {
 	bun.BaseModel `bun:"table:l_openstack_server_to_project"`
@@ -161,4 +171,8 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("openstack:model:floating_ip", &FloatingIP{})
 	registry.ModelRegistry.MustRegister("openstack:model:project", &Project{})
+	registry.ModelRegistry.MustRegister("openstack:model:subnet_to_network", &SubnetToNetwork{})
+	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_to_subnet", &LoadBalancerToSubnet{})
+	registry.ModelRegistry.MustRegister("openstack:model:server_to_project", &ServerToProject{})
+	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_to_project", &LoadBalancerToProject{})
 }
