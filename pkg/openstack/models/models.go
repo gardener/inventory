@@ -49,7 +49,7 @@ type Network struct {
 	Description string    `bun:"description,notnull"`
 	TimeCreated time.Time `bun:"network_created_at,notnull"`
 	TimeUpdated time.Time `bun:"network_updated_at,notnull"`
-	Subnets     []*Subnet `bun:"rel:has-many,join:network_id=network_id"`
+	Subnets     []*Subnet `bun:"rel:has-many,join:network_id=network_id,join:project_id=project_id"`
 	Project     *Project  `bun:"rel:has-one,join:project_id=project_id"`
 }
 
@@ -73,7 +73,7 @@ type LoadBalancer struct {
 	TimeUpdated    time.Time `bun:"loadbalancer_updated_at,notnull"`
 	Subnet         *Subnet   `bun:"rel:has-one,join:vip_subnet_id=subnet_id,join:project_id=project_id"`
 	Project        *Project  `bun:"rel:has-one,join:project_id=project_id"`
-	Network        *Network  `bun:"rel:has-one,join:vip_network_id=network_id"`
+	Network        *Network  `bun:"rel:has-one,join:vip_network_id=network_id,join:project_id=project_id"`
 }
 
 // Subnet represents an OpenStack Subnet.
