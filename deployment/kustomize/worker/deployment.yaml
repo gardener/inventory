@@ -36,6 +36,8 @@ spec:
             - name: inventory-config
               mountPath: /app/config
               readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
         - name: cleanup-archived-tasks
           image: europe-docker.pkg.dev/gardener-project/releases/gardener/inventory:latest
           imagePullPolicy: IfNotPresent
@@ -54,6 +56,8 @@ spec:
             - name: inventory-config
               mountPath: /app/config
               readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
       containers:
       - name: worker
         securityContext:
