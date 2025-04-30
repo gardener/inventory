@@ -429,7 +429,7 @@ The services which will be started are summarized in the table below.
 | `postgres`   | PostgreSQL database                       |
 | `worker`     | Handles task messages                     |
 | `scheduler`  | Schedules tasks on regular basis          |
-| `redis`      | Redis service used as a message queue     |
+| `valkey`     | Valkey service used as a message queue    |
 | `dashboard`  | Asynq UI dashboard and Prometheus metrics |
 | `grafana`    | Grafana instance                          |
 | `prometheus` | Prometheus instance                       |
@@ -441,7 +441,7 @@ your local system.
 | Endpoint                      | Description                 |
 |:------------------------------|:----------------------------|
 | localhost:5432                | PostgreSQL server           |
-| localhost:6379                | Redis server                |
+| localhost:6379                | Valkey server               |
 | http://localhost:8080/        | Dashboard UI                |
 | http://localhost:8080/metrics | Prometheus Metrics endpoint |
 | http://localhost:3000/        | Grafana UI                  |
@@ -457,7 +457,7 @@ In order to start a dev environment with
 make minikube-up
 ```
 
-> NOTE: The kustomize manifests for Grafana, Prometheus, PostgreSQL, and Redis,
+> NOTE: The kustomize manifests for Grafana, Prometheus, PostgreSQL, and Valkey,
 > which can be found in the [deployment/kustomize](../deployment/kustomize)
 > directory, are meant to be used in local dev environments only. For production
 > environments, it is recommended that you use the respective Kubernetes
