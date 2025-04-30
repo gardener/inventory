@@ -5,6 +5,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -92,12 +93,31 @@ func NewWorkerCommand() *cli.Command {
 						Required: true,
 						Aliases:  []string{"name"},
 					},
+					&cli.BoolFlag{
+						Name:  "local",
+						Usage: "ping local workers",
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					// Note: currently asynq does not expose Ping() methods for connected
 					// workers, but we can still rely on the [asynq.Inspector.Servers] to
 					// view whether a given worker is up and running.
 					workerName := ctx.String("worker")
+					localWorker := ctx.Bool("local")
+
+					switch {
+					case workerName == "" && !localWorker:
+						return errors.New("must specify either --worker or --local flag")
+					case workerName != "" && localWorker:
+						return errors.New("cannot specify --worker and --local at the same time")
+					case localWorker:
+						hostname, err := os.Hostname()
+						if err != nil {
+							return err
+						}
+						workerName = hostname
+					}
+
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
 					defer inspector.Close()
