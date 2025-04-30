@@ -3,30 +3,30 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/component: redis
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/component: valkey
     app.kubernetes.io/part-of: inventory
     app.kubernetes.io/managed-by: kustomize
-  name: redis
+  name: valkey
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis
-  serviceName: redis
+      app: valkey
+  serviceName: valkey
   template:
     metadata:
       labels:
-        app: redis
+        app: valkey
     spec:
       containers:
-      - name: redis
+      - name: valkey
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
             - "ALL"
-        image: redis:7.2.5-bookworm
+        image: valkey:8.1-alpine
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 6379
@@ -43,7 +43,7 @@ spec:
             command:
               - sh
               - -c
-              - "redis-cli ping"
+              - "valkey-cli ping"
           initialDelaySeconds: 5
           periodSeconds: 60
           successThreshold: 1
@@ -54,7 +54,7 @@ spec:
             command:
               - sh
               - -c
-              - "redis-cli ping"
+              - "valkey-cli ping"
       securityContext:
         fsGroup: 999
         runAsGroup: 999
