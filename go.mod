@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	cloud.google.com/go/auth v0.16.0
-	cloud.google.com/go/compute v1.36.1
+	cloud.google.com/go/compute v1.37.0
 	cloud.google.com/go/container v1.42.4
 	cloud.google.com/go/resourcemanager v1.10.5
 	cloud.google.com/go/storage v1.51.0
