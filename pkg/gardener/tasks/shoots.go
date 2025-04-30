@@ -187,6 +187,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 				"skipping shoot",
 				"name", s.Name,
 				"project", projectName,
+				"reason", "missing technical id",
 			)
 			return nil
 		}
