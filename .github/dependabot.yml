@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: weekly
     commit-message:
-      prefix: ":seedling:"
+      prefix: "deps:"
     # Skip gardaner packages. These shall be updated manually.
     ignore:
       - dependency-name: github.com/gardener/*
@@ -18,4 +18,4 @@ updates:
     schedule:
       interval: weekly
     commit-message:
-      prefix: ":seedling:"
+      prefix: "deps:"
