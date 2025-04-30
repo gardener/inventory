@@ -17,7 +17,7 @@ logging:
   #   landscape: dev
 
 redis:
-  endpoint: redis:6379
+  endpoint: valkey:6379
 
 # Database settings
 database:
@@ -310,20 +310,20 @@ openstack:
         - sa1
     # Used for collecting OpenStack Networks and Subnets
     network:
-      use_credentials: 
+      use_credentials:
         - local
         - sa2
     block_storage:
-      use_credentials: 
+      use_credentials:
         - sa1
         - sa2
     # Used for collecting OpenStack LoadBalancers
     load_balancer:
-      use_credentials: 
+      use_credentials:
         - local
     # Used for collecting OpenStack Project metadata
     identity:
-      use_credentials: 
+      use_credentials:
         - local
 
 # Scheduler configuration
