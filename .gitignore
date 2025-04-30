@@ -25,6 +25,7 @@ go.work.sum
 
 # Local Docker volumes
 dev/local/postgres
+dev/local/valkey
 dev/local/redis
 dev/local/prometheus
 
