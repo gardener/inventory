@@ -92,7 +92,7 @@ spec:
             command:
               - sh
               - -c
-              - "/app/inventory worker ping --name ${HOSTNAME}"
+              - "/app/inventory worker ping --local"
           initialDelaySeconds: 5
           periodSeconds: 60
           successThreshold: 1
@@ -103,7 +103,7 @@ spec:
             command:
               - sh
               - -c
-              - "/app/inventory worker ping --name ${HOSTNAME}"
+              - "/app/inventory worker ping --local"
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       volumes:
