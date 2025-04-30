@@ -7,7 +7,7 @@ x-postgres:
   port: &postgres-port 5432
 
 x-redis:
-  endpoint: &redis-endpoint 'redis:6379'
+  endpoint: &redis-endpoint 'valkey:6379'
 
 services:
   postgres:
@@ -26,14 +26,14 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
+  valkey:
     ports:
       - 6379:6379
-    image: redis:7.2.5-bookworm
+    image: valkey/valkey:8.1-alpine
     volumes:
-      - ./dev/local/redis:/data
+      - ./dev/local/valkey:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -60,7 +60,7 @@ services:
       REDIS_ENDPOINT: *redis-endpoint
       DATABASE_URI: *postgres-uri
     depends_on:
-      redis:
+      valkey:
         condition: service_healthy
       postgres:
         condition: service_healthy
@@ -80,7 +80,7 @@ services:
       INVENTORY_CONFIG: /home/nonroot/config.yaml
       REDIS_ENDPOINT: *redis-endpoint
     depends_on:
-      redis:
+      valkey:
         condition: service_healthy
     volumes:
       - ./examples/config.yaml:/home/nonroot/config.yaml
@@ -97,7 +97,7 @@ services:
       REDIS_ENDPOINT: *redis-endpoint
       PROMETHEUS_ENDPOINT: http://prometheus:9090/
     depends_on:
-      redis:
+      valkey:
         condition: service_healthy
     volumes:
       - ./examples/config.yaml:/home/nonroot/config.yaml
