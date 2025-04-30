@@ -1,7 +1,7 @@
 ---
 run:
   concurrency: 4
-  go: "1.22"
+  go: "1.24"
   timeout: 10m
 
 
