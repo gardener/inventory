@@ -14,4 +14,4 @@ _REPO_ROOT="${_SCRIPT_DIR}/.."
 git config --global user.email 'gardener@sap.com'
 git config --global user.name 'Gardener CI/CD'
 
-make -C "${_REPO_ROOT}" goimports goimports-reviser lint test
+make -C "${_REPO_ROOT}" goimports-reviser lint test
