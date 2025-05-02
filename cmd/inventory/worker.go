@@ -90,7 +90,7 @@ func NewWorkerCommand() *cli.Command {
 					&cli.StringFlag{
 						Name:     "worker",
 						Usage:    "worker name to ping",
-						Required: true,
+						Required: false,
 						Aliases:  []string{"name"},
 					},
 					&cli.BoolFlag{
