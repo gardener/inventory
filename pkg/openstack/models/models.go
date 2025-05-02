@@ -229,6 +229,32 @@ type Project struct {
 	IsDomain    bool   `bun:"is_domain,notnull"`
 }
 
+// Router represents an OpenStack Router.
+type Router struct {
+	bun.BaseModel `bun:"table:openstack_router"`
+	coremodels.Model
+
+	RouterID          string `bun:"router_id,notnull,unique:openstack_router_key"`
+	Name              string `bun:"name,notnull"`
+	ProjectID         string `bun:"project_id,notnull,unique:openstack_router_key"`
+	Domain            string `bun:"domain,notnull"`
+	Region            string `bun:"region,notnull"`
+	Status            string `bun:"status,notnull"`
+	Description       string `bun:"description,notnull"`
+	ExternalNetworkID string `bun:"external_network_id,notnull,unique:openstack_router_key"`
+}
+
+// RouterExternalIP represents an external IP for a OpenStack router.
+type RouterExternalIP struct {
+	bun.BaseModel `bun:"table:openstack_router_external_ip"`
+	coremodels.Model
+
+	RouterID         string `bun:"router_id,notnull,unique:openstack_router_key"`
+	ProjectID        string `bun:"project_id,notnull,unique:openstack_router_key"`
+	ExternalIP       net.IP `bun:"external_ip,notnull,unique:openstack_router_key"`
+	ExternalSubnetID string `bun:"external_subnet_id,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
@@ -246,4 +272,6 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:link_subnet_to_project", &SubnetToProject{})
 	registry.ModelRegistry.MustRegister("openstack:model:port", &Port{})
 	registry.ModelRegistry.MustRegister("openstack:model:port_ip", &PortIP{})
+	registry.ModelRegistry.MustRegister("openstack:model:router", &Router{})
+	registry.ModelRegistry.MustRegister("openstack:model:router_external_ip", &RouterExternalIP{})
 }
