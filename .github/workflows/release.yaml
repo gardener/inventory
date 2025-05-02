@@ -1,0 +1,24 @@
+name: Release
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yaml
+
+  publish-oci:
+    uses: ./.github/workflows/oci-images.yaml
+    needs:
+      - test
+    with:
+      mode: release
+
+  release-and-bump:
+    uses: gardener/cc-utils/.github/workflows/release.yaml@master
+    needs:
+      - publish-oci
+    secrets:
+      github-app-secret-key: ${{ secrets.GARDENER_GITHUB_ACTIONS_PRIVATE_KEY }}
+    with:
+      release-commit-target: branch
+      next-version: bump-patch

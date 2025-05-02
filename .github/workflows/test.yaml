@@ -1,0 +1,30 @@
+name: Test
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Run linter
+        run: |
+          set -eu
+          make goimports-reviser lint
+      - name: Run tests
+        run: |
+          set -eu
+          make test
+      - name: Build
+        run: |
+          set -eu
+          make build
+  publish-oci:
+    if: github.event_name == 'push' && github.repository == 'gardener/inventory'
+    uses: ./.github/workflows/oci-images.yaml
+    needs:
+      - test
+    with:
+      mode: snapshot
