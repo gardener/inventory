@@ -1,0 +1,42 @@
+name: Build and publish OCI images
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        required: true
+        type: string
+        default: snapshot
+        description: |
+          The mode specifies whether to build and publish a `snapshot' or `release' image.
+
+jobs:
+  prepare:
+    uses: gardener/cc-utils/.github/workflows/prepare.yaml@master
+    with:
+      mode: ${{ inputs.mode }}
+
+  oci-images:
+    needs:
+      - prepare
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: gardener/cc-utils/.github/workflows/oci-ocm.yaml@master
+    with:
+      name: inventory
+      version: ${{ needs.prepare.outputs.version }}
+      oci-registry: ${{ needs.prepare.outputs.oci-registry }}
+      oci-repository: gardener/inventory
+      dockerfile: Dockerfile
+      oci-platforms: linux/amd64,linux/arm64
+      ocm-labels: |
+        name: gardener.cloud/cve-categorisation
+        value:
+          network_exposure: protected
+          authentication_enforced: false
+          user_interaction: gardener-operator
+          confidentiality_requirement: high
+          integrity_requirement: high
+          availability_requirement: high
