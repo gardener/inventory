@@ -14,7 +14,7 @@ buildMetadata:
 
 resources:
   - namespace.yaml
-  - ../redis
+  - ../valkey
   - ../postgres
   - ../grafana/base
   - ../grafana/config
