@@ -13,17 +13,7 @@ ifneq ($(strip $(shell git status --porcelain 2>/dev/null)),)
 endif
 
 IMAGE_TAG                    ?= $(EFFECTIVE_VERSION)
-
-GOIMPORTS                    := $(TOOLS_BIN)/goimports
-GOLANGCI_LINT                := $(TOOLS_BIN)/golangci-lint
-GOIMPORTS_REVISER            := $(TOOLS_BIN)/goimports-reviser
-KUSTOMIZE                    := $(TOOLS_BIN)/kustomize
 MINIKUBE                     := $(TOOLS_BIN)/minikube
-
-GOIMPORTS_VERSION            ?= $(call version_gomod,golang.org/x/tools)
-GOIMPORTS_REVISER_VERSION    ?= v3.6.5
-GOLANGCI_LINT_VERSION        ?= v1.64.8
-KUSTOMIZE_VERSION            ?= v5.4.2
 MINIKUBE_VERSION 	     ?= v1.33.1
 
 # Minikube settings
@@ -37,7 +27,6 @@ GOARCH = $(shell go env GOARCH)
 export PATH := $(abspath $(TOOLS_BIN)):$(PATH)
 
 # Fetch the version of a go module from go.mod
-version_gomod = $(shell go list -mod=mod -f '{{ .Version }}' -m $(1))
 tool_version_file = $(TOOLS_BIN)/.version_$(subst $(TOOLS_BIN)/,,$(1))_$(2)
 
 # download-tool will download a binary package from the given URL.
@@ -61,25 +50,11 @@ $(TOOLS_BIN)/.version_%: | $(TOOLS_BIN)
 	@version_file=$@; rm -f $${version_file%_*}*
 	@touch $@
 
-
 #########################################
 # Tools                                 #
 #########################################
-$(GOLANGCI_LINT): $(call tool_version_file,$(GOLANGCI_LINT),$(GOLANGCI_LINT_VERSION))
-	@GOBIN=$(abspath $(TOOLS_BIN)) CGO_ENABLED=1 go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
-
-$(GOIMPORTS): $(call tool_version_file,$(GOIMPORTS),$(GOIMPORTS_VERSION))
-	@GOBIN=$(abspath $(TOOLS_BIN)) go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION)
-
-$(GOIMPORTS_REVISER): $(call tool_version_file,$(GOIMPORTS_REVISER),$(GOIMPORTS_REVISER_VERSION))
-	@GOBIN=$(abspath $(TOOLS_BIN)) go install github.com/incu6us/goimports-reviser/v3@$(GOIMPORTS_REVISER_VERSION)
-
-$(KUSTOMIZE): $(call tool_version_file,$(KUSTOMIZE),$(KUSTOMIZE_VERSION))
-	@GOBIN=$(abspath $(TOOLS_BIN)) go install sigs.k8s.io/kustomize/kustomize/v5@$(KUSTOMIZE_VERSION)
-
 $(MINIKUBE): $(call tool_version_file,$(MINIKUBE),$(MINIKUBE_VERSION))
 	$(call download-tool,minikube,https://github.com/kubernetes/minikube/releases/download/$(MINIKUBE_VERSION)/minikube-$(GOOS)-$(GOARCH))
-
 
 .PHONY: clean-tools-bin
 clean-tools-bin:
@@ -89,24 +64,19 @@ clean-tools-bin:
 #########################################
 # Makefile targets                      #
 #########################################
-
-.PHONY: goimports
-goimports: $(GOIMPORTS)
-	@for dir in $(SRC_DIRS); do \
-		$(GOIMPORTS) -w $$dir/; \
-	done
-
 .PHONY: goimports-reviser
-goimports-reviser: $(GOIMPORTS_REVISER)
-	@set -e && \
-	for dir in $(SRC_DIRS); do \
-		GOIMPORTS_REVISER_OPTIONS="-imports-order std,project,general,company" \
-		$(GOIMPORTS_REVISER) -set-exit-status -recursive $$dir/; \
-	done
+goimports-reviser:
+	go tool -modfile tools/go.mod \
+		goimports-reviser \
+		-set-exit-status \
+		-rm-unused \
+		-excludes './deployment,./extra' \
+		./...
 
 .PHONY: lint
-lint: $(GOLANGCI_LINT)
-	@$(GOLANGCI_LINT) run --config=$(REPO_ROOT)/.golangci.yaml ./...
+lint:
+	go tool -modfile tools/go.mod \
+		golangci-lint run --config=$(REPO_ROOT)/.golangci.yaml ./...
 
 $(BINARY): $(SRC_DIRS) | $(LOCAL_BIN)
 	go build \
@@ -138,8 +108,8 @@ docker-compose-up:
 	docker compose up --build --remove-orphans
 
 .PHONY: kustomize-build
-kustomize-build: $(KUSTOMIZE)
-	@$(KUSTOMIZE) build deployment/kustomize/$(KUSTOMIZE_OVERLAY)
+kustomize-build:
+	go tool -modfile tools/go.mod kustomize build deployment/kustomize/$(KUSTOMIZE_OVERLAY)
 
 .PHONY: minikube-up
 minikube-up: $(MINIKUBE)
