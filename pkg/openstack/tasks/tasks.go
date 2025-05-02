@@ -38,6 +38,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 		NewCollectSubnetsTask,
 		NewCollectFloatingIPsTask,
 		NewCollectProjectsTask,
+		NewCollectRoutersTask,
 		NewCollectPortsTask,
 	}
 
@@ -69,6 +70,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectFloatingIPs, asynq.HandlerFunc(HandleCollectFloatingIPsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectProjects, asynq.HandlerFunc(HandleCollectProjectsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectRouters, asynq.HandlerFunc(HandleCollectRoutersTask))
 	registry.TaskRegistry.MustRegister(TaskCollectPorts, asynq.HandlerFunc(HandleCollectPortsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
