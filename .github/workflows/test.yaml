@@ -17,10 +17,18 @@ jobs:
         run: |
           set -eu
           make test
-      - name: Build
+      - name: Build binary
         run: |
           set -eu
           make build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build OCI image
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          tags: gardener/inventory:latest
+
   publish-oci:
     if: github.event_name == 'push' && github.repository == 'gardener/inventory'
     uses: ./.github/workflows/oci-images.yaml
