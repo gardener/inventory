@@ -17,5 +17,5 @@ CREATE TABLE "openstack_port" (
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "openstack_port_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "openstack_port_key" UNIQUE ("port_id", "project_id",  "network_id", "region")
+    CONSTRAINT "openstack_port_key" UNIQUE ("port_id", "project_id", "network_id", "region")
 );
