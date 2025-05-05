@@ -135,7 +135,7 @@ type Port struct {
 	TimeCreated time.Time `bun:"port_created_at,notnull"`
 	TimeUpdated time.Time `bun:"port_updated_at,notnull"`
 
-	Network *Network `bun:"rel:has-one,join:network_id=network_id"`
+	Network *Network `bun:"rel:has-one,join:network_id=network_id,join:project_id=project_id"`
 	Project *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
@@ -147,7 +147,7 @@ type PortIP struct {
 	PortID    string  `bun:"port_id,notnull,unique:openstack_port_ip_key"`
 	IPAddress net.IP  `bun:"ip_address,notnull,unique:openstack_port_ip_key"`
 	SubnetID  string  `bun:"subnet_id,notnull,unique:openstack_port_ip_key"`
-	Port      *Port   `bun:"rel:has-one,join:port_id=port_id"`
+	Port      *Port   `bun:"rel:has-one,join:port_id=port_id,join:project_id=project_id"`
 	Subnet    *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id"`
 }
 
@@ -241,7 +241,7 @@ type Router struct {
 	Region            string `bun:"region,notnull"`
 	Status            string `bun:"status,notnull"`
 	Description       string `bun:"description,notnull"`
-	ExternalNetworkID string `bun:"external_network_id,notnull,unique:openstack_router_key"`
+	ExternalNetworkID string `bun:"external_network_id,notnull"`
 }
 
 // RouterExternalIP represents an external IP for a OpenStack router.
