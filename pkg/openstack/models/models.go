@@ -147,8 +147,9 @@ type PortIP struct {
 	PortID    string  `bun:"port_id,notnull,unique:openstack_port_ip_key"`
 	IPAddress net.IP  `bun:"ip_address,notnull,unique:openstack_port_ip_key"`
 	SubnetID  string  `bun:"subnet_id,notnull,unique:openstack_port_ip_key"`
+
 	Port      *Port   `bun:"rel:has-one,join:port_id=port_id,join:project_id=project_id"`
-	Subnet    *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id"`
+	Subnet    *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id,join:project_id=project_id"`
 }
 
 // SubnetToNetwork represents a link table connecting Subnets with Networks.
@@ -249,10 +250,10 @@ type RouterExternalIP struct {
 	bun.BaseModel `bun:"table:openstack_router_external_ip"`
 	coremodels.Model
 
-	RouterID         string `bun:"router_id,notnull,unique:openstack_router_key"`
-	ProjectID        string `bun:"project_id,notnull,unique:openstack_router_key"`
-	ExternalIP       net.IP `bun:"external_ip,notnull,unique:openstack_router_key"`
-	ExternalSubnetID string `bun:"external_subnet_id,notnull"`
+	RouterID         string `bun:"router_id,notnull,unique:openstack_router_external_ip_key"`
+	ProjectID        string `bun:"project_id,notnull,unique:openstack_router_external_ip_key"`
+	ExternalIP       net.IP `bun:"external_ip,notnull,unique:openstack_router_external_ip_key"`
+	ExternalSubnetID string `bun:"external_subnet_id,notnull,unique:openstack_router_external_ip_key"`
 }
 
 func init() {

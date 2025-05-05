@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS "openstack_router_external_ip" (
     "updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY ("id"),
-    CONSTRAINT "openstack_router_external_ip_key" UNIQUE ("external_ip", "external_subnet_id", "router_id")
+    CONSTRAINT "openstack_router_external_ip_key" UNIQUE ("external_ip", "external_subnet_id", "router_id", "project_id")
 );
