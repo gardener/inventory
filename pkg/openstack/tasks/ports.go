@@ -247,7 +247,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 
 	out, err = db.DB.NewInsert().
 		Model(&portIPs).
-		On("CONFLICT (port_id, ip_address, subnet_id) DO UPDATE").
+		On("CONFLICT (port_id, ip_address, subnet_id, project_id) DO UPDATE").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
