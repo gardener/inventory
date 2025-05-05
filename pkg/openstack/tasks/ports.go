@@ -198,11 +198,6 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 	}
 
 	if len(items) == 0 {
-		logger.Info(
-			"no OpenStack ports found",
-			"project", payload.Scope.Project,
-			"region", payload.Scope.Region,
-		)
 		return nil
 	}
 
@@ -247,11 +242,6 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 	)
 
 	if len(portIPs) == 0 {
-		logger.Info(
-			"no OpenStack port IPs found",
-			"project", payload.Scope.Project,
-			"region", payload.Scope.Region,
-		)
 		return nil
 	}
 
