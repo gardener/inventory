@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS "openstack_server" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     PRIMARY KEY ("id"),
     CONSTRAINT "openstack_server_key" UNIQUE ("server_id", "project_id")
 );

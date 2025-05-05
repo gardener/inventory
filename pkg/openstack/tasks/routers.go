@@ -237,7 +237,7 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 
 	out, err = db.DB.NewInsert().
 		Model(&externalIPs).
-		On("CONFLICT (router_id, external_ip, external_subnet_id) DO UPDATE").
+		On("CONFLICT (router_id, external_ip, external_subnet_id, project_id) DO UPDATE").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)

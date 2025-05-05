@@ -114,42 +114,7 @@ type FloatingIP struct {
 	Description       string    `bun:"description,notnull"`
 	TimeCreated       time.Time `bun:"ip_created_at,notnull"`
 	TimeUpdated       time.Time `bun:"ip_updated_at,notnull"`
-}
-
-// Port represents an OpenStack Port.
-type Port struct {
-	bun.BaseModel `bun:"table:openstack_port"`
-	coremodels.Model
-
-	PortID      string    `bun:"port_id,notnull,unique:openstack_port_key"`
-	Name        string    `bun:"name,notnull"`
-	ProjectID   string    `bun:"project_id,notnull,unique:openstack_port_key"`
-	NetworkID   string    `bun:"network_id,notnull,unique:openstack_port_key"`
-	DeviceID    string    `bun:"device_id,notnull"`
-	DeviceOwner string    `bun:"device_owner,notnull"`
-	Domain      string    `bun:"domain,notnull"`
-	Region      string    `bun:"region,notnull,unique:openstack_port_key"`
-	MacAddress  string    `bun:"mac_address,notnull"`
-	Status      string    `bun:"status,notnull"`
-	Description string    `bun:"description,notnull"`
-	TimeCreated time.Time `bun:"port_created_at,notnull"`
-	TimeUpdated time.Time `bun:"port_updated_at,notnull"`
-
-	Network *Network `bun:"rel:has-one,join:network_id=network_id,join:project_id=project_id"`
-	Project *Project `bun:"rel:has-one,join:project_id=project_id"`
-}
-
-// PortIP represents an OpenStack Port IP address.
-type PortIP struct {
-	bun.BaseModel `bun:"table:openstack_port_ip"`
-	coremodels.Model
-
-	PortID    string  `bun:"port_id,notnull,unique:openstack_port_ip_key"`
-	IPAddress net.IP  `bun:"ip_address,notnull,unique:openstack_port_ip_key"`
-	SubnetID  string  `bun:"subnet_id,notnull,unique:openstack_port_ip_key"`
-
-	Port      *Port   `bun:"rel:has-one,join:port_id=port_id,join:project_id=project_id"`
-	Subnet    *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id,join:project_id=project_id"`
+	Project           *Project  `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // SubnetToNetwork represents a link table connecting Subnets with Networks.
@@ -230,19 +195,55 @@ type Project struct {
 	IsDomain    bool   `bun:"is_domain,notnull"`
 }
 
+// Port represents an OpenStack Port.
+type Port struct {
+	bun.BaseModel `bun:"table:openstack_port"`
+	coremodels.Model
+
+	PortID      string    `bun:"port_id,notnull,unique:openstack_port_key"`
+	Name        string    `bun:"name,notnull"`
+	ProjectID   string    `bun:"project_id,notnull,unique:openstack_port_key"`
+	NetworkID   string    `bun:"network_id,notnull,unique:openstack_port_key"`
+	DeviceID    string    `bun:"device_id,notnull"`
+	DeviceOwner string    `bun:"device_owner,notnull"`
+	Domain      string    `bun:"domain,notnull"`
+	Region      string    `bun:"region,notnull,unique:openstack_port_key"`
+	MacAddress  string    `bun:"mac_address,notnull"`
+	Status      string    `bun:"status,notnull"`
+	Description string    `bun:"description,notnull"`
+	TimeCreated time.Time `bun:"port_created_at,notnull"`
+	TimeUpdated time.Time `bun:"port_updated_at,notnull"`
+	Network     *Network  `bun:"rel:has-one,join:network_id=network_id,join:project_id=project_id"`
+	Project     *Project  `bun:"rel:has-one,join:project_id=project_id"`
+}
+
+// PortIP represents an OpenStack Port IP address.
+type PortIP struct {
+	bun.BaseModel `bun:"table:openstack_port_ip"`
+	coremodels.Model
+
+	PortID    string  `bun:"port_id,notnull,unique:openstack_port_ip_key"`
+	ProjectID string  `bun:"project_id,notnull,unique:openstack_port_ip_key"`
+	IPAddress net.IP  `bun:"ip_address,nullzero,type:inet,unique:openstack_port_ip_key"`
+	SubnetID  string  `bun:"subnet_id,notnull,unique:openstack_port_ip_key"`
+	Port      *Port   `bun:"rel:has-one,join:port_id=port_id,join:project_id=project_id"`
+	Subnet    *Subnet `bun:"rel:has-one,join:subnet_id=subnet_id,join:project_id=project_id"`
+}
+
 // Router represents an OpenStack Router.
 type Router struct {
 	bun.BaseModel `bun:"table:openstack_router"`
 	coremodels.Model
 
-	RouterID          string `bun:"router_id,notnull,unique:openstack_router_key"`
-	Name              string `bun:"name,notnull"`
-	ProjectID         string `bun:"project_id,notnull,unique:openstack_router_key"`
-	Domain            string `bun:"domain,notnull"`
-	Region            string `bun:"region,notnull"`
-	Status            string `bun:"status,notnull"`
-	Description       string `bun:"description,notnull"`
-	ExternalNetworkID string `bun:"external_network_id,notnull"`
+	RouterID          string   `bun:"router_id,notnull,unique:openstack_router_key"`
+	Name              string   `bun:"name,notnull"`
+	ProjectID         string   `bun:"project_id,notnull,unique:openstack_router_key"`
+	Domain            string   `bun:"domain,notnull"`
+	Region            string   `bun:"region,notnull"`
+	Status            string   `bun:"status,notnull"`
+	Description       string   `bun:"description,notnull"`
+	ExternalNetworkID string   `bun:"external_network_id,notnull"`
+	Project           *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 // RouterExternalIP represents an external IP for a OpenStack router.
@@ -250,10 +251,11 @@ type RouterExternalIP struct {
 	bun.BaseModel `bun:"table:openstack_router_external_ip"`
 	coremodels.Model
 
-	RouterID         string `bun:"router_id,notnull,unique:openstack_router_external_ip_key"`
-	ProjectID        string `bun:"project_id,notnull,unique:openstack_router_external_ip_key"`
-	ExternalIP       net.IP `bun:"external_ip,notnull,unique:openstack_router_external_ip_key"`
-	ExternalSubnetID string `bun:"external_subnet_id,notnull,unique:openstack_router_external_ip_key"`
+	RouterID         string   `bun:"router_id,notnull,unique:openstack_router_external_ip_key"`
+	ProjectID        string   `bun:"project_id,notnull,unique:openstack_router_external_ip_key"`
+	ExternalIP       net.IP   `bun:"external_ip,nullzero,type:inet,unique:openstack_router_external_ip_key"`
+	ExternalSubnetID string   `bun:"external_subnet_id,notnull,unique:openstack_router_external_ip_key"`
+	Project          *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
 func init() {
