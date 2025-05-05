@@ -127,3 +127,7 @@ minikube-load-image: $(MINIKUBE)
 	docker image save -o image.tar $(IMAGE):latest
 	$(MINIKUBE) -p $(MINIKUBE_PROFILE) image load --overwrite=true image.tar
 	rm -f image.tar
+
+.PHONY: update-tools
+update-tools:
+	go get -u -modfile tools/go.mod tool
