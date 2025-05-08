@@ -146,8 +146,8 @@ type OpenStackServices struct {
 	// Network provides the Network service configuration.
 	Network OpenStackServiceCredentials `yaml:"network"`
 
-	// BlockStorage provides the Block Storage service configuration.
-	BlockStorage OpenStackServiceCredentials `yaml:"block_storage"`
+	// ObjectStorage provides the object Storage service configuration.
+	ObjectStorage OpenStackServiceCredentials `yaml:"object_storage"`
 
 	// LoadBalancer provides the LoadBalancer service configuration.
 	LoadBalancer OpenStackServiceCredentials `yaml:"load_balancer"`
