@@ -258,6 +258,19 @@ type RouterExternalIP struct {
 	Project          *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
+// Object represents an OpenStack Object.
+type Object struct {
+	bun.BaseModel `bun:"table:openstack_object"`
+	coremodels.Model
+
+	Name          string    `bun:"name,notnull,unique:openstack_object_key"`
+	ProjectID     string    `bun:"project_id,notnull,unique:openstack_object_key"`
+	ContainerName string    `bun:"container_name,notnull,unique:openstack_object_key"`
+	ContentType   string    `bun:"content_type,notnull"`
+	LastModified  time.Time `bun:"last_modified,notnull"`
+	IsLatest      bool      `bun:"is_latest,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
@@ -277,4 +290,5 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:port_ip", &PortIP{})
 	registry.ModelRegistry.MustRegister("openstack:model:router", &Router{})
 	registry.ModelRegistry.MustRegister("openstack:model:router_external_ip", &RouterExternalIP{})
+	registry.ModelRegistry.MustRegister("openstack:model:object", &Object{})
 }
