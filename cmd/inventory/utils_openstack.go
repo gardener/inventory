@@ -34,11 +34,11 @@ var errNoProject = errors.New("no project specified")
 func validateOpenStackConfig(conf *config.Config) error {
 	// Make sure that the services have named credentials configured.
 	services := map[string]config.OpenStackServiceCredentials{
-		"compute":       conf.OpenStack.Services.Compute,
-		"network":       conf.OpenStack.Services.Network,
-		"block_storage": conf.OpenStack.Services.BlockStorage,
-		"load_balancer": conf.OpenStack.Services.LoadBalancer,
-		"identity":      conf.OpenStack.Services.Identity,
+		"compute":        conf.OpenStack.Services.Compute,
+		"network":        conf.OpenStack.Services.Network,
+		"object_storage": conf.OpenStack.Services.ObjectStorage,
+		"load_balancer":  conf.OpenStack.Services.LoadBalancer,
+		"identity":       conf.OpenStack.Services.Identity,
 	}
 
 	for name, creds := range conf.OpenStack.Credentials {
@@ -124,11 +124,11 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 	}
 
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
-		"compute":       configureOpenStackComputeClientsets,
-		"network":       configureOpenStackNetworkClientsets,
-		"block_storage": configureOpenStackBlockStorageClientsets,
-		"load_balancer": configureOpenStackLoadBalancerClientsets,
-		"identity":      configureOpenStackIdentityClientsets,
+		"compute":        configureOpenStackComputeClientsets,
+		"network":        configureOpenStackNetworkClientsets,
+		"object_storage": configureOpenStackObjectStorageClientsets,
+		"load_balancer":  configureOpenStackLoadBalancerClientsets,
+		"identity":       configureOpenStackIdentityClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
@@ -265,10 +265,10 @@ func configureOpenStackNetworkClientsets(ctx context.Context, conf *config.Confi
 	return configureOpenStackServiceClientset(ctx, "network", openstackclients.NetworkClientset, conf.OpenStack.Services.Network, conf, openstack.NewNetworkV2)
 }
 
-// configureOpenStackBlockStorageClientsets configures the OpenStack Block Storage API clientsets.
-func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.Config) error {
-	return configureOpenStackServiceClientset(ctx, "block_storage", openstackclients.BlockStorageClientset,
-		conf.OpenStack.Services.BlockStorage, conf, openstack.NewBlockStorageV3)
+// configureOpenStackObjectStorageClientsets configures the OpenStack Object Storage API clientsets.
+func configureOpenStackObjectStorageClientsets(ctx context.Context, conf *config.Config) error {
+	return configureOpenStackServiceClientset(ctx, "object_storage", openstackclients.ObjectStorageClientset,
+		conf.OpenStack.Services.ObjectStorage, conf, openstack.NewObjectStorageV1)
 }
 
 // configureOpenStackLoadBalancerClientsets configures the OpenStack LoadBalancer API clientsets.
