@@ -479,6 +479,15 @@ scheduler:
     - name: "openstack:task:collect-projects"
       spec: "@every 1h"
       desc: "Collect OpenStack Projects"
+    - name: "openstack:task:collect-floating_ips"
+      spec: "@every 1h"
+      desc: "Collect OpenStack Floating IPs"
+    - name: "openstack:task:collect-ports"
+      spec: "@every 1h"
+      desc: "Collect OpenStack Ports"
+    - name: "openstack:task:collect-routers"
+      spec: "@every 1h"
+      desc: "Collect OpenStack Routers"
     - name: "openstack:task:collect-objects"
       spec: "@every 1h"
       desc: "Collect OpenStack Objects"
@@ -588,6 +597,16 @@ scheduler:
           - name: "openstack:model:subnet"
             duration: 24h
           - name: "openstack:model:project"
+            duration: 24h
+          - name: "openstack:model:floating_ip"
+            duration: 24h
+          - name: "openstack:model:port"
+            duration: 24h
+          - name: "openstack:model:port_ip"
+            duration: 24h
+          - name: "openstack:model:router"
+            duration: 24h
+          - name: "openstack:model:router_external_ip"
             duration: 24h
           - name: "openstack:model:object"
             duration: 24h
