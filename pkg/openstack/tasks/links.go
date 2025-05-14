@@ -341,3 +341,101 @@ func LinkSubnetsWithProjects(ctx context.Context, db *bun.DB) error {
 
 	return nil
 }
+
+// LinkServersWithPorts creates links between the OpenStack Servers and Ports
+func LinkServersWithPorts(ctx context.Context, db *bun.DB) error {
+	var servers []models.Server
+	err := db.NewSelect().
+		Model(&servers).
+		Relation("Port").
+		Where("port.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.ServerToPort, 0, len(servers))
+
+	for _, server := range servers {
+		links = append(links, models.ServerToPort{
+			ServerID: server.ID,
+			PortID:   server.Port.ID,
+		})
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (server_id, port_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked openstack servers with ports", "count", count)
+
+	return nil
+}
+
+// LinkServersWithNetworks creates links between the OpenStack Servers and Networks
+func LinkServersWithNetworks(ctx context.Context, db *bun.DB) error {
+	var ports []models.Port
+	err := db.NewSelect().
+		Model(&ports).
+		Relation("Server").
+		Where("server.id IS NOT NULL").
+		Relation("Network").
+		Where("network.id IS NOT NULL").
+		Scan(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	links := make([]models.ServerToNetwork, 0, len(ports))
+
+	for _, port := range ports {
+		links = append(links, models.ServerToNetwork{
+			ServerID:  port.Server.ID,
+			NetworkID: port.Network.ID,
+		})
+	}
+
+	if len(links) == 0 {
+		return nil
+	}
+
+	out, err := db.NewInsert().
+		Model(&links).
+		On("CONFLICT (server_id, network_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger := asynqutils.GetLogger(ctx)
+	logger.Info("linked openstack servers with networks", "count", count)
+
+	return nil
+}
