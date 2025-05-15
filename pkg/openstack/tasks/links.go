@@ -358,10 +358,12 @@ func LinkServersWithPorts(ctx context.Context, db *bun.DB) error {
 	links := make([]models.ServerToPort, 0, len(servers))
 
 	for _, server := range servers {
-		links = append(links, models.ServerToPort{
-			ServerID: server.ID,
-			PortID:   server.Port.ID,
-		})
+		for _, port := range server.Ports {
+			links = append(links, models.ServerToPort{
+				ServerID: server.ID,
+				PortID:   port.ID,
+			})
+		}
 	}
 
 	if len(links) == 0 {
