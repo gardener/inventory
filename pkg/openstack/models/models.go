@@ -32,7 +32,7 @@ type Server struct {
 	TimeCreated      time.Time `bun:"server_created_at,notnull"`
 	TimeUpdated      time.Time `bun:"server_updated_at,notnull"`
 	Project          *Project  `bun:"rel:has-one,join:project_id=project_id"`
-	Port             *Port     `bun:"rel:has-one,join:server_id=device_id"`
+	Ports            []*Port   `bun:"rel:has-many,join:server_id=device_id"`
 }
 
 // Network represents an OpenStack Network.
