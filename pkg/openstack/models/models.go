@@ -32,7 +32,6 @@ type Server struct {
 	TimeCreated      time.Time `bun:"server_created_at,notnull"`
 	TimeUpdated      time.Time `bun:"server_updated_at,notnull"`
 	Project          *Project  `bun:"rel:has-one,join:project_id=project_id"`
-	Ports            []*Port   `bun:"rel:has-many,join:server_id=device_id,join:project_id=project_id"`
 }
 
 // Network represents an OpenStack Network.
@@ -172,13 +171,13 @@ type ServerToProject struct {
 	ProjectID uuid.UUID `bun:"project_id,notnull"`
 }
 
-// ServerToPort represents a link table connecting Servers with Ports.
-type ServerToPort struct {
-	bun.BaseModel `bun:"table:l_openstack_server_to_port"`
+// PortToServer represents a link table connecting Ports with Servers.
+type PortToServer struct {
+	bun.BaseModel `bun:"table:l_openstack_port_to_server"`
 	coremodels.Model
 
-	ServerID uuid.UUID `bun:"server_id,notnull"`
 	PortID   uuid.UUID `bun:"port_id,notnull"`
+	ServerID uuid.UUID `bun:"server_id,notnull"`
 }
 
 // ServerToNetwork represents a link table connecting Servers with Networks.
@@ -308,7 +307,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:link_subnet_to_network", &SubnetToNetwork{})
 	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_subnet", &LoadBalancerToSubnet{})
 	registry.ModelRegistry.MustRegister("openstack:model:link_server_to_project", &ServerToProject{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_server_to_port", &ServerToPort{})
+	registry.ModelRegistry.MustRegister("openstack:model:link_server_to_port", &PortToServer{})
 	registry.ModelRegistry.MustRegister("openstack:model:link_server_to_network", &ServerToNetwork{})
 	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_project", &LoadBalancerToProject{})
 	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_network", &LoadBalancerToNetwork{})
