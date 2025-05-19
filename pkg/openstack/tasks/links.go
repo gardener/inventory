@@ -342,28 +342,26 @@ func LinkSubnetsWithProjects(ctx context.Context, db *bun.DB) error {
 	return nil
 }
 
-// LinkServersWithPorts creates links between the OpenStack Servers and Ports
-func LinkServersWithPorts(ctx context.Context, db *bun.DB) error {
-	var servers []models.Server
+// LinkPortsWithServers creates links between the OpenStack Ports and Servers
+func LinkPortsWithServers(ctx context.Context, db *bun.DB) error {
+	var ports []models.Port
 	err := db.NewSelect().
-		Model(&servers).
-		Relation("Port").
-		Where("port.id IS NOT NULL").
+		Model(&ports).
+		Relation("Server").
+		Where("server.id IS NOT NULL").
 		Scan(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	links := make([]models.ServerToPort, 0, len(servers))
+	links := make([]models.PortToServer, 0, len(ports))
 
-	for _, server := range servers {
-		for _, port := range server.Ports {
-			links = append(links, models.ServerToPort{
-				ServerID: server.ID,
-				PortID:   port.ID,
-			})
-		}
+	for _, port := range ports {
+		links = append(links, models.PortToServer{
+			PortID:   port.ID,
+			ServerID: port.Server.ID,
+		})
 	}
 
 	if len(links) == 0 {
@@ -372,7 +370,7 @@ func LinkServersWithPorts(ctx context.Context, db *bun.DB) error {
 
 	out, err := db.NewInsert().
 		Model(&links).
-		On("CONFLICT (server_id, port_id) DO UPDATE").
+		On("CONFLICT (port_id, server_id) DO UPDATE").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
@@ -387,7 +385,7 @@ func LinkServersWithPorts(ctx context.Context, db *bun.DB) error {
 	}
 
 	logger := asynqutils.GetLogger(ctx)
-	logger.Info("linked openstack servers with ports", "count", count)
+	logger.Info("linked openstack ports with servers", "count", count)
 
 	return nil
 }
@@ -398,9 +396,8 @@ func LinkServersWithNetworks(ctx context.Context, db *bun.DB) error {
 	err := db.NewSelect().
 		Model(&ports).
 		Relation("Server").
-		Where("server.id IS NOT NULL").
 		Relation("Network").
-		Where("network.id IS NOT NULL").
+		Where("server.id IS NOT NULL AND network.id IS NOT NULL").
 		Scan(ctx)
 
 	if err != nil {

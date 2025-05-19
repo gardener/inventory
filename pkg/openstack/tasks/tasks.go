@@ -53,7 +53,7 @@ func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
 		LinkSubnetsWithNetworks,
 		LinkLoadBalancersWithSubnets,
 		LinkServersWithProjects,
-		LinkServersWithPorts,
+		LinkPortsWithServers,
 		LinkServersWithNetworks,
 		LinkLoadBalancersWithProjects,
 		LinkLoadBalancersWithNetworks,
