@@ -235,6 +235,9 @@ type AzureServices struct {
 
 	// Storage provides the Storage service configuration.
 	Storage AzureServiceConfig `yaml:"storage"`
+
+	// Graph provides the Graph API service configuration.
+	Graph AzureServiceConfig `yaml:"graph"`
 }
 
 // AzureServiceConfig provides configuration specific for an Azure service.
