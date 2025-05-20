@@ -13,6 +13,11 @@ on:
 jobs:
   prepare:
     uses: gardener/cc-utils/.github/workflows/prepare.yaml@master
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      pull-requests: write
     with:
       mode: ${{ inputs.mode }}
 
@@ -23,6 +28,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      pull-requests: write
     uses: gardener/cc-utils/.github/workflows/oci-ocm.yaml@master
     with:
       name: inventory

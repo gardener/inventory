@@ -5,9 +5,19 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/test.yaml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      pull-requests: write
 
   publish-oci:
     uses: ./.github/workflows/oci-images.yaml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      pull-requests: write
     needs:
       - test
     with:
@@ -15,6 +25,11 @@ jobs:
 
   release-and-bump:
     uses: gardener/cc-utils/.github/workflows/release.yaml@master
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      pull-requests: write
     needs:
       - publish-oci
     secrets:
