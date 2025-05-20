@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/uptrace/bun"
@@ -171,7 +172,21 @@ func NewModelCommand() *cli.Command {
 						return err
 					}
 
-					tmpl, err := template.New("inventory").Parse(templateBody)
+					// Parse template
+					funcMap := template.FuncMap{
+						"HasPrefix":  strings.HasPrefix,
+						"HasSuffix":  strings.HasSuffix,
+						"Contains":   strings.Contains,
+						"Join":       strings.Join,
+						"ReplaceAll": strings.ReplaceAll,
+						"Split":      strings.Split,
+						"ToLower":    strings.ToLower,
+						"ToUpper":    strings.ToUpper,
+						"ToTitle":    strings.ToTitle,
+						"TrimPrefix": strings.TrimPrefix,
+						"TrimSuffix": strings.TrimSuffix,
+					}
+					tmpl, err := template.New("inventory").Funcs(funcMap).Parse(templateBody)
 					if err != nil {
 						return err
 					}
