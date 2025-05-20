@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/hibiken/asynq"
+	"github.com/microsoftgraph/msgraph-sdk-go/models/odataerrors"
 
 	"github.com/gardener/inventory/pkg/azure/constants"
 	"github.com/gardener/inventory/pkg/azure/models"
@@ -67,11 +68,21 @@ func MaybeSkipRetry(err error) error {
 	// Skip retrying for the following HTTP status codes
 	skipRetryCodes := []int{
 		http.StatusNotFound,
+		http.StatusBadRequest,
 	}
 
+	// Azure SDK errors
 	var respErr *azcore.ResponseError
 	if errors.As(err, &respErr) {
 		if slices.Contains(skipRetryCodes, respErr.StatusCode) {
+			return fmt.Errorf("%w (%w)", err, asynq.SkipRetry)
+		}
+	}
+
+	// Graph SDK errors
+	var graphRespErr *odataerrors.ODataError
+	if errors.As(err, &graphRespErr) {
+		if slices.Contains(skipRetryCodes, graphRespErr.GetStatusCode()) {
 			return fmt.Errorf("%w (%w)", err, asynq.SkipRetry)
 		}
 	}
