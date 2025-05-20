@@ -88,6 +88,11 @@ azure:
       use_credentials:
         - foo
 
+    # Graph API clients. Used for collecting Microsoft Entra user accounts.
+    graph:
+      use_credentials:
+        - foo
+
   # The `credentials' section provides named credentials, which are used by the
   # various Azure services. The currently supported authentication mechanisms
   # are `default' and `workload_identity'.
@@ -586,6 +591,8 @@ scheduler:
           - name: "az:model:storage_account"
             duration: 24h
           - name: "az:model:blob_container"
+            duration: 24h
+          - name: "az:model:user"
             duration: 24h
           # OpenStack
           - name: "openstack:model:server"
