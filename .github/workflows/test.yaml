@@ -1,5 +1,8 @@
 name: Test
 on: [push, pull_request, workflow_call]
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   test:
@@ -32,6 +35,11 @@ jobs:
   publish-oci:
     if: github.event_name == 'push' && github.repository == 'gardener/inventory'
     uses: ./.github/workflows/oci-images.yaml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      pull-requests: write
     needs:
       - test
     with:
