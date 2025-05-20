@@ -74,4 +74,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectSubnets, asynq.HandlerFunc(HandleCollectSubnetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectStorageAccounts, asynq.HandlerFunc(HandleCollectStorageAccountsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectBlobContainers, asynq.HandlerFunc(HandleCollectBlobContainersTask))
+	registry.TaskRegistry.MustRegister(TaskCollectUsers, asynq.HandlerFunc(HandleCollectUsers))
 }

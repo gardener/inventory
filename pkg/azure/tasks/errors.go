@@ -9,6 +9,18 @@ import (
 	"fmt"
 )
 
+// ErrNoPayload is an error, which is returned by task handlers, which expect a
+// payload, but none was provided.
+var ErrNoPayload = errors.New("no payload specified")
+
+// ErrNoUserPrincipalName is an error, which is returned by task handlers, which
+// expect a user principal name to be specified, but none was provided.
+var ErrNoUserPrincipalName = errors.New("no user principal name specified")
+
+// ErrNoTenantID is an error, which is returned when a task expects an
+// Azure Tenant ID, but none was provided.
+var ErrNoTenantID = errors.New("no tenant id specified")
+
 // ErrNoSubscriptionID is an error, which is returned when a task expects an
 // Azure Subscription ID, but none was provided.
 var ErrNoSubscriptionID = errors.New("no subscription id specified")
