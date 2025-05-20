@@ -236,6 +236,16 @@ type BlobContainerToResourceGroup struct {
 	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_blob_container_to_rg_key"`
 }
 
+// User represents a Microsoft Entra user account.
+type User struct {
+	bun.BaseModel `bun:"table:az_user"`
+	coremodels.Model
+
+	UserID   string `bun:"user_id,notnull,unique:az_user_key"`
+	TenantID string `bun:"tenant_id,notnull,unique:az_user_key"`
+	Mail     string `bun:"mail,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
@@ -247,6 +257,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("az:model:subnet", &Subnet{})
 	registry.ModelRegistry.MustRegister("az:model:storage_account", &StorageAccount{})
 	registry.ModelRegistry.MustRegister("az:model:blob_container", &BlobContainer{})
+	registry.ModelRegistry.MustRegister("az:model:user", &User{})
 
 	// Link tables
 	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
