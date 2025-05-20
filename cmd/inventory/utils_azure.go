@@ -20,6 +20,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
+	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
 	"github.com/gardener/inventory/pkg/core/config"
@@ -46,6 +47,7 @@ func validateAzureConfig(conf *config.Config) error {
 		"resource_manager": conf.Azure.Services.ResourceManager.UseCredentials,
 		"network":          conf.Azure.Services.Network.UseCredentials,
 		"storage":          conf.Azure.Services.Storage.UseCredentials,
+		"graph":            conf.Azure.Services.Graph.UseCredentials,
 	}
 
 	for service, namedCredentials := range services {
@@ -99,6 +101,7 @@ func configureAzureClients(ctx context.Context, conf *config.Config) error {
 		"resource_manager": configureAzureResourceManagerClientsets,
 		"network":          configureAzureNetworkClientsets,
 		"storage":          configureAzureStorageClientsets,
+		"graph":            configureAzureGraphClientsets,
 	}
 
 	if conf.Debug {
@@ -507,6 +510,79 @@ func configureAzureStorageClientsets(ctx context.Context, conf *config.Config) e
 				"credentials", namedCreds,
 				"subscription_id", subscriptionID,
 				"subscription_name", subscriptionName,
+			)
+		}
+	}
+
+	return nil
+}
+
+// getAzureTenants returns the slice of [armsubscription.TenantIDDescription] to
+// which the given [azcore.TokenCredential] has access to.
+func getAzureTenants(ctx context.Context, creds azcore.TokenCredential) ([]*armsubscription.TenantIDDescription, error) {
+	factory, err := armsubscription.NewClientFactory(creds, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	client := factory.NewTenantsClient()
+	pager := client.NewListPager(&armsubscription.TenantsClientListOptions{})
+	result := make([]*armsubscription.TenantIDDescription, 0)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, page.Value...)
+	}
+
+	return result, nil
+}
+
+// configureAzureGraphClientsets configures the Graph API clientsets.
+func configureAzureGraphClientsets(ctx context.Context, conf *config.Config) error {
+	// Configure token provider and then set a Graph API client for each
+	// tenant to which we have access using the given named credentials. In
+	// contrast to the other Azure API clients the Graph API clientset are
+	// tenant-scoped.
+	scopes := []string{
+		"https://graph.microsoft.com/.default",
+	}
+
+	for _, namedCreds := range conf.Azure.Services.Graph.UseCredentials {
+		tokenProvider, err := getAzureTokenProvider(conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		tenants, err := getAzureTenants(ctx, tokenProvider)
+		if err != nil {
+			return err
+		}
+
+		for _, tenant := range tenants {
+			tenantID := ptr.Value(tenant.TenantID, "")
+			if tenantID == "" {
+				return fmt.Errorf("empty tenant id for named credentials %s", namedCreds)
+			}
+
+			graphClient, err := msgraphsdk.NewGraphServiceClientWithCredentials(tokenProvider, scopes)
+			if err != nil {
+				return err
+			}
+
+			azureclients.GraphClientset.Overwrite(
+				tenantID,
+				&azureclients.Client[*msgraphsdk.GraphServiceClient]{
+					NamedCredentials: namedCreds,
+					Client:           graphClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "graph",
+				"credentials", namedCreds,
+				"tenant_id", tenantID,
 			)
 		}
 	}
