@@ -189,6 +189,7 @@ func newOpenStackProviderClient(
 			IdentityEndpoint:            creds.AuthEndpoint,
 			ApplicationCredentialID:     appID,
 			ApplicationCredentialSecret: appSecret,
+			AllowReauth: true,
 		}
 	default:
 		return nil, fmt.Errorf("unknown authentication method: %s", creds.Authentication)
