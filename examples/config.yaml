@@ -26,6 +26,11 @@ database:
 
 # Worker settings
 worker:
+  # Metrics settings
+  metrics:
+    path: /metrics
+    address: ":9090"
+
   # Concurrency level
   concurrency: 100
 
@@ -44,6 +49,7 @@ worker:
   # higher priority queues are empty.
   strict_priority: false
 
+# Dashboard settings
 dashboard:
   address: ":8080"
   read_only: false
