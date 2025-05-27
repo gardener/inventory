@@ -69,6 +69,14 @@ const (
 	// OpenStackAuthenticationMethodAppCredentials is the name of the
 	// authentication mechanism for OpenStack, which uses application credentials.
 	OpenStackAuthenticationMethodAppCredentials = "app_credentials"
+
+	// DefaultWorkerMetricsAddress is the network address from which the
+	// worker is serving metrics.
+	DefaultWorkerMetricsAddress = ":9090"
+
+	// DefaultWorkerMetricsPath is the default HTTP path at which the worker
+	// is exposing metrics.
+	DefaultWorkerMetricsPath = "/metrics"
 )
 
 // ErrNoConfigVersion error is returned when the configuration does not specify
