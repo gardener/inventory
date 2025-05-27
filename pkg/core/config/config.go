@@ -529,6 +529,9 @@ type DatabaseConfig struct {
 
 // WorkerConfig provides worker specific configuration settings.
 type WorkerConfig struct {
+	// Metrics specifies the settings for exposing metrics from workers.
+	Metrics WorkerMetricsConfig `yaml:"metrics"`
+
 	// Concurrency specifies the concurrency level for workers.
 	Concurrency int `yaml:"concurrency"`
 
@@ -545,6 +548,16 @@ type WorkerConfig struct {
 	// always processed first, and tasks from queues with lower priority are
 	// processed only after higher priority queues are empty.
 	StrictPriority bool `yaml:"strict_priority"`
+}
+
+// WorkerMetricsConfig provides settings for exposing worker-related metrics
+type WorkerMetricsConfig struct {
+	// Path specifies the HTTP path at which metrics will be exposed.
+	Path string `yaml:"path"`
+
+	// Address specifies the TCP network address for the HTTP server, which
+	// serves the metrics.
+	Address string `yaml:"address"`
 }
 
 // SchedulerConfig provides scheduler specific configuration settings.
