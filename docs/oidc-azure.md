@@ -81,6 +81,15 @@ give our App access to.
 
 1. Select the `Reader` role and add the App as a member.
 
+Inventory is also able to collect basic user information from Microsoft Entra ID
+via the Graph API. When using the `az:task:collect-users` task for collecting
+user information the app must also be granted the `User.ReadBasic.All` API
+permission.
+
+In order to do that go to your app, then navigate to `Manage > API Permissions > Add a permission`.
+
+![Azure App API Permissions](../images/azure-app-api-permissions.png)
+
 ## Configuration
 
 The Azure specific configuration used by the Inventory system resides in the `azure`
