@@ -270,7 +270,12 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 		return err
 	}
 
-	logger.Info("populated gardener shoots", "count", count)
+	logger.Info(
+		"populated gardener shoots",
+		"count", count,
+		"project_name", payload.ProjectName,
+		"project_namespace", payload.ProjectNamespace,
+	)
 
 	return nil
 }
