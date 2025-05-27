@@ -290,6 +290,33 @@ type Object struct {
 	IsLatest      bool      `bun:"is_latest,notnull"`
 }
 
+// Pool represents an OpenStack server Pool.
+type Pool struct {
+	bun.BaseModel `bun:"table:openstack_pool"`
+	coremodels.Model
+
+	PoolID      string `bun:"pool_id,notnull,unique:openstack_pool_key"`
+	ProjectID   string `bun:"project_id,notnull,unique:openstack_pool_key"`
+	Name        string `bun:"name,notnull"`
+	SubnetID    string `bun:"subnet_id,notnull"`
+	Description string `bun:"description,notnull"`
+}
+
+// PoolMember represents device that is a member of an OpenStack pool.
+type PoolMember struct {
+	bun.BaseModel `bun:"table:openstack_pool_member"`
+	coremodels.Model
+
+	MemberID        string    `bun:"member_id,notnull,unique:openstack_pool_member_key"`
+	PoolID          string    `bun:"pool_id,notnull,unique:openstack_pool_member_key"`
+	ProjectID       string    `bun:"project_id,notnull,unique:openstack_pool_member_key"`
+	Name            string    `bun:"name,notnull"`
+	SubnetID        string    `bun:"subnet_id,notnull"`
+	ProtocolPort    int       `bun:"protocol_port,notnull"`
+	MemberCreatedAt time.Time `bun:"member_created_at,notnull"`
+	MemberUpdatedAt time.Time `bun:"member_updated_at,notnull"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
@@ -303,6 +330,8 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:router", &Router{})
 	registry.ModelRegistry.MustRegister("openstack:model:router_external_ip", &RouterExternalIP{})
 	registry.ModelRegistry.MustRegister("openstack:model:object", &Object{})
+	registry.ModelRegistry.MustRegister("openstack:model:pool", &Pool{})
+	registry.ModelRegistry.MustRegister("openstack:model:pool_member", &PoolMember{})
 
 	registry.ModelRegistry.MustRegister("openstack:model:link_subnet_to_network", &SubnetToNetwork{})
 	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_subnet", &LoadBalancerToSubnet{})
