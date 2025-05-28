@@ -51,3 +51,4 @@ scrape_configs:
   static_configs:
   - targets:
     - dashboard:8080
+    - worker:6080
