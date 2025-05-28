@@ -438,15 +438,16 @@ The services which will be started are summarized in the table below.
 Once the services are up and running, you can access the following endpoints from
 your local system.
 
-| Endpoint                      | Description                 |
-|:------------------------------|:----------------------------|
-| localhost:5432                | PostgreSQL server           |
-| localhost:6379                | Valkey server               |
-| http://localhost:8080/        | Dashboard UI                |
-| http://localhost:8080/metrics | Prometheus Metrics endpoint |
-| http://localhost:3000/        | Grafana UI                  |
-| http://localhost:9090/        | Prometheus UI               |
-| http://localhost:7080/        | pgAdmin UI                  |
+| Endpoint                      | Description                    |
+|:------------------------------|:-------------------------------|
+| localhost:5432                | PostgreSQL server              |
+| localhost:6379                | Valkey server                  |
+| http://localhost:8080/        | Dashboard UI                   |
+| http://localhost:8080/metrics | Metrics endpoint for Dashboard |
+| http://localhost:3000/        | Grafana UI                     |
+| http://localhost:9090/        | Prometheus UI                  |
+| http://localhost:7080/        | pgAdmin UI                     |
+| http://localhost:6080/metrics | Metrics endpoint for Worker    |
 
 ### minikube
 
