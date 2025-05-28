@@ -345,6 +345,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:object", &Object{})
 	registry.ModelRegistry.MustRegister("openstack:model:pool", &Pool{})
 	registry.ModelRegistry.MustRegister("openstack:model:pool_member", &PoolMember{})
+	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_with_pool", &LoadBalancerWithPool{})
 
 	registry.ModelRegistry.MustRegister("openstack:model:link_subnet_to_network", &SubnetToNetwork{})
 	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_subnet", &LoadBalancerToSubnet{})
