@@ -52,6 +52,18 @@ var (
 		},
 		[]string{"task_name", "task_queue"},
 	)
+
+	// TaskDurationSeconds is a metric, which tracks the duration of task
+	// execution in seconds.
+	TaskDurationSeconds = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: Namespace,
+			Name:      "task_duration_seconds",
+			Help:      "Duration of task execution in seconds",
+			Buckets:   []float64{5.0, 10.0, 30.0, 90.0, 180.0, 300.0},
+		},
+		[]string{"task_name", "task_queue"},
+	)
 )
 
 // NewServer returns a new [http.Server] which can serve the metrics from
@@ -80,6 +92,7 @@ func init() {
 		TaskSuccessfulTotal,
 		TaskFailedTotal,
 		TaskSkippedTotal,
+		TaskDurationSeconds,
 
 		// Standard Go metrics
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
