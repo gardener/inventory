@@ -20,13 +20,35 @@ const Namespace = "inventory"
 var DefaultRegistry = prometheus.NewPedanticRegistry()
 
 var (
-	// TaskExecutionTotal is a metric, which gets incremented each time a
-	// task has been called.
-	TaskExecutionTotal = prometheus.NewCounterVec(
+	// TaskSuccessfulTotal is a metric, which gets incremented each time a
+	// task has been successfully executed.
+	TaskSuccessfulTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: Namespace,
-			Name:      "task_execution_total",
-			Help:      "Total number of times a task has been executed",
+			Name:      "task_successful_total",
+			Help:      "Total number of times a task has been successfully executed",
+		},
+		[]string{"task_name", "task_queue"},
+	)
+
+	// TaskFailedTotal is a metric, which gets incremented each time a task
+	// has failed.
+	TaskFailedTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: Namespace,
+			Name:      "task_failed_total",
+			Help:      "Total number of times a task has failed",
+		},
+		[]string{"task_name", "task_queue"},
+	)
+
+	// TaskSkippedTotal is a metric, which gets incremented each time a task
+	// has failed and will be skipped from being retried.
+	TaskSkippedTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: Namespace,
+			Name:      "task_skipped_total",
+			Help:      "Total number of times a task has been skipped from being retried",
 		},
 		[]string{"task_name", "task_queue"},
 	)
@@ -55,7 +77,9 @@ func NewServer(addr, path string) *http.Server {
 func init() {
 	DefaultRegistry.MustRegister(
 		// Inventory metrics
-		TaskExecutionTotal,
+		TaskSuccessfulTotal,
+		TaskFailedTotal,
+		TaskSkippedTotal,
 
 		// Standard Go metrics
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
