@@ -317,6 +317,19 @@ type PoolMember struct {
 	MemberUpdatedAt time.Time `bun:"member_updated_at,notnull"`
 }
 
+// LoadBalancerWithPool represents the connection between an OpenStack LoadBalancer and Pool
+// This is different to a link table in that it is populated during collection
+// and the pool ID is not a forein key in the Pool table, as the Pool record
+// might not exist yet.
+type LoadBalancerWithPool struct {
+	bun.BaseModel `bun:"table:openstack_loadbalancer_with_pool"`
+	coremodels.Model
+
+	LoadBalancerID string `bun:"loadbalancer_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
+	PoolID         string `bun:"pool_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
+	ProjectID      string `bun:"project_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
+}
+
 func init() {
 	// Register the models with the default registry
 	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
