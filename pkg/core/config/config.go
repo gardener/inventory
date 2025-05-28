@@ -72,7 +72,7 @@ const (
 
 	// DefaultWorkerMetricsAddress is the network address from which the
 	// worker is serving metrics.
-	DefaultWorkerMetricsAddress = ":9090"
+	DefaultWorkerMetricsAddress = ":6080"
 
 	// DefaultWorkerMetricsPath is the default HTTP path at which the worker
 	// is exposing metrics.
