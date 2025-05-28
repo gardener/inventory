@@ -29,7 +29,7 @@ worker:
   # Metrics settings
   metrics:
     path: /metrics
-    address: ":9090"
+    address: ":6080"
 
   # Concurrency level
   concurrency: 100
