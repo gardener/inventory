@@ -42,6 +42,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - 6080:6080
     entrypoint: ["/app/inventory", "worker", "start"]
     hostname: inventory-worker-1
     healthcheck:
