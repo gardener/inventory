@@ -204,6 +204,7 @@ func NewWorkerCommand() *cli.Command {
 						slog.Info("queue configuration", "name", queue, "priority", priority)
 					}
 
+					defer worker.Shutdown()
 					return worker.Run()
 				},
 			},
