@@ -135,6 +135,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 	)
 
 	items := make([]models.LoadBalancer, 0)
+	lbWithPoolItems := make([]models.LoadBalancerWithPool, 0)
 
 	err := loadbalancers.List(client.Client, nil).
 		EachPage(ctx,
@@ -153,6 +154,16 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 				}
 
 				for _, lb := range lbList {
+					for _, pool := range lb.Pools {
+						item := models.LoadBalancerWithPool {
+							LoadBalancerID: lb.ID,
+							PoolID: pool.ID,
+							ProjectID: lb.ProjectID,
+						}
+
+						lbWithPoolItems = append(lbWithPoolItems, item)
+					}
+
 					item := models.LoadBalancer{
 						LoadBalancerID: lb.ID,
 						Name:           lb.Name,
@@ -223,6 +234,41 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 
 	logger.Info(
 		"populated openstack load balancers",
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
+		"count", count,
+	)
+
+	if len(items) == 0 {
+		return nil
+	}
+
+	out, err = db.DB.NewInsert().
+		Model(&lbWithPoolItems).
+		On("CONFLICT (loadbalancer_id, pool_id, project_id) DO UPDATE").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		logger.Error(
+			"could not insert load balancers with pools into db",
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
+			"reason", err,
+		)
+		return err
+	}
+
+	count, err = out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger.Info(
+		"populated openstack load balancers with pools",
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
