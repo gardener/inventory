@@ -13,8 +13,24 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// Namespace is the namespace component of the fully qualified metric name
+const Namespace = "inventory"
+
 // DefaultRegistry is the default [prometheus.Registry] for metrics.
 var DefaultRegistry = prometheus.NewPedanticRegistry()
+
+var (
+	// TaskExecutionTotal is a metric, which gets incremented each time a
+	// task has been called.
+	TaskExecutionTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: Namespace,
+			Name:      "task_execution_total",
+			Help:      "Total number of times a task has been executed",
+		},
+		[]string{"task_name", "task_queue"},
+	)
+)
 
 // NewServer returns a new [http.Server] which can serve the metrics from
 // [DefaultRegistry] on the specified network address and HTTP path. Callers
@@ -38,6 +54,9 @@ func NewServer(addr, path string) *http.Server {
 // init registers collectors with the [DefaultRegistry].
 func init() {
 	DefaultRegistry.MustRegister(
+		// Inventory metrics
+		TaskExecutionTotal,
+
 		// Standard Go metrics
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		collectors.NewGoCollector(),
