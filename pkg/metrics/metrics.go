@@ -75,6 +75,18 @@ var (
 		},
 		[]string{"model_name"},
 	)
+
+	// HousekeeperFailedRecordsTotal is a metric, which gets incremented
+	// each time the housekeeper fails to delete stale records for a given
+	// model.
+	HousekeeperFailedRecordsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: Namespace,
+			Name:      "housekeeper_failed_records_total",
+			Help:      "Total number of times the housekeeper failed to delete stale records",
+		},
+		[]string{"model_name"},
+	)
 )
 
 // NewServer returns a new [http.Server] which can serve the metrics from
@@ -105,6 +117,7 @@ func init() {
 		TaskSkippedTotal,
 		TaskDurationSeconds,
 		HousekeeperDeletedRecords,
+		HousekeeperFailedRecordsTotal,
 
 		// Standard Go metrics
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
