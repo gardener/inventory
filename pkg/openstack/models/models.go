@@ -315,6 +315,7 @@ type PoolMember struct {
 	ProtocolPort    int       `bun:"protocol_port,notnull"`
 	MemberCreatedAt time.Time `bun:"member_created_at,notnull"`
 	MemberUpdatedAt time.Time `bun:"member_updated_at,notnull"`
+	Pool            *Pool     `bun:"rel:has-one,join:project_id=project_id,join:pool_id=pool_id"`
 }
 
 // LoadBalancerWithPool represents the connection between an OpenStack LoadBalancer and Pool
@@ -325,9 +326,11 @@ type LoadBalancerWithPool struct {
 	bun.BaseModel `bun:"table:openstack_loadbalancer_with_pool"`
 	coremodels.Model
 
-	LoadBalancerID string `bun:"loadbalancer_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
-	PoolID         string `bun:"pool_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
-	ProjectID      string `bun:"project_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
+	LoadBalancerID string        `bun:"loadbalancer_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
+	PoolID         string        `bun:"pool_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
+	ProjectID      string        `bun:"project_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
+	LoadBalancer   *LoadBalancer `bun:"rel:has-one,join:project_id=project_id,join:loadbalancer_id=loadbalancer_id"`
+	Pool           *Pool         `bun:"rel:has-one,join:project_id=project_id,join:pool_id=pool_id"`
 }
 
 func init() {

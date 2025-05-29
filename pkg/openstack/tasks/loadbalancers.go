@@ -240,7 +240,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 		"count", count,
 	)
 
-	if len(items) == 0 {
+	if len(lbWithPoolItems) == 0 {
 		return nil
 	}
 

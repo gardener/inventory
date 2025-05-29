@@ -190,12 +190,13 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 
 					if err != nil {
 						logger.Error(
-							"could not insert pools into db",
+							"could not extract pool member pages",
 							"project", payload.Scope.Project,
 							"domain", payload.Scope.Domain,
 							"region", payload.Scope.Region,
 							"reason", err,
 						)
+						return false, err
 					}
 
 					item := models.Pool{
@@ -215,6 +216,9 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 	if err != nil {
 		logger.Error(
 			"could not extract pool pages",
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
 			"reason", err,
 		)
 		return err
