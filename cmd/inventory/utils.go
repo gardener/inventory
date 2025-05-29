@@ -111,6 +111,7 @@ func newWorker(conf *config.Config) *workerutils.Worker {
 	middlewares := []asynq.MiddlewareFunc{
 		asynqutils.NewLoggerMiddleware(slog.Default()),
 		asynqutils.NewMeasuringMiddleware(),
+		asynqutils.NewMetricsMiddleware(),
 	}
 	worker.UseMiddlewares(middlewares...)
 
