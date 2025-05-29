@@ -188,6 +188,16 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 								return true, nil
 							})
 
+					if err != nil {
+						logger.Error(
+							"could not insert pools into db",
+							"project", payload.Scope.Project,
+							"domain", payload.Scope.Domain,
+							"region", payload.Scope.Region,
+							"reason", err,
+						)
+					}
+
 					item := models.Pool{
 						PoolID:      pool.ID,
 						ProjectID:   pool.ProjectID,
