@@ -64,6 +64,17 @@ var (
 		},
 		[]string{"task_name", "task_queue"},
 	)
+
+	// HousekeeperDeletedRecords is a gauge, which tracks the number of
+	// deleted resources for models by the housekeeper.
+	HousekeeperDeletedRecords = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: Namespace,
+			Name:      "housekeeper_deleted_records",
+			Help:      "Gauge which tracks the number of deleted records by the housekeeper",
+		},
+		[]string{"model_name"},
+	)
 )
 
 // NewServer returns a new [http.Server] which can serve the metrics from
@@ -93,6 +104,7 @@ func init() {
 		TaskFailedTotal,
 		TaskSkippedTotal,
 		TaskDurationSeconds,
+		HousekeeperDeletedRecords,
 
 		// Standard Go metrics
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
