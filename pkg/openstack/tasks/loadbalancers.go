@@ -155,10 +155,10 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 
 				for _, lb := range lbList {
 					for _, pool := range lb.Pools {
-						item := models.LoadBalancerWithPool {
+						item := models.LoadBalancerWithPool{
 							LoadBalancerID: lb.ID,
-							PoolID: pool.ID,
-							ProjectID: lb.ProjectID,
+							PoolID:         pool.ID,
+							ProjectID:      lb.ProjectID,
 						}
 
 						lbWithPoolItems = append(lbWithPoolItems, item)
