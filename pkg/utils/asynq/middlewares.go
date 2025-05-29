@@ -7,9 +7,11 @@ package asynq
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
+	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/hibiken/asynq"
 )
 
@@ -55,6 +57,40 @@ func NewMeasuringMiddleware() asynq.MiddlewareFunc {
 			err := handler.ProcessTask(ctx, task)
 			elapsed := time.Since(start)
 			logger.Info("task finished", "duration", elapsed)
+			return err
+		}
+
+		return asynq.HandlerFunc(mw)
+	}
+
+	return asynq.MiddlewareFunc(middleware)
+}
+
+// NewMetricsMiddleware returns a new [asynq.MiddlewareFunc] which provides
+// metrics about task handlers.
+func NewMetricsMiddleware() asynq.MiddlewareFunc {
+	middleware := func(handler asynq.Handler) asynq.Handler {
+		mw := func(ctx context.Context, task *asynq.Task) error {
+			taskName := task.Type()
+			queueName := GetQueueName(ctx)
+
+			start := time.Now()
+			err := handler.ProcessTask(ctx, task)
+			elapsed := time.Since(start)
+
+			switch {
+			case err == nil:
+				// OK
+				metrics.TaskSuccessfulTotal.WithLabelValues(taskName, queueName).Inc()
+				metrics.TaskDurationSeconds.WithLabelValues(taskName, queueName).Observe(elapsed.Seconds())
+			case errors.Is(err, asynq.SkipRetry):
+				// Skipped
+				metrics.TaskSkippedTotal.WithLabelValues(taskName, queueName).Inc()
+			default:
+				// Failed
+				metrics.TaskFailedTotal.WithLabelValues(taskName, queueName).Inc()
+			}
+
 			return err
 		}
 
