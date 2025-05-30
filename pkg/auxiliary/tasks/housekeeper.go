@@ -13,6 +13,7 @@ import (
 	"github.com/gardener/inventory/pkg/auxiliary/models"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -90,10 +91,12 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 				Count:       count,
 			}
 			hkRuns = append(hkRuns, hkRun)
+			metrics.HousekeeperDeletedRecords.WithLabelValues(item.Name).Set(float64(count))
 		default:
 			// Simply log the error here and keep going with the
 			// rest of the objects to cleanup
 			logger.Error("failed to delete stale records", "name", item.Name, "reason", err)
+			metrics.HousekeeperFailedRecordsTotal.WithLabelValues(item.Name).Inc()
 		}
 	}
 
