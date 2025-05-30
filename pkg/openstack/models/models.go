@@ -307,15 +307,16 @@ type PoolMember struct {
 	bun.BaseModel `bun:"table:openstack_pool_member"`
 	coremodels.Model
 
-	MemberID        string    `bun:"member_id,notnull,unique:openstack_pool_member_key"`
-	PoolID          string    `bun:"pool_id,notnull,unique:openstack_pool_member_key"`
-	ProjectID       string    `bun:"project_id,notnull,unique:openstack_pool_member_key"`
-	Name            string    `bun:"name,notnull"`
-	SubnetID        string    `bun:"subnet_id,notnull"`
-	ProtocolPort    int       `bun:"protocol_port,notnull"`
-	MemberCreatedAt time.Time `bun:"member_created_at,notnull"`
-	MemberUpdatedAt time.Time `bun:"member_updated_at,notnull"`
-	Pool            *Pool     `bun:"rel:has-one,join:project_id=project_id,join:pool_id=pool_id"`
+	MemberID              string    `bun:"member_id,notnull,unique:openstack_pool_member_key"`
+	PoolID                string    `bun:"pool_id,notnull,unique:openstack_pool_member_key"`
+	ProjectID             string    `bun:"project_id,notnull,unique:openstack_pool_member_key"`
+	Name                  string    `bun:"name,notnull"`
+	InferredGardenerShoot string    `bun:"inferred_gardener_shoot,nullzero"`
+	SubnetID              string    `bun:"subnet_id,notnull"`
+	ProtocolPort          int       `bun:"protocol_port,notnull"`
+	MemberCreatedAt       time.Time `bun:"member_created_at,notnull"`
+	MemberUpdatedAt       time.Time `bun:"member_updated_at,notnull"`
+	Pool                  *Pool     `bun:"rel:has-one,join:project_id=project_id,join:pool_id=pool_id"`
 }
 
 // LoadBalancerWithPool represents the connection between an OpenStack LoadBalancer and Pool
