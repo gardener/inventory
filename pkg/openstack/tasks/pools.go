@@ -16,6 +16,7 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	gardenerutils "github.com/gardener/inventory/pkg/gardener/utils"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -171,15 +172,22 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 								}
 
 								for _, member := range extractedMembers {
+									var inferredGardenerShoot string
+									shoot, err := gardenerutils.InferShootFromInstanceName(ctx, member.Name)
+									if err == nil {
+										inferredGardenerShoot = shoot.TechnicalId
+									}
+
 									item := models.PoolMember{
-										MemberID:        member.ID,
-										PoolID:          pool.ID,
-										ProjectID:       member.ProjectID,
-										Name:            member.Name,
-										SubnetID:        member.SubnetID,
-										ProtocolPort:    member.ProtocolPort,
-										MemberCreatedAt: member.CreatedAt,
-										MemberUpdatedAt: member.UpdatedAt,
+										MemberID:              member.ID,
+										PoolID:                pool.ID,
+										ProjectID:             member.ProjectID,
+										Name:                  member.Name,
+										InferredGardenerShoot: inferredGardenerShoot,
+										SubnetID:              member.SubnetID,
+										ProtocolPort:          member.ProtocolPort,
+										MemberCreatedAt:       member.CreatedAt,
+										MemberUpdatedAt:       member.UpdatedAt,
 									}
 
 									memberItems = append(memberItems, item)
@@ -272,6 +280,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 		Set("name = EXCLUDED.name").
 		Set("subnet_id = EXCLUDED.subnet_id").
 		Set("protocol_port = EXCLUDED.protocol_port").
+		Set("inferred_gardener_shoot = EXCLUDED.inferred_gardener_shoot").
 		Set("member_created_at = EXCLUDED.member_created_at").
 		Set("member_updated_at = EXCLUDED.member_updated_at").
 		Set("updated_at = EXCLUDED.updated_at").

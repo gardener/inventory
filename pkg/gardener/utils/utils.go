@@ -46,7 +46,7 @@ var ErrCannotInferShoot = errors.New("cannot infer shoot")
 // SHA-256 digest.
 //
 // Use this utility function to infer shoot details for Virtual Machines
-// provisioned by the GCP, AWS or Azure extensions only.
+// provisioned by the GCP, AWS, Azure or OpenStack extensions only.
 func InferShootFromInstanceName(ctx context.Context, name string) (*models.Shoot, error) {
 	pattern := regexp.MustCompile("^shoot--(?P<project>.*)--(?P<shoot_and_workerpool>.*)-z(?P<zone_index>.)-(?P<pool_hash>.{5})-(?P<vm_hash>.{5})$")
 	matches := pattern.FindStringSubmatch(name)
