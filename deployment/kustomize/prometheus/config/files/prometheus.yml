@@ -70,6 +70,9 @@ scrape_configs:
       target_label: __address__
       regex: (.+)(?::\d+);(\d+)
       replacement: $1:$2
+    - source_labels: [ __meta_kubernetes_pod_container_init ]
+      regex: true
+      action: drop
     - source_labels: [__meta_kubernetes_namespace]
       action: replace
       target_label: kubernetes_namespace
