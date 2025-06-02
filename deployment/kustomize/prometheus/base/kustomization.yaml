@@ -13,3 +13,4 @@ resources:
   - statefulset.yaml
   - service.yaml
   - serviceaccount.yaml
+  - rbac.yaml
