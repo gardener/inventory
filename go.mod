@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	cloud.google.com/go/auth v0.16.1
-	cloud.google.com/go/compute v1.37.0
+	cloud.google.com/go/compute v1.38.0
 	cloud.google.com/go/container v1.42.4
 	cloud.google.com/go/resourcemanager v1.10.6
 	cloud.google.com/go/storage v1.53.0
@@ -53,7 +53,7 @@ require (
 
 require (
 	cel.dev/expr v0.20.0 // indirect
-	cloud.google.com/go v0.120.1 // indirect
+	cloud.google.com/go v0.121.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
