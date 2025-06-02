@@ -17,6 +17,7 @@ alerting:
     static_configs:
     - targets: []
 scrape_configs:
+# Prometheus jobs
 - job_name: prometheus
   honor_timestamps: true
   track_timestamps_staleness: false
@@ -34,6 +35,8 @@ scrape_configs:
   static_configs:
   - targets:
     - localhost:9090
+
+# Inventory jobs
 - job_name: inventory
   honor_timestamps: true
   track_timestamps_staleness: false
@@ -43,11 +46,35 @@ scrape_configs:
   - OpenMetricsText1.0.0
   - OpenMetricsText0.0.1
   - PrometheusText0.0.4
-  metrics_path: /metrics
-  scheme: http
   enable_compression: true
   follow_redirects: true
   enable_http2: true
-  static_configs:
-  - targets:
-    - dashboard:8080
+  kubernetes_sd_configs:
+    - role: endpoints
+    - role: pods
+  relabel_configs:
+    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+      action: keep
+      regex: true
+    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+      action: replace
+      target_label: __scheme__
+      regex: (https?)
+    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+      action: replace
+      target_label: __address__
+      regex: (.+)(?::\d+);(\d+)
+      replacement: $1:$2
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: kubernetes_namespace
+    - source_labels: [__meta_kubernetes_service_name]
+      action: replace
+      target_label: kubernetes_service
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: kubernetes_pod
