@@ -20,8 +20,3 @@ install -m 0644 \
 rsync -av --exclude "*~" \
       "${_REPO_ROOT}/extra/grafana/" \
       "${_KUSTOMIZE_DIR}/grafana/config/files"
-
-# Update Prometheus configs
-install -m 0644 \
-        "${_REPO_ROOT}/extra/prometheus/prometheus.yml" \
-        "${_KUSTOMIZE_DIR}/prometheus/config/files/prometheus.yml"
