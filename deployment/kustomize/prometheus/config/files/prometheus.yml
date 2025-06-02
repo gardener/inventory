@@ -51,7 +51,11 @@ scrape_configs:
   enable_http2: true
   kubernetes_sd_configs:
     - role: endpoints
-    - role: pods
+      namespaces:
+        own_namespace: true
+    - role: pod
+      namespaces:
+        own_namespace: true
   relabel_configs:
     - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
       action: keep
