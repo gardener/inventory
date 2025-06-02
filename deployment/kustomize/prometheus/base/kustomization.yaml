@@ -12,3 +12,4 @@ generatorOptions:
 resources:
   - statefulset.yaml
   - service.yaml
+  - serviceaccount.yaml
