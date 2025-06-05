@@ -230,6 +230,8 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 		return fmt.Errorf("could not list persistent volumes for seed %q: %w", payload.Seed, err)
 	}
 
+	collectedSeedVolumesMetric.WithLabelValues(payload.Seed).Set(float64(len(pvs)))
+
 	if len(pvs) == 0 {
 		return nil
 	}

@@ -83,6 +83,17 @@ var (
 			Help:      "A gauge which tracks the number of collected Gardener Cloud Profiles",
 		},
 	)
+
+	// collectedSeedVolumesMetric is a gauge, which tracks the number of
+	// collected Persitent Volumes from seed clusters.
+	collectedSeedVolumesMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metrics.Namespace,
+			Name:      "g_collected_seed_volumes",
+			Help:      "A gauge which tracks the number of collected persistent volumes from seeds",
+		},
+		[]string{"seed"},
+	)
 )
 
 // init registers metrics with the [metrics.DefaultRegistry].
@@ -95,5 +106,6 @@ func init() {
 		collectedMachinesMetric,
 		collectedBackupBucketsMetric,
 		collectedCloudProfilesMetric,
+		collectedSeedVolumesMetric,
 	)
 }
