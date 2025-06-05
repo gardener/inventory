@@ -232,6 +232,8 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 		return fmt.Errorf("could not list shoots: %w", err)
 	}
 
+	CollectedShootsMetric.WithLabelValues(payload.ProjectName).Set(float64(len(shoots)))
+
 	if len(shoots) == 0 {
 		return nil
 	}
