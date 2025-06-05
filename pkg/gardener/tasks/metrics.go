@@ -42,6 +42,16 @@ var (
 		},
 		[]string{"project_name"},
 	)
+
+	// CollectedSeedsMetric is a gauge, which tracks the number of
+	// collected Gardener Seeds.
+	CollectedSeedsMetric = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: metrics.Namespace,
+			Name:      "g_collected_seeds",
+			Help:      "A gauge which tracks the number of collected Gardener seeds",
+		},
+	)
 )
 
 // init registers metrics with the [metrics.DefaultRegistry].
@@ -50,5 +60,6 @@ func init() {
 		CollectedProjectsMetric,
 		CollectedProjectMembersMetric,
 		CollectedShootsMetric,
+		CollectedSeedsMetric,
 	)
 }
