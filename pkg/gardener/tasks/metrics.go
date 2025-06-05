@@ -73,6 +73,16 @@ var (
 			Help:      "A gauge which tracks the number of collected Gardener backup buckets",
 		},
 	)
+
+	// collectedCloudProfilesMetric is a gauge, which tracks the number of
+	// collected Gardener Cloud Profiles.
+	collectedCloudProfilesMetric = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: metrics.Namespace,
+			Name:      "g_collected_cloud_profiles",
+			Help:      "A gauge which tracks the number of collected Gardener Cloud Profiles",
+		},
+	)
 )
 
 // init registers metrics with the [metrics.DefaultRegistry].
@@ -84,5 +94,6 @@ func init() {
 		collectedSeedsMetric,
 		collectedMachinesMetric,
 		collectedBackupBucketsMetric,
+		collectedCloudProfilesMetric,
 	)
 }

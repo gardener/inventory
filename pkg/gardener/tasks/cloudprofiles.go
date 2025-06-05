@@ -167,6 +167,8 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list Cloud Profile resources: %w", err)
 	}
 
+	collectedCloudProfilesMetric.Set(float64(len(cloudProfiles)))
+
 	if len(cloudProfiles) == 0 {
 		return nil
 	}
