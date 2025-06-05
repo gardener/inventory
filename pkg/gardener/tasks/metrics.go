@@ -63,6 +63,16 @@ var (
 		},
 		[]string{"seed"},
 	)
+
+	// collectedBackupBucketsMetric is a gauge, which tracks the number of
+	// collected Gardener Backup Buckets.
+	collectedBackupBucketsMetric = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: metrics.Namespace,
+			Name:      "g_collected_backup_buckets",
+			Help:      "A gauge which tracks the number of collected Gardener backup buckets",
+		},
+	)
 )
 
 // init registers metrics with the [metrics.DefaultRegistry].
@@ -73,5 +83,6 @@ func init() {
 		collectedShootsMetric,
 		collectedSeedsMetric,
 		collectedMachinesMetric,
+		collectedBackupBucketsMetric,
 	)
 }

@@ -81,6 +81,8 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list backup buckets: %w", err)
 	}
 
+	collectedBackupBucketsMetric.Set(float64(len(buckets)))
+
 	if len(buckets) == 0 {
 		return nil
 	}
