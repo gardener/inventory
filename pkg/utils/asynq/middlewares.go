@@ -11,8 +11,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/hibiken/asynq"
+
+	"github.com/gardener/inventory/pkg/metrics"
 )
 
 // NewLoggerMiddleware returns a new [asynq.MiddlewareFunc], which embeds a

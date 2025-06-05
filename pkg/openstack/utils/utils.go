@@ -13,7 +13,7 @@ import (
 	"github.com/gardener/inventory/pkg/openstack/models"
 )
 
-// ErrProjectNotFound is an error which is returned when the task for finding
+// ErrNoProjectMatchingScope is an error which is returned when the task for finding
 // [models.Project] project by client scope doesn't find a match.
 var ErrNoProjectMatchingScope = errors.New("no project matching scope found")
 
