@@ -174,9 +174,9 @@ func toProjectModels(items []*v1beta1.Project) ([]models.Project, []models.Proje
 		memberGroups[member.ProjectName] += 1
 	}
 
-	CollectedProjectsMetric.Set(float64(len(projects)))
+	collectedProjectsMetric.Set(float64(len(projects)))
 	for groupName, count := range memberGroups {
-		CollectedProjectMembersMetric.WithLabelValues(groupName).Set(float64(count))
+		collectedProjectMembersMetric.WithLabelValues(groupName).Set(float64(count))
 	}
 
 	return projects, members

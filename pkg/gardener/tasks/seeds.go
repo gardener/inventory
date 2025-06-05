@@ -69,7 +69,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list seeds: %w", err)
 	}
 
-	CollectedSeedsMetric.Set(float64(len(seeds)))
+	collectedSeedsMetric.Set(float64(len(seeds)))
 
 	if len(seeds) == 0 {
 		return nil

@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	// CollectedProjectsMetric is a gauge, which tracks the number of
+	// collectedProjectsMetric is a gauge, which tracks the number of
 	// collected Gardener Projects.
-	CollectedProjectsMetric = prometheus.NewGauge(
+	collectedProjectsMetric = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
 			Name:      "g_collected_projects",
@@ -21,9 +21,9 @@ var (
 		},
 	)
 
-	// CollectedProjectMembersMetric is a gauge, which tracks the number of
+	// collectedProjectMembersMetric is a gauge, which tracks the number of
 	// collected Gardener Project members.
-	CollectedProjectMembersMetric = prometheus.NewGaugeVec(
+	collectedProjectMembersMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
 			Name:      "g_collected_project_members",
@@ -32,9 +32,9 @@ var (
 		[]string{"project_name"},
 	)
 
-	// CollectedShootsMetric is a gauge, which tracks the number of
+	// collectedShootsMetric is a gauge, which tracks the number of
 	// collected Gardener Shoots.
-	CollectedShootsMetric = prometheus.NewGaugeVec(
+	collectedShootsMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
 			Name:      "g_collected_shoots",
@@ -43,9 +43,9 @@ var (
 		[]string{"project_name"},
 	)
 
-	// CollectedSeedsMetric is a gauge, which tracks the number of
+	// collectedSeedsMetric is a gauge, which tracks the number of
 	// collected Gardener Seeds.
-	CollectedSeedsMetric = prometheus.NewGauge(
+	collectedSeedsMetric = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
 			Name:      "g_collected_seeds",
@@ -53,9 +53,9 @@ var (
 		},
 	)
 
-	// CollectedMachinesMetric is a gauge, which tracks the number of
+	// collectedMachinesMetric is a gauge, which tracks the number of
 	// collected Gardener Machines from seeds.
-	CollectedMachinesMetric = prometheus.NewGaugeVec(
+	collectedMachinesMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
 			Name:      "g_collected_machines",
@@ -68,10 +68,10 @@ var (
 // init registers metrics with the [metrics.DefaultRegistry].
 func init() {
 	metrics.DefaultRegistry.MustRegister(
-		CollectedProjectsMetric,
-		CollectedProjectMembersMetric,
-		CollectedShootsMetric,
-		CollectedSeedsMetric,
-		CollectedMachinesMetric,
+		collectedProjectsMetric,
+		collectedProjectMembersMetric,
+		collectedShootsMetric,
+		collectedSeedsMetric,
+		collectedMachinesMetric,
 	)
 }
