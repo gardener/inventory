@@ -165,6 +165,8 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		return fmt.Errorf("could not list machines for seed %q: %w", payload.Seed, err)
 	}
 
+	CollectedMachinesMetric.WithLabelValues(payload.Seed).Set(float64(len(machines)))
+
 	if len(machines) == 0 {
 		return nil
 	}
