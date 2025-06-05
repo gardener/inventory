@@ -118,7 +118,7 @@ func enqueueCollectProjects(ctx context.Context) error {
 	})
 }
 
-// collectProjects collects the OpenStack Projects from the specified project,
+// collectProjects collects the OpenStack Projects,
 // using the identity client associated with the project ID in the given payload.
 func collectProjects(ctx context.Context, payload CollectProjectsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
