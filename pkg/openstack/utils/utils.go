@@ -5,10 +5,17 @@
 package utils
 
 import (
+	"context"
 	"errors"
 
+	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/openstack/models"
 )
+
+// ErrProjectNotFound is an error which is returned when the task for finding
+// [models.Project] project by client scope doesn't find a match.
+var ErrNoProjectMatchingScope = errors.New("no project matching scope found")
 
 // IsValidDomainScope can be used to check the scope fields are set for usage
 // on the domain level.
@@ -41,4 +48,31 @@ func IsValidProjectScope(scope openstackclients.ClientScope) error {
 	}
 
 	return nil
+}
+
+// GetResourcesFromDB fetches the given model from the database.
+func GetResourcesFromDB[T any](ctx context.Context) ([]T, error) {
+	items := make([]T, 0)
+	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+	return items, err
+}
+
+func MatchScopeToProject(scope openstackclients.ClientScope, projects []models.Project) (models.Project, error) {
+	for _, project := range projects {
+		if scope.Project != project.Name {
+			continue
+		}
+
+		if scope.Domain != project.Domain {
+			continue
+		}
+
+		if scope.Region != project.Region {
+			continue
+		}
+
+		return project, nil
+	}
+
+	return models.Project{}, ErrNoProjectMatchingScope
 }
