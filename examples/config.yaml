@@ -324,7 +324,7 @@ openstack:
       use_credentials:
         - local
         - sa2
-    # Used for collecting OpenStack Objects
+    # Used for collecting OpenStack Containers and Objects
     object_storage:
       use_credentials:
         - sa1
@@ -499,9 +499,9 @@ scheduler:
     - name: "openstack:task:collect-routers"
       spec: "@every 1h"
       desc: "Collect OpenStack Routers"
-    - name: "openstack:task:collect-objects"
-      spec: "@every 1h"
-      desc: "Collect OpenStack Objects"
+    # - name: "openstack:task:collect-objects"
+    #   spec: "@every 1h"
+    #   desc: "Collect OpenStack Objects"
     - name: "openstack:task:collect-pools"
       spec: "@every 1h"
       desc: "Collect OpenStack Pools"
