@@ -277,6 +277,17 @@ type RouterExternalIP struct {
 	Project          *Project `bun:"rel:has-one,join:project_id=project_id"`
 }
 
+// Container represents an OpenStack Container.
+type Container struct {
+	bun.BaseModel `bun:"table:openstack_container"`
+	coremodels.Model
+
+	Name        string `bun:"name,notnull,unique:openstack_container_key"`
+	ProjectID   string `bun:"project_id,notnull,unique:openstack_container_key"`
+	Bytes       int64  `bun:"bytes,notnull"`
+	ObjectCount int64  `bun:"object_count,notnull"`
+}
+
 // Object represents an OpenStack Object.
 type Object struct {
 	bun.BaseModel `bun:"table:openstack_object"`
@@ -347,6 +358,7 @@ func init() {
 	registry.ModelRegistry.MustRegister("openstack:model:router", &Router{})
 	registry.ModelRegistry.MustRegister("openstack:model:router_external_ip", &RouterExternalIP{})
 	registry.ModelRegistry.MustRegister("openstack:model:object", &Object{})
+	registry.ModelRegistry.MustRegister("openstack:model:container", &Container{})
 	registry.ModelRegistry.MustRegister("openstack:model:pool", &Pool{})
 	registry.ModelRegistry.MustRegister("openstack:model:pool_member", &PoolMember{})
 	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_with_pool", &LoadBalancerWithPool{})
