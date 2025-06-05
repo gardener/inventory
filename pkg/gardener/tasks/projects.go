@@ -168,6 +168,17 @@ func toProjectModels(items []*v1beta1.Project) ([]models.Project, []models.Proje
 		}
 	}
 
+	// Group members by project and emit metrics
+	memberGroups := make(map[string]int)
+	for _, member := range members {
+		memberGroups[member.ProjectName] += 1
+	}
+
+	CollectedProjectsMetric.Set(float64(len(projects)))
+	for groupName, count := range memberGroups {
+		CollectedProjectMembersMetric.WithLabelValues(groupName).Set(float64(count))
+	}
+
 	return projects, members
 }
 
