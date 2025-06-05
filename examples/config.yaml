@@ -505,6 +505,9 @@ scheduler:
     - name: "openstack:task:collect-pools"
       spec: "@every 1h"
       desc: "Collect OpenStack Pools"
+    - name: "openstack:task:collect-containers"
+      spec: "@every 1h"
+      desc: "Collect OpenStack Containers"
 
     # Auxiliary task
     #
