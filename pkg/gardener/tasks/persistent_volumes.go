@@ -133,6 +133,11 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 		return nil
 	}
 
+	var count int64
+	defer func() {
+		seedVolumesMetric.WithLabelValues(payload.Seed).Set(float64(count))
+	}()
+
 	logger.Info("collecting Gardener Persistent Volumes", "seed", payload.Seed)
 	client, err := gardenerclient.DefaultClient.SeedClient(ctx, payload.Seed)
 	if err != nil {
@@ -230,8 +235,6 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 		return fmt.Errorf("could not list persistent volumes for seed %q: %w", payload.Seed, err)
 	}
 
-	collectedSeedVolumesMetric.WithLabelValues(payload.Seed).Set(float64(len(pvs)))
-
 	if len(pvs) == 0 {
 		return nil
 	}
@@ -259,7 +262,7 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}

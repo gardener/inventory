@@ -42,6 +42,11 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 		return nil
 	}
 
+	var count int64
+	defer func() {
+		backupBucketsMetric.Set(float64(count))
+	}()
+
 	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info("Collecting Gardener backup buckets")
 	buckets := make([]models.BackupBucket, 0)
@@ -81,8 +86,6 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list backup buckets: %w", err)
 	}
 
-	collectedBackupBucketsMetric.Set(float64(len(buckets)))
-
 	if len(buckets) == 0 {
 		return nil
 	}
@@ -108,7 +111,7 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}

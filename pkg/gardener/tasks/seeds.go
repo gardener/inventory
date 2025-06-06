@@ -42,6 +42,11 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 		return nil
 	}
 
+	var count int64
+	defer func() {
+		seedsMetric.Set(float64(count))
+	}()
+
 	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info("collecting Gardener seeds")
 	seeds := make([]models.Seed, 0)
@@ -69,8 +74,6 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list seeds: %w", err)
 	}
 
-	collectedSeedsMetric.Set(float64(len(seeds)))
-
 	if len(seeds) == 0 {
 		return nil
 	}
@@ -92,7 +95,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}

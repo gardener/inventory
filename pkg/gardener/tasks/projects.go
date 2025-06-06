@@ -168,22 +168,16 @@ func toProjectModels(items []*v1beta1.Project) ([]models.Project, []models.Proje
 		}
 	}
 
-	// Group members by project and emit metrics
-	memberGroups := make(map[string]int)
-	for _, member := range members {
-		memberGroups[member.ProjectName] += 1
-	}
-
-	collectedProjectsMetric.Set(float64(len(projects)))
-	for groupName, count := range memberGroups {
-		collectedProjectMembersMetric.WithLabelValues(groupName).Set(float64(count))
-	}
-
 	return projects, members
 }
 
 // persistProjects persists the provided projects into the database.
 func persistProjects(ctx context.Context, items []models.Project) error {
+	var count int64
+	defer func() {
+		projectsMetric.Set(float64(count))
+	}()
+
 	if len(items) == 0 {
 		return nil
 	}
@@ -204,7 +198,7 @@ func persistProjects(ctx context.Context, items []models.Project) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -217,6 +211,23 @@ func persistProjects(ctx context.Context, items []models.Project) error {
 
 // persistProjectMembers persists the given project members into the database.
 func persistProjectMembers(ctx context.Context, items []models.ProjectMember) error {
+	var err error
+
+	// Group members by project and emit metrics
+	memberGroups := make(map[string]int)
+	for _, member := range items {
+		memberGroups[member.ProjectName] += 1
+	}
+	defer func() {
+		for groupName, count := range memberGroups {
+			val := count
+			if err != nil {
+				val = 0
+			}
+			projectMembersMetric.WithLabelValues(groupName).Set(float64(val))
+		}
+	}()
+
 	if len(items) == 0 {
 		return nil
 	}

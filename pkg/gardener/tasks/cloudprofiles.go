@@ -65,6 +65,11 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		return nil
 	}
 
+	var count int64
+	defer func() {
+		cloudProfilesMetric.Set(float64(count))
+	}()
+
 	// After collecting the Cloud Profiles we will enqueue a separate task
 	// for persisting the Machine Images for each supported Cloud Profile
 	// type. The following is the mapping between the Cloud Profile type,
@@ -167,8 +172,6 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("could not list Cloud Profile resources: %w", err)
 	}
 
-	collectedCloudProfilesMetric.Set(float64(len(cloudProfiles)))
-
 	if len(cloudProfiles) == 0 {
 		return nil
 	}
@@ -190,7 +193,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}

@@ -161,12 +161,18 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 		return nil
 	}
 
+	var count int64
+	defer func() {
+		shootsMetric.WithLabelValues(payload.ProjectName).Set(float64(count))
+	}()
+
 	client := gardenerclient.DefaultClient.GardenClient()
 	logger.Info(
 		"collecting Gardener shoots",
 		"project", payload.ProjectName,
 		"namespace", payload.ProjectNamespace,
 	)
+
 	shoots := make([]models.Shoot, 0)
 	p := pager.New(
 		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -232,8 +238,6 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 		return fmt.Errorf("could not list shoots: %w", err)
 	}
 
-	collectedShootsMetric.WithLabelValues(payload.ProjectName).Set(float64(len(shoots)))
-
 	if len(shoots) == 0 {
 		return nil
 	}
@@ -267,7 +271,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}

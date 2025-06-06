@@ -124,6 +124,11 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		return nil
 	}
 
+	var count int64
+	defer func() {
+		machinesMetric.WithLabelValues(payload.Seed).Set(float64(count))
+	}()
+
 	logger.Info("collecting Gardener machines", "seed", payload.Seed)
 	client, err := gardenerclient.DefaultClient.MCMClient(ctx, payload.Seed)
 	if err != nil {
@@ -165,8 +170,6 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		return fmt.Errorf("could not list machines for seed %q: %w", payload.Seed, err)
 	}
 
-	collectedMachinesMetric.WithLabelValues(payload.Seed).Set(float64(len(machines)))
-
 	if len(machines) == 0 {
 		return nil
 	}
@@ -191,7 +194,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
