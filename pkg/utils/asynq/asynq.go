@@ -77,6 +77,13 @@ func NewDefaultErrorHandler() asynq.ErrorHandlerFunc {
 	return asynq.ErrorHandlerFunc(handler)
 }
 
+// GetTaskID returns the ID of the task from the specified context, if present.
+func GetTaskID(ctx context.Context) string {
+	id, _ := asynq.GetTaskID(ctx)
+
+	return id
+}
+
 // GetQueueName returns the queue name from the specified context, if present.
 // Otherwise it returns [config.DefaultQueueName].
 func GetQueueName(ctx context.Context) string {
