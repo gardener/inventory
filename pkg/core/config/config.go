@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -687,7 +688,7 @@ type LoggingConfig struct {
 // ParseFileInto parses the configuration from the given path and unmarshals it
 // into the specified out value.
 func ParseFileInto(path string, out any) error {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("%w: %s", err, path)
 	}
