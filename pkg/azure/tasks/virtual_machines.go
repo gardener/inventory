@@ -85,6 +85,7 @@ func enqueueCollectVirtualMachines(ctx context.Context) error {
 				"subscription_id", rg.SubscriptionID,
 				"resource_group", rg.Name,
 			)
+
 			continue
 		}
 
@@ -101,6 +102,7 @@ func enqueueCollectVirtualMachines(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 		task := asynq.NewTask(TaskCollectVirtualMachines, data)
@@ -113,6 +115,7 @@ func enqueueCollectVirtualMachines(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -159,6 +162,7 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 				"resource_group", payload.ResourceGroup,
 				"reason", err,
 			)
+
 			return azureutils.MaybeSkipRetry(err)
 		}
 
@@ -199,6 +203,7 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 					"vm", vmName,
 					"reason", err,
 				)
+
 				continue
 			}
 

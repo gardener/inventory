@@ -114,6 +114,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 			"seed", s.Name,
 		)
 	}
+
 	return nil
 }
 
@@ -123,6 +124,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -138,8 +140,10 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 			// Don't treat excluded seeds as errors, in order to
 			// avoid accumulating archived tasks
 			logger.Warn("seed is excluded", "seed", payload.Seed)
+
 			return nil
 		}
+
 		return asynqutils.SkipRetry(fmt.Errorf("cannot get garden client for %q: %s", payload.Seed, err))
 	}
 
@@ -158,13 +162,14 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 		item := models.Machine{
 			Name:              m.Name,
 			Namespace:         m.Namespace,
-			ProviderId:        m.Spec.ProviderID,
+			ProviderID:        m.Spec.ProviderID,
 			Status:            string(m.Status.CurrentStatus.Phase),
 			Node:              m.Labels["node"],
 			SeedName:          payload.Seed,
 			CreationTimestamp: m.CreationTimestamp.Time,
 		}
 		machines = append(machines, item)
+
 		return nil
 	})
 
@@ -193,6 +198,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 			"seed", payload.Seed,
 			"reason", err,
 		)
+
 		return err
 	}
 

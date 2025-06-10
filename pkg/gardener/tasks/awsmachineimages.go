@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	aws "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws"
+	"github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws"
 	awsinstall "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/install"
 	"github.com/hibiken/asynq"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -91,6 +91,7 @@ func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImages
 			"cloud_profile", payload.CloudProfileName,
 			"reason", err,
 		)
+
 		return err
 	}
 

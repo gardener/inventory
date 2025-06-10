@@ -8,7 +8,7 @@ import (
 	"context"
 
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
-	resourcemanagerpb "cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
+	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -29,10 +29,11 @@ func NewCollectProjectsTask() *asynq.Task {
 }
 
 // HandleCollectProjectsTask is the handler, which collects GCP projects
-func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectProjectsTask(ctx context.Context, _ *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	if gcpclients.ProjectsClientset.Length() == 0 {
 		logger.Warn("no GCP project clients found")
+
 		return nil
 	}
 
@@ -49,6 +50,7 @@ func HandleCollectProjectsTask(ctx context.Context, t *asynq.Task) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		item := models.Project{

@@ -57,7 +57,11 @@ var errUnknownAuthenticationMethod = errors.New("unknown authentication method s
 
 // getConfig extracts and returns the [config.Config] from app's context.
 func getConfig(ctx *cli.Context) *config.Config {
-	conf := ctx.Context.Value(configKey{}).(*config.Config)
+	conf, ok := ctx.Context.Value(configKey{}).(*config.Config)
+	if !ok {
+		return &config.Config{}
+	}
+
 	return conf
 }
 
@@ -68,6 +72,7 @@ func validateDashboardConfig(conf *config.Config) error {
 	}
 
 	_, err := url.Parse(conf.Dashboard.PrometheusEndpoint)
+
 	return err
 }
 
@@ -85,12 +90,14 @@ func newRedisClientOpt(conf *config.Config) asynq.RedisClientOpt {
 // newAsynqClient creates a new [asynq.Client] from the given config
 func newAsynqClient(conf *config.Config) *asynq.Client {
 	redisClientOpt := newRedisClientOpt(conf)
+
 	return asynq.NewClient(redisClientOpt)
 }
 
 // newInspector returns a new [asynq.Inspector] from the given config.
 func newInspector(conf *config.Config) *asynq.Inspector {
 	redisClientOpt := newRedisClientOpt(conf)
+
 	return asynq.NewInspector(redisClientOpt)
 }
 
@@ -142,7 +149,7 @@ func newMigrator(conf *config.Config, db *bun.DB) (*migrate.Migrator, error) {
 		err := m.Discover(os.DirFS(migrationDir))
 		switch {
 		case err == nil:
-			break
+			break // nolint: revive
 		case errors.Is(err, fs.ErrNotExist):
 			slog.Warn(
 				"falling back to bundled migrations",
@@ -157,6 +164,7 @@ func newMigrator(conf *config.Config, db *bun.DB) (*migrate.Migrator, error) {
 	}
 
 	migrator := migrate.NewMigrator(db, m, migrate.WithMarkAppliedOnSuccess(true))
+
 	return migrator, nil
 }
 
@@ -166,11 +174,11 @@ func newScheduler(conf *config.Config) *asynq.Scheduler {
 
 	// TODO: Logger, etc.
 	// TODO: PostEnqueue hook to emit metrics per tasks
-	preEnqueueFunc := func(t *asynq.Task, opts []asynq.Option) {
+	preEnqueueFunc := func(t *asynq.Task, _ []asynq.Option) {
 		slog.Info("enqueueing task", "name", t.Type())
 	}
 
-	errEnqueueFunc := func(t *asynq.Task, opts []asynq.Option, err error) {
+	errEnqueueFunc := func(t *asynq.Task, _ []asynq.Option, err error) {
 		slog.Error("failed to enqueue", "name", t.Type(), "error", err)
 	}
 
@@ -190,6 +198,7 @@ func newScheduler(conf *config.Config) *asynq.Scheduler {
 	}
 
 	scheduler := asynq.NewScheduler(redisClientOpt, opts)
+
 	return scheduler
 }
 

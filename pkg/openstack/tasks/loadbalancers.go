@@ -69,11 +69,12 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 
 	if openstackclients.LoadBalancerClientset.Length() == 0 {
 		logger.Warn("no OpenStack loadbalancer clients found")
+
 		return nil
 	}
 
 	return openstackclients.LoadBalancerClientset.
-		Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+		Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 			payload := CollectLoadBalancersPayload{
 				Scope: scope,
 			}
@@ -86,6 +87,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -100,6 +102,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -139,7 +142,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 
 	err := loadbalancers.List(client.Client, nil).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				lbList, err := loadbalancers.ExtractLoadBalancers(page)
 
 				if err != nil {
@@ -150,6 +153,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 						"region", payload.Scope.Region,
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -191,6 +195,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 			"could not extract load balancer pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -224,6 +229,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -259,6 +265,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

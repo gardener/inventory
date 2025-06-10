@@ -69,12 +69,13 @@ func enqueueCollectSubnets(ctx context.Context) error {
 
 	if openstackclients.NetworkClientset.Length() == 0 {
 		logger.Warn("no OpenStack subnet clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectSubnetsPayload{
 			Scope: scope,
 		}
@@ -87,6 +88,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -101,6 +103,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -139,7 +142,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	err := subnets.List(client.Client, nil).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				subnetList, err := subnets.ExtractSubnets(page)
 
 				if err != nil {
@@ -147,6 +150,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 						"could not extract subnet pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -177,6 +181,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 			"could not extract subnet pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -209,6 +214,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

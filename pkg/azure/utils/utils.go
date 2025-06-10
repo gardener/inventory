@@ -27,6 +27,7 @@ import (
 func GetResourceGroupsFromDB(ctx context.Context) ([]models.ResourceGroup, error) {
 	items := make([]models.ResourceGroup, 0)
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+
 	return items, err
 }
 
@@ -34,6 +35,7 @@ func GetResourceGroupsFromDB(ctx context.Context) ([]models.ResourceGroup, error
 func GetVPCsFromDB(ctx context.Context) ([]models.VPC, error) {
 	items := make([]models.VPC, 0)
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+
 	return items, err
 }
 
@@ -41,6 +43,7 @@ func GetVPCsFromDB(ctx context.Context) ([]models.VPC, error) {
 func GetStorageAccountsFromDB(ctx context.Context) ([]models.StorageAccount, error) {
 	items := make([]models.StorageAccount, 0)
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+
 	return items, err
 }
 

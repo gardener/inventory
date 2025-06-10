@@ -92,6 +92,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 				"region", r.Name,
 				"account_id", r.AccountID,
 			)
+
 			continue
 		}
 
@@ -107,6 +108,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -120,6 +122,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -177,8 +180,10 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 				"account_id", payload.AccountID,
 				"reason", err,
 			)
+
 			return err
 		}
+
 		for _, reservation := range page.Reservations {
 			items = append(items, reservation.Instances...)
 		}
@@ -232,6 +237,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

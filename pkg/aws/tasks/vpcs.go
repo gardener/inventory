@@ -15,7 +15,6 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/aws/utils"
 	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
@@ -90,6 +89,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 				"region", r.Name,
 				"account_id", r.AccountID,
 			)
+
 			continue
 		}
 
@@ -105,6 +105,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -118,6 +119,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -175,6 +177,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 				"account_id", payload.AccountID,
 				"reason", err,
 			)
+
 			return err
 		}
 		items = append(items, page.Vpcs...)
@@ -182,14 +185,14 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 
 	vpcs := make([]models.VPC, 0, len(items))
 	for _, vpc := range items {
-		name := utils.FetchTag(vpc.Tags, "Name")
+		name := awsutils.FetchTag(vpc.Tags, "Name")
 		item := models.VPC{
 			Name:       name,
 			AccountID:  payload.AccountID,
 			VpcID:      stringutils.StringFromPointer(vpc.VpcId),
 			State:      string(vpc.State),
 			IPv4CIDR:   stringutils.StringFromPointer(vpc.CidrBlock),
-			IPv6CIDR:   "", //TODO: fetch IPv6 CIDR
+			IPv6CIDR:   "", // TODO: fetch IPv6 CIDR
 			IsDefault:  ptr.Value(vpc.IsDefault, false),
 			OwnerID:    stringutils.StringFromPointer(vpc.OwnerId),
 			RegionName: payload.Region,
@@ -222,6 +225,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

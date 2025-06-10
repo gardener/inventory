@@ -69,12 +69,13 @@ func enqueueCollectServers(ctx context.Context) error {
 
 	if openstackclients.ComputeClientset.Length() == 0 {
 		logger.Warn("no OpenStack compute clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.ComputeClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.ComputeClientset.Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectServersPayload{
 			Scope: scope,
 		}
@@ -87,6 +88,7 @@ func enqueueCollectServers(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -101,6 +103,7 @@ func enqueueCollectServers(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -139,7 +142,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 	err := servers.List(client.Client, nil).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				serverList, err := servers.ExtractServers(page)
 
 				if err != nil {
@@ -147,6 +150,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 						"could not extract server pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -183,6 +187,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 			"could not extract server pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -214,6 +219,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

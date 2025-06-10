@@ -15,7 +15,6 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/aws/utils"
 	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
@@ -41,7 +40,7 @@ type CollectSubnetsPayload struct {
 	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NewCollectSubnetTask creates a new [asynq.Task] for collecting AWS Subnets,
+// NewCollectSubnetsTask creates a new [asynq.Task] for collecting AWS Subnets,
 // without specifying a payload.
 func NewCollectSubnetsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectSubnets, nil)
@@ -89,6 +88,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"region", r.Name,
 				"account_id", r.AccountID,
 			)
+
 			continue
 		}
 
@@ -104,6 +104,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 		task := asynq.NewTask(TaskCollectSubnets, data)
@@ -116,6 +117,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -172,6 +174,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 				"account_id", payload.AccountID,
 				"reason", err,
 			)
+
 			return err
 		}
 		items = append(items, page.Subnets...)
@@ -179,7 +182,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	subnets := make([]models.Subnet, 0, len(items))
 	for _, s := range items {
-		name := utils.FetchTag(s.Tags, "Name")
+		name := awsutils.FetchTag(s.Tags, "Name")
 		item := models.Subnet{
 			Name:                   name,
 			SubnetID:               stringutils.StringFromPointer(s.SubnetId),
@@ -191,7 +194,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 			AzID:                   stringutils.StringFromPointer(s.AvailabilityZoneId),
 			AvailableIPv4Addresses: int(ptr.Value(s.AvailableIpAddressCount, 0)),
 			IPv4CIDR:               stringutils.StringFromPointer(s.CidrBlock),
-			IPv6CIDR:               "", //TODO: fetch IPv6 CIDR
+			IPv6CIDR:               "", // TODO: fetch IPv6 CIDR
 		}
 		subnets = append(subnets, item)
 	}
@@ -223,6 +226,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

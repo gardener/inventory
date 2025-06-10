@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// NewQueueCommand returns a new [cli.Command] for queue-related operations.
 func NewQueueCommand() *cli.Command {
 	cmd := &cli.Command{
 		Name:    "queue",
@@ -96,6 +97,7 @@ func NewQueueCommand() *cli.Command {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
 					defer inspector.Close() // nolint: errcheck
+
 					return inspector.PauseQueue(queueName)
 				},
 			},
@@ -116,6 +118,7 @@ func NewQueueCommand() *cli.Command {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
 					defer inspector.Close() // nolint: errcheck
+
 					return inspector.UnpauseQueue(queueName)
 				},
 			},
@@ -158,10 +161,12 @@ func NewQueueCommand() *cli.Command {
 						for k := range typeToFunc {
 							messageTypes = append(messageTypes, k)
 						}
-						return fmt.Errorf("Message type should be one of %s", strings.Join(messageTypes, ", "))
+
+						return fmt.Errorf("message type should be one of %s", strings.Join(messageTypes, ", "))
 					}
 
 					_, err := deleteFunc(queueName)
+
 					return err
 				},
 			},

@@ -69,12 +69,13 @@ func enqueueCollectPorts(ctx context.Context) error {
 
 	if openstackclients.NetworkClientset.Length() == 0 {
 		logger.Warn("no OpenStack network clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectPortsPayload{
 			Scope: scope,
 		}
@@ -87,6 +88,7 @@ func enqueueCollectPorts(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -101,6 +103,7 @@ func enqueueCollectPorts(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -140,10 +143,11 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 
 	err := ports.List(client.Client, ports.ListOpts{}).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				portList, err := ports.ExtractPorts(page)
 				if err != nil {
 					logger.Error("failed to extract ports", "reason", err)
+
 					return false, err
 				}
 
@@ -172,6 +176,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 								"ip string value",
 								fixedIP.IPAddress,
 							)
+
 							continue
 						}
 
@@ -183,6 +188,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 						portIPs = append(portIPs, ip)
 					}
 				}
+
 				return true, nil
 			})
 
@@ -225,6 +231,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -260,6 +267,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

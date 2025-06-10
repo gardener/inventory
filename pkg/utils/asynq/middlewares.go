@@ -39,8 +39,10 @@ func NewLoggerMiddleware(logger *slog.Logger) asynq.MiddlewareFunc {
 			logHandler := logger.Handler().WithAttrs(attrs)
 			newLogger := slog.New(logHandler)
 			newCtx := context.WithValue(ctx, loggerKey{}, newLogger)
+
 			return handler.ProcessTask(newCtx, task)
 		}
+
 		return asynq.HandlerFunc(mw)
 	}
 
@@ -58,6 +60,7 @@ func NewMeasuringMiddleware() asynq.MiddlewareFunc {
 			err := handler.ProcessTask(ctx, task)
 			elapsed := time.Since(start)
 			logger.Info("task finished", "duration", elapsed)
+
 			return err
 		}
 

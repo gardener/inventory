@@ -35,10 +35,11 @@ func NewCollectSeedsTask() *asynq.Task {
 }
 
 // HandleCollectSeedsTask is the handler for collecting Gardener Seeds.
-func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectSeedsTask(ctx context.Context, _ *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -67,6 +68,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 			CreationTimestamp: s.CreationTimestamp.Time,
 		}
 		seeds = append(seeds, item)
+
 		return nil
 	})
 
@@ -92,6 +94,7 @@ func HandleCollectSeedsTask(ctx context.Context, t *asynq.Task) error {
 			"could not insert gardener seeds into db",
 			"reason", err,
 		)
+
 		return err
 	}
 

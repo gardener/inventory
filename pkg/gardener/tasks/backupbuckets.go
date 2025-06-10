@@ -35,10 +35,11 @@ func NewCollectBackupBucketsTask() *asynq.Task {
 }
 
 // HandleCollectBackupBucketsTask is the handler for collecting BackupBuckets.
-func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectBackupBucketsTask(ctx context.Context, _ *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -79,6 +80,7 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 			CreationTimestamp: b.CreationTimestamp.Time,
 		}
 		buckets = append(buckets, item)
+
 		return nil
 	})
 
@@ -108,6 +110,7 @@ func HandleCollectBackupBucketsTask(ctx context.Context, t *asynq.Task) error {
 			"could not insert gardener backup buckets into db",
 			"reason", err,
 		)
+
 		return err
 	}
 

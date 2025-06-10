@@ -5,7 +5,7 @@
 package azure
 
 import (
-	armstorage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 
 	"github.com/gardener/inventory/pkg/core/registry"
 )

@@ -43,6 +43,7 @@ func LinkObjects(ctx context.Context, db *bun.DB, items []LinkFunction) error {
 	for _, linkFunc := range items {
 		if err := linkFunc(ctx, db); err != nil {
 			logger.Error("failed to link objects", "reason", err)
+
 			continue
 		}
 	}

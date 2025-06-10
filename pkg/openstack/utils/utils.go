@@ -54,9 +54,11 @@ func IsValidProjectScope(scope openstackclients.ClientScope) error {
 func GetResourcesFromDB[T any](ctx context.Context) ([]T, error) {
 	items := make([]T, 0)
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+
 	return items, err
 }
 
+// MatchScopeToProject matches the given scope to an OpenStack project.
 func MatchScopeToProject(scope openstackclients.ClientScope, projects []models.Project) (models.Project, error) {
 	for _, project := range projects {
 		if scope.Project != project.Name {

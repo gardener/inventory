@@ -11,7 +11,7 @@ import (
 	"net"
 
 	compute "cloud.google.com/go/compute/apiv1"
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
 	"google.golang.org/api/iterator"
 
@@ -79,6 +79,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if gcpclients.InstancesClientset.Length() == 0 {
 		logger.Warn("no GCP instance clients found")
+
 		return nil
 	}
 
@@ -95,6 +96,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectInstances, data)
@@ -106,6 +108,7 @@ func enqueueCollectInstances(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -159,6 +162,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 				"project", payload.ProjectID,
 				"reason", err,
 			)
+
 			return err
 		}
 

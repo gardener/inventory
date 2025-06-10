@@ -10,7 +10,7 @@ import (
 	"errors"
 
 	compute "cloud.google.com/go/compute/apiv1"
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
 	"google.golang.org/api/iterator"
 
@@ -48,7 +48,7 @@ func NewCollectTargetPoolsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectTargetPools, nil)
 }
 
-// HandlCollectTargetPools is the handler, which collects GCP Target Pools.
+// HandleCollectTargetPools is the handler, which collects GCP Target Pools.
 func HandleCollectTargetPools(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
 	// collecting resources from all registered projects.
@@ -75,6 +75,7 @@ func enqueueCollectTargetPools(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if gcpclients.TargetPoolsClientset.Length() == 0 {
 		logger.Warn("no GCP target pools clients found")
+
 		return nil
 	}
 
@@ -91,6 +92,7 @@ func enqueueCollectTargetPools(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectTargetPools, data)
@@ -102,6 +104,7 @@ func enqueueCollectTargetPools(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -155,6 +158,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 				"project", payload.ProjectID,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -180,7 +184,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 				var inferredShoot string
 				shoot, err := gardenerutils.InferShootFromInstanceName(ctx, instanceName)
 				if err == nil {
-					inferredShoot = shoot.TechnicalId
+					inferredShoot = shoot.TechnicalID
 				}
 
 				item := models.TargetPoolInstance{

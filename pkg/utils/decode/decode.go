@@ -26,6 +26,7 @@ func Decode(decoder runtime.Decoder, data []byte, into runtime.Object) error {
 
 	if reflect.TypeOf(output) == intoType {
 		reflect.ValueOf(into).Elem().Set(reflect.ValueOf(output).Elem())
+
 		return nil
 	}
 

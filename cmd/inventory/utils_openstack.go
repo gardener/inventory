@@ -109,6 +109,7 @@ func validateOpenStackConfig(conf *config.Config) error {
 func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 	if !conf.OpenStack.IsEnabled {
 		slog.Warn("OpenStack is not enabled, will not create API clients")
+
 		return nil
 	}
 
@@ -205,10 +206,7 @@ func configureOpenStackServiceClientset(
 	clientset *registry.Registry[openstackclients.ClientScope, openstackclients.Client[*gophercloud.ServiceClient]],
 	serviceConfig config.OpenStackServiceCredentials,
 	conf *config.Config,
-	serviceFunc func(
-		providerClient *gophercloud.ProviderClient,
-		eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error)) error {
-
+	serviceFunc func(providerClient *gophercloud.ProviderClient, eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error)) error {
 	for _, credentials := range serviceConfig.UseCredentials {
 		namedCreds := conf.OpenStack.Credentials[credentials]
 		providerClient, err := newOpenStackProviderClient(ctx, &namedCreds)

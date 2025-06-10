@@ -88,6 +88,7 @@ func validateAzureConfig(conf *config.Config) error {
 func configureAzureClients(ctx context.Context, conf *config.Config) error {
 	if !conf.Azure.IsEnabled {
 		slog.Warn("Azure is not enabled, will not create API clients")
+
 		return nil
 	}
 
@@ -146,6 +147,7 @@ func getAzureTokenProvider(conf *config.Config, namedCredentials string) (azcore
 			TenantID:      creds.WorkloadIdentity.TenantID,
 			TokenFilePath: creds.WorkloadIdentity.TokenFile,
 		}
+
 		return azidentity.NewWorkloadIdentityCredential(opts)
 	default:
 		return nil, fmt.Errorf("azure: %w: %s", errUnknownAuthenticationMethod, creds.Authentication)

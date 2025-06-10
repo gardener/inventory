@@ -170,7 +170,7 @@ func loadAWSConfig(ctx context.Context, conf *config.Config, namedCredentials st
 	switch creds.TokenRetriever {
 	case config.DefaultAWSTokenRetriever:
 		// Load shared credentials config only
-		break
+		break // nolint: revive
 	case kubesatoken.TokenRetrieverName:
 		credsProvider, err := newKubeSATokenCredentialsProvider(conf, creds)
 		if err != nil {
@@ -347,6 +347,7 @@ func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 func configureAWSClients(ctx context.Context, conf *config.Config) error {
 	if !conf.AWS.IsEnabled {
 		slog.Warn("AWS is not enabled, will not create API clients")
+
 		return nil
 	}
 

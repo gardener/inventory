@@ -11,7 +11,7 @@ import (
 	"net"
 
 	compute "cloud.google.com/go/compute/apiv1"
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
 	"google.golang.org/api/iterator"
 
@@ -71,6 +71,7 @@ func enqueueCollectAddresses(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if gcpclients.AddressesClientset.Length() == 0 && gcpclients.GlobalAddressesClientset.Length() == 0 {
 		logger.Warn("no GCP addresses clients found")
+
 		return nil
 	}
 
@@ -87,6 +88,7 @@ func enqueueCollectAddresses(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectAddresses, data)
@@ -98,6 +100,7 @@ func enqueueCollectAddresses(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 

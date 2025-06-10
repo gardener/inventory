@@ -24,16 +24,17 @@ const TaskCollectSubscriptions = "az:task:collect-subscriptions"
 
 // NewCollectSubscriptionsTask creates a new [asynq.Task] for collecting Azure
 // Subscriptions, without specifying a payload.
-func NewCollectSubscriptionsTasks() *asynq.Task {
+func NewCollectSubscriptionsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectSubscriptions, nil)
 }
 
 // HandleCollectSubscriptionsTask is the handler, which collects Azure
 // Subscriptions.
-func HandleCollectSubscriptionsTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectSubscriptionsTask(ctx context.Context, _ *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	if azureclients.SubscriptionsClientset.Length() == 0 {
 		logger.Warn("no Azure subscriptions clients found")
+
 		return nil
 	}
 
@@ -47,6 +48,7 @@ func HandleCollectSubscriptionsTask(ctx context.Context, t *asynq.Task) error {
 				"subscription_id", subscriptionID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		item := models.Subscription{
@@ -55,6 +57,7 @@ func HandleCollectSubscriptionsTask(ctx context.Context, t *asynq.Task) error {
 			State:          string(ptr.Value(sub.State, armsubscription.SubscriptionState(""))),
 		}
 		items = append(items, item)
+
 		return nil
 	})
 

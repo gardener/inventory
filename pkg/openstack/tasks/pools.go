@@ -70,11 +70,12 @@ func enqueueCollectPools(ctx context.Context) error {
 
 	if openstackclients.LoadBalancerClientset.Length() == 0 {
 		logger.Warn("no OpenStack loadbalancer clients found")
+
 		return nil
 	}
 
 	return openstackclients.LoadBalancerClientset.
-		Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+		Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 			payload := CollectPoolsPayload{
 				Scope: scope,
 			}
@@ -87,6 +88,7 @@ func enqueueCollectPools(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -101,6 +103,7 @@ func enqueueCollectPools(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -151,6 +154,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 						"region", payload.Scope.Region,
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -168,6 +172,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 										"region", payload.Scope.Region,
 										"reason", err,
 									)
+
 									return false, err
 								}
 
@@ -175,7 +180,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 									var inferredGardenerShoot string
 									shoot, err := gardenerutils.InferShootFromInstanceName(ctx, member.Name)
 									if err == nil {
-										inferredGardenerShoot = shoot.TechnicalId
+										inferredGardenerShoot = shoot.TechnicalID
 									}
 
 									item := models.PoolMember{
@@ -204,6 +209,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 							"region", payload.Scope.Region,
 							"reason", err,
 						)
+
 						return false, err
 					}
 
@@ -229,6 +235,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -254,6 +261,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -295,6 +303,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

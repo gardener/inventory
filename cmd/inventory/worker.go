@@ -130,7 +130,7 @@ func NewWorkerCommand() *cli.Command {
 					for _, item := range servers {
 						if item.Host == workerName {
 							exists = true
-							fmt.Printf("%s/%d: OK\n", item.Host, item.PID)
+							fmt.Printf("%s/%d: OK\n", item.Host, item.PID) // #nolint
 						}
 					}
 
@@ -195,6 +195,7 @@ func NewWorkerCommand() *cli.Command {
 					worker.HandlersFromRegistry(registry.TaskRegistry)
 					_ = registry.TaskRegistry.Range(func(name string, _ asynq.Handler) error {
 						slog.Info("registered task", "name", name)
+
 						return nil
 					})
 
@@ -205,6 +206,7 @@ func NewWorkerCommand() *cli.Command {
 					}
 
 					defer worker.Shutdown()
+
 					return worker.Run()
 				},
 			},

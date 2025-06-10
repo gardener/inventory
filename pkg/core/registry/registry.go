@@ -48,6 +48,7 @@ func (r *Registry[K, V]) Register(key K, val V) error {
 	}
 
 	r.items[key] = val
+
 	return nil
 }
 
@@ -84,6 +85,7 @@ func (r *Registry[K, V]) Get(key K) (V, bool) {
 	defer r.Unlock()
 
 	val, ok := r.items[key]
+
 	return val, ok
 }
 
@@ -94,6 +96,7 @@ func (r *Registry[K, V]) Exists(key K) bool {
 	defer r.Unlock()
 
 	_, exists := r.items[key]
+
 	return exists
 }
 

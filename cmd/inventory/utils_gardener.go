@@ -79,6 +79,7 @@ func getGardenerRestConfig(conf *config.Config) (*rest.Config, error) {
 			)
 			conf.Gardener.Kubeconfig = kubeconfigFromEnv
 		}
+
 		return clientcmd.BuildConfigFromFlags("", conf.Gardener.Kubeconfig)
 	case config.GardenerAuthenticationMethodToken:
 		// Token file authentication
@@ -101,6 +102,7 @@ func getGardenerRestConfig(conf *config.Config) (*rest.Config, error) {
 func configureGardenerClient(_ context.Context, conf *config.Config) error {
 	if !conf.Gardener.IsEnabled {
 		slog.Warn("Gardener is not enabled, will not create API client")
+
 		return nil
 	}
 

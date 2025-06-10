@@ -26,7 +26,7 @@ const (
 	TaskCollectRegions = "aws:task:collect-regions"
 )
 
-// NewAwsCollectRegionsTask creates a new [asynq.Task] task for collecting AWS
+// NewCollectRegionsTask creates a new [asynq.Task] task for collecting AWS
 // regions without specifying a payload.
 func NewCollectRegionsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectRegions, nil)
@@ -68,6 +68,7 @@ func enqueueCollectRegions(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if awsclients.EC2Clientset.Length() == 0 {
 		logger.Warn("no AWS clients found")
+
 		return nil
 	}
 
@@ -81,6 +82,7 @@ func enqueueCollectRegions(ctx context.Context) error {
 				"account_id", accountID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -93,6 +95,7 @@ func enqueueCollectRegions(ctx context.Context) error {
 				"account_id", accountID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -103,6 +106,7 @@ func enqueueCollectRegions(ctx context.Context) error {
 			"queue", info.Queue,
 			"account_id", accountID,
 		)
+
 		return nil
 	})
 
@@ -128,6 +132,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -162,6 +167,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

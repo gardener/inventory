@@ -118,6 +118,7 @@ func (w *Worker) Handle(pattern string, handler asynq.Handler) {
 func (w *Worker) HandlersFromRegistry(reg *registry.Registry[string, asynq.Handler]) {
 	_ = reg.Range(func(pattern string, handler asynq.Handler) error {
 		w.Handle(pattern, handler)
+
 		return nil
 	})
 }

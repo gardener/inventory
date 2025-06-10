@@ -123,6 +123,7 @@ func enqueueCollectShoots(ctx context.Context) error {
 				"namespace", p.Namespace,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -136,6 +137,7 @@ func enqueueCollectShoots(ctx context.Context) error {
 				"namespace", p.Namespace,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -158,6 +160,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -195,6 +198,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 				"project", projectName,
 				"reason", "missing technical id",
 			)
+
 			return nil
 		}
 
@@ -204,6 +208,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 				"cannot extract shoot",
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -215,7 +220,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 		}
 		item := models.Shoot{
 			Name:              s.Name,
-			TechnicalId:       s.Status.TechnicalID,
+			TechnicalID:       s.Status.TechnicalID,
 			Namespace:         s.Namespace,
 			ProjectName:       projectName,
 			CloudProfile:      cloudProfileName,
@@ -231,6 +236,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 			WorkerPrefixes:    workerPrefixes,
 		}
 		shoots = append(shoots, item)
+
 		return nil
 	})
 
@@ -268,6 +274,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 			"could not insert gardener shoots into db",
 			"reason", err,
 		)
+
 		return err
 	}
 

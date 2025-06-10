@@ -69,7 +69,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
 	queue := asynqutils.GetQueueName(ctx)
-	err := gcpclients.StorageClientset.Range(func(projectID string, c *gcpclients.Client[*storage.Client]) error {
+	err := gcpclients.StorageClientset.Range(func(projectID string, _ *gcpclients.Client[*storage.Client]) error {
 		p := &CollectBucketsPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
 		if err != nil {
@@ -78,6 +78,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -90,6 +91,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -134,6 +136,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 				"project", payload.ProjectID,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -170,6 +173,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 			"project", payload.ProjectID,
 			"reason", err,
 		)
+
 		return err
 	}
 

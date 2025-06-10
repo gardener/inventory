@@ -90,6 +90,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 				"region", r.Name,
 				"account_id", r.AccountID,
 			)
+
 			continue
 		}
 
@@ -112,6 +113,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -125,6 +127,7 @@ func enqueueCollectImages(ctx context.Context, payload CollectImagesPayload) err
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -185,6 +188,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 				"account_id", payload.AccountID,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -230,6 +234,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

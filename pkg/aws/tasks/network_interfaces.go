@@ -41,7 +41,7 @@ type CollectNetworkInterfacesPayload struct {
 	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NetCollectNetworkInterfacesTask creates a new [asynq.Task] for collecting AWS
+// NewCollectNetworkInterfacesTask creates a new [asynq.Task] for collecting AWS
 // ENIs, without specifying a payload.
 func NewCollectNetworkInterfacesTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectNetworkInterfaces, nil)
@@ -92,6 +92,7 @@ func enqueueCollectENIs(ctx context.Context) error {
 				"region", r.Name,
 				"account_id", r.AccountID,
 			)
+
 			continue
 		}
 
@@ -107,6 +108,7 @@ func enqueueCollectENIs(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -120,6 +122,7 @@ func enqueueCollectENIs(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -177,6 +180,7 @@ func collectENIs(ctx context.Context, payload CollectNetworkInterfacesPayload) e
 				"account_id", payload.AccountID,
 				"reason", err,
 			)
+
 			return err
 		}
 		items = append(items, page.NetworkInterfaces...)
@@ -268,6 +272,7 @@ func collectENIs(ctx context.Context, payload CollectNetworkInterfacesPayload) e
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

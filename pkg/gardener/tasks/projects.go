@@ -67,6 +67,7 @@ func collectProject(ctx context.Context, payload CollectProjectsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -83,11 +84,7 @@ func collectProject(ctx context.Context, payload CollectProjectsPayload) error {
 		return err
 	}
 
-	if err := persistProjectMembers(ctx, members); err != nil {
-		return err
-	}
-
-	return nil
+	return persistProjectMembers(ctx, members)
 }
 
 // collectAllProjects collects all projects from Gardener.
@@ -95,6 +92,7 @@ func collectAllProjects(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -114,6 +112,7 @@ func collectAllProjects(ctx context.Context) error {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
 		items = append(items, item)
+
 		return nil
 	})
 
@@ -126,11 +125,7 @@ func collectAllProjects(ctx context.Context) error {
 		return err
 	}
 
-	if err := persistProjectMembers(ctx, members); err != nil {
-		return err
-	}
-
-	return nil
+	return persistProjectMembers(ctx, members)
 }
 
 // toProjectModels converts the given slice of [v1beta1.Project] items into
@@ -216,7 +211,7 @@ func persistProjectMembers(ctx context.Context, items []models.ProjectMember) er
 	// Group members by project and emit metrics
 	memberGroups := make(map[string]int)
 	for _, member := range items {
-		memberGroups[member.ProjectName] += 1
+		memberGroups[member.ProjectName]++
 	}
 	defer func() {
 		for groupName, count := range memberGroups {

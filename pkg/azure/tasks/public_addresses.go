@@ -85,6 +85,7 @@ func enqueueCollectPublicAddresses(ctx context.Context) error {
 				"subscription_id", rg.SubscriptionID,
 				"resource_group", rg.Name,
 			)
+
 			continue
 		}
 
@@ -101,6 +102,7 @@ func enqueueCollectPublicAddresses(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 		task := asynq.NewTask(TaskCollectPublicAddresses, data)
@@ -113,6 +115,7 @@ func enqueueCollectPublicAddresses(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
