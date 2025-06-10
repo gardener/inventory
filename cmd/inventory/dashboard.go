@@ -48,7 +48,7 @@ func NewDashboardCommand() *cli.Command {
 					conf := getConfig(ctx)
 					redisClientOpt := newRedisClientOpt(conf)
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 
 					// Asynq UI
 					opts := asynqmon.Options{

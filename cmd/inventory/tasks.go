@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"time"
@@ -61,7 +62,7 @@ func NewTaskCommand() *cli.Command {
 					taskID := ctx.String("id")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 					return inspector.CancelProcessing(taskID)
 				},
 			},
@@ -87,7 +88,7 @@ func NewTaskCommand() *cli.Command {
 					queue := ctx.String("queue")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 					return inspector.DeleteTask(queue, taskID)
 				},
 			},
@@ -292,7 +293,7 @@ func NewTaskCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					client := newAsynqClient(conf)
-					defer client.Close()
+					defer client.Close() // nolint: errcheck
 
 					taskName := ctx.String("task")
 					timeout := ctx.Duration("timeout")
@@ -303,13 +304,13 @@ func NewTaskCommand() *cli.Command {
 					payloadFile := ctx.Path("payload-file")
 					switch {
 					case payloadData != "" && payloadFile != "":
-						return fmt.Errorf("Cannot use --payload and --payload-file at the same time")
+						return fmt.Errorf("cannot use --payload and --payload-file at the same time")
 					case payloadData != "":
 						payload = []byte(payloadData)
 					case payloadFile != "":
-						data, err := os.ReadFile(payloadFile)
+						data, err := os.ReadFile(filepath.Clean(payloadFile))
 						if err != nil {
-							return fmt.Errorf("Cannot read payload file: %w", err)
+							return fmt.Errorf("cannot read payload file: %w", err)
 						}
 						payload = data
 					}
@@ -321,7 +322,7 @@ func NewTaskCommand() *cli.Command {
 					}
 					info, err := client.EnqueueContext(ctx.Context, task, opts...)
 					if err != nil {
-						return fmt.Errorf("Cannot enqueue %q task: %w", taskName, err)
+						return fmt.Errorf("cannot enqueue %q task: %w", taskName, err)
 					}
 
 					fmt.Printf("%s/%s\n", info.Queue, info.ID)
@@ -350,7 +351,7 @@ func NewTaskCommand() *cli.Command {
 					taskID := ctx.String("id")
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 					info, err := inspector.GetTaskInfo(queueName, taskID)
 					if err != nil {
 						return err
@@ -427,7 +428,7 @@ func printTasksInState(ctx *cli.Context, state asynq.TaskState) error {
 	queueName := ctx.String("queue")
 	conf := getConfig(ctx)
 	inspector := newInspector(conf)
-	defer inspector.Close()
+	defer inspector.Close() // nolint: errcheck
 	headers := []string{
 		"ID",
 		"TYPE",

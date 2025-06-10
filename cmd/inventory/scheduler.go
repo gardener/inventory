@@ -109,7 +109,7 @@ func NewSchedulerCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 					items, err := inspector.SchedulerEntries()
 					if err != nil {
 						return err

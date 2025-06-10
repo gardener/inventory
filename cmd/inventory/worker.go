@@ -37,7 +37,7 @@ func NewWorkerCommand() *cli.Command {
 				Action: func(ctx *cli.Context) error {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 					servers, err := inspector.Servers()
 					if err != nil {
 						return err
@@ -120,7 +120,7 @@ func NewWorkerCommand() *cli.Command {
 
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 					servers, err := inspector.Servers()
 					if err != nil {
 						return err
@@ -151,11 +151,11 @@ func NewWorkerCommand() *cli.Command {
 					if err != nil {
 						return err
 					}
-					defer db.Close()
+					defer db.Close() // nolint: errcheck
 					client := newAsynqClient(conf)
-					defer client.Close()
+					defer client.Close() // nolint: errcheck
 					inspector := newInspector(conf)
-					defer inspector.Close()
+					defer inspector.Close() // nolint: errcheck
 					worker := newWorker(conf)
 
 					// Gardener client configs
