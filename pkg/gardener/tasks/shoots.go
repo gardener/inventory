@@ -68,7 +68,7 @@ func getCloudProfileName(s v1beta1.Shoot) (string, error) {
 		return *s.Spec.CloudProfileName, nil
 	}
 
-	return "", fmt.Errorf("No cloud profile name found for shoot %s", s.Name)
+	return "", fmt.Errorf("no cloud profile name found for shoot %s", s.Name)
 }
 
 // NewCollectShootsTask creates a new [asynq.Task] for collecting

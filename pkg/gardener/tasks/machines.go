@@ -89,6 +89,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 				"seed", s.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -101,6 +102,7 @@ func enqueueCollectMachines(ctx context.Context) error {
 				"seed", s.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
