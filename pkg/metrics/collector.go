@@ -59,10 +59,10 @@ type Collector struct {
 var _ prometheus.Collector = &Collector{}
 
 // AddDesc adds the given [prometheus.Desc] to the [Collector].
-func (c *Collector) AddDesc(desc *prometheus.Desc) {
+func (c *Collector) AddDesc(items ...*prometheus.Desc) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.descriptors = append(c.descriptors, desc)
+	c.descriptors = append(c.descriptors, items...)
 }
 
 // AddMetric adds the given [prometheus.Metric] to the [Collector]. The metric
