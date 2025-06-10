@@ -24,7 +24,7 @@ var ErrContinue = errors.New("continue iteration")
 
 // Registry is a concurrent-safe registry.
 type Registry[K comparable, V any] struct {
-	sync.Mutex
+	mu    sync.Mutex
 	items map[K]V
 }
 
@@ -39,8 +39,8 @@ func New[K comparable, V any]() *Registry[K, V] {
 
 // Register registers the key and value with the registry
 func (r *Registry[K, V]) Register(key K, val V) error {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	_, exists := r.items[key]
 	if exists {
@@ -61,8 +61,8 @@ func (r *Registry[K, V]) MustRegister(key K, val V) {
 
 // Unregister removes the key (if present) from the registry.
 func (r *Registry[K, V]) Unregister(key K) {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	_, exists := r.items[key]
 	if exists {
@@ -72,8 +72,8 @@ func (r *Registry[K, V]) Unregister(key K) {
 
 // Overwrite replaces the key specified by K with the value V in the registry.
 func (r *Registry[K, V]) Overwrite(key K, val V) {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	r.items[key] = val
 }
@@ -81,8 +81,8 @@ func (r *Registry[K, V]) Overwrite(key K, val V) {
 // Get returns the value associated with the given key and a boolean indicating
 // whether the key is present in the registry.
 func (r *Registry[K, V]) Get(key K) (V, bool) {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	val, ok := r.items[key]
 
@@ -92,8 +92,8 @@ func (r *Registry[K, V]) Get(key K) (V, bool) {
 // Exists returns a boolean indicating whether the given key exists in the
 // registry.
 func (r *Registry[K, V]) Exists(key K) bool {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	_, exists := r.items[key]
 
@@ -102,8 +102,8 @@ func (r *Registry[K, V]) Exists(key K) bool {
 
 // Length returns the number of items in the registry.
 func (r *Registry[K, V]) Length() int {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	return len(r.items)
 }
@@ -115,8 +115,8 @@ type RangeFunc[K comparable, V any] func(key K, val V) error
 // Range calls f for each item in the registry. If f returns an error, Range
 // will stop the iteration.
 func (r *Registry[K, V]) Range(f RangeFunc[K, V]) error {
-	r.Lock()
-	defer r.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	for k, v := range r.items {
 		err := f(k, v)
