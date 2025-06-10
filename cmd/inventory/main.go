@@ -51,7 +51,7 @@ func main() {
 			configPaths := ctx.StringSlice("config")
 			conf, err := config.Parse(configPaths...)
 			if err != nil {
-				return fmt.Errorf("Cannot parse config: %w", err)
+				return fmt.Errorf("cannot parse config: %w", err)
 			}
 
 			logger, err := newLogger(os.Stdout, conf)

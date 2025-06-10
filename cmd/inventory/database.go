@@ -133,7 +133,7 @@ func execDatabaseInitCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func execDatabaseMigrateCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -186,7 +186,7 @@ func execDatabaseRollbackCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -224,7 +224,7 @@ func execDatabaseLockCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func execDatabaseUnlockCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -255,7 +255,7 @@ func execDatabaseCreateMigrationCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func execDatabaseStatusCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -318,7 +318,7 @@ func execDatabaseAppliedCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err
@@ -347,7 +347,7 @@ func execDatabasePendingCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 	migrator, err := newMigrator(conf, db)
 	if err != nil {
 		return err

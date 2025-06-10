@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -93,13 +94,13 @@ func NewModelCommand() *cli.Command {
 
 					switch {
 					case templateData != "" && templateFile != "":
-						return fmt.Errorf("Cannot use --template and --template-file at the same time")
+						return fmt.Errorf("cannot use --template and --template-file at the same time")
 					case templateData == "" && templateFile == "":
-						return fmt.Errorf("Must specify --template or --template-file")
+						return fmt.Errorf("must specify --template or --template-file")
 					case templateData != "":
 						templateBody = templateData
 					case templateFile != "":
-						data, err := os.ReadFile(templateFile)
+						data, err := os.ReadFile(filepath.Clean(templateFile))
 						if err != nil {
 							return err
 						}
@@ -109,16 +110,16 @@ func NewModelCommand() *cli.Command {
 					modelName := ctx.String("model")
 					model, ok := registry.ModelRegistry.Get(modelName)
 					if !ok {
-						return fmt.Errorf("Model %q not found in registry", modelName)
+						return fmt.Errorf("model %q not found in registry", modelName)
 					}
 
 					offset := ctx.Int("offset")
 					if offset < 0 {
-						return fmt.Errorf("Invalid offset %d", offset)
+						return fmt.Errorf("invalid offset %d", offset)
 					}
 					limit := ctx.Int("limit")
 					if limit < 0 {
-						return fmt.Errorf("Invalid limit %d", limit)
+						return fmt.Errorf("invalid limit %d", limit)
 					}
 
 					// Configure database connection
@@ -127,7 +128,7 @@ func NewModelCommand() *cli.Command {
 					if err != nil {
 						return err
 					}
-					defer db.Close()
+					defer db.Close() // nolint: errcheck
 
 					// Create a new slice of the type we have in the registry
 					// for the specified model name. This slice will then be

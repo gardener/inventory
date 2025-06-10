@@ -454,57 +454,46 @@ func configureGCPClients(ctx context.Context, conf *config.Config) error {
 // closeGCPClients closes the existing GCP client connections
 func closeGCPClients() {
 	_ = gcpclients.ProjectsClientset.Range(func(_ string, client *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.InstancesClientset.Range(func(_ string, client *gcpclients.Client[*compute.InstancesClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.NetworksClientset.Range(func(_ string, client *gcpclients.Client[*compute.NetworksClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.AddressesClientset.Range(func(_ string, client *gcpclients.Client[*compute.AddressesClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.GlobalAddressesClientset.Range(func(_ string, client *gcpclients.Client[*compute.GlobalAddressesClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.SubnetworksClientset.Range(func(_ string, client *gcpclients.Client[*compute.SubnetworksClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.DisksClientset.Range(func(_ string, client *gcpclients.Client[*compute.DisksClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.StorageClientset.Range(func(_ string, client *gcpclients.Client[*storage.Client]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.ForwardingRulesClientset.Range(func(_ string, client *gcpclients.Client[*compute.ForwardingRulesClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.ClusterManagerClientset.Range(func(_ string, client *gcpclients.Client[*container.ClusterManagerClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 
 	_ = gcpclients.TargetPoolsClientset.Range(func(_ string, client *gcpclients.Client[*compute.TargetPoolsClient]) error {
-		client.Client.Close()
-		return nil
+		return client.Client.Close()
 	})
 }
