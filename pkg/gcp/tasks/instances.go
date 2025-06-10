@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
-	"github.com/gardener/inventory/pkg/gcp/utils"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
@@ -193,7 +192,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 				LastStartTimestamp:   inst.GetLastStartTimestamp(),
 				LastStopTimestamp:    inst.GetLastStopTimestamp(),
 				LastSuspendTimestamp: inst.GetLastSuspendedTimestamp(),
-				MachineType:          utils.ResourceNameFromURL(inst.GetMachineType()),
+				MachineType:          gcputils.ResourceNameFromURL(inst.GetMachineType()),
 				MinCPUPlatform:       inst.GetMinCpuPlatform(),
 				SelfLink:             inst.GetSelfLink(),
 				SourceMachineImage:   sourceMachineImage,
@@ -331,7 +330,7 @@ func getSourceMachineImageFromDisks(
 		}
 
 		sourceDisk := disk.GetSource()
-		sourceDiskName := utils.ResourceNameFromURL(sourceDisk)
+		sourceDiskName := gcputils.ResourceNameFromURL(sourceDisk)
 
 		diskClient, ok := gcpclients.DisksClientset.Get(projectID)
 		if !ok {
@@ -348,7 +347,7 @@ func getSourceMachineImageFromDisks(
 			return "", err
 		}
 
-		sourceMachineImage = utils.ResourceNameFromURL(disk.GetSourceImage())
+		sourceMachineImage = gcputils.ResourceNameFromURL(disk.GetSourceImage())
 
 		return sourceMachineImage, nil
 	}
