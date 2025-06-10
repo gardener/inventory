@@ -52,7 +52,7 @@ func WithErrorHandler(handler asynq.ErrorHandler) Option {
 
 // NewFromConfig creates a new [Worker] based on the provided
 // [config.WorkerConfig] spec.
-func NewFromConfig(r asynq.RedisClientOpt, conf config.WorkerConfig, opts ...Option) *Worker {
+func NewFromConfig(ctx context.Context, r asynq.RedisClientOpt, conf config.WorkerConfig, opts ...Option) *Worker {
 	concurrency := conf.Concurrency
 	if concurrency <= 0 {
 		concurrency = runtime.NumCPU()
@@ -89,7 +89,7 @@ func NewFromConfig(r asynq.RedisClientOpt, conf config.WorkerConfig, opts ...Opt
 
 	asynqServer := asynq.NewServer(r, asynqConfig)
 	asynqMux := asynq.NewServeMux()
-	metricsServer := metrics.NewServer(metricsAddr, metricsPath)
+	metricsServer := metrics.NewServer(ctx, metricsAddr, metricsPath)
 
 	worker := &Worker{
 		asynqServer:   asynqServer,
