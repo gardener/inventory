@@ -65,6 +65,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		model, ok := registry.ModelRegistry.Get(item.Name)
 		if !ok {
 			logger.Warn("model not found in registry", "name", item.Name)
+
 			continue
 		}
 
@@ -81,6 +82,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 			count, err := out.RowsAffected()
 			if err != nil {
 				logger.Error("failed to get number of deleted rows", "name", item.Name, "reason", err)
+
 				continue
 			}
 			logger.Info("deleted stale records", "name", item.Name, "count", count)
