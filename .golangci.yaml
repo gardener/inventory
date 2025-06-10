@@ -17,7 +17,6 @@ linters:
     - gocyclo
     - govet
     - ineffassign
-    - lll
     - misspell
     - nakedret
     - prealloc
@@ -46,8 +45,23 @@ linters:
           disabled: true
         - name: use-errors-new
           disabled: true
-    lll:
-      line-length: 160
+        - name: max-public-structs
+          disabled: true
+        - name: var-naming
+          arguments:
+            - []
+            - []
+            - - skip-package-name-checks: true
+        - name: unhandled-error
+          disabled: false
+          exclude: [""]
+          arguments:
+            - fmt.Print
+            - fmt.Printf
+            - fmt.Println
+            - fmt.Fprint
+            - fmt.Fprintf
+            - fmt.Fprintln
 
 formatters:
   enable:
