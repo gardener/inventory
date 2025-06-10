@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	openstack "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack"
+	"github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack"
 	openstackinstall "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack/install"
 	"github.com/hibiken/asynq"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -95,6 +95,7 @@ func collectOpenStackMachineImages(ctx context.Context, payload CollectCPMachine
 			"cloud_profile", payload.CloudProfileName,
 			"reason", err,
 		)
+
 		return err
 	}
 

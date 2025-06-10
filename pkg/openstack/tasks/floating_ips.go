@@ -60,7 +60,6 @@ func HandleCollectFloatingIPsTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	return collectFloatingIPs(ctx, payload)
-
 }
 
 // enqueueCollectFloatingIPs enqueues tasks for collecting OpenStack Floating IPs for
@@ -71,12 +70,13 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 
 	if openstackclients.NetworkClientset.Length() == 0 {
 		logger.Warn("no OpenStack network clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectFloatingIPsPayload{
 			Scope: scope,
 		}
@@ -89,6 +89,7 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -103,6 +104,7 @@ func enqueueCollectFloatingIPs(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -141,7 +143,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 
 	err := floatingips.List(client.Client, nil).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				floatingIPList, err := floatingips.ExtractFloatingIPs(page)
 
 				if err != nil {
@@ -149,6 +151,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 						"could not extract floating IPs pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -162,6 +165,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 							"fixed IP",
 							ip.FixedIP,
 						)
+
 						continue
 					}
 
@@ -171,6 +175,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 							"floating IP",
 							ip.FloatingIP,
 						)
+
 						continue
 					}
 
@@ -199,6 +204,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 			"could not extract floating IP pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -231,6 +237,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

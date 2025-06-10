@@ -134,6 +134,7 @@ type Config struct {
 	OpenStack OpenStackConfig `yaml:"openstack"`
 }
 
+// OpenStackConfig provides the OpenStack-related configuration.
 type OpenStackConfig struct {
 	// IsEnabled specifies whether the OpenStack collection is enabled or not.
 	// Setting this to false will not create any OpenStack client.

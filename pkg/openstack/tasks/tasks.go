@@ -27,7 +27,7 @@ const (
 
 // HandleCollectAllTask is a handler, which enqueues tasks for collecting all
 // OpenStack objects.
-func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 	queue := asynqutils.GetQueueName(ctx)
 
 	// Task constructors
@@ -50,7 +50,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 
 // HandleLinkAllTask is a handler, which establishes links between the various
 // OpenStack models.
-func HandleLinkAllTask(ctx context.Context, t *asynq.Task) error {
+func HandleLinkAllTask(ctx context.Context, _ *asynq.Task) error {
 	linkFns := []dbutils.LinkFunction{
 		LinkSubnetsWithNetworks,
 		LinkLoadBalancersWithSubnets,

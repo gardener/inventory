@@ -39,7 +39,7 @@ const (
 
 // models specifies the mapping between name and model type, which will be
 // registered with [registry.ModelRegistry].
-var models map[string]any = map[string]any{
+var models = map[string]any{
 	ProjectModelName:                &Project{},
 	SeedModelName:                   &Seed{},
 	ShootModelName:                  &Shoot{},
@@ -144,7 +144,7 @@ type Shoot struct {
 	coremodels.Model
 
 	Name              string     `bun:"name,notnull"`
-	TechnicalId       string     `bun:"technical_id,notnull,unique"`
+	TechnicalID       string     `bun:"technical_id,notnull,unique"`
 	Namespace         string     `bun:"namespace,notnull"`
 	ProjectName       string     `bun:"project_name,notnull"`
 	CloudProfile      string     `bun:"cloud_profile,notnull"`
@@ -170,7 +170,7 @@ type Machine struct {
 
 	Name              string    `bun:"name,notnull,unique:g_machine_name_namespace_key"`
 	Namespace         string    `bun:"namespace,notnull,unique:g_machine_name_namespace_key"`
-	ProviderId        string    `bun:"provider_id,notnull"`
+	ProviderID        string    `bun:"provider_id,notnull"`
 	Status            string    `bun:"status,notnull"`
 	Node              string    `bun:"node,nullzero"`
 	SeedName          string    `bun:"seed_name,notnull"`

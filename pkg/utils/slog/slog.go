@@ -25,10 +25,13 @@ var ErrInvalidLogFormat = errors.New("invalid log format")
 type LogLevel string
 
 var (
-	// The supported log levels
-	LevelInfo  LogLevel = "info"
-	LevelWarn  LogLevel = "warn"
+	// LevelInfo specifies INFO log level.
+	LevelInfo LogLevel = "info"
+	// LevelWarn specifies WARN log level.
+	LevelWarn LogLevel = "warn"
+	// LevelError specifies ERROR log level.
 	LevelError LogLevel = "error"
+	// LevelDebug specifies DEBUG log level.
 	LevelDebug LogLevel = "debug"
 )
 
@@ -36,7 +39,9 @@ var (
 type LogFormat string
 
 var (
+	// FormatText specifies text log format.
 	FormatText LogFormat = "text"
+	// FormatJSON specifies JSON log format.
 	FormatJSON LogFormat = "json"
 )
 

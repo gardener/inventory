@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/auth/credentials"
-	"github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -187,6 +186,7 @@ func (c *Client) Seeds(ctx context.Context) ([]*v1beta1.Seed, error) {
 		}
 
 		seeds = append(seeds, s)
+
 		return nil
 	})
 
@@ -259,7 +259,7 @@ func (c *Client) MCMClient(ctx context.Context, name string) (*machineversioned.
 func (c *Client) ViewerKubeconfig(ctx context.Context, projectNamespace string, shootName string, expiration time.Duration) ([]byte, error) {
 	expirationSeconds := int64(expiration.Seconds())
 	req := &authenticationv1alpha1.ViewerKubeconfigRequest{
-		Spec: v1alpha1.ViewerKubeconfigRequestSpec{
+		Spec: authenticationv1alpha1.ViewerKubeconfigRequestSpec{
 			ExpirationSeconds: &expirationSeconds,
 		},
 	}
@@ -329,7 +329,7 @@ func (c *Client) getGKESoilClusterRestConfig(ctx context.Context) (*rest.Config,
 		return nil, err
 	}
 
-	token, err := creds.TokenProvider.Token(ctx)
+	token, err := creds.TokenProvider.Token(ctx) // nolint: staticcheck
 	if err != nil {
 		return nil, err
 	}
@@ -361,17 +361,19 @@ func goneIn60Seconds(config *rest.Config) bool {
 	}
 
 	// Check for the presence of client certificate and its expiration
-	if config.TLSClientConfig.CertData != nil {
-		return certIsAboutToExpire(config.TLSClientConfig.CertData)
+	if config.TLSClientConfig.CertData != nil { // nolint: staticcheck
+		return certIsAboutToExpire(config.TLSClientConfig.CertData) // nolint: staticcheck
 	}
 
 	// Check for the presence of file containing a client certificate and its expiration
-	if config.TLSClientConfig.CertFile != "" {
-		certData, err := os.ReadFile(config.TLSClientConfig.CertFile)
+	if config.TLSClientConfig.CertFile != "" { // nolint: staticcheck
+		certData, err := os.ReadFile(config.TLSClientConfig.CertFile) // nolint: staticcheck
 		if err != nil {
 			slog.Error(fmt.Sprintf("failed to load certificate file: %s", err))
+
 			return true
 		}
+
 		return certIsAboutToExpire(certData)
 	}
 
@@ -385,8 +387,10 @@ func goneIn60Seconds(config *rest.Config) bool {
 		tokenData, err := os.ReadFile(config.BearerTokenFile)
 		if err != nil {
 			slog.Error(fmt.Sprintf("failed to load token file: %s", err))
+
 			return true
 		}
+
 		return tokenIsAboutToExpire(string(tokenData))
 	}
 
@@ -399,8 +403,10 @@ func certIsAboutToExpire(certData []byte) bool {
 	c, err := x509.ParseCertificate(b.Bytes)
 	if err != nil {
 		slog.Error(fmt.Sprintf("failed to parse certificate: %s", err))
+
 		return true
 	}
+
 	return (time.Now().UTC().Unix() + 60) > c.NotAfter.UTC().Unix() // gone in 60 seconds
 }
 
@@ -409,11 +415,13 @@ func tokenIsAboutToExpire(token string) bool {
 	splitToken := strings.Split(token, ".")
 	if len(splitToken) != 3 {
 		slog.Error("invalid token format")
+
 		return true
 	}
 	payload, err := base64.RawURLEncoding.DecodeString(splitToken[1])
 	if err != nil {
 		slog.Error("failed to decode token payload", "error", err)
+
 		return true
 	}
 
@@ -423,6 +431,7 @@ func tokenIsAboutToExpire(token string) bool {
 	}
 	if err = json.Unmarshal(payload, &tokenPayload); err != nil {
 		slog.Error("failed to unmarshal token payload", "error", err)
+
 		return true
 	}
 

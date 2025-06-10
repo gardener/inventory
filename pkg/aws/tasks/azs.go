@@ -102,6 +102,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -146,6 +147,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -185,6 +187,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 				"region", r.Name,
 				"account_id", r.AccountID,
 			)
+
 			continue
 		}
 
@@ -200,6 +203,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -213,6 +217,7 @@ func enqueueCollectAvailabilityZones(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 

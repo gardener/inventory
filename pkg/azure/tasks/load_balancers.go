@@ -180,8 +180,8 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 			if lb.SKU != nil {
 				skuName = ptr.Value(lb.SKU.Name, armnetwork.LoadBalancerSKUName(""))
 				skuTier = ptr.Value(lb.SKU.Tier, armnetwork.LoadBalancerSKUTier(""))
-
 			}
+
 			item := models.LoadBalancer{
 				Name:              ptr.Value(lb.Name, ""),
 				SubscriptionID:    payload.SubscriptionID,

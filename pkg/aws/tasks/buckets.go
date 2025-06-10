@@ -68,6 +68,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if awsclients.S3Clientset.Length() == 0 {
 		logger.Warn("no AWS clients found")
+
 		return nil
 	}
 
@@ -81,6 +82,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 				"account_id", accountID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -93,6 +95,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 				"account_id", accountID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -103,6 +106,7 @@ func enqueueCollectBuckets(ctx context.Context) error {
 			"queue", info.Queue,
 			"account_id", accountID,
 		)
+
 		return nil
 	})
 
@@ -126,6 +130,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -144,6 +149,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 				"bucket", stringutils.StringFromPointer(bucket.Name),
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -185,6 +191,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

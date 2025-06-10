@@ -83,6 +83,7 @@ func enqueueCollectStorageAccounts(ctx context.Context) error {
 				"subscription_id", rg.SubscriptionID,
 				"resource_group", rg.Name,
 			)
+
 			continue
 		}
 
@@ -99,6 +100,7 @@ func enqueueCollectStorageAccounts(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 		task := asynq.NewTask(TaskCollectStorageAccounts, data)
@@ -111,6 +113,7 @@ func enqueueCollectStorageAccounts(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -157,6 +160,7 @@ func collectStorageAccounts(ctx context.Context, payload CollectStorageAccountsP
 				"resource_group", payload.ResourceGroup,
 				"reason", err,
 			)
+
 			return azureutils.MaybeSkipRetry(err)
 		}
 

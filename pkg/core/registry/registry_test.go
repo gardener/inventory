@@ -133,22 +133,22 @@ func TestRegistryRange(t *testing.T) {
 		{
 			desc:    "returns nil on ErrStopIteration",
 			wantErr: nil,
-			walker:  func(k, v string) error { return registry.ErrStopIteration },
+			walker:  func(_, _ string) error { return registry.ErrStopIteration },
 		},
 		{
 			desc:    "returns nil on success",
 			wantErr: nil,
-			walker:  func(k, v string) error { return nil },
+			walker:  func(_, _ string) error { return nil },
 		},
 		{
 			desc:    "returns nil on ErrContinue",
 			wantErr: nil,
-			walker:  func(k, v string) error { return registry.ErrContinue },
+			walker:  func(_, _ string) error { return registry.ErrContinue },
 		},
 		{
 			desc:    "propagates error back to caller",
 			wantErr: dummyErr,
-			walker:  func(k, v string) error { return dummyErr },
+			walker:  func(_, _ string) error { return dummyErr },
 		},
 	}
 

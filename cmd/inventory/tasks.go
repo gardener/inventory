@@ -18,6 +18,8 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
+// NewTaskCommand returns a [cli.Command] for interfacing with task-related
+// operations.
 func NewTaskCommand() *cli.Command {
 	cmd := &cli.Command{
 		Name:    "task",
@@ -28,10 +30,11 @@ func NewTaskCommand() *cli.Command {
 				Name:    "list",
 				Usage:   "list registered tasks",
 				Aliases: []string{"ls"},
-				Action: func(ctx *cli.Context) error {
+				Action: func(_ *cli.Context) error {
 					tasks := make([]string, 0, registry.TaskRegistry.Length())
-					walker := func(name string, handler asynq.Handler) error {
+					walker := func(name string, _ asynq.Handler) error {
 						tasks = append(tasks, name)
+
 						return nil
 					}
 
@@ -63,6 +66,7 @@ func NewTaskCommand() *cli.Command {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
 					defer inspector.Close() // nolint: errcheck
+
 					return inspector.CancelProcessing(taskID)
 				},
 			},
@@ -89,6 +93,7 @@ func NewTaskCommand() *cli.Command {
 					conf := getConfig(ctx)
 					inspector := newInspector(conf)
 					defer inspector.Close() // nolint: errcheck
+
 					return inspector.DeleteTask(queue, taskID)
 				},
 			},
@@ -326,6 +331,7 @@ func NewTaskCommand() *cli.Command {
 					}
 
 					fmt.Printf("%s/%s\n", info.Queue, info.ID)
+
 					return nil
 				},
 			},
@@ -471,5 +477,6 @@ func printTasksInState(ctx *cli.Context, state asynq.TaskState) error {
 	}
 
 	table.Render()
+
 	return nil
 }

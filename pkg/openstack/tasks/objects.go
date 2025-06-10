@@ -70,13 +70,14 @@ func enqueueCollectObjects(ctx context.Context) error {
 
 	if openstackclients.ObjectStorageClientset.Length() == 0 {
 		logger.Warn("no OpenStack object storage clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
 	return openstackclients.ObjectStorageClientset.
-		Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+		Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 			payload := CollectObjectsPayload{
 				Scope: scope,
 			}
@@ -89,6 +90,7 @@ func enqueueCollectObjects(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -103,6 +105,7 @@ func enqueueCollectObjects(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -142,7 +145,7 @@ func collectObjects(ctx context.Context, payload CollectObjectsPayload) error {
 
 	err := containers.List(client.Client, nil).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				containerNameList, err := containers.ExtractNames(page)
 
 				if err != nil {
@@ -150,9 +153,9 @@ func collectObjects(ctx context.Context, payload CollectObjectsPayload) error {
 						"could not extract container pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
-
 				containerNames = append(containerNames, containerNameList...)
 
 				return true, nil
@@ -163,13 +166,14 @@ func collectObjects(ctx context.Context, payload CollectObjectsPayload) error {
 			"could not extract container pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
 	for _, name := range containerNames {
 		err = objects.List(client.Client, name, nil).
 			EachPage(ctx,
-				func(ctx context.Context, page pagination.Page) (bool, error) {
+				func(_ context.Context, page pagination.Page) (bool, error) {
 					objectList, err := objects.ExtractInfo(page)
 
 					if err != nil {
@@ -177,6 +181,7 @@ func collectObjects(ctx context.Context, payload CollectObjectsPayload) error {
 							"could not extract object pages",
 							"reason", err,
 						)
+
 						return false, err
 					}
 
@@ -203,6 +208,7 @@ func collectObjects(ctx context.Context, payload CollectObjectsPayload) error {
 				name,
 				"reason", err,
 			)
+
 			continue
 		}
 	}
@@ -229,6 +235,7 @@ func collectObjects(ctx context.Context, payload CollectObjectsPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

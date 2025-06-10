@@ -73,6 +73,7 @@ func ResourceNameFromURL(s string) string {
 	}
 
 	parts := strings.Split(u.Path, "/")
+
 	return parts[len(parts)-1]
 }
 
@@ -84,5 +85,6 @@ func GetGKEClusterFromDB(ctx context.Context, name string) (models.GKECluster, e
 		Model(&item).
 		Where("name = ?", name).
 		Scan(ctx)
+
 	return item, err
 }

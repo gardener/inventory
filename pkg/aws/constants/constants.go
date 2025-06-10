@@ -9,6 +9,6 @@ const (
 	// during a paginated call.
 	PageSize = 100
 
-	// The value set for the type column of classic LBs.
+	// LoadBalancerClassicType is the value set for classic AWS LBs.
 	LoadBalancerClassicType = "classic"
 )

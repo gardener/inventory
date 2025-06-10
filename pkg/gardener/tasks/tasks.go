@@ -27,7 +27,7 @@ const (
 
 // HandleCollectAllTask is the handler, which enqueues tasks for collecting all
 // known Gardener resources.
-func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 	queue := asynqutils.GetQueueName(ctx)
 
 	// Task constructors
@@ -46,7 +46,7 @@ func HandleCollectAllTask(ctx context.Context, t *asynq.Task) error {
 
 // HandleLinkAllTask is the handler, which establishes relationships between the
 // various Gardener models.
-func HandleLinkAllTask(ctx context.Context, r *asynq.Task) error {
+func HandleLinkAllTask(ctx context.Context, _ *asynq.Task) error {
 	linkFns := []dbutils.LinkFunction{
 		LinkShootWithProject,
 		LinkShootWithSeed,

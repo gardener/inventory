@@ -30,10 +30,11 @@ func NewModelCommand() *cli.Command {
 				Name:    "list",
 				Usage:   "list registered models",
 				Aliases: []string{"ls"},
-				Action: func(ctx *cli.Context) error {
+				Action: func(_ *cli.Context) error {
 					models := make([]string, 0, registry.ModelRegistry.Length())
 					walker := func(name string, _ any) error {
 						models = append(models, name)
+
 						return nil
 					}
 
@@ -192,11 +193,7 @@ func NewModelCommand() *cli.Command {
 						return err
 					}
 
-					if err := tmpl.Execute(os.Stdout, items.Interface()); err != nil {
-						return err
-					}
-
-					return nil
+					return tmpl.Execute(os.Stdout, items.Interface())
 				},
 			},
 		},

@@ -172,10 +172,12 @@ func execDatabaseMigrateCmd(ctx *cli.Context) error {
 
 	if group.IsZero() {
 		fmt.Printf("database is up to date\n")
+
 		return nil
 	}
 
 	fmt.Printf("database migrated to %s\n", group)
+
 	return nil
 }
 
@@ -210,10 +212,12 @@ func execDatabaseRollbackCmd(ctx *cli.Context) error {
 
 	if group.IsZero() {
 		fmt.Printf("there are no migration groups for rollback\n")
+
 		return nil
 	}
 
 	fmt.Printf("rolled back %s\n", group)
+
 	return nil
 }
 
@@ -245,6 +249,7 @@ func execDatabaseUnlockCmd(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	return migrator.Unlock(ctx.Context)
 }
 

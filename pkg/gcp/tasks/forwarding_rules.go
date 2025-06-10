@@ -11,7 +11,7 @@ import (
 	"net"
 
 	compute "cloud.google.com/go/compute/apiv1"
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
 	"google.golang.org/api/iterator"
 
@@ -76,6 +76,7 @@ func enqueueCollectForwardingRules(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if gcpclients.ForwardingRulesClientset.Length() == 0 {
 		logger.Warn("no GCP forwarding rules clients found")
+
 		return nil
 	}
 
@@ -92,6 +93,7 @@ func enqueueCollectForwardingRules(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectForwardingRules, data)
@@ -103,6 +105,7 @@ func enqueueCollectForwardingRules(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -157,6 +160,7 @@ func collectForwardingRules(ctx context.Context, payload CollectForwardingRulesP
 				"project", payload.ProjectID,
 				"reason", err,
 			)
+
 			return err
 		}
 

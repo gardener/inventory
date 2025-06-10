@@ -74,6 +74,7 @@ func main() {
 			}
 
 			ctx.Context = context.WithValue(ctx.Context, configKey{}, conf)
+
 			return nil
 		},
 		Commands: []*cli.Command{

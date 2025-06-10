@@ -69,13 +69,14 @@ func enqueueCollectContainers(ctx context.Context) error {
 
 	if openstackclients.ObjectStorageClientset.Length() == 0 {
 		logger.Warn("no OpenStack object storage clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
 	return openstackclients.ObjectStorageClientset.
-		Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+		Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 			payload := CollectContainersPayload{
 				Scope: scope,
 			}
@@ -88,6 +89,7 @@ func enqueueCollectContainers(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -102,6 +104,7 @@ func enqueueCollectContainers(ctx context.Context) error {
 					"region", scope.Region,
 					"reason", err,
 				)
+
 				return err
 			}
 
@@ -145,18 +148,20 @@ func collectContainers(ctx context.Context, payload CollectContainersPayload) er
 			"could not get projects from db",
 			"reason", err,
 		)
+
 		return err
 	}
 
 	err = containers.List(client.Client, nil).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				extractedContainers, err := containers.ExtractInfo(page)
 				if err != nil {
 					logger.Error(
 						"could not extract container pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -187,6 +192,7 @@ func collectContainers(ctx context.Context, payload CollectContainersPayload) er
 			"could not extract container pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -211,6 +217,7 @@ func collectContainers(ctx context.Context, payload CollectContainersPayload) er
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

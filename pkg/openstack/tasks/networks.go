@@ -59,7 +59,6 @@ func HandleCollectNetworksTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	return collectNetworks(ctx, payload)
-
 }
 
 // enqueueCollectNetworks enqueues tasks for collecting OpenStack Networks from
@@ -70,12 +69,13 @@ func enqueueCollectNetworks(ctx context.Context) error {
 
 	if openstackclients.NetworkClientset.Length() == 0 {
 		logger.Warn("no OpenStack network clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectNetworksPayload{
 			Scope: scope,
 		}
@@ -88,6 +88,7 @@ func enqueueCollectNetworks(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -102,6 +103,7 @@ func enqueueCollectNetworks(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -140,7 +142,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 
 	err := networks.List(client.Client, nil).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				networkList, err := networks.ExtractNetworks(page)
 
 				if err != nil {
@@ -148,6 +150,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 						"could not extract networks pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -176,6 +179,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 			"could not extract network pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -206,6 +210,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

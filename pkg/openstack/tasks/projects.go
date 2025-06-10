@@ -69,12 +69,13 @@ func enqueueCollectProjects(ctx context.Context) error {
 
 	if openstackclients.IdentityClientset.Length() == 0 {
 		logger.Warn("no OpenStack identity clients found")
+
 		return nil
 	}
 
 	queue := asynqutils.GetQueueName(ctx)
 
-	return openstackclients.IdentityClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.IdentityClientset.Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectProjectsPayload{
 			Scope: scope,
 		}
@@ -87,6 +88,7 @@ func enqueueCollectProjects(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -101,6 +103,7 @@ func enqueueCollectProjects(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -139,7 +142,7 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 
 	err := projects.ListAvailable(client.Client).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				projectList, err := projects.ExtractProjects(page)
 
 				if err != nil {
@@ -147,6 +150,7 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 						"could not extract project pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -173,6 +177,7 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 			"could not extract project pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -202,6 +207,7 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

@@ -89,6 +89,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"subscription_id", vpc.SubscriptionID,
 				"resource_group", vpc.Name,
 			)
+
 			continue
 		}
 
@@ -107,6 +108,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"vpc", vpc.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 		task := asynq.NewTask(TaskCollectSubnets, data)
@@ -120,6 +122,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 				"vpc", vpc.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -171,6 +174,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 				"vpc", payload.VPCName,
 				"reason", err,
 			)
+
 			return azureutils.MaybeSkipRetry(err)
 		}
 

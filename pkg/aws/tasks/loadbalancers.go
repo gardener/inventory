@@ -99,6 +99,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -112,6 +113,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 				"account_id", r.AccountID,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -209,6 +211,7 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 				"account_id", payload.AccountID,
 				"reason", err,
 			)
+
 			return err
 		}
 		items = append(items, page.LoadBalancers...)
@@ -264,6 +267,7 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -322,6 +326,7 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 				"account_id", payload.AccountID,
 				"reason", err,
 			)
+
 			return err
 		}
 		items = append(items, page.LoadBalancerDescriptions...)
@@ -367,6 +372,7 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 			"account_id", payload.AccountID,
 			"reason", err,
 		)
+
 		return err
 	}
 

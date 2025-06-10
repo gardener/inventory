@@ -24,6 +24,7 @@ func FetchTag(tags []types.Tag, key string) string {
 			return *t.Value
 		}
 	}
+
 	return ""
 }
 
@@ -31,5 +32,6 @@ func FetchTag(tags []types.Tag, key string) string {
 func GetRegionsFromDB(ctx context.Context) ([]models.Region, error) {
 	items := make([]models.Region, 0)
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+
 	return items, err
 }

@@ -10,7 +10,7 @@ import (
 	"errors"
 
 	compute "cloud.google.com/go/compute/apiv1"
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
 	"google.golang.org/api/iterator"
 
@@ -75,6 +75,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 		logger.Warn(
 			"no gcp network clients configured. skipping task.",
 		)
+
 		return nil
 	}
 
@@ -88,6 +89,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -100,6 +102,7 @@ func enqueueCollectVPCs(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -153,6 +156,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 				"project", payload.ProjectID,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -192,6 +196,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 			"project", payload.ProjectID,
 			"reason", err,
 		)
+
 		return err
 	}
 

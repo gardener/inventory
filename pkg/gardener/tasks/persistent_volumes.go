@@ -98,6 +98,7 @@ func enqueueCollectPersistentVolumes(ctx context.Context) error {
 				"seed", s.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -110,6 +111,7 @@ func enqueueCollectPersistentVolumes(ctx context.Context) error {
 				"seed", s.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -121,6 +123,7 @@ func enqueueCollectPersistentVolumes(ctx context.Context) error {
 			"seed", s.Name,
 		)
 	}
+
 	return nil
 }
 
@@ -130,6 +133,7 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -145,8 +149,10 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 			// Don't treat excluded seeds as errors, in order to
 			// avoid accumulating archived tasks
 			logger.Warn("seed is excluded", "seed", payload.Seed)
+
 			return nil
 		}
+
 		return asynqutils.SkipRetry(fmt.Errorf("cannot get garden client for %q: %s", payload.Seed, err))
 	}
 
@@ -228,6 +234,7 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 			CreationTimestamp: pv.CreationTimestamp.Time,
 		}
 		pvs = append(pvs, item)
+
 		return nil
 	})
 
@@ -259,6 +266,7 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 			"seed", payload.Seed,
 			"reason", err,
 		)
+
 		return err
 	}
 

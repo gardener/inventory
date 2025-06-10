@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	gcp "github.com/gardener/gardener-extension-provider-gcp/pkg/apis/gcp"
+	"github.com/gardener/gardener-extension-provider-gcp/pkg/apis/gcp"
 	gcpinstall "github.com/gardener/gardener-extension-provider-gcp/pkg/apis/gcp/install"
 	"github.com/hibiken/asynq"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -89,6 +89,7 @@ func collectGCPMachineImages(ctx context.Context, payload CollectCPMachineImages
 			"cloud_profile", payload.CloudProfileName,
 			"reason", err,
 		)
+
 		return err
 	}
 

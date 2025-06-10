@@ -18,6 +18,7 @@ import (
 func GetSeedsFromDB(ctx context.Context) ([]models.Seed, error) {
 	items := make([]models.Seed, 0)
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+
 	return items, err
 }
 
@@ -25,6 +26,7 @@ func GetSeedsFromDB(ctx context.Context) ([]models.Seed, error) {
 func GetProjectsFromDB(ctx context.Context) ([]models.Project, error) {
 	items := make([]models.Project, 0)
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
+
 	return items, err
 }
 

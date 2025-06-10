@@ -72,7 +72,7 @@ func enqueueCollectDisks(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 
 	queue := asynqutils.GetQueueName(ctx)
-	err := gcpclients.DisksClientset.Range(func(projectID string, c *gcpclients.Client[*compute.DisksClient]) error {
+	err := gcpclients.DisksClientset.Range(func(projectID string, _ *gcpclients.Client[*compute.DisksClient]) error {
 		p := &CollectDisksPayload{ProjectID: projectID}
 		data, err := json.Marshal(p)
 		if err != nil {
@@ -81,6 +81,7 @@ func enqueueCollectDisks(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -93,6 +94,7 @@ func enqueueCollectDisks(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -145,6 +147,7 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 				"project", payload.ProjectID,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -229,6 +232,7 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 			"project", payload.ProjectID,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -258,6 +262,7 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 			"project", payload.ProjectID,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -271,5 +276,6 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 		"project", payload.ProjectID,
 		"count", count,
 	)
+
 	return nil
 }

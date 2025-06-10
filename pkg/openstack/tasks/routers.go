@@ -64,10 +64,11 @@ func enqueueCollectRouters(ctx context.Context) error {
 
 	if openstackclients.NetworkClientset.Length() == 0 {
 		logger.Warn("no OpenStack network clients found")
+
 		return nil
 	}
 
-	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, client openstackclients.Client[*gophercloud.ServiceClient]) error {
+	return openstackclients.NetworkClientset.Range(func(scope openstackclients.ClientScope, _ openstackclients.Client[*gophercloud.ServiceClient]) error {
 		payload := CollectRoutersPayload{
 			Scope: scope,
 		}
@@ -80,6 +81,7 @@ func enqueueCollectRouters(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -94,6 +96,7 @@ func enqueueCollectRouters(ctx context.Context) error {
 				"region", scope.Region,
 				"reason", err,
 			)
+
 			return err
 		}
 
@@ -134,13 +137,14 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 
 	err := routers.List(client.Client, routers.ListOpts{}).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				routerList, err := routers.ExtractRouters(page)
 				if err != nil {
 					logger.Error(
 						"could not extract router pages",
 						"reason", err,
 					)
+
 					return false, err
 				}
 
@@ -187,6 +191,7 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 			"could not extract router pages",
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -215,6 +220,7 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 
@@ -250,6 +256,7 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 			"region", payload.Scope.Region,
 			"reason", err,
 		)
+
 		return err
 	}
 

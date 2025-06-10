@@ -33,7 +33,7 @@ type CollectResourceGroupsPayload struct {
 	SubscriptionID string `json:"subscription_id" yaml:"subscription_id"`
 }
 
-// NewCollectResourceGroups creates a new [asynq.Task] for collecting Azure
+// NewCollectResourceGroupsTask creates a new [asynq.Task] for collecting Azure
 // Resource Groups, without specifying a payload.
 func NewCollectResourceGroupsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectResourceGroups, nil)
@@ -67,6 +67,7 @@ func enqueueCollectResourceGroups(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if azureclients.ResourceGroupsClientset.Length() == 0 {
 		logger.Warn("no Azure Resource Groups clients found")
+
 		return nil
 	}
 
@@ -82,6 +83,7 @@ func enqueueCollectResourceGroups(ctx context.Context) error {
 				"subscription_id", subscriptionID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectResourceGroups, data)
@@ -93,6 +95,7 @@ func enqueueCollectResourceGroups(ctx context.Context) error {
 				"subscription_id", subscriptionID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
@@ -103,6 +106,7 @@ func enqueueCollectResourceGroups(ctx context.Context) error {
 			"queue", info.Queue,
 			"subscription_id", subscriptionID,
 		)
+
 		return nil
 	})
 
@@ -130,6 +134,7 @@ func collectResourceGroups(ctx context.Context, payload CollectResourceGroupsPay
 				"subscription_id", payload.SubscriptionID,
 				"reason", err,
 			)
+
 			return azureutils.MaybeSkipRetry(err)
 		}
 		for _, rg := range page.Value {

@@ -58,10 +58,11 @@ func NewCollectCloudProfilesTask() *asynq.Task {
 // HandleCollectCloudProfilesTask is the handler for collecting Gardener Cloud
 // Profiles. This handler will also enqueue tasks for collecting and persisting
 // the machine images for each supported Cloud Profile type.
-func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectCloudProfilesTask(ctx context.Context, _ *asynq.Task) error {
 	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
+
 		return nil
 	}
 
@@ -115,6 +116,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 				"cloud_profile", cp.Name,
 				"provider_type", providerType,
 			)
+
 			return nil
 		}
 
@@ -125,6 +127,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 				"cloud_profile", cp.Name,
 				"provider_type", providerType,
 			)
+
 			return nil
 		}
 
@@ -140,6 +143,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 				"provider_type", providerType,
 				"reason", err,
 			)
+
 			return nil
 		}
 
@@ -153,6 +157,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 				"provider_type", providerType,
 				"reason", err,
 			)
+
 			return nil
 		}
 
@@ -190,6 +195,7 @@ func HandleCollectCloudProfilesTask(ctx context.Context, t *asynq.Task) error {
 			"could not insert gardener cloud profiles into db",
 			"reason", err,
 		)
+
 		return err
 	}
 

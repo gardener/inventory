@@ -36,7 +36,7 @@ type CollectUsersPayload struct {
 
 // HandleCollectUsersTask is the handler, which collects Microsoft Entra user
 // accounts.
-func HandleCollectUsers(ctx context.Context, t *asynq.Task) error {
+func HandleCollectUsersTask(ctx context.Context, t *asynq.Task) error {
 	data := t.Payload()
 	if data == nil {
 		return asynqutils.SkipRetry(ErrNoPayload)
@@ -80,6 +80,7 @@ func collectUsers(ctx context.Context, payload CollectUsersPayload) error {
 			"user_principal_name", payload.UserPrincipalName,
 			"reason", err,
 		)
+
 		return azureutils.MaybeSkipRetry(err)
 	}
 
@@ -90,6 +91,7 @@ func collectUsers(ctx context.Context, payload CollectUsersPayload) error {
 			"tenant_id", payload.TenantID,
 			"user_principal_name", payload.UserPrincipalName,
 		)
+
 		return nil
 	}
 
@@ -100,6 +102,7 @@ func collectUsers(ctx context.Context, payload CollectUsersPayload) error {
 			"tenant_id", payload.TenantID,
 			"user_principal_name", payload.UserPrincipalName,
 		)
+
 		return nil
 	}
 

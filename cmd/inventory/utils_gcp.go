@@ -98,7 +98,7 @@ func getGCPClientOptions(conf *config.Config, namedCredentials string) ([]option
 	case config.GCPAuthenticationMethodNone:
 		// Load Application Default Credentials only, nothing to be done
 		// from our side.
-		break
+		break // nolint: revive
 	case config.GCPAuthenticationMethodKeyFile:
 		// JSON Key file authentication
 		if creds.KeyFile.Path == "" {
@@ -427,6 +427,7 @@ func configureGKEClientsets(ctx context.Context, conf *config.Config) error {
 func configureGCPClients(ctx context.Context, conf *config.Config) error {
 	if !conf.GCP.IsEnabled {
 		slog.Warn("GCP is not enabled, will not create API clients")
+
 		return nil
 	}
 

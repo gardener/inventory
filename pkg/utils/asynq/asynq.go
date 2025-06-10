@@ -47,6 +47,7 @@ func GetLogger(ctx context.Context) *slog.Logger {
 	if !ok {
 		return slog.Default()
 	}
+
 	return logger
 }
 
@@ -113,6 +114,7 @@ func Enqueue(ctx context.Context, items []TaskConstructor, opts ...asynq.Option)
 				"type", task.Type(),
 				"reason", err,
 			)
+
 			return err
 		}
 

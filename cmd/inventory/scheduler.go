@@ -53,6 +53,7 @@ func NewSchedulerCommand() *cli.Command {
 							"queue", queue,
 							"source", "registry",
 						)
+
 						return nil
 					}
 					if err := registry.ScheduledTaskRegistry.Range(walker); err != nil {
@@ -83,11 +84,7 @@ func NewSchedulerCommand() *cli.Command {
 						)
 					}
 
-					if err := scheduler.Run(); err != nil {
-						return err
-					}
-
-					return nil
+					return scheduler.Run()
 				},
 			},
 			{

@@ -63,6 +63,7 @@ func enqueueCollectGKEClusters(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	if gcpclients.ClusterManagerClientset.Length() == 0 {
 		logger.Warn("no GCP Cluster Manager clients found")
+
 		return nil
 	}
 
@@ -79,6 +80,7 @@ func enqueueCollectGKEClusters(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 		task := asynq.NewTask(TaskCollectGKEClusters, data)
@@ -90,6 +92,7 @@ func enqueueCollectGKEClusters(ctx context.Context) error {
 				"project", projectID,
 				"reason", err,
 			)
+
 			return registry.ErrContinue
 		}
 
