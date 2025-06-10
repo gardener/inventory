@@ -1,24 +1,20 @@
 ---
+version: "2"
 run:
   concurrency: 4
   go: "1.24"
   timeout: 10m
 
-
-linters-settings:
-  lll:
-    line-length: 160
-
 linters:
-  disable-all: true
   enable:
+    - gocritic
+    - gosec
+    - nlreturn
+    - revive
     - errcheck
     - copyloopvar
     - goconst
     - gocyclo
-    - gofmt
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - lll
@@ -26,8 +22,40 @@ linters:
     - nakedret
     - prealloc
     - staticcheck
-    - typecheck
     - unconvert
     - unparam
     - unused
-    - gosec
+
+  settings:
+    revive:
+      enable-all-rules: true
+      rules:
+        - name: add-constant
+          disabled: true
+        - name: cognitive-complexity
+          disabled: true
+        - name: cyclomatic
+          disabled: true
+        - name: dot-imports
+          disabled: true
+        - name: function-length
+          disabled: true
+        - name: line-length-limit
+          disabled: true
+        - name: package-comments
+          disabled: true
+        - name: use-errors-new
+          disabled: true
+    lll:
+      line-length: 160
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
