@@ -91,6 +91,7 @@ func enqueueCollectBlobContainers(ctx context.Context) error {
 				"resource_group", acc.ResourceGroupName,
 				"storage_account", acc.Name,
 			)
+
 			continue
 		}
 
@@ -109,6 +110,7 @@ func enqueueCollectBlobContainers(ctx context.Context) error {
 				"storage_account", acc.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 		task := asynq.NewTask(TaskCollectBlobContainers, data)
@@ -122,6 +124,7 @@ func enqueueCollectBlobContainers(ctx context.Context) error {
 				"storage_account", acc.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -172,6 +175,7 @@ func collectBlobContainers(ctx context.Context, payload CollectBlobContainersPay
 				"storage_account", payload.StorageAccount,
 				"reason", err,
 			)
+
 			return azureutils.MaybeSkipRetry(err)
 		}
 
