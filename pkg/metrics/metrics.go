@@ -5,6 +5,8 @@
 package metrics
 
 import (
+	"context"
+	"net"
 	"net/http"
 	"time"
 
@@ -64,35 +66,12 @@ var (
 		},
 		[]string{"task_name", "task_queue"},
 	)
-
-	// HousekeeperDeletedRecords is a gauge, which tracks the number of
-	// deleted resources for models by the housekeeper.
-	HousekeeperDeletedRecords = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: Namespace,
-			Name:      "housekeeper_deleted_records",
-			Help:      "Gauge which tracks the number of deleted records by the housekeeper",
-		},
-		[]string{"model_name"},
-	)
-
-	// HousekeeperFailedRecordsTotal is a metric, which gets incremented
-	// each time the housekeeper fails to delete stale records for a given
-	// model.
-	HousekeeperFailedRecordsTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: Namespace,
-			Name:      "housekeeper_failed_records_total",
-			Help:      "Total number of times the housekeeper failed to delete stale records",
-		},
-		[]string{"model_name"},
-	)
 )
 
 // NewServer returns a new [http.Server] which can serve the metrics from
 // [DefaultRegistry] on the specified network address and HTTP path. Callers
 // are responsible for starting up and shutting down the HTTP server.
-func NewServer(addr, path string) *http.Server {
+func NewServer(ctx context.Context, addr, path string) *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle(
 		path,
@@ -103,6 +82,7 @@ func NewServer(addr, path string) *http.Server {
 		Addr:              addr,
 		ReadHeaderTimeout: time.Second * 30,
 		Handler:           mux,
+		BaseContext:       func(_ net.Listener) context.Context { return ctx },
 	}
 
 	return server
@@ -116,8 +96,7 @@ func init() {
 		TaskFailedTotal,
 		TaskSkippedTotal,
 		TaskDurationSeconds,
-		HousekeeperDeletedRecords,
-		HousekeeperFailedRecordsTotal,
+		DefaultCollector,
 
 		// Standard Go metrics
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
