@@ -5,6 +5,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -102,7 +103,7 @@ func newInspector(conf *config.Config) *asynq.Inspector {
 }
 
 // newWorker creates a new [workerutils.Worker] from the given config.
-func newWorker(conf *config.Config) *workerutils.Worker {
+func newWorker(ctx context.Context, conf *config.Config) *workerutils.Worker {
 	redisClientOpt := newRedisClientOpt(conf)
 	opts := make([]workerutils.Option, 0)
 	logLevel := asynq.InfoLevel
@@ -112,7 +113,7 @@ func newWorker(conf *config.Config) *workerutils.Worker {
 
 	opts = append(opts, workerutils.WithLogLevel(logLevel))
 	opts = append(opts, workerutils.WithErrorHandler(asynqutils.NewDefaultErrorHandler()))
-	worker := workerutils.NewFromConfig(redisClientOpt, conf.Worker, opts...)
+	worker := workerutils.NewFromConfig(ctx, redisClientOpt, conf.Worker, opts...)
 
 	// Configure middlewares
 	middlewares := []asynq.MiddlewareFunc{

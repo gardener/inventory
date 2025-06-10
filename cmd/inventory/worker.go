@@ -156,7 +156,7 @@ func NewWorkerCommand() *cli.Command {
 					defer client.Close() // nolint: errcheck
 					inspector := newInspector(conf)
 					defer inspector.Close() // nolint: errcheck
-					worker := newWorker(conf)
+					worker := newWorker(ctx, conf)
 
 					// Gardener client configs
 					if err := configureGardenerClient(ctx.Context, conf); err != nil {
