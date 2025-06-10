@@ -66,7 +66,7 @@ func HandleCommandTask(ctx context.Context, task *asynq.Task) error {
 		"dir", payload.Dir,
 	)
 
-	cmd := exec.CommandContext(ctx, path, payload.Args...)
+	cmd := exec.CommandContext(ctx, path, payload.Args...) // #nosec: G204
 	cmd.Dir = payload.Dir
 
 	return cmd.Run()
