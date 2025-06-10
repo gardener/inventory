@@ -84,6 +84,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 				"subscription_id", rg.SubscriptionID,
 				"resource_group", rg.Name,
 			)
+
 			continue
 		}
 
@@ -100,6 +101,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 		task := asynq.NewTask(TaskCollectLoadBalancers, data)
@@ -112,6 +114,7 @@ func enqueueCollectLoadBalancers(ctx context.Context) error {
 				"resource_group", rg.Name,
 				"reason", err,
 			)
+
 			continue
 		}
 
@@ -158,6 +161,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 				"resource_group", payload.ResourceGroup,
 				"reason", err,
 			)
+
 			return azureutils.MaybeSkipRetry(err)
 		}
 
