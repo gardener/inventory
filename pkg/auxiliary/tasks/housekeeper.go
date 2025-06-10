@@ -6,9 +6,11 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/auxiliary/models"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -69,6 +71,18 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 			continue
 		}
 
+		var count int64
+		defer func() {
+			metric := prometheus.MustNewConstMetric(
+				hkDeletedRecordsDesc,
+				prometheus.GaugeValue,
+				float64(count),
+				item.Name,
+			)
+			key := fmt.Sprintf("%s/%s/%s", HousekeeperTaskType, asynqutils.GetTaskID(ctx), item.Name)
+			metrics.DefaultCollector.AddMetric(key, metric)
+		}()
+
 		now := time.Now()
 		past := now.Add(-item.Duration)
 		out, err := db.DB.NewDelete().
@@ -79,7 +93,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		completedAt := time.Now()
 		switch err {
 		case nil:
-			count, err := out.RowsAffected()
+			count, err = out.RowsAffected()
 			if err != nil {
 				logger.Error("failed to get number of deleted rows", "name", item.Name, "reason", err)
 
@@ -93,12 +107,10 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 				Count:       count,
 			}
 			hkRuns = append(hkRuns, hkRun)
-			metrics.HousekeeperDeletedRecords.WithLabelValues(item.Name).Set(float64(count))
 		default:
 			// Simply log the error here and keep going with the
 			// rest of the objects to cleanup
 			logger.Error("failed to delete stale records", "name", item.Name, "reason", err)
-			metrics.HousekeeperFailedRecordsTotal.WithLabelValues(item.Name).Inc()
 		}
 	}
 
