@@ -10,6 +10,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,6 +20,7 @@ import (
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -170,7 +172,12 @@ func toProjectModels(items []*v1beta1.Project) ([]models.Project, []models.Proje
 func persistProjects(ctx context.Context, items []models.Project) error {
 	var count int64
 	defer func() {
-		projectsMetric.Set(float64(count))
+		metric := prometheus.MustNewConstMetric(
+			projectsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+		)
+		metrics.DefaultCollector.AddMetric(TaskCollectProjects, metric)
 	}()
 
 	if len(items) == 0 {
@@ -219,7 +226,14 @@ func persistProjectMembers(ctx context.Context, items []models.ProjectMember) er
 			if err != nil {
 				val = 0
 			}
-			projectMembersMetric.WithLabelValues(groupName).Set(float64(val))
+			metric := prometheus.MustNewConstMetric(
+				projectMembersDesc,
+				prometheus.GaugeValue,
+				float64(val),
+				groupName,
+			)
+			key := fmt.Sprintf("%s/members/%s", TaskCollectProjects, groupName)
+			metrics.DefaultCollector.AddMetric(key, metric)
 		}
 	}()
 

@@ -11,101 +11,89 @@ import (
 )
 
 var (
-	// projectsMetric is a gauge, which tracks the number of
-	// collected Gardener Projects.
-	projectsMetric = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_projects",
-			Help:      "A gauge which tracks the number of collected Gardener projects",
-		},
+	// projectsDesc is the descriptor for a metric, which tracks the number
+	// of collected Gardener Projects.
+	projectsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_projects"),
+		"A gauge which tracks the number of collected Gardener projects",
+		nil,
+		nil,
 	)
 
-	// projectMembersMetric is a gauge, which tracks the number of
-	// collected Gardener Project members.
-	projectMembersMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_project_members",
-			Help:      "A gauge which tracks the number of collected Gardener project members",
-		},
+	// projectMembersDesc is the descriptor for a metric, which tracks the
+	// number of collected Gardener Project members.
+	projectMembersDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_project_members"),
+		"A gauge which tracks the number of collected Gardener project members",
 		[]string{"project_name"},
+		nil,
 	)
 
-	// shootsMetric is a gauge, which tracks the number of
+	// shootsDesc is the descriptor for a metric, which tracks the number of
 	// collected Gardener Shoots.
-	shootsMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_shoots",
-			Help:      "A gauge which tracks the number of collected Gardener shoots",
-		},
+	shootsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_shoots"),
+		"A gauge which tracks the number of collected Gardener shoots",
 		[]string{"project_name"},
+		nil,
 	)
 
-	// seedsMetric is a gauge, which tracks the number of
-	// collected Gardener Seeds.
-	seedsMetric = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_seeds",
-			Help:      "A gauge which tracks the number of collected Gardener seeds",
-		},
+	// seedsDesc is the descriptor for a metric, which tracks the number
+	// of collected Gardener Seeds.
+	seedsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_seeds"),
+		"A gauge which tracks the number of collected Gardener seeds",
+		nil,
+		nil,
 	)
 
-	// machinesMetric is a gauge, which tracks the number of
-	// collected Gardener Machines from seeds.
-	machinesMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_machines",
-			Help:      "A gauge which tracks the number of collected Gardener machines",
-		},
+	// machinesDesc is the descriptor for a metric, which tracks the number
+	// of collected Gardener Machines from seeds.
+	machinesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_machines"),
+		"A gauge which tracks the number of collected Gardener machines",
 		[]string{"seed"},
+		nil,
 	)
 
-	// backupBucketsMetric is a gauge, which tracks the number of
-	// collected Gardener Backup Buckets.
-	backupBucketsMetric = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_backup_buckets",
-			Help:      "A gauge which tracks the number of collected Gardener backup buckets",
-		},
+	// backupBucketsDesc is the descriptor for a metric, which tracks the
+	// number of collected Gardener Backup Buckets.
+	backupBucketsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_backup_buckets"),
+		"A gauge which tracks the number of collected Gardener backup buckets",
+		nil,
+		nil,
 	)
 
-	// cloudProfilesMetric is a gauge, which tracks the number of
-	// collected Gardener Cloud Profiles.
-	cloudProfilesMetric = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_cloud_profiles",
-			Help:      "A gauge which tracks the number of collected Gardener Cloud Profiles",
-		},
+	// cloudProfilesDesc is the descriptor for a metric, which tracks the
+	// number of collected Gardener Cloud Profiles.
+	cloudProfilesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_cloud_profiles"),
+		"A gauge which tracks the number of collected Gardener Cloud Profiles",
+		nil,
+		nil,
 	)
 
-	// seedVolumesMetric is a gauge, which tracks the number of
-	// collected Persitent Volumes from seed clusters.
-	seedVolumesMetric = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metrics.Namespace,
-			Name:      "g_seed_volumes",
-			Help:      "A gauge which tracks the number of collected persistent volumes from seeds",
-		},
+	// seedVolumesDesc is the descriptor for a metric, which tracks the
+	// number of collected Persitent Volumes from seed clusters.
+	seedVolumesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_seed_volumes"),
+		"A gauge which tracks the number of collected persistent volumes from seeds",
 		[]string{"seed"},
+		nil,
 	)
 )
 
-// init registers metrics with the [metrics.DefaultRegistry].
+// init registers metrics with the [metrics.DefaultCollector].
 func init() {
-	metrics.DefaultRegistry.MustRegister(
-		projectsMetric,
-		projectMembersMetric,
-		shootsMetric,
-		seedsMetric,
-		machinesMetric,
-		backupBucketsMetric,
-		cloudProfilesMetric,
-		seedVolumesMetric,
+	metrics.DefaultCollector.AddDesc(
+		projectsDesc,
+		projectMembersDesc,
+		shootsDesc,
+		seedsDesc,
+		machinesDesc,
+		backupBucketsDesc,
+		cloudProfilesDesc,
+		seedVolumesDesc,
 	)
 }

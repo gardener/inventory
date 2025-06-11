@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	gutils "github.com/gardener/inventory/pkg/gardener/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -139,7 +141,14 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 
 	var count int64
 	defer func() {
-		seedVolumesMetric.WithLabelValues(payload.Seed).Set(float64(count))
+		metric := prometheus.MustNewConstMetric(
+			seedVolumesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.Seed,
+		)
+		key := fmt.Sprintf("%s/%s", TaskCollectPersistentVolumes, payload.Seed)
+		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
 	logger.Info("collecting Gardener Persistent Volumes", "seed", payload.Seed)

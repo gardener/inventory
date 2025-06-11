@@ -11,6 +11,7 @@ import (
 
 	gardenerv1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
@@ -20,6 +21,7 @@ import (
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -68,7 +70,12 @@ func HandleCollectCloudProfilesTask(ctx context.Context, _ *asynq.Task) error {
 
 	var count int64
 	defer func() {
-		cloudProfilesMetric.Set(float64(count))
+		metric := prometheus.MustNewConstMetric(
+			cloudProfilesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+		)
+		metrics.DefaultCollector.AddMetric(TaskCollectCloudProfiles, metric)
 	}()
 
 	// After collecting the Cloud Profiles we will enqueue a separate task

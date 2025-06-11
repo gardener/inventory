@@ -71,18 +71,6 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 			continue
 		}
 
-		var count int64
-		defer func() {
-			metric := prometheus.MustNewConstMetric(
-				hkDeletedRecordsDesc,
-				prometheus.GaugeValue,
-				float64(count),
-				item.Name,
-			)
-			key := fmt.Sprintf("%s/%s/%s", HousekeeperTaskType, asynqutils.GetTaskID(ctx), item.Name)
-			metrics.DefaultCollector.AddMetric(key, metric)
-		}()
-
 		now := time.Now()
 		past := now.Add(-item.Duration)
 		out, err := db.DB.NewDelete().
@@ -93,7 +81,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		completedAt := time.Now()
 		switch err {
 		case nil:
-			count, err = out.RowsAffected()
+			count, err := out.RowsAffected()
 			if err != nil {
 				logger.Error("failed to get number of deleted rows", "name", item.Name, "reason", err)
 
@@ -107,6 +95,15 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 				Count:       count,
 			}
 			hkRuns = append(hkRuns, hkRun)
+
+			metric := prometheus.MustNewConstMetric(
+				hkDeletedRecordsDesc,
+				prometheus.GaugeValue,
+				float64(count),
+				item.Name,
+			)
+			key := fmt.Sprintf("%s/%s", HousekeeperTaskType, item.Name)
+			metrics.DefaultCollector.AddMetric(key, metric)
 		default:
 			// Simply log the error here and keep going with the
 			// rest of the objects to cleanup

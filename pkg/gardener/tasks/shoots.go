@@ -12,6 +12,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	gutils "github.com/gardener/inventory/pkg/gardener/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -166,7 +168,14 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 
 	var count int64
 	defer func() {
-		shootsMetric.WithLabelValues(payload.ProjectName).Set(float64(count))
+		metric := prometheus.MustNewConstMetric(
+			shootsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.ProjectName,
+		)
+		key := fmt.Sprintf("%s/%s", TaskCollectShoots, payload.ProjectName)
+		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
 	client := gardenerclient.DefaultClient.GardenClient()
