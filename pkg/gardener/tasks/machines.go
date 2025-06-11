@@ -12,6 +12,7 @@ import (
 
 	"github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/pager"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	gutils "github.com/gardener/inventory/pkg/gardener/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -130,7 +132,14 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 
 	var count int64
 	defer func() {
-		machinesMetric.WithLabelValues(payload.Seed).Set(float64(count))
+		metric := prometheus.MustNewConstMetric(
+			machinesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.Seed,
+		)
+		key := fmt.Sprintf("%s/%s", TaskCollectMachines, payload.Seed)
+		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
 	logger.Info("collecting Gardener machines", "seed", payload.Seed)
