@@ -7,7 +7,6 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
@@ -132,7 +131,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 			float64(count),
 			payload.AccountID,
 		)
-		key := fmt.Sprintf("%s/%s", TaskCollectRegions, payload.AccountID)
+		key := metrics.Key(TaskCollectRegions, payload.AccountID)
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 

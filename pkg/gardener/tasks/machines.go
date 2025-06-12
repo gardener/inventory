@@ -138,7 +138,7 @@ func collectMachines(ctx context.Context, payload CollectMachinesPayload) error 
 			float64(count),
 			payload.Seed,
 		)
-		key := fmt.Sprintf("%s/%s", TaskCollectMachines, payload.Seed)
+		key := metrics.Key(TaskCollectMachines, payload.Seed)
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
