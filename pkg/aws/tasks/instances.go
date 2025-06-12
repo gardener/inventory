@@ -22,7 +22,6 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -195,15 +194,15 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		item := models.Instance{
 			Name:         name,
 			Arch:         string(instance.Architecture),
-			InstanceID:   stringutils.StringFromPointer(instance.InstanceId),
+			InstanceID:   ptr.StringFromPointer(instance.InstanceId),
 			AccountID:    payload.AccountID,
 			InstanceType: string(instance.InstanceType),
 			State:        string(instance.State.Name),
-			SubnetID:     stringutils.StringFromPointer(instance.SubnetId),
-			VpcID:        stringutils.StringFromPointer(instance.VpcId),
-			Platform:     stringutils.StringFromPointer(instance.PlatformDetails),
+			SubnetID:     ptr.StringFromPointer(instance.SubnetId),
+			VpcID:        ptr.StringFromPointer(instance.VpcId),
+			Platform:     ptr.StringFromPointer(instance.PlatformDetails),
 			RegionName:   payload.Region,
-			ImageID:      stringutils.StringFromPointer(instance.ImageId),
+			ImageID:      ptr.StringFromPointer(instance.ImageId),
 			LaunchTime:   ptr.Value(instance.LaunchTime, time.Time{}),
 		}
 		instances = append(instances, item)

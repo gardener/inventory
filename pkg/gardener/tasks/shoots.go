@@ -25,7 +25,7 @@ import (
 	gutils "github.com/gardener/inventory/pkg/gardener/utils"
 	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -233,8 +233,8 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 			Namespace:         s.Namespace,
 			ProjectName:       projectName,
 			CloudProfile:      cloudProfileName,
-			Purpose:           stringutils.StringFromPointer((*string)(s.Spec.Purpose)),
-			SeedName:          stringutils.StringFromPointer(s.Spec.SeedName),
+			Purpose:           ptr.StringFromPointer((*string)(s.Spec.Purpose)),
+			SeedName:          ptr.StringFromPointer(s.Spec.SeedName),
 			Status:            s.Labels["shoot.gardener.cloud/status"],
 			IsHibernated:      s.Status.IsHibernated,
 			CreatedBy:         s.Annotations["gardener.cloud/created-by"],

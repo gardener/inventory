@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/smithy-go/ptr"
 	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/aws/models"
@@ -19,7 +18,7 @@ import (
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -88,7 +87,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 
 	result, err := client.Client.DescribeAvailabilityZones(ctx,
 		&ec2.DescribeAvailabilityZonesInput{
-			AllAvailabilityZones: ptr.Bool(false),
+			AllAvailabilityZones: ptr.To(false),
 		},
 		func(o *ec2.Options) {
 			o.Region = payload.Region
@@ -109,15 +108,15 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 	items := make([]models.AvailabilityZone, 0, len(result.AvailabilityZones))
 	for _, item := range result.AvailabilityZones {
 		item := models.AvailabilityZone{
-			ZoneID:             stringutils.StringFromPointer(item.ZoneId),
+			ZoneID:             ptr.StringFromPointer(item.ZoneId),
 			AccountID:          payload.AccountID,
-			ZoneType:           stringutils.StringFromPointer(item.ZoneType),
-			Name:               stringutils.StringFromPointer(item.ZoneName),
+			ZoneType:           ptr.StringFromPointer(item.ZoneType),
+			Name:               ptr.StringFromPointer(item.ZoneName),
 			OptInStatus:        string(item.OptInStatus),
 			State:              string(item.State),
-			RegionName:         stringutils.StringFromPointer(item.RegionName),
-			GroupName:          stringutils.StringFromPointer(item.GroupName),
-			NetworkBorderGroup: stringutils.StringFromPointer(item.NetworkBorderGroup),
+			RegionName:         ptr.StringFromPointer(item.RegionName),
+			GroupName:          ptr.StringFromPointer(item.GroupName),
+			NetworkBorderGroup: ptr.StringFromPointer(item.NetworkBorderGroup),
 		}
 		items = append(items, item)
 	}

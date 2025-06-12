@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -185,15 +184,15 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		name := awsutils.FetchTag(s.Tags, "Name")
 		item := models.Subnet{
 			Name:                   name,
-			SubnetID:               stringutils.StringFromPointer(s.SubnetId),
+			SubnetID:               ptr.StringFromPointer(s.SubnetId),
 			AccountID:              payload.AccountID,
-			SubnetArn:              stringutils.StringFromPointer(s.SubnetArn),
-			VpcID:                  stringutils.StringFromPointer(s.VpcId),
+			SubnetArn:              ptr.StringFromPointer(s.SubnetArn),
+			VpcID:                  ptr.StringFromPointer(s.VpcId),
 			State:                  string(s.State),
-			AZ:                     stringutils.StringFromPointer(s.AvailabilityZone),
-			AzID:                   stringutils.StringFromPointer(s.AvailabilityZoneId),
+			AZ:                     ptr.StringFromPointer(s.AvailabilityZone),
+			AzID:                   ptr.StringFromPointer(s.AvailabilityZoneId),
 			AvailableIPv4Addresses: int(ptr.Value(s.AvailableIpAddressCount, 0)),
-			IPv4CIDR:               stringutils.StringFromPointer(s.CidrBlock),
+			IPv4CIDR:               ptr.StringFromPointer(s.CidrBlock),
 			IPv6CIDR:               "", // TODO: fetch IPv6 CIDR
 		}
 		subnets = append(subnets, item)

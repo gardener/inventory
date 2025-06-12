@@ -24,7 +24,7 @@ import (
 	"github.com/gardener/inventory/pkg/aws/stscreds/tokenfile"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/core/config"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 // errNoAWSRegion is an error which is returned when there was no region or
@@ -209,9 +209,9 @@ func configureEC2Clientset(ctx context.Context, conf *config.Config) error {
 		}
 		client := &awsclients.Client[*ec2.Client]{
 			NamedCredentials: namedCreds,
-			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
-			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
-			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			AccountID:        ptr.StringFromPointer(callerIdentity.Account),
+			ARN:              ptr.StringFromPointer(callerIdentity.Arn),
+			UserID:           ptr.StringFromPointer(callerIdentity.UserId),
 			Client:           awsClient,
 		}
 		awsclients.EC2Clientset.Overwrite(client.AccountID, client)
@@ -247,9 +247,9 @@ func configureELBClientset(ctx context.Context, conf *config.Config) error {
 		}
 		client := &awsclients.Client[*elb.Client]{
 			NamedCredentials: namedCreds,
-			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
-			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
-			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			AccountID:        ptr.StringFromPointer(callerIdentity.Account),
+			ARN:              ptr.StringFromPointer(callerIdentity.Arn),
+			UserID:           ptr.StringFromPointer(callerIdentity.UserId),
 			Client:           awsClient,
 		}
 		awsclients.ELBClientset.Overwrite(client.AccountID, client)
@@ -285,9 +285,9 @@ func configureELBv2Clientset(ctx context.Context, conf *config.Config) error {
 		}
 		client := &awsclients.Client[*elbv2.Client]{
 			NamedCredentials: namedCreds,
-			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
-			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
-			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			AccountID:        ptr.StringFromPointer(callerIdentity.Account),
+			ARN:              ptr.StringFromPointer(callerIdentity.Arn),
+			UserID:           ptr.StringFromPointer(callerIdentity.UserId),
 			Client:           awsClient,
 		}
 		awsclients.ELBv2Clientset.Overwrite(client.AccountID, client)
@@ -323,9 +323,9 @@ func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 		}
 		client := &awsclients.Client[*s3.Client]{
 			NamedCredentials: namedCreds,
-			AccountID:        stringutils.StringFromPointer(callerIdentity.Account),
-			ARN:              stringutils.StringFromPointer(callerIdentity.Arn),
-			UserID:           stringutils.StringFromPointer(callerIdentity.UserId),
+			AccountID:        ptr.StringFromPointer(callerIdentity.Account),
+			ARN:              ptr.StringFromPointer(callerIdentity.Arn),
+			UserID:           ptr.StringFromPointer(callerIdentity.UserId),
 			Client:           awsClient,
 		}
 		awsclients.S3Clientset.Overwrite(client.AccountID, client)

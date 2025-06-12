@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -189,12 +188,12 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		item := models.VPC{
 			Name:       name,
 			AccountID:  payload.AccountID,
-			VpcID:      stringutils.StringFromPointer(vpc.VpcId),
+			VpcID:      ptr.StringFromPointer(vpc.VpcId),
 			State:      string(vpc.State),
-			IPv4CIDR:   stringutils.StringFromPointer(vpc.CidrBlock),
+			IPv4CIDR:   ptr.StringFromPointer(vpc.CidrBlock),
 			IPv6CIDR:   "", // TODO: fetch IPv6 CIDR
 			IsDefault:  ptr.Value(vpc.IsDefault, false),
-			OwnerID:    stringutils.StringFromPointer(vpc.OwnerId),
+			OwnerID:    ptr.StringFromPointer(vpc.OwnerId),
 			RegionName: payload.Region,
 		}
 		vpcs = append(vpcs, item)
