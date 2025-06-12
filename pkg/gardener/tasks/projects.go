@@ -22,7 +22,7 @@ import (
 	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -141,9 +141,9 @@ func toProjectModels(items []*v1beta1.Project) ([]models.Project, []models.Proje
 		// Collect projects
 		projectItem := models.Project{
 			Name:              p.Name,
-			Namespace:         stringutils.StringFromPointer(p.Spec.Namespace),
+			Namespace:         ptr.StringFromPointer(p.Spec.Namespace),
 			Status:            string(p.Status.Phase),
-			Purpose:           stringutils.StringFromPointer(p.Spec.Purpose),
+			Purpose:           ptr.StringFromPointer(p.Spec.Purpose),
 			Owner:             p.Spec.Owner.Name,
 			CreationTimestamp: p.CreationTimestamp.Time,
 		}

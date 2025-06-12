@@ -19,7 +19,6 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -146,7 +145,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 			logger.Error(
 				"could not get bucket location",
 				"account_id", payload.AccountID,
-				"bucket", stringutils.StringFromPointer(bucket.Name),
+				"bucket", ptr.StringFromPointer(bucket.Name),
 				"reason", err,
 			)
 
@@ -164,7 +163,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		}
 
 		item := models.Bucket{
-			Name:         stringutils.StringFromPointer(bucket.Name),
+			Name:         ptr.StringFromPointer(bucket.Name),
 			AccountID:    payload.AccountID,
 			CreationDate: ptr.Value(bucket.CreationDate, time.Time{}),
 			RegionName:   region,

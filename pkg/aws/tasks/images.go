@@ -20,7 +20,7 @@ import (
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -198,13 +198,13 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 	images := make([]models.Image, 0, len(items))
 	for _, image := range items {
 		item := models.Image{
-			ImageID:        stringutils.StringFromPointer(image.ImageId),
+			ImageID:        ptr.StringFromPointer(image.ImageId),
 			AccountID:      payload.AccountID,
-			Name:           stringutils.StringFromPointer(image.Name),
-			OwnerID:        stringutils.StringFromPointer(image.OwnerId),
+			Name:           ptr.StringFromPointer(image.Name),
+			OwnerID:        ptr.StringFromPointer(image.OwnerId),
 			ImageType:      string(image.ImageType),
 			RootDeviceType: string(image.RootDeviceType),
-			Description:    stringutils.StringFromPointer(image.Description),
+			Description:    ptr.StringFromPointer(image.Description),
 			RegionName:     payload.Region,
 		}
 		images = append(images, item)

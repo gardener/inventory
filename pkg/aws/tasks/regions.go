@@ -20,7 +20,7 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -153,10 +153,10 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	regions := make([]models.Region, 0, len(result.Regions))
 	for _, region := range result.Regions {
 		item := models.Region{
-			Name:        stringutils.StringFromPointer(region.RegionName),
+			Name:        ptr.StringFromPointer(region.RegionName),
 			AccountID:   payload.AccountID,
-			Endpoint:    stringutils.StringFromPointer(region.Endpoint),
-			OptInStatus: stringutils.StringFromPointer(region.OptInStatus),
+			Endpoint:    ptr.StringFromPointer(region.Endpoint),
+			OptInStatus: ptr.StringFromPointer(region.OptInStatus),
 		}
 		regions = append(regions, item)
 	}

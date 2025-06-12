@@ -23,7 +23,7 @@ import (
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -220,21 +220,21 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 	lbs := make([]models.LoadBalancer, 0, len(items))
 	for _, lb := range items {
 		// Get the LoadBalancerID from the last component of the ARN
-		arn := stringutils.StringFromPointer(lb.LoadBalancerArn)
+		arn := ptr.StringFromPointer(lb.LoadBalancerArn)
 		arnParts := strings.Split(arn, "/")
 		loadBalancerID := arnParts[len(arnParts)-1]
 
 		item := models.LoadBalancer{
-			Name:                  stringutils.StringFromPointer(lb.LoadBalancerName),
+			Name:                  ptr.StringFromPointer(lb.LoadBalancerName),
 			ARN:                   arn,
 			LoadBalancerID:        loadBalancerID,
-			DNSName:               stringutils.StringFromPointer(lb.DNSName),
+			DNSName:               ptr.StringFromPointer(lb.DNSName),
 			AccountID:             payload.AccountID,
-			CanonicalHostedZoneID: stringutils.StringFromPointer(lb.CanonicalHostedZoneId),
+			CanonicalHostedZoneID: ptr.StringFromPointer(lb.CanonicalHostedZoneId),
 			State:                 string(lb.State.Code),
 			Scheme:                string(lb.Scheme),
 			Type:                  string(lb.Type),
-			VpcID:                 stringutils.StringFromPointer(lb.VpcId),
+			VpcID:                 ptr.StringFromPointer(lb.VpcId),
 			RegionName:            payload.Region,
 		}
 		lbs = append(lbs, item)
@@ -335,13 +335,13 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 	lbs := make([]models.LoadBalancer, 0, len(items))
 	for _, lb := range items {
 		item := models.LoadBalancer{
-			Name:                  stringutils.StringFromPointer(lb.LoadBalancerName),
-			DNSName:               stringutils.StringFromPointer(lb.DNSName),
+			Name:                  ptr.StringFromPointer(lb.LoadBalancerName),
+			DNSName:               ptr.StringFromPointer(lb.DNSName),
 			AccountID:             payload.AccountID,
-			CanonicalHostedZoneID: stringutils.StringFromPointer(lb.CanonicalHostedZoneNameID),
-			Scheme:                stringutils.StringFromPointer(lb.Scheme),
+			CanonicalHostedZoneID: ptr.StringFromPointer(lb.CanonicalHostedZoneNameID),
+			Scheme:                ptr.StringFromPointer(lb.Scheme),
 			Type:                  constants.LoadBalancerClassicType,
-			VpcID:                 stringutils.StringFromPointer(lb.VPCId),
+			VpcID:                 ptr.StringFromPointer(lb.VPCId),
 			RegionName:            payload.Region,
 		}
 		lbs = append(lbs, item)

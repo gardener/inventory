@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -191,39 +190,39 @@ func collectENIs(ctx context.Context, payload CollectNetworkInterfacesPayload) e
 	for _, item := range items {
 		netInterface := models.NetworkInterface{
 			RegionName:       payload.Region,
-			AZ:               stringutils.StringFromPointer(item.AvailabilityZone),
-			Description:      stringutils.StringFromPointer(item.Description),
+			AZ:               ptr.StringFromPointer(item.AvailabilityZone),
+			Description:      ptr.StringFromPointer(item.Description),
 			InterfaceType:    string(item.InterfaceType),
 			AccountID:        payload.AccountID,
-			MacAddress:       stringutils.StringFromPointer(item.MacAddress),
-			InterfaceID:      stringutils.StringFromPointer(item.NetworkInterfaceId),
-			OwnerID:          stringutils.StringFromPointer(item.OwnerId),
-			PrivateDNSName:   stringutils.StringFromPointer(item.PrivateDnsName),
-			PrivateIPAddress: stringutils.StringFromPointer(item.PrivateIpAddress),
-			RequesterID:      stringutils.StringFromPointer(item.RequesterId),
+			MacAddress:       ptr.StringFromPointer(item.MacAddress),
+			InterfaceID:      ptr.StringFromPointer(item.NetworkInterfaceId),
+			OwnerID:          ptr.StringFromPointer(item.OwnerId),
+			PrivateDNSName:   ptr.StringFromPointer(item.PrivateDnsName),
+			PrivateIPAddress: ptr.StringFromPointer(item.PrivateIpAddress),
+			RequesterID:      ptr.StringFromPointer(item.RequesterId),
 			RequesterManaged: ptr.Value(item.RequesterManaged, false),
 			SourceDestCheck:  ptr.Value(item.SourceDestCheck, false),
 			Status:           string(item.Status),
-			SubnetID:         stringutils.StringFromPointer(item.SubnetId),
-			VpcID:            stringutils.StringFromPointer(item.VpcId),
+			SubnetID:         ptr.StringFromPointer(item.SubnetId),
+			VpcID:            ptr.StringFromPointer(item.VpcId),
 		}
 
 		// Association
 		if item.Association != nil {
-			netInterface.AllocationID = stringutils.StringFromPointer(item.Association.AllocationId)
-			netInterface.AssociationID = stringutils.StringFromPointer(item.Association.AssociationId)
-			netInterface.IPOwnerID = stringutils.StringFromPointer(item.Association.IpOwnerId)
-			netInterface.PublicDNSName = stringutils.StringFromPointer(item.Association.PublicDnsName)
-			netInterface.PublicIPAddress = stringutils.StringFromPointer(item.Association.PublicIp)
+			netInterface.AllocationID = ptr.StringFromPointer(item.Association.AllocationId)
+			netInterface.AssociationID = ptr.StringFromPointer(item.Association.AssociationId)
+			netInterface.IPOwnerID = ptr.StringFromPointer(item.Association.IpOwnerId)
+			netInterface.PublicDNSName = ptr.StringFromPointer(item.Association.PublicDnsName)
+			netInterface.PublicIPAddress = ptr.StringFromPointer(item.Association.PublicIp)
 		}
 
 		// Attachment
 		if item.Attachment != nil {
-			netInterface.AttachmentID = stringutils.StringFromPointer(item.Attachment.AttachmentId)
+			netInterface.AttachmentID = ptr.StringFromPointer(item.Attachment.AttachmentId)
 			netInterface.DeleteOnTermination = ptr.Value(item.Attachment.DeleteOnTermination, false)
 			netInterface.DeviceIndex = int(ptr.Value(item.Attachment.DeviceIndex, 0))
-			netInterface.InstanceID = stringutils.StringFromPointer(item.Attachment.InstanceId)
-			netInterface.InstanceOwnerID = stringutils.StringFromPointer(item.Attachment.InstanceOwnerId)
+			netInterface.InstanceID = ptr.StringFromPointer(item.Attachment.InstanceId)
+			netInterface.InstanceOwnerID = ptr.StringFromPointer(item.Attachment.InstanceOwnerId)
 			netInterface.AttachmentStatus = string(item.Attachment.Status)
 		}
 
