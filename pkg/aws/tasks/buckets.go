@@ -11,12 +11,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
+	"github.com/gardener/inventory/pkg/metrics"
+	"github.com/gardener/inventory/pkg/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -170,6 +173,24 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		}
 		buckets = append(buckets, item)
 	}
+
+	// Emit metrics by first grouping the items by region
+	defer func() {
+		groups := utils.GroupBy(buckets, func(item models.Bucket) string {
+			return item.RegionName
+		})
+		for region, items := range groups {
+			metric := prometheus.MustNewConstMetric(
+				bucketsDesc,
+				prometheus.GaugeValue,
+				float64(len(items)),
+				payload.AccountID,
+				region,
+			)
+			key := metrics.Key(TaskCollectBuckets, payload.AccountID, region)
+			metrics.DefaultCollector.AddMetric(key, metric)
+		}
+	}()
 
 	if len(buckets) == 0 {
 		return nil
