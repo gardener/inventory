@@ -232,7 +232,7 @@ func persistProjectMembers(ctx context.Context, items []models.ProjectMember) er
 				float64(val),
 				groupName,
 			)
-			key := fmt.Sprintf("%s/members/%s", TaskCollectProjects, groupName)
+			key := metrics.Key(TaskCollectProjects, "members", groupName)
 			metrics.DefaultCollector.AddMetric(key, metric)
 		}
 	}()

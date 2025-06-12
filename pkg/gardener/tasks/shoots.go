@@ -174,7 +174,7 @@ func collectShoots(ctx context.Context, payload CollectShootsPayload) error {
 			float64(count),
 			payload.ProjectName,
 		)
-		key := fmt.Sprintf("%s/%s", TaskCollectShoots, payload.ProjectName)
+		key := metrics.Key(TaskCollectShoots, payload.ProjectName)
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
