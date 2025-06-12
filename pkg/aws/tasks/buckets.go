@@ -174,24 +174,6 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		buckets = append(buckets, item)
 	}
 
-	// Emit metrics by first grouping the items by region
-	defer func() {
-		groups := utils.GroupBy(buckets, func(item models.Bucket) string {
-			return item.RegionName
-		})
-		for region, items := range groups {
-			metric := prometheus.MustNewConstMetric(
-				bucketsDesc,
-				prometheus.GaugeValue,
-				float64(len(items)),
-				payload.AccountID,
-				region,
-			)
-			key := metrics.Key(TaskCollectBuckets, payload.AccountID, region)
-			metrics.DefaultCollector.AddMetric(key, metric)
-		}
-	}()
-
 	if len(buckets) == 0 {
 		return nil
 	}
@@ -225,6 +207,22 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		"account_id", payload.AccountID,
 		"count", count,
 	)
+
+	// Emit metrics by first grouping the items by region
+	groups := utils.GroupBy(buckets, func(item models.Bucket) string {
+		return item.RegionName
+	})
+	for region, items := range groups {
+		metric := prometheus.MustNewConstMetric(
+			bucketsDesc,
+			prometheus.GaugeValue,
+			float64(len(items)),
+			payload.AccountID,
+			region,
+		)
+		key := metrics.Key(TaskCollectBuckets, payload.AccountID, region)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}
 
 	return nil
 }
