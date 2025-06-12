@@ -7,15 +7,18 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
@@ -121,8 +124,19 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
-	logger := asynqutils.GetLogger(ctx)
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			regionsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.AccountID,
+		)
+		key := fmt.Sprintf("%s/%s", TaskCollectRegions, payload.AccountID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
 
+	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting AWS regions", "account_id", payload.AccountID)
 	result, err := client.Client.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 
@@ -171,7 +185,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
