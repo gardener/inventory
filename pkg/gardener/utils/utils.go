@@ -8,7 +8,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
+
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
@@ -84,4 +87,26 @@ func InferShootFromInstanceName(ctx context.Context, name string) (*models.Shoot
 	default:
 		return &items[0], nil
 	}
+}
+
+// Decode takes a `decoder` and decodes the provided `data` into the provided object.
+// The underlying `into` address is used to assign the decoded object.
+func Decode(decoder runtime.Decoder, data []byte, into runtime.Object) error {
+	// By not providing an `into` it is necessary that the serialized `data` is configured with
+	// a proper `apiVersion` and `kind` field. This also makes sure that the conversion logic to
+	// the internal version is called.
+	output, _, err := decoder.Decode(data, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	intoType := reflect.TypeOf(into)
+
+	if reflect.TypeOf(output) == intoType {
+		reflect.ValueOf(into).Elem().Set(reflect.ValueOf(output).Elem())
+
+		return nil
+	}
+
+	return fmt.Errorf("is not of type %s", intoType)
 }

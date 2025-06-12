@@ -16,9 +16,9 @@ import (
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/gardener/models"
+	gutils "github.com/gardener/inventory/pkg/gardener/utils"
 	"github.com/gardener/inventory/pkg/gcp/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	decodeutils "github.com/gardener/inventory/pkg/utils/decode"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
@@ -126,7 +126,7 @@ func decodeGCPProviderConfig(rawProviderConfig []byte) (*gcp.CloudProfileConfig,
 	decoder := serializer.NewCodecFactory(scheme, serializer.EnableStrict).UniversalDecoder()
 	providerConfig := &gcp.CloudProfileConfig{}
 
-	if err := decodeutils.Decode(decoder, rawProviderConfig, providerConfig); err != nil {
+	if err := gutils.Decode(decoder, rawProviderConfig, providerConfig); err != nil {
 		return nil, err
 	}
 
