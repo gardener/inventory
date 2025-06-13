@@ -15,6 +15,7 @@ import (
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	v2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
@@ -22,6 +23,8 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
+	"github.com/gardener/inventory/pkg/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -282,6 +285,23 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 		"account_id", payload.AccountID,
 		"count", count,
 	)
+
+	// Emit metrics by grouping the ELBs by VPC
+	groups := utils.GroupBy(lbs, func(item models.LoadBalancer) string {
+		return item.VpcID
+	})
+	for vpcID, items := range groups {
+		metric := prometheus.MustNewConstMetric(
+			loadBalancersDesc,
+			prometheus.GaugeValue,
+			float64(len(items)),
+			payload.AccountID,
+			payload.Region,
+			vpcID,
+		)
+		key := metrics.Key(TaskCollectLoadBalancers, payload.AccountID, payload.Region, vpcID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}
 
 	return nil
 }
