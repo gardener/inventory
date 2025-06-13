@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
@@ -19,6 +20,7 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -159,6 +161,19 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			imagesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.AccountID,
+			payload.Region,
+		)
+		key := metrics.Key(TaskCollectImages, payload.AccountID, payload.Region)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	logger := asynqutils.GetLogger(ctx)
 	paginator := ec2.NewDescribeImagesPaginator(
 		client.Client,
@@ -238,7 +253,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
