@@ -11,12 +11,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -77,6 +79,19 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 	if !ok {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
+
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			zonesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.AccountID,
+			payload.Region,
+		)
+		key := metrics.Key(TaskCollectAvailabilityZones, payload.AccountID, payload.Region)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
 
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info(
@@ -150,7 +165,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
