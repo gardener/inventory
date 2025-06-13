@@ -10,16 +10,17 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/smithy-go/ptr"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -79,6 +80,19 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			zonesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.AccountID,
+			payload.Region,
+		)
+		key := metrics.Key(TaskCollectAvailabilityZones, payload.AccountID, payload.Region)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info(
 		"collecting AWS availability zones",
@@ -88,7 +102,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 
 	result, err := client.Client.DescribeAvailabilityZones(ctx,
 		&ec2.DescribeAvailabilityZonesInput{
-			AllAvailabilityZones: ptr.Bool(false),
+			AllAvailabilityZones: ptr.To(false),
 		},
 		func(o *ec2.Options) {
 			o.Region = payload.Region
@@ -109,15 +123,15 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 	items := make([]models.AvailabilityZone, 0, len(result.AvailabilityZones))
 	for _, item := range result.AvailabilityZones {
 		item := models.AvailabilityZone{
-			ZoneID:             stringutils.StringFromPointer(item.ZoneId),
+			ZoneID:             ptr.StringFromPointer(item.ZoneId),
 			AccountID:          payload.AccountID,
-			ZoneType:           stringutils.StringFromPointer(item.ZoneType),
-			Name:               stringutils.StringFromPointer(item.ZoneName),
+			ZoneType:           ptr.StringFromPointer(item.ZoneType),
+			Name:               ptr.StringFromPointer(item.ZoneName),
 			OptInStatus:        string(item.OptInStatus),
 			State:              string(item.State),
-			RegionName:         stringutils.StringFromPointer(item.RegionName),
-			GroupName:          stringutils.StringFromPointer(item.GroupName),
-			NetworkBorderGroup: stringutils.StringFromPointer(item.NetworkBorderGroup),
+			RegionName:         ptr.StringFromPointer(item.RegionName),
+			GroupName:          ptr.StringFromPointer(item.GroupName),
+			NetworkBorderGroup: ptr.StringFromPointer(item.NetworkBorderGroup),
 		}
 		items = append(items, item)
 	}
@@ -151,7 +165,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}

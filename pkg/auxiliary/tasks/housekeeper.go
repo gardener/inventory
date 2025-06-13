@@ -6,7 +6,6 @@ package tasks
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -102,7 +101,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 				float64(count),
 				item.Name,
 			)
-			key := fmt.Sprintf("%s/%s", HousekeeperTaskType, item.Name)
+			key := metrics.Key(HousekeeperTaskType, item.Name)
 			metrics.DefaultCollector.AddMetric(key, metric)
 		default:
 			// Simply log the error here and keep going with the

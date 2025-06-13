@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
@@ -20,9 +21,10 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
+	"github.com/gardener/inventory/pkg/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -195,15 +197,15 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		item := models.Instance{
 			Name:         name,
 			Arch:         string(instance.Architecture),
-			InstanceID:   stringutils.StringFromPointer(instance.InstanceId),
+			InstanceID:   ptr.StringFromPointer(instance.InstanceId),
 			AccountID:    payload.AccountID,
 			InstanceType: string(instance.InstanceType),
 			State:        string(instance.State.Name),
-			SubnetID:     stringutils.StringFromPointer(instance.SubnetId),
-			VpcID:        stringutils.StringFromPointer(instance.VpcId),
-			Platform:     stringutils.StringFromPointer(instance.PlatformDetails),
+			SubnetID:     ptr.StringFromPointer(instance.SubnetId),
+			VpcID:        ptr.StringFromPointer(instance.VpcId),
+			Platform:     ptr.StringFromPointer(instance.PlatformDetails),
 			RegionName:   payload.Region,
-			ImageID:      stringutils.StringFromPointer(instance.ImageId),
+			ImageID:      ptr.StringFromPointer(instance.ImageId),
 			LaunchTime:   ptr.Value(instance.LaunchTime, time.Time{}),
 		}
 		instances = append(instances, item)
@@ -252,6 +254,29 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		"account_id", payload.AccountID,
 		"count", count,
 	)
+
+	// Emit metrics by grouping the instances by VPC
+	groups := utils.GroupBy(instances, func(item models.Instance) string {
+		return item.VpcID
+	})
+	for vpcID, items := range groups {
+		// An empty VPC ID would capture instances in terminating state,
+		// so we simply exclude these.
+		if vpcID == "" {
+			continue
+		}
+
+		metric := prometheus.MustNewConstMetric(
+			instancesDesc,
+			prometheus.GaugeValue,
+			float64(len(items)),
+			payload.AccountID,
+			payload.Region,
+			vpcID,
+		)
+		key := metrics.Key(TaskCollectInstances, payload.AccountID, payload.Region, vpcID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}
 
 	return nil
 }

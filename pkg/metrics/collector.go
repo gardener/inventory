@@ -5,6 +5,7 @@
 package metrics
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -113,4 +114,14 @@ func NewCollector() *Collector {
 	}
 
 	return c
+}
+
+// Key is a utility function, which derives a key from the given items. The
+// derived key can be used as an `idempotency key' for metrics when adding them
+// via [Collector.AddMetric].
+func Key(item string, rest ...string) string {
+	items := []string{item}
+	items = append(items, rest...)
+
+	return strings.Join(items, "/")
 }

@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -79,7 +79,7 @@ func HandleCollectBackupBucketsTask(ctx context.Context, _ *asynq.Task) error {
 
 		item := models.BackupBucket{
 			Name:              b.GetName(),
-			SeedName:          stringutils.StringFromPointer(b.Spec.SeedName),
+			SeedName:          ptr.StringFromPointer(b.Spec.SeedName),
 			ProviderType:      b.Spec.Provider.Type,
 			RegionName:        b.Spec.Provider.Region,
 			State:             state,

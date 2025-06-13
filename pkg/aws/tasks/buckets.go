@@ -11,15 +11,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
+	"github.com/gardener/inventory/pkg/metrics"
+	"github.com/gardener/inventory/pkg/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -146,7 +148,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 			logger.Error(
 				"could not get bucket location",
 				"account_id", payload.AccountID,
-				"bucket", stringutils.StringFromPointer(bucket.Name),
+				"bucket", ptr.StringFromPointer(bucket.Name),
 				"reason", err,
 			)
 
@@ -164,7 +166,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		}
 
 		item := models.Bucket{
-			Name:         stringutils.StringFromPointer(bucket.Name),
+			Name:         ptr.StringFromPointer(bucket.Name),
 			AccountID:    payload.AccountID,
 			CreationDate: ptr.Value(bucket.CreationDate, time.Time{}),
 			RegionName:   region,
@@ -205,6 +207,22 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		"account_id", payload.AccountID,
 		"count", count,
 	)
+
+	// Emit metrics by first grouping the items by region
+	groups := utils.GroupBy(buckets, func(item models.Bucket) string {
+		return item.RegionName
+	})
+	for region, items := range groups {
+		metric := prometheus.MustNewConstMetric(
+			bucketsDesc,
+			prometheus.GaugeValue,
+			float64(len(items)),
+			payload.AccountID,
+			region,
+		)
+		key := metrics.Key(TaskCollectBuckets, payload.AccountID, region)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}
 
 	return nil
 }

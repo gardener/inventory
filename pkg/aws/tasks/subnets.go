@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
@@ -19,9 +20,10 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
+	"github.com/gardener/inventory/pkg/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
 )
 
 const (
@@ -185,15 +187,15 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		name := awsutils.FetchTag(s.Tags, "Name")
 		item := models.Subnet{
 			Name:                   name,
-			SubnetID:               stringutils.StringFromPointer(s.SubnetId),
+			SubnetID:               ptr.StringFromPointer(s.SubnetId),
 			AccountID:              payload.AccountID,
-			SubnetArn:              stringutils.StringFromPointer(s.SubnetArn),
-			VpcID:                  stringutils.StringFromPointer(s.VpcId),
+			SubnetArn:              ptr.StringFromPointer(s.SubnetArn),
+			VpcID:                  ptr.StringFromPointer(s.VpcId),
 			State:                  string(s.State),
-			AZ:                     stringutils.StringFromPointer(s.AvailabilityZone),
-			AzID:                   stringutils.StringFromPointer(s.AvailabilityZoneId),
+			AZ:                     ptr.StringFromPointer(s.AvailabilityZone),
+			AzID:                   ptr.StringFromPointer(s.AvailabilityZoneId),
 			AvailableIPv4Addresses: int(ptr.Value(s.AvailableIpAddressCount, 0)),
-			IPv4CIDR:               stringutils.StringFromPointer(s.CidrBlock),
+			IPv4CIDR:               ptr.StringFromPointer(s.CidrBlock),
 			IPv6CIDR:               "", // TODO: fetch IPv6 CIDR
 		}
 		subnets = append(subnets, item)
@@ -241,6 +243,23 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		"account_id", payload.AccountID,
 		"count", count,
 	)
+
+	// Emit metrics by grouping the subnets by VPC
+	groups := utils.GroupBy(subnets, func(item models.Subnet) string {
+		return item.VpcID
+	})
+	for vpcID, items := range groups {
+		metric := prometheus.MustNewConstMetric(
+			subnetsDesc,
+			prometheus.GaugeValue,
+			float64(len(items)),
+			payload.AccountID,
+			payload.Region,
+			vpcID,
+		)
+		key := metrics.Key(TaskCollectSubnets, payload.AccountID, payload.Region, vpcID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}
 
 	return nil
 }

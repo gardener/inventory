@@ -14,6 +14,62 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
+// Names for the various models provided by this package.
+// These names are used for registering models with [registry.ModelRegistry]
+const (
+	RegionModelName                         = "aws:model:region"
+	AvailabilityZoneModelName               = "aws:model:az"
+	VPCModelName                            = "aws:model:vpc"
+	SubnetModelName                         = "aws:model:subnet"
+	InstanceModelName                       = "aws:model:instance"
+	ImageModelName                          = "aws:model:image"
+	LoadBalancerModelName                   = "aws:model:loadbalancer"
+	BucketModelName                         = "aws:model:bucket"
+	NetworkInterfaceModelName               = "aws:model:network_interface"
+	RegionToAZModelName                     = "aws:model:link_region_to_az"
+	RegionToVPCModelName                    = "aws:model:link_region_to_vpc"
+	VPCToSubnetModelName                    = "aws:model:link_vpc_to_subnet"
+	VPCToInstanceModelName                  = "aws:model:link_vpc_to_instance"
+	SubnetToAZModelName                     = "aws:model:link_subnet_to_az"
+	InstanceToSubnetModelName               = "aws:model:link_instance_to_subnet"
+	InstanceToRegionModelName               = "aws:model:link_instance_to_region"
+	InstanceToImageModelName                = "aws:model:link_instance_to_image"
+	ImageToRegionModelName                  = "aws:model:link_image_to_region"
+	LoadBalancerToVPCModelName              = "aws:model:link_lb_to_vpc"
+	LoadBalancerToRegionModelName           = "aws:model:link_lb_to_region"
+	LoadBalancerToNetworkInterfaceModelName = "aws:model:link_lb_to_net_interface"
+	InstanceToNetworkInterfaceModelName     = "aws:model:link_instance_to_net_interface"
+)
+
+// models specifies the mapping between name and model type, which will be
+// registered with [registry.ModelRegistry].
+var models = map[string]any{
+	RegionModelName:           &Region{},
+	AvailabilityZoneModelName: &AvailabilityZone{},
+	VPCModelName:              &VPC{},
+	SubnetModelName:           &Subnet{},
+	InstanceModelName:         &Instance{},
+	ImageModelName:            &Image{},
+	LoadBalancerModelName:     &LoadBalancer{},
+	BucketModelName:           &Bucket{},
+	NetworkInterfaceModelName: &NetworkInterface{},
+
+	// Link models
+	RegionToAZModelName:                     &RegionToAZ{},
+	RegionToVPCModelName:                    &RegionToVPC{},
+	VPCToSubnetModelName:                    &VPCToSubnet{},
+	VPCToInstanceModelName:                  &VPCToInstance{},
+	SubnetToAZModelName:                     &SubnetToAZ{},
+	InstanceToSubnetModelName:               &InstanceToSubnet{},
+	InstanceToRegionModelName:               &InstanceToRegion{},
+	InstanceToImageModelName:                &InstanceToImage{},
+	ImageToRegionModelName:                  &ImageToRegion{},
+	LoadBalancerToVPCModelName:              &LoadBalancerToVPC{},
+	LoadBalancerToRegionModelName:           &LoadBalancerToRegion{},
+	LoadBalancerToNetworkInterfaceModelName: &LoadBalancerToNetworkInterface{},
+	InstanceToNetworkInterfaceModelName:     &InstanceToNetworkInterface{},
+}
+
 // RegionToAZ represents a link table connecting the Region with AZ.
 type RegionToAZ struct {
 	bun.BaseModel `bun:"table:l_aws_region_to_az"`
@@ -322,30 +378,9 @@ type LoadBalancerToNetworkInterface struct {
 	NetworkInterfaceID uuid.UUID `bun:"ni_id,notnull,type:uuid,unique:l_aws_lb_to_net_interface_key"`
 }
 
+// init registers the models with the [registry.ModelRegistry]
 func init() {
-	// Register the models with the default registry
-	registry.ModelRegistry.MustRegister("aws:model:region", &Region{})
-	registry.ModelRegistry.MustRegister("aws:model:az", &AvailabilityZone{})
-	registry.ModelRegistry.MustRegister("aws:model:vpc", &VPC{})
-	registry.ModelRegistry.MustRegister("aws:model:subnet", &Subnet{})
-	registry.ModelRegistry.MustRegister("aws:model:instance", &Instance{})
-	registry.ModelRegistry.MustRegister("aws:model:image", &Image{})
-	registry.ModelRegistry.MustRegister("aws:model:loadbalancer", &LoadBalancer{})
-	registry.ModelRegistry.MustRegister("aws:model:bucket", &Bucket{})
-	registry.ModelRegistry.MustRegister("aws:model:network_interface", &NetworkInterface{})
-
-	// Link tables
-	registry.ModelRegistry.MustRegister("aws:model:link_region_to_az", &RegionToAZ{})
-	registry.ModelRegistry.MustRegister("aws:model:link_region_to_vpc", &RegionToVPC{})
-	registry.ModelRegistry.MustRegister("aws:model:link_vpc_to_subnet", &VPCToSubnet{})
-	registry.ModelRegistry.MustRegister("aws:model:link_vpc_to_instance", &VPCToInstance{})
-	registry.ModelRegistry.MustRegister("aws:model:link_subnet_to_az", &SubnetToAZ{})
-	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_subnet", &InstanceToSubnet{})
-	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_region", &InstanceToRegion{})
-	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_image", &InstanceToImage{})
-	registry.ModelRegistry.MustRegister("aws:model:link_image_to_region", &ImageToRegion{})
-	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_vpc", &LoadBalancerToVPC{})
-	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_region", &LoadBalancerToRegion{})
-	registry.ModelRegistry.MustRegister("aws:model:link_lb_to_net_interface", &LoadBalancerToNetworkInterface{})
-	registry.ModelRegistry.MustRegister("aws:model:link_instance_to_net_interface", &InstanceToNetworkInterface{})
+	for k, v := range models {
+		registry.ModelRegistry.MustRegister(k, v)
+	}
 }

@@ -21,8 +21,9 @@ import (
 	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/gardener/inventory/pkg/metrics"
+	"github.com/gardener/inventory/pkg/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -141,9 +142,9 @@ func toProjectModels(items []*v1beta1.Project) ([]models.Project, []models.Proje
 		// Collect projects
 		projectItem := models.Project{
 			Name:              p.Name,
-			Namespace:         stringutils.StringFromPointer(p.Spec.Namespace),
+			Namespace:         ptr.StringFromPointer(p.Spec.Namespace),
 			Status:            string(p.Status.Phase),
-			Purpose:           stringutils.StringFromPointer(p.Spec.Purpose),
+			Purpose:           ptr.StringFromPointer(p.Spec.Purpose),
 			Owner:             p.Spec.Owner.Name,
 			CreationTimestamp: p.CreationTimestamp.Time,
 		}
@@ -216,23 +217,18 @@ func persistProjectMembers(ctx context.Context, items []models.ProjectMember) er
 	var err error
 
 	// Group members by project and emit metrics
-	memberGroups := make(map[string]int)
-	for _, member := range items {
-		memberGroups[member.ProjectName]++
-	}
 	defer func() {
-		for groupName, count := range memberGroups {
-			val := count
-			if err != nil {
-				val = 0
-			}
+		groups := utils.GroupBy(items, func(item models.ProjectMember) string {
+			return item.ProjectName
+		})
+		for projectName, members := range groups {
 			metric := prometheus.MustNewConstMetric(
 				projectMembersDesc,
 				prometheus.GaugeValue,
-				float64(val),
-				groupName,
+				float64(len(members)),
+				projectName,
 			)
-			key := fmt.Sprintf("%s/members/%s", TaskCollectProjects, groupName)
+			key := metrics.Key(TaskCollectProjects, "members", projectName)
 			metrics.DefaultCollector.AddMetric(key, metric)
 		}
 	}()

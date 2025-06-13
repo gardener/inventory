@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
@@ -19,8 +20,9 @@ import (
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -159,6 +161,19 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.AccountID))
 	}
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			imagesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.AccountID,
+			payload.Region,
+		)
+		key := metrics.Key(TaskCollectImages, payload.AccountID, payload.Region)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	logger := asynqutils.GetLogger(ctx)
 	paginator := ec2.NewDescribeImagesPaginator(
 		client.Client,
@@ -198,13 +213,13 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 	images := make([]models.Image, 0, len(items))
 	for _, image := range items {
 		item := models.Image{
-			ImageID:        stringutils.StringFromPointer(image.ImageId),
+			ImageID:        ptr.StringFromPointer(image.ImageId),
 			AccountID:      payload.AccountID,
-			Name:           stringutils.StringFromPointer(image.Name),
-			OwnerID:        stringutils.StringFromPointer(image.OwnerId),
+			Name:           ptr.StringFromPointer(image.Name),
+			OwnerID:        ptr.StringFromPointer(image.OwnerId),
 			ImageType:      string(image.ImageType),
 			RootDeviceType: string(image.RootDeviceType),
-			Description:    stringutils.StringFromPointer(image.Description),
+			Description:    ptr.StringFromPointer(image.Description),
 			RegionName:     payload.Region,
 		}
 		images = append(images, item)
@@ -238,7 +253,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}

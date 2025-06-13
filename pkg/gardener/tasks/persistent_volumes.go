@@ -147,7 +147,7 @@ func collectPersistentVolumes(ctx context.Context, payload CollectPersistentVolu
 			float64(count),
 			payload.Seed,
 		)
-		key := fmt.Sprintf("%s/%s", TaskCollectPersistentVolumes, payload.Seed)
+		key := metrics.Key(TaskCollectPersistentVolumes, payload.Seed)
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 

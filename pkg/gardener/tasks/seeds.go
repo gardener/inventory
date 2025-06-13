@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/inventory/pkg/gardener/models"
 	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	stringutils "github.com/gardener/inventory/pkg/utils/strings"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -71,7 +71,7 @@ func HandleCollectSeedsTask(ctx context.Context, _ *asynq.Task) error {
 		}
 		item := models.Seed{
 			Name:              s.Name,
-			KubernetesVersion: stringutils.StringFromPointer(s.Status.KubernetesVersion),
+			KubernetesVersion: ptr.StringFromPointer(s.Status.KubernetesVersion),
 			CreationTimestamp: s.CreationTimestamp.Time,
 		}
 		seeds = append(seeds, item)

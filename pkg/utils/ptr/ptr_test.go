@@ -54,3 +54,24 @@ func TestValue(t *testing.T) {
 		})
 	}
 }
+
+func TestStringFromPointer(t *testing.T) {
+	emptyString := ""
+	nonEmptyString := "abc"
+	testCases := []struct {
+		in  *string
+		out string
+	}{
+		{nil, ""},
+		{&emptyString, ""},
+		{&nonEmptyString, nonEmptyString},
+	}
+
+	for _, tt := range testCases {
+		out := ptr.StringFromPointer(tt.in)
+
+		if tt.out != out {
+			t.Fatalf(`StringFromPointer(%v) == %q, expected %q.`, tt.in, out, tt.out)
+		}
+	}
+}

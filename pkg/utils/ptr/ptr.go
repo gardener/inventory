@@ -19,3 +19,9 @@ func Value[T any](p *T, def T) T {
 func To[T any](v T) *T {
 	return &v
 }
+
+// StringFromPointer returns the string value of a pointer to a string or an
+// empty string if the pointer is nil.
+func StringFromPointer(s *string) string {
+	return Value(s, "")
+}
