@@ -10,12 +10,14 @@ import (
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/clients/db"
 	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gcp/models"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -36,6 +38,16 @@ func HandleCollectProjectsTask(ctx context.Context, _ *asynq.Task) error {
 
 		return nil
 	}
+
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			projectsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+		)
+		metrics.DefaultCollector.AddMetric(TaskCollectProjects, metric)
+	}()
 
 	items := make([]models.Project, 0, gcpclients.ProjectsClientset.Length())
 	err := gcpclients.ProjectsClientset.Range(func(projectID string, client *gcpclients.Client[*resourcemanager.ProjectsClient]) error {
@@ -95,7 +107,7 @@ func HandleCollectProjectsTask(ctx context.Context, _ *asynq.Task) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
