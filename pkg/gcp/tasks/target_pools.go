@@ -12,6 +12,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/api/iterator"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -130,6 +132,18 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
 
+	var tpCount int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			targetPoolsDesc,
+			prometheus.GaugeValue,
+			float64(tpCount),
+			payload.ProjectID,
+		)
+		key := metrics.Key(TaskCollectTargetPools, payload.ProjectID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting GCP target pools", "project", payload.ProjectID)
 
@@ -143,6 +157,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 
 	targetPools := make([]models.TargetPool, 0)
 	targetPoolInstances := make([]models.TargetPoolInstance, 0)
+
 	it := client.Client.AggregatedList(ctx, req)
 	for {
 		// The iterator returns a k/v pair, where the key represents a
@@ -221,7 +236,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	tpCount, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -229,7 +244,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 	logger.Info(
 		"populated gcp target pools",
 		"project", payload.ProjectID,
-		"count", count,
+		"count", tpCount,
 	)
 
 	// UPSERT Target Pool Instances
@@ -249,7 +264,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 		return err
 	}
 
-	count, err = out.RowsAffected()
+	tpiCount, err := out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -257,7 +272,7 @@ func collectTargetPools(ctx context.Context, payload CollectTargetPoolsPayload) 
 	logger.Info(
 		"populated gcp target pool instances",
 		"project", payload.ProjectID,
-		"count", count,
+		"count", tpiCount,
 	)
 
 	return nil

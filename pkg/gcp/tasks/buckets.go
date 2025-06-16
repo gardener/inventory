@@ -11,6 +11,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/api/iterator"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
@@ -20,7 +21,6 @@ import (
 	"github.com/gardener/inventory/pkg/gcp/models"
 	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
