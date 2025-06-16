@@ -13,6 +13,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/api/iterator"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -126,8 +128,19 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
 
-	logger := asynqutils.GetLogger(ctx)
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			subnetsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.ProjectID,
+		)
+		key := metrics.Key(TaskCollectSubnets, payload.ProjectID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
 
+	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting GCP subnets", "project", payload.ProjectID)
 
 	pageSize := uint32(constants.PageSize)
@@ -218,7 +231,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
