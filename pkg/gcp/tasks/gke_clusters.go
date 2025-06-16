@@ -12,12 +12,14 @@ import (
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gcp/models"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -118,6 +120,18 @@ func collectGKEClusters(ctx context.Context, payload CollectGKEClustersPayload) 
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			gkeClustersDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.ProjectID,
+		)
+		key := metrics.Key(TaskCollectGKEClusters, payload.ProjectID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting GKE clusters", "project", payload.ProjectID)
 
@@ -180,7 +194,7 @@ func collectGKEClusters(ctx context.Context, payload CollectGKEClustersPayload) 
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
