@@ -13,6 +13,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/api/iterator"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -192,7 +194,17 @@ func getGlobalAddresses(ctx context.Context, payload CollectAddressesPayload) ([
 // collectAddresses collects the global and regional static IP addresses for the
 // project specified in the payload.
 func collectAddresses(ctx context.Context, payload CollectAddressesPayload) error {
-	logger := asynqutils.GetLogger(ctx)
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			addressesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.ProjectID,
+		)
+		key := metrics.Key(TaskCollectAddresses, payload.ProjectID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
 
 	regional, err := getRegionalAddresses(ctx, payload)
 	if err != nil {
@@ -277,11 +289,12 @@ func collectAddresses(ctx context.Context, payload CollectAddressesPayload) erro
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
 
+	logger := asynqutils.GetLogger(ctx)
 	logger.Info(
 		"populated gcp addresses",
 		"project", payload.ProjectID,
