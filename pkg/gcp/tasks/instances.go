@@ -13,6 +13,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/api/iterator"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/inventory/pkg/gcp/constants"
 	"github.com/gardener/inventory/pkg/gcp/models"
 	gcputils "github.com/gardener/inventory/pkg/gcp/utils"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 
@@ -133,6 +135,18 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 	if !ok {
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
+
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			instancesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.ProjectID,
+		)
+		key := metrics.Key(TaskCollectInstances, payload.ProjectID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
 
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting GCP instances", "project", payload.ProjectID)
@@ -261,7 +275,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
