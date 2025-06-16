@@ -62,7 +62,7 @@ var (
 			Namespace: Namespace,
 			Name:      "task_duration_seconds",
 			Help:      "Duration of task execution in seconds",
-			Buckets:   []float64{5.0, 10.0, 30.0, 90.0, 180.0, 300.0},
+			Buckets:   []float64{1.0, 10.0, 30.0, 60.0, 120.0},
 		},
 		[]string{"task_name", "task_queue"},
 	)
