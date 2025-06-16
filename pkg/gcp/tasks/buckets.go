@@ -18,7 +18,9 @@ import (
 	gcpclients "github.com/gardener/inventory/pkg/clients/gcp"
 	"github.com/gardener/inventory/pkg/core/registry"
 	"github.com/gardener/inventory/pkg/gcp/models"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -117,8 +119,19 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		return asynqutils.SkipRetry(ClientNotFound(payload.ProjectID))
 	}
 
-	logger := asynqutils.GetLogger(ctx)
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			bucketsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.ProjectID,
+		)
+		key := metrics.Key(TaskCollectBuckets, payload.ProjectID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
 
+	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting GCP buckets", "project", payload.ProjectID)
 
 	iter := client.Client.Buckets(ctx, payload.ProjectID)
@@ -177,7 +190,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
