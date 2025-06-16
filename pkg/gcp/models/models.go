@@ -15,6 +15,66 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
+// Names for the various models provided by this package.
+// These names are used for registering models with [registry.ModelRegistry]
+const (
+	ProjectModelName                    = "gcp:model:project"
+	InstanceModelName                   = "gcp:model:instance"
+	VPCModelName                        = "gcp:model:vpc"
+	AddressModelName                    = "gcp:model:address"
+	NetworkInterfaceModelName           = "gcp:model:nic"
+	SubnetModelName                     = "gcp:model:subnet"
+	BucketModelName                     = "gcp:model:bucket"
+	ForwardingRuleModelName             = "gcp:model:forwarding_rule"
+	DiskModelName                       = "gcp:model:disk"
+	AttachedDiskModelName               = "gcp:model:attached_disk"
+	GKEClusterModelName                 = "gcp:model:gke_cluster"
+	TargetPoolModelName                 = "gcp:model:target_pool"
+	TargetPoolInstanceModelName         = "gcp:model:target_pool_instance"
+	InstanceToProjectModelName          = "gcp:model:link_instance_to_project"
+	VPCToProjectModelName               = "gcp:model:link_vpc_to_project"
+	AddressToProjectModelName           = "gcp:model:link_addr_to_project"
+	InstanceToNetworkInterfaceModelName = "gcp:model:link_instance_to_nic"
+	SubnetToVPCModelName                = "gcp:model:link_subnet_to_vpc"
+	SubnetToProjectModelName            = "gcp:model:link_subnet_to_project"
+	ForwardingRuleToProjectModelName    = "gcp:model:link_forwarding_rule_to_project"
+	InstanceToDiskModelName             = "gcp:model:link_instance_to_disk"
+	GKEClusterToProjectModelName        = "gcp:model:link_gke_cluster_to_project"
+	TargetPoolToInstanceModelName       = "gcp:model:link_target_pool_to_instance"
+	TargetPoolToProjectModelName        = "gcp:model:link_target_pool_to_project"
+)
+
+// models specifies the mapping between name and model type, which will be
+// registered with [registry.ModelRegistry].
+var models = map[string]any{
+	ProjectModelName:            &Project{},
+	InstanceModelName:           &Instance{},
+	VPCModelName:                &VPC{},
+	AddressModelName:            &Address{},
+	NetworkInterfaceModelName:   &NetworkInterface{},
+	SubnetModelName:             &Subnet{},
+	BucketModelName:             &Bucket{},
+	ForwardingRuleModelName:     &ForwardingRule{},
+	DiskModelName:               &Disk{},
+	AttachedDiskModelName:       &AttachedDisk{},
+	GKEClusterModelName:         &GKECluster{},
+	TargetPoolModelName:         &TargetPool{},
+	TargetPoolInstanceModelName: &TargetPoolInstance{},
+
+	// Link models
+	InstanceToProjectModelName:          &InstanceToProject{},
+	VPCToProjectModelName:               &VPCToProject{},
+	AddressToProjectModelName:           &AddressToProject{},
+	InstanceToNetworkInterfaceModelName: &InstanceToNetworkInterface{},
+	SubnetToVPCModelName:                &SubnetToVPC{},
+	SubnetToProjectModelName:            &SubnetToProject{},
+	ForwardingRuleToProjectModelName:    &ForwardingRuleToProject{},
+	InstanceToDiskModelName:             &InstanceToDisk{},
+	GKEClusterToProjectModelName:        &GKEClusterToProject{},
+	TargetPoolToInstanceModelName:       &TargetPoolToInstance{},
+	TargetPoolToProjectModelName:        &TargetPoolToProject{},
+}
+
 // Project represents a GCP Project.
 type Project struct {
 	bun.BaseModel `bun:"table:gcp_project"`
@@ -397,32 +457,9 @@ type TargetPoolToProject struct {
 	ProjectID    uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_target_pool_to_project_key"`
 }
 
+// init registers the models with the [registry.ModelRegistry]
 func init() {
-	// Register the models with the default registry
-	registry.ModelRegistry.MustRegister("gcp:model:project", &Project{})
-	registry.ModelRegistry.MustRegister("gcp:model:instance", &Instance{})
-	registry.ModelRegistry.MustRegister("gcp:model:vpc", &VPC{})
-	registry.ModelRegistry.MustRegister("gcp:model:address", &Address{})
-	registry.ModelRegistry.MustRegister("gcp:model:nic", &NetworkInterface{})
-	registry.ModelRegistry.MustRegister("gcp:model:subnet", &Subnet{})
-	registry.ModelRegistry.MustRegister("gcp:model:bucket", &Bucket{})
-	registry.ModelRegistry.MustRegister("gcp:model:forwarding_rule", &ForwardingRule{})
-	registry.ModelRegistry.MustRegister("gcp:model:disk", &Disk{})
-	registry.ModelRegistry.MustRegister("gcp:model:attached_disk", &AttachedDisk{})
-	registry.ModelRegistry.MustRegister("gcp:model:gke_cluster", &GKECluster{})
-	registry.ModelRegistry.MustRegister("gcp:model:target_pool", &TargetPool{})
-	registry.ModelRegistry.MustRegister("gcp:model:target_pool_instance", &TargetPoolInstance{})
-
-	// Link tables
-	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_project", &InstanceToProject{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_vpc_to_project", &VPCToProject{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_addr_to_project", &AddressToProject{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_nic", &InstanceToNetworkInterface{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_vpc", &SubnetToVPC{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_subnet_to_project", &SubnetToProject{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_forwarding_rule_to_project", &ForwardingRuleToProject{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_instance_to_disk", &InstanceToDisk{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_gke_cluster_to_project", &GKEClusterToProject{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_target_pool_to_instance", &TargetPoolToInstance{})
-	registry.ModelRegistry.MustRegister("gcp:model:link_target_pool_to_project", &TargetPoolToProject{})
+	for k, v := range models {
+		registry.ModelRegistry.MustRegister(k, v)
+	}
 }
