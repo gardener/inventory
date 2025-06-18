@@ -10,6 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/azure/models"
 	azureutils "github.com/gardener/inventory/pkg/azure/utils"
@@ -17,6 +18,7 @@ import (
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -124,6 +126,18 @@ func collectResourceGroups(ctx context.Context, payload CollectResourceGroupsPay
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting Azure Resource Groups", "subscription_id", payload.SubscriptionID)
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			resourceGroupsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.SubscriptionID,
+		)
+		key := metrics.Key(TaskCollectResourceGroups, payload.SubscriptionID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.ResourceGroup, 0)
 	pager := client.Client.NewListPager(&armresources.ResourceGroupsClientListOptions{})
 	for pager.More() {
@@ -163,7 +177,7 @@ func collectResourceGroups(ctx context.Context, payload CollectResourceGroupsPay
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
