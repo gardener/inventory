@@ -15,6 +15,52 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
+// Names for the various models provided by this package.
+// These names are used for registering models with [registry.ModelRegistry]
+const (
+	SubscriptionModelName                  = "az:model:subscription"
+	ResourceGroupModelName                 = "az:model:resource_group"
+	VirtualMachineModelName                = "az:model:vm"
+	PublicAddressModelName                 = "az:model:public_address"
+	LoadBalancerModelName                  = "az:model:loadbalancer"
+	VPCModelName                           = "az:model:vpc"
+	SubnetModelName                        = "az:model:subnet"
+	StorageAccountModelName                = "az:model:storage_account"
+	BlobContainerModelName                 = "az:model:blob_container"
+	UserModelName                          = "az:model:user"
+	ResourceGroupToSubscriptionModelName   = "az:model:link_rg_to_subscription"
+	VirtualMachineToResourceGroupModelName = "az:model:link_vm_to_rg"
+	PublicAddressToResourceGroupModelName  = "az:model:link_public_address_to_rg"
+	LoadBalancerToResourceGroupModelName   = "az:model:link_lb_to_rg"
+	VPCToResourceGroupModelName            = "az:model:link_vpc_to_rg"
+	SubnetToVPCModelName                   = "az:model:link_subnet_to_vpc"
+	BlobContainerToResourceGroupModelName  = "az:model:link_blob_container_to_rg"
+)
+
+// models specifies the mapping between name and model type, which will be
+// registered with [registry.ModelRegistry].
+var models = map[string]any{
+	SubscriptionModelName:   &Subscription{},
+	ResourceGroupModelName:  &ResourceGroup{},
+	VirtualMachineModelName: &VirtualMachine{},
+	PublicAddressModelName:  &PublicAddress{},
+	LoadBalancerModelName:   &LoadBalancer{},
+	VPCModelName:            &VPC{},
+	SubnetModelName:         &Subnet{},
+	StorageAccountModelName: &StorageAccount{},
+	BlobContainerModelName:  &BlobContainer{},
+	UserModelName:           &User{},
+
+	// Link models
+	ResourceGroupToSubscriptionModelName:   &ResourceGroupToSubscription{},
+	VirtualMachineToResourceGroupModelName: &VirtualMachineToResourceGroup{},
+	PublicAddressToResourceGroupModelName:  &PublicAddressToResourceGroup{},
+	LoadBalancerToResourceGroupModelName:   &LoadBalancerToResourceGroup{},
+	VPCToResourceGroupModelName:            &VPCToResourceGroup{},
+	SubnetToVPCModelName:                   &SubnetToVPC{},
+	BlobContainerToResourceGroupModelName:  &BlobContainerToResourceGroup{},
+}
+
 // Subscription represents an Azure Subscription
 type Subscription struct {
 	bun.BaseModel `bun:"table:az_subscription"`
@@ -246,25 +292,9 @@ type User struct {
 	Mail     string `bun:"mail,notnull"`
 }
 
+// init registers the models with the [registry.ModelRegistry].
 func init() {
-	// Register the models with the default registry
-	registry.ModelRegistry.MustRegister("az:model:subscription", &Subscription{})
-	registry.ModelRegistry.MustRegister("az:model:resource_group", &ResourceGroup{})
-	registry.ModelRegistry.MustRegister("az:model:vm", &VirtualMachine{})
-	registry.ModelRegistry.MustRegister("az:model:public_address", &PublicAddress{})
-	registry.ModelRegistry.MustRegister("az:model:loadbalancer", &LoadBalancer{})
-	registry.ModelRegistry.MustRegister("az:model:vpc", &VPC{})
-	registry.ModelRegistry.MustRegister("az:model:subnet", &Subnet{})
-	registry.ModelRegistry.MustRegister("az:model:storage_account", &StorageAccount{})
-	registry.ModelRegistry.MustRegister("az:model:blob_container", &BlobContainer{})
-	registry.ModelRegistry.MustRegister("az:model:user", &User{})
-
-	// Link tables
-	registry.ModelRegistry.MustRegister("az:model:link_rg_to_subscription", &ResourceGroupToSubscription{})
-	registry.ModelRegistry.MustRegister("az:model:link_vm_to_rg", &VirtualMachineToResourceGroup{})
-	registry.ModelRegistry.MustRegister("az:model:link_public_address_to_rg", &PublicAddressToResourceGroup{})
-	registry.ModelRegistry.MustRegister("az:model:link_lb_to_rg", &LoadBalancerToResourceGroup{})
-	registry.ModelRegistry.MustRegister("az:model:link_vpc_to_rg", &VPCToResourceGroup{})
-	registry.ModelRegistry.MustRegister("az:model:link_subnet_to_vpc", &SubnetToVPC{})
-	registry.ModelRegistry.MustRegister("az:model:link_blob_container_to_rg", &BlobContainerToResourceGroup{})
+	for k, v := range models {
+		registry.ModelRegistry.MustRegister(k, v)
+	}
 }
