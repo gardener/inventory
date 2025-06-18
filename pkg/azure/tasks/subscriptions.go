@@ -9,11 +9,13 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/azure/models"
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
 	"github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/registry"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -37,6 +39,16 @@ func HandleCollectSubscriptionsTask(ctx context.Context, _ *asynq.Task) error {
 
 		return nil
 	}
+
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			subscriptionsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+		)
+		metrics.DefaultCollector.AddMetric(TaskCollectSubscriptions, metric)
+	}()
 
 	items := make([]models.Subscription, 0)
 	err := azureclients.SubscriptionsClientset.Range(func(subscriptionID string, client *azureclients.Client[*armsubscription.SubscriptionsClient]) error {
@@ -82,7 +94,7 @@ func HandleCollectSubscriptionsTask(ctx context.Context, _ *asynq.Task) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
