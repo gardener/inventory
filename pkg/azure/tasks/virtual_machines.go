@@ -11,12 +11,14 @@ import (
 
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/azure/models"
 	azureutils "github.com/gardener/inventory/pkg/azure/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -147,6 +149,19 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 		"resource_group", payload.ResourceGroup,
 	)
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			virtualMachinesDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.SubscriptionID,
+			payload.ResourceGroup,
+		)
+		key := metrics.Key(TaskCollectVirtualMachines, payload.SubscriptionID, payload.ResourceGroup)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.VirtualMachine, 0)
 	pager := client.Client.NewListPager(
 		payload.ResourceGroup,
@@ -257,7 +272,7 @@ func collectVirtualMachines(ctx context.Context, payload CollectVirtualMachinesP
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
