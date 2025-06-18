@@ -10,12 +10,14 @@ import (
 
 	armnetwork "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/azure/models"
 	azureutils "github.com/gardener/inventory/pkg/azure/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	azureclients "github.com/gardener/inventory/pkg/clients/azure"
 	"github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 	"github.com/gardener/inventory/pkg/utils/ptr"
 )
@@ -156,8 +158,26 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		"vpc", payload.VPCName,
 	)
 
-	subnets := make([]models.Subnet, 0)
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			subnetsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.SubscriptionID,
+			payload.ResourceGroup,
+			payload.VPCName,
+		)
+		key := metrics.Key(
+			TaskCollectSubnets,
+			payload.SubscriptionID,
+			payload.ResourceGroup,
+			payload.VPCName,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
 
+	subnets := make([]models.Subnet, 0)
 	pager := client.Client.NewListPager(
 		payload.ResourceGroup,
 		payload.VPCName,
@@ -228,7 +248,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
