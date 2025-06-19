@@ -121,5 +121,6 @@ func init() {
 		floatingIPsDesc,
 		portsDesc,
 		routersDesc,
+		objectsDesc,
 	)
 }
