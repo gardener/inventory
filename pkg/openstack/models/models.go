@@ -15,6 +15,67 @@ import (
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
+// Names for the models provided by this package,
+// used for registering models with [registry.ModelRegistry]
+const (
+	ServerModelName               = "openstack:model:server"
+	NetworkModelName              = "openstack:model:network"
+	LoadBalancerModelName         = "openstack:model:loadbalancer"
+	LoadBalancerWithPoolModelName = "openstack:model:loadbalancer_with_pool"
+	SubnetModelName               = "openstack:model:subnet"
+	FloatingIPModelName           = "openstack:model:floating_ip"
+	ProjectModelName              = "openstack:model:project"
+	PortModelName                 = "openstack:model:port"
+	PortIPModelName               = "openstack:model:port_ip"
+	RouterModelName               = "openstack:model:router"
+	RouterExternalIPModelName     = "openstack:model:router_external_ip"
+	PoolModelName                 = "openstack:model:pool"
+	PoolMemberModelName           = "openstack:model:pool_member"
+	ContainerModelName            = "openstack:model:container"
+	ObjectModelName               = "openstack:model:object"
+
+	SubnetToNetworkModelName       = "openstack:model:link_subnet_to_network"
+	SubnetToProjectModelName       = "openstack:model:link_subnet_to_project"
+	ServerToProjectModelName       = "openstack:model:link_server_to_project"
+	ServerToNetworkModelName       = "openstack:model:link_server_to_network"
+	LoadBalancerToSubnetModelName  = "openstack:model:link_loadbalancer_to_subnet"
+	LoadBalancerToNetworkModelName = "openstack:model:link_loadbalancer_to_network"
+	LoadBalancerToProjectModelName = "openstack:model:link_loadbalancer_to_project"
+	NetworkToProjectModelName      = "openstack:model:link_network_to_project"
+	PortToServerModelName          = "openstack:model:link_server_to_port"
+)
+
+// models specifies the mapping between name and model type, which will be
+// registered with [registry.ModelRegistry].
+var models = map[string]any{
+	ServerModelName:               &Server{},
+	NetworkModelName:              &Network{},
+	LoadBalancerModelName:         &LoadBalancer{},
+	LoadBalancerWithPoolModelName: &LoadBalancerWithPool{},
+	SubnetModelName:               &Subnet{},
+	FloatingIPModelName:           &FloatingIP{},
+	ProjectModelName:              &Project{},
+	PortModelName:                 &Port{},
+	PortIPModelName:               &PortIP{},
+	RouterModelName:               &Router{},
+	RouterExternalIPModelName:     &RouterExternalIP{},
+	PoolModelName:                 &Pool{},
+	PoolMemberModelName:           &PoolMember{},
+	ContainerModelName:            &Container{},
+	ObjectModelName:               &Object{},
+
+	// Link models
+	SubnetToNetworkModelName:       &SubnetToNetwork{},
+	SubnetToProjectModelName:       &SubnetToProject{},
+	ServerToProjectModelName:       &ServerToProject{},
+	ServerToNetworkModelName:       &ServerToNetwork{},
+	LoadBalancerToSubnetModelName:  &LoadBalancerToSubnet{},
+	LoadBalancerToNetworkModelName: &LoadBalancerToNetwork{},
+	LoadBalancerToProjectModelName: &LoadBalancerToProject{},
+	NetworkToProjectModelName:      &NetworkToProject{},
+	PortToServerModelName:          &PortToServer{},
+}
+
 // Server represents an OpenStack Server.
 type Server struct {
 	bun.BaseModel `bun:"table:openstack_server"`
@@ -347,29 +408,8 @@ type LoadBalancerWithPool struct {
 
 func init() {
 	// Register the models with the default registry
-	registry.ModelRegistry.MustRegister("openstack:model:server", &Server{})
-	registry.ModelRegistry.MustRegister("openstack:model:network", &Network{})
-	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer", &LoadBalancer{})
-	registry.ModelRegistry.MustRegister("openstack:model:subnet", &Subnet{})
-	registry.ModelRegistry.MustRegister("openstack:model:floating_ip", &FloatingIP{})
-	registry.ModelRegistry.MustRegister("openstack:model:project", &Project{})
-	registry.ModelRegistry.MustRegister("openstack:model:port", &Port{})
-	registry.ModelRegistry.MustRegister("openstack:model:port_ip", &PortIP{})
-	registry.ModelRegistry.MustRegister("openstack:model:router", &Router{})
-	registry.ModelRegistry.MustRegister("openstack:model:router_external_ip", &RouterExternalIP{})
-	registry.ModelRegistry.MustRegister("openstack:model:object", &Object{})
-	registry.ModelRegistry.MustRegister("openstack:model:container", &Container{})
-	registry.ModelRegistry.MustRegister("openstack:model:pool", &Pool{})
-	registry.ModelRegistry.MustRegister("openstack:model:pool_member", &PoolMember{})
-	registry.ModelRegistry.MustRegister("openstack:model:loadbalancer_with_pool", &LoadBalancerWithPool{})
 
-	registry.ModelRegistry.MustRegister("openstack:model:link_subnet_to_network", &SubnetToNetwork{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_subnet", &LoadBalancerToSubnet{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_server_to_project", &ServerToProject{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_server_to_port", &PortToServer{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_server_to_network", &ServerToNetwork{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_project", &LoadBalancerToProject{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_loadbalancer_to_network", &LoadBalancerToNetwork{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_network_to_project", &NetworkToProject{})
-	registry.ModelRegistry.MustRegister("openstack:model:link_subnet_to_project", &SubnetToProject{})
+	for k, v := range models {
+		registry.ModelRegistry.MustRegister(k, v)
+	}
 }
