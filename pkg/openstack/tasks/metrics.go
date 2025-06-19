@@ -122,5 +122,6 @@ func init() {
 		portsDesc,
 		routersDesc,
 		objectsDesc,
+		poolsDesc,
 	)
 }
