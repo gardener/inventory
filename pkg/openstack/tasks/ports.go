@@ -13,10 +13,12 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/v2/pagination"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -138,6 +140,25 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 		"domain", payload.Scope.Domain,
 	)
 
+	var portCount int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			portsDesc,
+			prometheus.GaugeValue,
+			float64(portCount),
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		key := metrics.Key(
+			TaskCollectPorts,
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.Port, 0)
 	portIPs := make([]models.PortIP, 0)
 
@@ -235,7 +256,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	portCount, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -245,7 +266,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
-		"count", count,
+		"count", portCount,
 	)
 
 	if len(portIPs) == 0 {
@@ -271,7 +292,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 		return err
 	}
 
-	count, err = out.RowsAffected()
+	ipCount, err := out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -281,7 +302,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
-		"count", count,
+		"count", ipCount,
 	)
 
 	return nil
