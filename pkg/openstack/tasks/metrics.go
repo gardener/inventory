@@ -28,6 +28,87 @@ var (
 		[]string{"project", "domain", "region"},
 		nil,
 	)
+
+	// subnetsDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Subnets
+	subnetsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_subnets"),
+		"A gauge which tracks the number of collected OpenStack Subnets",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// loadbalancersDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Loadbalancers
+	loadbalancersDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_loadbalancers"),
+		"A gauge which tracks the number of collected OpenStack Loadbalancers",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// projectsDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Projects
+	projectsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_projects"),
+		"A gauge which tracks the number of collected OpenStack Projects",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// floatingIPsDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Floating IPs
+	floatingIPsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_floating_ips"),
+		"A gauge which tracks the number of collected OpenStack Floating IPs",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// portsDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Ports
+	portsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_ports"),
+		"A gauge which tracks the number of collected OpenStack Ports",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// routersDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Routers
+	routersDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_routers"),
+		"A gauge which tracks the number of collected OpenStack Routers",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// objectsDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Objects
+	objectsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_objects"),
+		"A gauge which tracks the number of collected OpenStack Objects",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// poolsDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Pools
+	poolsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_pools"),
+		"A gauge which tracks the number of collected OpenStack Pools",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
+
+	// containersDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Containers
+	containersDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_containers"),
+		"A gauge which tracks the number of collected OpenStack Containers",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
 )
 
 func init() {
