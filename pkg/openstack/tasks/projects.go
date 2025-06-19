@@ -12,10 +12,12 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/v2/pagination"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -138,6 +140,25 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 		"region", payload.Scope.Region,
 	)
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			projectsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		key := metrics.Key(
+			TaskCollectProjects,
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.Project, 0)
 
 	err := projects.ListAvailable(client.Client).
@@ -211,7 +232,7 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
