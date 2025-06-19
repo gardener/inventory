@@ -19,10 +19,20 @@ var (
 		[]string{"project", "domain", "region"},
 		nil,
 	)
+
+	// networksDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Networks
+	networksDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_networks"),
+		"A gauge which tracks the number of collected OpenStack Networks",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
 )
 
 func init() {
 	metrics.DefaultCollector.AddDesc(
 		serversDesc,
+		networksDesc,
 	)
 }
