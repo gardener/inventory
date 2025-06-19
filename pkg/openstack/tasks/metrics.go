@@ -118,5 +118,6 @@ func init() {
 		subnetsDesc,
 		loadbalancersDesc,
 		projectsDesc,
+		floatingIPsDesc,
 	)
 }

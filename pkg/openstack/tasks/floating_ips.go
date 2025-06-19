@@ -13,10 +13,12 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/v2/pagination"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -139,6 +141,25 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 		"region", payload.Scope.Region,
 	)
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			floatingIPsDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		key := metrics.Key(
+			TaskCollectFloatingIPs,
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.FloatingIP, 0)
 
 	err := floatingips.List(client.Client, nil).
@@ -241,7 +262,7 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
