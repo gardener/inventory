@@ -12,10 +12,12 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/objectstorage/v1/containers"
 	"github.com/gophercloud/gophercloud/v2/pagination"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -139,6 +141,25 @@ func collectContainers(ctx context.Context, payload CollectContainersPayload) er
 		"region", payload.Scope.Region,
 	)
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			containersDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		key := metrics.Key(
+			TaskCollectContainers,
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.Container, 0)
 
 	projects, err := openstackutils.GetResourcesFromDB[models.Project](ctx)
@@ -221,7 +242,7 @@ func collectContainers(ctx context.Context, payload CollectContainersPayload) er
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
