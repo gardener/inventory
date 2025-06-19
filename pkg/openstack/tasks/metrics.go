@@ -119,5 +119,6 @@ func init() {
 		loadbalancersDesc,
 		projectsDesc,
 		floatingIPsDesc,
+		portsDesc,
 	)
 }
