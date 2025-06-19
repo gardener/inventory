@@ -117,5 +117,6 @@ func init() {
 		networksDesc,
 		subnetsDesc,
 		loadbalancersDesc,
+		projectsDesc,
 	)
 }
