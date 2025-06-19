@@ -9,10 +9,12 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/pagination"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -132,6 +134,25 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 		"named_credentials", payload.Scope.NamedCredentials,
 	)
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			routersDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		key := metrics.Key(
+			TaskCollectRouters,
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.Router, 0)
 	externalIPs := make([]models.RouterExternalIP, 0)
 
@@ -224,7 +245,7 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -260,7 +281,7 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 		return err
 	}
 
-	count, err = out.RowsAffected()
+	externalIPCount, err := out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -270,7 +291,7 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
-		"count", count,
+		"count", externalIPCount,
 	)
 
 	return nil
