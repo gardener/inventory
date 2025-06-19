@@ -115,5 +115,6 @@ func init() {
 	metrics.DefaultCollector.AddDesc(
 		serversDesc,
 		networksDesc,
+		subnetsDesc,
 	)
 }
