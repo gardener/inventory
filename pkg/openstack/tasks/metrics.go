@@ -120,5 +120,6 @@ func init() {
 		projectsDesc,
 		floatingIPsDesc,
 		portsDesc,
+		routersDesc,
 	)
 }
