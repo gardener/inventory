@@ -42,7 +42,7 @@ require (
 	github.com/uptrace/bun/driver/pgdriver v1.2.14
 	github.com/uptrace/bun/extra/bundebug v1.2.14
 	github.com/urfave/cli/v2 v2.27.7
-	google.golang.org/api v0.237.0
+	google.golang.org/api v0.238.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.33.1
 	k8s.io/apimachinery v0.33.1
