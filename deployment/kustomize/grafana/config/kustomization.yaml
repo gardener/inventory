@@ -13,6 +13,7 @@ secretGenerator:
   - name: grafana-provisioning-datasources
     files:
       - files/provisioning/datasources/postgres.yaml
+      - files/provisioning/datasources/prometheus.yaml
 
 configMapGenerator:
   - name: grafana-provisioning-dashboards
