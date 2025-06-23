@@ -123,6 +123,11 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.3.1
+    entrypoint:
+      - /bin/prometheus
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - --web.enable-admin-api
     ports:
       - 9090:9090
     depends_on:
