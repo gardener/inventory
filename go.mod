@@ -34,7 +34,7 @@ require (
 	github.com/hibiken/asynq v0.25.1
 	github.com/hibiken/asynq/x v0.0.0-20250401060612-c327bc40a28e
 	github.com/hibiken/asynqmon v0.7.2
-	github.com/microsoftgraph/msgraph-sdk-go v1.74.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.75.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.22.0
 	github.com/uptrace/bun v1.2.14
