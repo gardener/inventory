@@ -1,0 +1,21 @@
+---
+apiVersion: 1
+
+# See [1] and [2] for more details about the format and explanation of the
+# fields.
+#
+# [1]: https://grafana.com/docs/grafana/latest/datasources/prometheus/
+# [2]: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#provisioning
+datasources:
+  - name: prometheus
+    type: prometheus
+    uid: ds_prometheus
+    url: http://prometheus:9090
+    jsonData:
+      httpMethod: POST
+      manageAlerts: false
+      prometheusType: Prometheus
+      disableRecordingRules: false
+      incrementalQueryOverlapWindow: 10m
+      timeInterval: 60s
+      queryTimeout: 10s
