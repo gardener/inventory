@@ -30,3 +30,8 @@ configMapGenerator:
       - files/dashboards/inventory/inventory-azure-leaked.json
       - files/dashboards/inventory/inventory-openstack.json
       - files/dashboards/inventory/inventory-leaked-openstack.json
+      - files/dashboards/inventory/inventory-worker-gardener-tasks.json
+      - files/dashboards/inventory/inventory-worker-azure-tasks.json
+      - files/dashboards/inventory/inventory-worker-gcp-tasks.json
+      - files/dashboards/inventory/inventory-worker-aws-tasks.json
+      - files/dashboards/inventory/inventory-worker-odg-tasks.json
