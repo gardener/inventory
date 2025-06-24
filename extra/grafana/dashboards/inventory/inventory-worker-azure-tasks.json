@@ -1417,7 +1417,7 @@
       "type": "timeseries"
     }
   ],
-  "schemaVersion": 1,
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": []
@@ -1431,6 +1431,6 @@
   "timezone": "browser",
   "title": "Inventory: Worker Metrics (Azure tasks)",
   "uid": "fepttvut8q0aoa",
-  "version": 7,
+  "version": 8,
   "weekStart": ""
 }
