@@ -486,3 +486,85 @@ In order to run the unit tests, run the following command:
 ```sh
 make test
 ```
+
+Run linter tests.
+
+``` sh
+make lint
+```
+
+## Worker Metrics
+
+This section documents the metrics exposed by workers.
+
+Common worker metrics (including extension workers such as
+[gardener/inventory-extension-odg](https://github.com/gardener/inventory-extension-odg)).
+
+| Metric                            | Type        | Description                                                      |
+|:----------------------------------|:------------|:-----------------------------------------------------------------|
+| `inventory_task_successful_total` | `counter`   | Total number of times a task has been successfully executed      |
+| `inventory_task_failed_total`     | `counter`   | Total number of times a task has failed                          |
+| `inventory_task_skipped_total`    | `counter`   | Total number of times a task has been skipped from being retried |
+| `inventory_task_duration_seconds` | `histogram` | Duration of task execution in seconds                            |
+
+Metrics reported by the Housekeeper.
+
+| Metric                                  | Type    | Description                                             |
+|:----------------------------------------|:--------|:--------------------------------------------------------|
+| `inventory_housekeeper_deleted_records` | `gauge` | Number of deleted records by the housekeeper |
+
+Metrics reported by the Gardener-related tasks.
+
+| Metric                        | Type    | Description                                         |
+|:------------------------------|:--------|:----------------------------------------------------|
+| `inventory_g_projects`        | `gauge` | Number of collected Projects                        |
+| `inventory_g_project_members` | `gauge` | Number of collected project members                 |
+| `inventory_g_shoots`          | `gauge` | Number of collected shoots                          |
+| `inventory_g_seeds`           | `gauge` | Number of collected seeds                           |
+| `inventory_g_machines`        | `gauge` | Number of collected machines (from seeds)           |
+| `inventory_g_backup_buckets`  | `gauge` | Number of collected Backup Buckets                  |
+| `inventory_g_cloud_profiles`  | `gauge` | Number of collected Cloud Profiles                  |
+| `inventory_g_seed_volumes`    | `gauge` | Number of collected persistent volumes (from seeds) |
+
+Metrics reported by the AWS-related tasks.
+
+| Metric                         | Type    | Description                                    |
+|:-------------------------------|:--------|:-----------------------------------------------|
+| `inventory_aws_regions`        | `gauge` | Number of collected regions                    |
+| `inventory_aws_buckets`        | `gauge` | Number of collected S3 buckets                 |
+| `inventory_aws_images`         | `gauge` | Number of collected AMI images                 |
+| `inventory_aws_zones`          | `gauge` | Number of collected Availability Zones         |
+| `inventory_aws_vpcs`           | `gauge` | Number of collected VPCs                       |
+| `inventory_aws_subnets`        | `gauge` | Number of collected subnets                    |
+| `inventory_aws_instances`      | `gauge` | Number of collected EC2 instances              |
+| `inventory_aws_load_balancers` | `gauge` | Number of collected Elastic Load Balancers     |
+| `inventory_aws_net_interfaces` | `gauge` | Number of collected Elastic Network Interfaces |
+
+Metrics reported by the GCP-related tasks.
+
+| Metric                           | Type    | Description                                       |
+|:---------------------------------|:--------|:--------------------------------------------------|
+| `inventory_gcp_projects`         | `gauge` | Number of collected projects                      |
+| `inventory_gcp_vpcs`             | `gauge` | Number of collected VPCs                          |
+| `inventory_gcp_disks`            | `gauge` | Number of collected persistent disks              |
+| `inventory_gcp_buckets`          | `gauge` | Number of collected buckets                       |
+| `inventory_gcp_subnets`          | `gauge` | Number of collected subnets                       |
+| `inventory_gcp_addresses`        | `gauge` | Number of collected global and regional addresses |
+| `inventory_gcp_instances`        | `gauge` | Number of collected instances                     |
+| `inventory_gcp_gke_clusters`     | `gauge` | Number of collected GKE clusters                  |
+| `inventory_gcp_target_pools`     | `gauge` | Number of collected target pools                  |
+| `inventory_gcp_forwarding_rules` | `gauge` | Number of collected forwarding rules              |
+
+Metrics reported by the Azure-related tasks.
+
+| Metric                          | Type    | Description                             |
+|:--------------------------------|:--------|:----------------------------------------|
+| `inventory_az_subscriptions`    | `gauge` | Number of collected subscriptions       |
+| `inventory_az_vpcs`             | `gauge` | Number of collected VPCs                |
+| `inventory_az_subnets`          | `gauge` | Number of collected subnets             |
+| `inventory_az_load_balancers`   | `gauge` | Number of collected Load Balancers      |
+| `inventory_az_blob_containers`  | `gauge` | Number of collected blob containers     |
+| `inventory_az_resource_groups`  | `gauge` | Number of collected resource groups     |
+| `inventory_az_public_addresses` | `gauge` | Number of collected public IP addresses |
+| `inventory_az_storage_accounts` | `gauge` | Number of collected storage accounts    |
+| `inventory_az_vms`              | `gauge` | Number of collected Virtual Machines    |
