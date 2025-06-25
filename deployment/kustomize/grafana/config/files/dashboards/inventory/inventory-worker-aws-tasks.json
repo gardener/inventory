@@ -627,8 +627,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_zones) by (account_id)",
+          "expr": "sum(sum_over_time(inventory_aws_zones[30m])) by (account_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -725,8 +726,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_regions) by (account_id)",
+          "expr": "sum(sum_over_time(inventory_aws_regions[30m])) by (account_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -921,8 +923,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_images) by (account_id)",
+          "expr": "sum(sum_over_time(inventory_aws_images[30m])) by (account_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1019,8 +1022,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_vpcs) by (account_id)",
+          "expr": "sum(sum_over_time(inventory_aws_vpcs[30m])) by (account_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1117,8 +1121,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_subnets) by (account_id)",
+          "expr": "sum(sum_over_time(inventory_aws_subnets[30m])) by (account_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1133,7 +1138,7 @@
         "type": "prometheus",
         "uid": "ds_prometheus"
       },
-      "description": "Number of collected instances",
+      "description": "Number of collected VPCs by region",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1194,7 +1199,7 @@
         "x": 12,
         "y": 40
       },
-      "id": 9,
+      "id": 16,
       "options": {
         "legend": {
           "calcs": [],
@@ -1215,14 +1220,15 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_instances) by (account_id)",
+          "expr": "sum(inventory_aws_vpcs) by (account_id, region)",
           "instant": false,
-          "legendFormat": "__auto",
+          "interval": "",
+          "legendFormat": "{{account_id}}:{{region}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Instances",
+      "title": "VPCs by region",
       "transparent": true,
       "type": "timeseries"
     },
@@ -1313,14 +1319,114 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_load_balancers) by (account_id)",
+          "expr": "sum(sum_over_time(inventory_aws_load_balancers[30m])) by (account_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "Load Balancers",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ds_prometheus"
+      },
+      "description": "Number of collected instances",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ds_prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time(inventory_aws_instances[30m])) by (account_id)",
+          "instant": false,
+          "interval": "30m",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Instances",
       "transparent": true,
       "type": "timeseries"
     },
@@ -1387,8 +1493,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 48
+        "x": 0,
+        "y": 56
       },
       "id": 15,
       "options": {
@@ -1411,14 +1517,114 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_aws_net_interfaces) by (account_id)",
+          "expr": "sum(sum_over_time(inventory_aws_net_interfaces[30m])) by (account_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "ENIs",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ds_prometheus"
+      },
+      "description": "Number of collected instances by region",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ds_prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(inventory_aws_instances) by (account_id, region)",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{account_id}}:{{region}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Instances by region",
       "transparent": true,
       "type": "timeseries"
     }
@@ -1437,6 +1643,6 @@
   "timezone": "browser",
   "title": "Inventory: Worker Metrics (AWS tasks)",
   "uid": "fepwmpfjvt340e",
-  "version": 3,
+  "version": 9,
   "weekStart": ""
 }

@@ -885,7 +885,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -982,7 +983,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1017,8 +1019,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_g_shoots)",
+          "expr": "sum(sum_over_time(inventory_g_shoots[30m]))",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "count",
           "range": true,
           "refId": "A"
@@ -1079,7 +1082,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1130,7 +1134,7 @@
         "type": "prometheus",
         "uid": "ds_prometheus"
       },
-      "description": "Number of collected persistent volumes by seeds",
+      "description": "Number of collected shoots per project",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1176,7 +1180,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1190,7 +1195,7 @@
         "x": 12,
         "y": 40
       },
-      "id": 9,
+      "id": 15,
       "options": {
         "legend": {
           "calcs": [],
@@ -1211,14 +1216,15 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_g_seed_volumes) by (seed)",
+          "expr": "sum(inventory_g_shoots) by (project_name)",
           "instant": false,
+          "interval": "",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Seed Volumes",
+      "title": "Shoots per project",
       "transparent": true,
       "type": "timeseries"
     },
@@ -1273,7 +1279,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1318,6 +1325,104 @@
       "title": "Cloud Profiles",
       "transparent": true,
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ds_prometheus"
+      },
+      "description": "Number of collected persistent volumes by seeds",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ds_prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(inventory_g_seed_volumes) by (seed)",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Seed Volumes",
+      "transparent": true,
+      "type": "timeseries"
     }
   ],
   "schemaVersion": 39,
@@ -1334,6 +1439,6 @@
   "timezone": "browser",
   "title": "Inventory: Worker Metrics (Gardener tasks)",
   "uid": "beptilkv3iyv4b",
-  "version": 23,
+  "version": 33,
   "weekStart": ""
 }
