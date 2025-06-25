@@ -116,7 +116,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "round(sum(increase(inventory_task_successful_total{task_name=~\"az:task:.*\"}[30m])) by (task_name))",
+          "expr": "round(sum(increase(inventory_task_successful_total{task_name=~\"az:task:.*\", task_name!=\"az:task:collect-users\"}[30m])) by (task_name))",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -627,8 +627,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_vpcs) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_vpcs[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -823,8 +824,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_subnets) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_subnets[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -885,7 +887,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -920,8 +923,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_load_balancers) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_load_balancers[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -982,7 +986,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1017,8 +1022,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_blob_containers) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_blob_containers[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1079,7 +1085,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1114,8 +1121,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_resource_groups) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_resource_groups[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1176,7 +1184,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1211,8 +1220,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_public_addresses) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_public_addresses[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1273,7 +1283,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1308,8 +1319,9 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_storage_accounts) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_storage_accounts[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1370,7 +1382,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1405,14 +1418,114 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_az_vms) by (subscription_id)",
+          "expr": "sum(sum_over_time(inventory_az_vms[30m])) by (subscription_id)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "Virtual Machines",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ds_prometheus"
+      },
+      "description": "Number of collected VMs by Resource Groups",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ds_prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(inventory_az_vms) by (subscription_id, resource_group)",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{subscription_id}}:{{resource_group}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Virtual Machines by Resource Groups",
       "transparent": true,
       "type": "timeseries"
     }
@@ -1431,6 +1544,6 @@
   "timezone": "browser",
   "title": "Inventory: Worker Metrics (Azure tasks)",
   "uid": "fepttvut8q0aoa",
-  "version": 8,
+  "version": 13,
   "weekStart": ""
 }
