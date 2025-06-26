@@ -146,11 +146,12 @@ func NewSchedulerCommand() *cli.Command {
 							fmt.Sprintf("In %s", nextIn.String()),
 							strings.Join(opts, ", "),
 						}
-						table.Append(row)
+						if err := table.Append(row); err != nil {
+							return err
+						}
 					}
-					table.Render()
 
-					return nil
+					return table.Render()
 				},
 			},
 		},

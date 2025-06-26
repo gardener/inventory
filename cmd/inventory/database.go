@@ -86,7 +86,7 @@ func NewDatabaseCommand() *cli.Command {
 
 // tabulateMigrations adds the given migration items to a table and returns it.
 // The returned table can be further customized, if needed, and rendered.
-func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
+func tabulateMigrations(items migrate.MigrationSlice) (*tablewriter.Table, error) {
 	headers := []string{
 		"ID",
 		"NAME",
@@ -120,10 +120,12 @@ func tabulateMigrations(items migrate.MigrationSlice) *tablewriter.Table {
 			groupID,
 			migratedAt,
 		}
-		table.Append(row)
+		if err := table.Append(row); err != nil {
+			return nil, err
+		}
 	}
 
-	return table
+	return table, nil
 }
 
 // execDatabaseInitCmd executes the command for initializing database schema.
@@ -339,10 +341,12 @@ func execDatabaseAppliedCmd(ctx *cli.Context) error {
 		return nil
 	}
 
-	table := tabulateMigrations(items)
-	table.Render()
+	table, err := tabulateMigrations(items)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	return table.Render()
 }
 
 // execDatabasePendingCmd displays the list of pending migrations.
@@ -368,8 +372,10 @@ func execDatabasePendingCmd(ctx *cli.Context) error {
 		return nil
 	}
 
-	table := tabulateMigrations(items)
-	table.Render()
+	table, err := tabulateMigrations(items)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	return table.Render()
 }
