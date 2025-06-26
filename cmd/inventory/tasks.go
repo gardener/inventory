@@ -473,10 +473,10 @@ func printTasksInState(ctx *cli.Context, state asynq.TaskState) error {
 			fmt.Sprintf("%d/%d", item.Retried, item.MaxRetry),
 			strconv.FormatBool(item.IsOrphaned),
 		}
-		table.Append(row)
+		if err := table.Append(row); err != nil {
+			return err
+		}
 	}
 
-	table.Render()
-
-	return nil
+	return table.Render()
 }
