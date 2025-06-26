@@ -16,6 +16,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
@@ -206,14 +207,26 @@ func newScheduler(conf *config.Config) *asynq.Scheduler {
 // newTableWriter creates a new [tablewriter.Table] with the given [io.Writer]
 // and headers
 func newTableWriter(w io.Writer, headers []string) *tablewriter.Table {
-	table := tablewriter.NewWriter(w)
-	table.SetHeader(headers)
-	table.SetAutoWrapText(false)
-	table.SetBorder(false)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	opts := []tablewriter.Option{
+		tablewriter.WithHeader(headers),
+		tablewriter.WithRendition(
+			tw.Rendition{
+				Borders: tw.Border{
+					Top:    tw.Off,
+					Bottom: tw.Off,
+					Left:   tw.Off,
+					Right:  tw.Off,
+				},
+			},
+		),
+	}
+	table := tablewriter.NewWriter(w).Options(opts...)
+
+	table.Configure(func(cfg *tablewriter.Config) {
+		cfg.Row.Alignment.Global = tw.AlignLeft
+		cfg.Row.Formatting.AutoWrap = tw.WrapNone
+		cfg.Header.Alignment.Global = tw.AlignLeft
+	})
 
 	return table
 }
