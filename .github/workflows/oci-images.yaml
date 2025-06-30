@@ -30,6 +30,7 @@ jobs:
       id-token: write
       pull-requests: write
     uses: gardener/cc-utils/.github/workflows/oci-ocm.yaml@master
+    secrets: inherit
     with:
       name: inventory
       version: ${{ needs.prepare.outputs.version }}
