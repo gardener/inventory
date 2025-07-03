@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	vault "github.com/hashicorp/vault/api"
@@ -19,22 +20,22 @@ import (
 // Authentication Method.
 const DefaultMountPath = "jwt"
 
-// ErrNoToken is an error, which is returned when [JWTAuth] is configured
+// ErrNoToken is an error, which is returned when [Auth] is configured
 // with an empty token.
 var ErrNoToken = errors.New("no token specified")
 
-// ErrInvalidMountPath is an error, which is returned when configuring [JWTAuth]
+// ErrInvalidMountPath is an error, which is returned when configuring [Auth]
 // to use an invalid mount path for a Vault Authentication Method.
 var ErrInvalidMountPath = errors.New("invalid auth method mount path specified")
 
 // ErrNoRoleName is an error, which is returned when no role name was specified
-// when creating a [JWTAuth].
-var ErrNoRole = errors.New("no role name specified")
+// when creating a [Auth].
+var ErrNoRoleName = errors.New("no role name specified")
 
-// JWTAuth implements support for the [JWT Authentication Method].
+// Auth implements support for the [JWT Authentication Method].
 //
 // [JWT Authentication Method]: https://developer.hashicorp.com/vault/docs/auth/jwt
-type JWTAuth struct {
+type Auth struct {
 	// roleName specifies the name of the role to use.
 	roleName string
 
@@ -46,12 +47,12 @@ type JWTAuth struct {
 	token string
 }
 
-var _ vault.AuthMethod = &JWTAuth{}
+var _ vault.AuthMethod = &Auth{}
 
-// Option is a function which configures [JWTAuth].
-type Option func(a *JWTAuth) error
+// Option is a function which configures [Auth].
+type Option func(a *Auth) error
 
-// New creates a new [JWTAuth] and configures it with the given options.
+// New creates a new [Auth] and configures it with the given options.
 //
 // The default mount path for the JWT Authentication Method is
 // [DefaultMountPath]. In order to configure a different mount path for the
@@ -62,35 +63,35 @@ type Option func(a *JWTAuth) error
 // from path, or via an environment variable. In order to configure the token
 // for authentication use the [WithToken], [WithTokenFromPath] or
 // [WithTokenFromEnv] options.
-func New(roleName string, opts ...Option) (*JWTAuth, error) {
+func New(roleName string, opts ...Option) (*Auth, error) {
 	if roleName == "" {
-		return nil, ErrNoRole
+		return nil, ErrNoRoleName
 	}
 
-	jwtAuth := &JWTAuth{
+	auth := &Auth{
 		roleName:  roleName,
 		mountPath: DefaultMountPath,
 	}
 
 	for _, opt := range opts {
-		if err := opt(jwtAuth); err != nil {
+		if err := opt(auth); err != nil {
 			return nil, err
 		}
 	}
 
-	if jwtAuth.token == "" {
+	if auth.token == "" {
 		return nil, ErrNoToken
 	}
 
-	if jwtAuth.mountPath == "" {
+	if auth.mountPath == "" {
 		return nil, ErrInvalidMountPath
 	}
 
-	return jwtAuth, nil
+	return auth, nil
 }
 
 // Login implements the [vault.AuthMethod] interface.
-func (a *JWTAuth) Login(ctx context.Context, client *vault.Client) (*vault.Secret, error) {
+func (a *Auth) Login(ctx context.Context, client *vault.Client) (*vault.Secret, error) {
 	path := fmt.Sprintf("auth/%s/login", a.mountPath)
 	data := map[string]any{
 		"jwt":  a.token,
@@ -100,10 +101,10 @@ func (a *JWTAuth) Login(ctx context.Context, client *vault.Client) (*vault.Secre
 	return client.Logical().WriteWithContext(ctx, path, data)
 }
 
-// WithToken is an [Option], which configures [JWTAuth] to use the given token
+// WithToken is an [Option], which configures [Auth] to use the given token
 // when authenticating against the Vault JWT Authentication Method.
 func WithToken(token string) Option {
-	opt := func(a *JWTAuth) error {
+	opt := func(a *Auth) error {
 		a.token = token
 
 		return nil
@@ -112,11 +113,11 @@ func WithToken(token string) Option {
 	return opt
 }
 
-// WithTokenFromPath is an [Option], which configures [JWTAuth] to read the
+// WithTokenFromPath is an [Option], which configures [Auth] to read the
 // token from the given path.
 func WithTokenFromPath(path string) Option {
-	opt := func(a *JWTAuth) error {
-		token, err := os.ReadFile(path)
+	opt := func(a *Auth) error {
+		token, err := os.ReadFile(filepath.Clean(path))
 		if err != nil {
 			return err
 		}
@@ -128,10 +129,10 @@ func WithTokenFromPath(path string) Option {
 	return opt
 }
 
-// WithTokenFromEnv is an [Option], which configures [JWTAuth] to read the token
+// WithTokenFromEnv is an [Option], which configures [Auth] to read the token
 // from the given environment variable.
 func WithTokenFromEnv(env string) Option {
-	opt := func(a *JWTAuth) error {
+	opt := func(a *Auth) error {
 		value := os.Getenv(env)
 		a.token = value
 
@@ -141,10 +142,10 @@ func WithTokenFromEnv(env string) Option {
 	return opt
 }
 
-// WithMountPath is an [Option], which configures [JWTAuth] to use the given
+// WithMountPath is an [Option], which configures [Auth] to use the given
 // mount path for the Vault Authentication Method.
 func WithMountPath(mountPath string) Option {
-	opt := func(a *JWTAuth) error {
+	opt := func(a *Auth) error {
 		// Remove any trailing slashes from the given mount path
 		a.mountPath = strings.TrimRight(mountPath, "/")
 
