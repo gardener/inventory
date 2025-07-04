@@ -568,3 +568,19 @@ Metrics reported by the Azure-related tasks.
 | `inventory_az_public_addresses` | `gauge` | Number of collected public IP addresses |
 | `inventory_az_storage_accounts` | `gauge` | Number of collected storage accounts    |
 | `inventory_az_vms`              | `gauge` | Number of collected Virtual Machines    |
+
+Metrics reported by the OpenStack-related tasks.
+
+| Metric                              | Type    | Description                               |
+|:------------------------------------|:--------|:------------------------------------------|
+| `inventory_openstack_projects`      | `gauge` | Number of collected Projects              |
+| `inventory_openstack_servers`       | `gauge` | Number of collected Servers               |
+| `inventory_openstack_networks`      | `gauge` | Number of collected Networks              |
+| `inventory_openstack_subnets`       | `gauge` | Number of collected Subnets               |
+| `inventory_openstack_loadbalancers` | `gauge` | Number of collected Load Balancers        |
+| `inventory_openstack_floating_ips`  | `gauge` | Number of collected Floating IP addresses |
+| `inventory_openstack_routers`       | `gauge` | Number of collected Routers               |
+| `inventory_openstack_ports`         | `gauge` | Number of collected Ports                 |
+| `inventory_openstack_pools`         | `gauge` | Number of collected Pools                 |
+| `inventory_openstack_containers`    | `gauge` | Number of collected Containers            |
+| `inventory_openstack_objects`       | `gauge` | Number of collected Objects               |

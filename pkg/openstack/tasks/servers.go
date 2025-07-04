@@ -12,10 +12,12 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/v2/pagination"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	"github.com/gardener/inventory/pkg/metrics"
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
@@ -138,6 +140,25 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 		"region", payload.Scope.Region,
 	)
 
+	var count int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			serversDesc,
+			prometheus.GaugeValue,
+			float64(count),
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		key := metrics.Key(
+			TaskCollectServers,
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	items := make([]models.Server, 0)
 
 	err := servers.List(client.Client, nil).
@@ -223,7 +244,7 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 		return err
 	}
 
-	count, err := out.RowsAffected()
+	count, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
