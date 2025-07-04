@@ -45,6 +45,9 @@ type Auth struct {
 	// token specifies the JWT token which will be used for authenticating
 	// against the Vault Authentication Method endpoint.
 	token string
+
+	// tokenPath specifies a path from which to read the JWT token.
+	tokenPath string
 }
 
 var _ vault.AuthMethod = &Auth{}
@@ -79,7 +82,7 @@ func New(roleName string, opts ...Option) (*Auth, error) {
 		}
 	}
 
-	if auth.token == "" {
+	if auth.token == "" && auth.tokenPath == "" {
 		return nil, ErrNoToken
 	}
 
@@ -92,9 +95,22 @@ func New(roleName string, opts ...Option) (*Auth, error) {
 
 // Login implements the [vault.AuthMethod] interface.
 func (a *Auth) Login(ctx context.Context, client *vault.Client) (*vault.Secret, error) {
+	var token string
+
+	switch {
+	case a.token != "":
+		token = a.token
+	case a.tokenPath != "":
+		data, err := os.ReadFile(filepath.Clean(a.tokenPath))
+		if err != nil {
+			return nil, err
+		}
+		token = string(data)
+	}
+
 	path := fmt.Sprintf("auth/%s/login", a.mountPath)
 	data := map[string]any{
-		"jwt":  a.token,
+		"jwt":  token,
 		"role": a.roleName,
 	}
 
@@ -117,11 +133,7 @@ func WithToken(token string) Option {
 // token from the given path.
 func WithTokenFromPath(path string) Option {
 	opt := func(a *Auth) error {
-		token, err := os.ReadFile(filepath.Clean(path))
-		if err != nil {
-			return err
-		}
-		a.token = string(token)
+		a.tokenPath = path
 
 		return nil
 	}
