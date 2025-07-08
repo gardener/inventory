@@ -5,6 +5,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -20,6 +21,7 @@ import (
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	dbclient "github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
 
@@ -174,22 +176,24 @@ func NewWorkerCommand() *cli.Command {
 					slog.Info("configuring asynq inspector")
 					asynqclient.SetInspector(inspector)
 
-					if err := configureAWSClients(ctx.Context, conf); err != nil {
-						return err
+					// Vault clients are configured first in
+					// order to enable other datasources to
+					// be initialized from Vault secrets.
+					configureClientFuncs := []func(context.Context, *config.Config) error{
+						configureVaultClients,
+						configureAWSClients,
+						configureGCPClients,
+						configureAzureClients,
+						configureOpenStackClients,
 					}
 
-					if err := configureGCPClients(ctx.Context, conf); err != nil {
-						return err
+					for _, configureClientsFunc := range configureClientFuncs {
+						if err := configureClientsFunc(ctx.Context, conf); err != nil {
+							return err
+						}
 					}
+
 					defer closeGCPClients()
-
-					if err := configureAzureClients(ctx.Context, conf); err != nil {
-						return err
-					}
-
-					if err := configureOpenStackClients(ctx.Context, conf); err != nil {
-						return err
-					}
 
 					// Register our task handlers using the default registry
 					worker.HandlersFromRegistry(registry.TaskRegistry)
