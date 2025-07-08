@@ -63,35 +63,35 @@ vault:
       token_auth:
         token_path: /path/to/my/token
 
-    # Production Vault server example
-    prod:
-      # Endpoint of the Vault server
-      endpoint: https://vault.example.org:8200/
+    # # Production Vault server example
+    # prod:
+    #   # Endpoint of the Vault server
+    #   endpoint: https://vault.example.org:8200/
 
-      # Vault namespace
-      namespace: my-vault-namespace
+    #   # Vault namespace
+    #   namespace: my-vault-namespace
 
-      # Optional TLS settings
-      # tls:
-      #   ca_cert: /path/to/ca.crt
-      #   ca_cert_bytes: "PEM-encoded CA bundle"
-      #   ca_path: /path/to/ca/cert/files
-      #   client_cert: /path/to/client.crt
-      #   client_key: /path/to/client.key
-      #   tls_server_name: SNI-host
-      #   insecure: false
+    #   # Optional TLS settings
+    #   # tls:
+    #   #   ca_cert: /path/to/ca.crt
+    #   #   ca_cert_bytes: "PEM-encoded CA bundle"
+    #   #   ca_path: /path/to/ca/cert/files
+    #   #   client_cert: /path/to/client.crt
+    #   #   client_key: /path/to/client.key
+    #   #   tls_server_name: SNI-host
+    #   #   insecure: false
 
-      # Example of `jwt' Auth Method
-      auth_method: jwt
+    #   # Example of `jwt' Auth Method
+    #   auth_method: jwt
 
-      # Auth settings when using `jwt' auth method.
-      jwt_auth:
-        # Mount path of the JWT Auth Method
-        mount_path: my-jwt-am-mount-path
-        # Role name to use
-        role_name: my-role-name
-        # Path to a JWT token to use for logging into Vault
-        token_path: /path/to/my/jwt/token
+    #   # Auth settings when using `jwt' auth method.
+    #   jwt_auth:
+    #     # Mount path of the JWT Auth Method
+    #     mount_path: my-jwt-am-mount-path
+    #     # Role name to use
+    #     role_name: my-role-name
+    #     # Path to a JWT token to use for logging into Vault
+    #     token_path: /path/to/my/jwt/token
 
 # Worker settings
 worker:
