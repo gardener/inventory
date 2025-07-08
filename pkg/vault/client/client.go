@@ -54,8 +54,7 @@ type Option func(c *Client) error
 type Client struct {
 	*vault.Client
 
-	address string
-	am      vault.AuthMethod
+	am vault.AuthMethod
 }
 
 // ManageAuthTokenLifetime starts managing the auth token lifetime.
@@ -139,14 +138,14 @@ func (c *Client) renewPeriodically(ctx context.Context, duration time.Duration) 
 			// re-authenticate if we use an Auth Method.
 			slog.Info(
 				"renewing vault token",
-				"address", c.address,
+				"address", c.Address(),
 			)
 
 			authInfo, err = c.Auth().Token().RenewSelfWithContext(ctx, 3600)
 			if err != nil {
 				slog.Error(
 					"failed to renew vault token",
-					"address", c.address,
+					"address", c.Address(),
 					"reason", err,
 				)
 
@@ -161,7 +160,7 @@ func (c *Client) renewPeriodically(ctx context.Context, duration time.Duration) 
 				if err != nil {
 					slog.Error(
 						"failed to authenticate with vault",
-						"address", c.address,
+						"address", c.Address(),
 						"reason", err,
 					)
 
@@ -173,7 +172,7 @@ func (c *Client) renewPeriodically(ctx context.Context, duration time.Duration) 
 			if authInfo == nil {
 				slog.Warn(
 					"empty auth info returned from vault",
-					"address", c.address,
+					"address", c.Address(),
 				)
 
 				continue
@@ -184,7 +183,7 @@ func (c *Client) renewPeriodically(ctx context.Context, duration time.Duration) 
 			if err != nil {
 				slog.Warn(
 					"cannot read vault auth token ttl",
-					"address", c.address,
+					"address", c.Address(),
 					"reason", err,
 				)
 
@@ -194,7 +193,7 @@ func (c *Client) renewPeriodically(ctx context.Context, duration time.Duration) 
 			if ttl <= 0 {
 				slog.Warn(
 					"vault token ttl <= 0, will not attempt renewal",
-					"address", c.address,
+					"address", c.Address(),
 				)
 
 				return
@@ -220,7 +219,7 @@ func (c *Client) reAuthPeriodically(ctx context.Context, duration time.Duration)
 			if err != nil {
 				slog.Error(
 					"failed to authenticate with vault",
-					"address", c.address,
+					"address", c.Address(),
 					"reason", err,
 				)
 
@@ -229,7 +228,7 @@ func (c *Client) reAuthPeriodically(ctx context.Context, duration time.Duration)
 			if authInfo == nil {
 				slog.Warn(
 					"empty auth info returned from vault",
-					"address", c.address,
+					"address", c.Address(),
 				)
 
 				continue
@@ -240,7 +239,7 @@ func (c *Client) reAuthPeriodically(ctx context.Context, duration time.Duration)
 			if err != nil {
 				slog.Warn(
 					"cannot read vault auth token ttl",
-					"address", c.address,
+					"address", c.Address(),
 					"reason", err,
 				)
 
@@ -250,7 +249,7 @@ func (c *Client) reAuthPeriodically(ctx context.Context, duration time.Duration)
 			if ttl <= 0 {
 				slog.Warn(
 					"vault token ttl <= 0, will not attempt re-authentication",
-					"address", c.address,
+					"address", c.Address(),
 				)
 
 				return
@@ -266,7 +265,7 @@ func (c *Client) reAuthPeriodically(ctx context.Context, duration time.Duration)
 func (c *Client) login(ctx context.Context) (*vault.Secret, error) {
 	slog.Info(
 		"authenticating with vault",
-		"address", c.address,
+		"address", c.Address(),
 	)
 
 	if c.am == nil {
@@ -298,8 +297,7 @@ func New(conf *vault.Config, opts ...Option) (*Client, error) {
 	}
 
 	c := &Client{
-		Client:  vaultClient,
-		address: conf.Address,
+		Client: vaultClient,
 	}
 
 	for _, opt := range opts {
