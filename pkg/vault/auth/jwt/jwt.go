@@ -110,7 +110,7 @@ func (a *Auth) Login(ctx context.Context, client *vault.Client) (*vault.Secret, 
 
 	path := fmt.Sprintf("auth/%s/login", a.mountPath)
 	data := map[string]any{
-		"jwt":  token,
+		"jwt":  strings.TrimSpace(token),
 		"role": a.roleName,
 	}
 
