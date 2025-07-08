@@ -132,6 +132,95 @@ type Config struct {
 
 	// OpenStack represents the OpenStack specific configuration settings.
 	OpenStack OpenStackConfig `yaml:"openstack"`
+
+	// Vault represents the Vault specific config settings.
+	Vault VaultConfig `yaml:"vault"`
+}
+
+// VaultConfig provides the Vault-related configuration.
+type VaultConfig struct {
+	// IsEnabled specifies whether Vault is enabled or not. Setting this to
+	// false will not create any Vault API client.
+	IsEnabled bool `yaml:"is_enabled"`
+
+	// Servers specifies the Vault servers configuration.
+	Servers map[string]VaultEndpointConfig `yaml:"servers"`
+}
+
+// VaultEndpointConfig provides the config settings for a Vault server endpoint.
+type VaultEndpointConfig struct {
+	// Endpoint represents the Vault server URL
+	Endpoint string `yaml:"endpoint"`
+
+	// Namespace specifies the Vault namespace to use.
+	Namespace string `yaml:"namespace"`
+
+	// TLSConfig specifies the TLS config for this Vault server
+	TLSConfig VaultEndpointTLSConfig `yaml:"tls"`
+
+	// AuthMethod specifies the Authentication Method to use when creating
+	// API clients. The currently supported Auth Methods are `token' and
+	// `jwt'.
+	AuthMethod string `yaml:"auth_method"`
+
+	// TokenAuth specifies the auth settings when using `token' auth method.
+	TokenAuth VaultTokenAuthMethodConfig `yaml:"token_auth"`
+
+	// JWTAuth specifies the auth settings when using `jwt' auth method.
+	JWTAuth VaultJWTAuthMethodConfig `yaml:"jwt_auth"`
+}
+
+// VaultEndpointTLSConfig provides the TLS settings for a Vault server endpoint.
+//
+// This struct is based on [vault.TLSConfig] with included tags for YAML
+// decoding.
+type VaultEndpointTLSConfig struct {
+	// CACert is the path to a PEM-encoded CA cert file to use to verify the
+	// Vault server SSL certificate. It takes precedence over CACertBytes
+	// and CAPath.
+	CACert string `yaml:"ca_cert"`
+
+	// CACertBytes is a PEM-encoded certificate or bundle. It takes precedence
+	// over CAPath.
+	CACertBytes []byte `yaml:"ca_cert_bytes"`
+
+	// CAPath is the path to a directory of PEM-encoded CA cert files to verify
+	// the Vault server SSL certificate.
+	CAPath string `yaml:"ca_path"`
+
+	// ClientCert is the path to the certificate for Vault communication
+	ClientCert string `yaml:"client_cert"`
+
+	// ClientKey is the path to the private key for Vault communication
+	ClientKey string `yaml:"client_key"`
+
+	// TLSServerName, if set, is used to set the SNI host when connecting via
+	// TLS.
+	TLSServerName string `yaml:"tls_server_name"`
+
+	// Insecure enables or disables SSL verification
+	Insecure bool `yaml:"insecure"`
+}
+
+// VaultTokenAuthMethodConfig provides the auth settings when using `token' auth
+// method in Vault.
+type VaultTokenAuthMethodConfig struct {
+	// TokenPath specifies a path to a file containing Vault token
+	TokenPath string `yaml:"token_path"`
+}
+
+// VaultJWTAuthMethodConfig provides the auth settings when using `jwt' auth
+// method in Vault.
+type VaultJWTAuthMethodConfig struct {
+	// MountPath specifies the JWT Auth Method mount path.
+	MountPath string `yaml:"mount_path"`
+
+	// RoleName specifies the role to use.
+	RoleName string `yaml:"role_name"`
+
+	// TokenPath specifies a path to a file containing the JWT token to be
+	// used when logging into the JWT Auth Method endpoint.
+	TokenPath string `yaml:"token_path"`
 }
 
 // OpenStackConfig provides the OpenStack-related configuration.
