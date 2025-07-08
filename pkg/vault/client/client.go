@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	vault "github.com/hashicorp/vault/api"
@@ -359,7 +360,8 @@ func NewFromConfig(conf *config.VaultEndpointConfig) (*Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		client.SetToken(string(data))
+		token := strings.TrimSpace(string(data))
+		client.SetToken(token)
 	case JWTAuthMethodName:
 		// Configure JWT Auth Method implementation
 		amOpts := []jwtauth.Option{
