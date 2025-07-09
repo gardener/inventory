@@ -335,7 +335,9 @@ func NewFromConfig(conf *config.VaultEndpointConfig) (*Client, error) {
 		TLSServerName: conf.TLSConfig.TLSServerName,
 		Insecure:      conf.TLSConfig.Insecure,
 	}
-	defaultVaultConf.ConfigureTLS(tlsConfig)
+	if err := defaultVaultConf.ConfigureTLS(tlsConfig); err != nil {
+		return nil, err
+	}
 
 	// Create and configure a [Client]
 	client, err := New(defaultVaultConf)
