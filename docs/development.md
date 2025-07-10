@@ -434,6 +434,7 @@ The services which will be started are summarized in the table below.
 | `grafana`    | Grafana instance                          |
 | `prometheus` | Prometheus instance                       |
 | `pgadmin`    | PostgreSQL Admin Interface                |
+| `vault`      | Vault server in development mode          |
 
 Once the services are up and running, you can access the following endpoints from
 your local system.
@@ -448,6 +449,7 @@ your local system.
 | http://localhost:9090/        | Prometheus UI                  |
 | http://localhost:7080/        | pgAdmin UI                     |
 | http://localhost:6080/metrics | Metrics endpoint for Worker    |
+| http://localhost:8200/        | Development Vault server       |
 
 ### minikube
 
