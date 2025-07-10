@@ -38,6 +38,18 @@ services:
       timeout: 5s
       retries: 5
 
+  vault:
+    image: hashicorp/vault:1.20
+    ports:
+      - 8200:8200
+    healthcheck:
+      test: curl --fail -I http://localhost:8200/ui/sys/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./dev/local/vault:/vault/file
+
   worker:
     build:
       context: .
