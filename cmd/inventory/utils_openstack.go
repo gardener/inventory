@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gophercloud/gophercloud/v2"
@@ -154,7 +155,7 @@ func newOpenStackProviderClient(
 			return nil, fmt.Errorf("no username specified for project %s", creds.Project)
 		}
 
-		rawPassword, err := os.ReadFile(creds.Password.PasswordFile)
+		rawPassword, err := os.ReadFile(filepath.Clean(creds.Password.PasswordFile))
 		if err != nil {
 			return nil, fmt.Errorf("unable to read password file: %w", err)
 		}
@@ -177,7 +178,7 @@ func newOpenStackProviderClient(
 			return nil, fmt.Errorf("no app credentials id specified for project %s", creds.Project)
 		}
 
-		rawAppSecret, err := os.ReadFile(creds.AppCredentials.AppCredentialsSecretFile)
+		rawAppSecret, err := os.ReadFile(filepath.Clean(creds.AppCredentials.AppCredentialsSecretFile))
 		if err != nil {
 			return nil, fmt.Errorf("unable to read app credentials secret file: %w", err)
 		}
