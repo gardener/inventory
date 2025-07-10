@@ -66,20 +66,35 @@ func validateOpenStackConfig(conf *config.Config) error {
 		switch creds.Authentication {
 		case config.OpenStackAuthenticationMethodPassword:
 			if creds.Password.Username == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoUsername, name)
+				return fmt.Errorf("openstack: %w: %s", errNoUsername, name)
 			}
 			if creds.Password.PasswordFile == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoPasswordFile, name)
+				return fmt.Errorf("openstack: %w: %s", errNoPasswordFile, name)
 			}
 		case config.OpenStackAuthenticationMethodAppCredentials:
 			if creds.AppCredentials.AppCredentialsID == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsID, name)
+				return fmt.Errorf("openstack: %w: %s", errNoAppCredentialsID, name)
 			}
 			if creds.AppCredentials.AppCredentialsSecretFile == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoAppCredentialsSecretFile, name)
+				return fmt.Errorf("openstack: %w: %s", errNoAppCredentialsSecretFile, name)
+			}
+		case config.OpenStackAuthenticationMethodVaultSecret:
+			if creds.VaultSecret.Server == "" {
+				return fmt.Errorf("openstack: no vault server specified for %s", name)
+			}
+
+			if _, ok := conf.Vault.Servers[creds.VaultSecret.Server]; !ok {
+				return fmt.Errorf("openstack: %s refers to unknown vault server %s", name, creds.VaultSecret.Server)
+			}
+
+			if creds.VaultSecret.SecretEngine == "" {
+				return fmt.Errorf("openstack: no vault secret engine specified for %s", name)
+			}
+			if creds.VaultSecret.SecretPath == "" {
+				return fmt.Errorf("openstack: no vault secret path specified for %s", name)
 			}
 		default:
-			return fmt.Errorf("OpenStack: %w: %s uses %s", errUnknownAuthenticationMethod, name, creds.Authentication)
+			return fmt.Errorf("openstack: %w: %s uses %s", errUnknownAuthenticationMethod, name, creds.Authentication)
 		}
 	}
 
@@ -93,11 +108,11 @@ func validateOpenStackConfig(conf *config.Config) error {
 		// Validate that the named credentials are actually defined.
 		for _, cred := range credentials {
 			if cred == "" {
-				return fmt.Errorf("OpenStack: %w: %s", errNoServiceCredentials, service)
+				return fmt.Errorf("openstack: %w: %s", errNoServiceCredentials, service)
 			}
 
 			if _, ok := conf.OpenStack.Credentials[cred]; !ok {
-				return fmt.Errorf("OpenStack: %w: service %s refers to %s", errUnknownNamedCredentials, service, cred)
+				return fmt.Errorf("openstack: %w: service %s refers to %s", errUnknownNamedCredentials, service, cred)
 			}
 		}
 	}
