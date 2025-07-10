@@ -42,7 +42,7 @@ vault:
   # The Vault servers for which API clients will be created.
   servers:
     # Dev Vault server example
-    dev:
+    vault-dev:
       # Endpoint of the Vault server
       endpoint: http://localhost:8200/
 
@@ -64,7 +64,7 @@ vault:
         token_path: /path/to/my/token
 
     # # Production Vault server example
-    # prod:
+    # vault-prod:
     #   # Endpoint of the Vault server
     #   endpoint: https://vault.example.org:8200/
 
@@ -353,9 +353,12 @@ openstack:
   is_enabled: false
 
   # The `credentials' section provides named credentials, which are used by the
-  # various OpenStack services. The currently supported authentication mechanisms are `password' for username and password
-  # and `app_credentials' for application credentials.
+  # various OpenStack services. The currently supported authentication
+  # mechanisms are `password' for username and password, `app_credentials' for
+  # Application Credentials and `vault_secret' for credentials provided by a
+  # Vault secret..
   credentials:
+    # Example of using username/password for authentication
     local:
       domain: <domain>
       auth_endpoint: <endpoint>
@@ -365,6 +368,7 @@ openstack:
       password:
         username: "<username>"
         password_file: "<path-to-password-file>"
+    # Example of using Application Credentials for authentication
     sa1:
       domain: <domain>
       auth_endpoint: <endpoint>
@@ -383,6 +387,23 @@ openstack:
       app_credentials:
         app_credentials_id: "<app-id>"
         app_credentials_secret_file: "<path-to-secret-file>"
+    sa3:
+      domain: <domain>
+      auth_endpoint: <endpoint>
+      project: <project_name>
+      region: <region>
+      authentication: vault_secret
+      vault_secret:
+        # Must refer to a server already defined in `vault.servers'
+        server: vault-dev
+
+        # Mount point of a KV v2 secret engine
+        secret_engine: kvv2
+
+        # Path to the secret
+        secret_path: my/secret
+
+  # OpenStack services configuration
   services:
     # Used for collecting OpenStack Servers
     compute:
