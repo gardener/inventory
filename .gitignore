@@ -28,6 +28,7 @@ dev/local/postgres
 dev/local/valkey
 dev/local/redis
 dev/local/prometheus
+dev/local/vault
 
 # direnv
 .envrc
