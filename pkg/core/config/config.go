@@ -71,6 +71,11 @@ const (
 	// authentication mechanism for OpenStack, which uses application credentials.
 	OpenStackAuthenticationMethodAppCredentials = "app_credentials"
 
+	// OpenStackAuthenticationMethodVaultSecret is the name of the
+	// authentication mechanism for OpenStack, which reads credentials from
+	// a Vault secret.
+	OpenStackAuthenticationMethodVaultSecret = "vault_secret"
+
 	// DefaultWorkerMetricsAddress is the network address from which the
 	// worker is serving metrics.
 	DefaultWorkerMetricsAddress = ":6080"
