@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -18,6 +19,7 @@ import (
 	gophercloudconfig "github.com/gophercloud/gophercloud/v2/openstack/config"
 
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
+	vaultclients "github.com/gardener/inventory/pkg/clients/vault"
 	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/core/registry"
 )
@@ -30,6 +32,31 @@ var errNoAuthEndpoint = errors.New("no authentication endpoint specified")
 var errNoDomain = errors.New("no domain specified")
 var errNoRegion = errors.New("no region specified")
 var errNoProject = errors.New("no project specified")
+
+// The kinds of OpenStack credentials provided by Vault secrets.
+var openstackVaultSecretKindV3Password = "v3password"
+var openstackVaultSecretKindV3ApplicationCredential = "v3applicationcredential"
+
+// openstackVaultSecret provides OpenStack credentials, which were read from a
+// Vault secret.
+type openstackVaultSecret struct {
+	// Kind specifies the kind of OpenStack credentials provided by the
+	// secret.  It should be [openstackVaultSecretKindV3Password] for
+	// username/password credentials, or
+	// [openstackVaultSecretKindV3ApplicationCredential] for Application
+	// Credentials.
+	Kind string `json:"kind,omitempty"`
+
+	// Username for v3password auth type.
+	Username string `json:"username,omitempty"`
+	// Password for v3password auth type.
+	Password string `json:"password,omitempty"`
+
+	// ApplicationCredentialID for v3applicationcredential auth type.
+	ApplicationCredentialID string `json:"application_credential_id,omitempty"`
+	// ApplicationCredentialSecret for v3applicationcredential auth type.
+	ApplicationCredentialSecret string `json:"application_credential_secret,omitempty"`
+}
 
 // validateOpenStackConfig validates the OpenStack configuration settings.
 func validateOpenStackConfig(conf *config.Config) error {
@@ -165,6 +192,7 @@ func newOpenStackProviderClient(
 
 	switch creds.Authentication {
 	case config.OpenStackAuthenticationMethodPassword:
+		// Username/password authentication method
 		username := strings.TrimSpace(creds.Password.Username)
 		if username == "" {
 			return nil, fmt.Errorf("no username specified for project %s", creds.Project)
@@ -188,6 +216,7 @@ func newOpenStackProviderClient(
 			AllowReauth:      true,
 		}
 	case config.OpenStackAuthenticationMethodAppCredentials:
+		// Application Credentials authentication method
 		appID := strings.TrimSpace(creds.AppCredentials.AppCredentialsID)
 		if appID == "" {
 			return nil, fmt.Errorf("no app credentials id specified for project %s", creds.Project)
@@ -209,6 +238,63 @@ func newOpenStackProviderClient(
 			ApplicationCredentialSecret: appSecret,
 			AllowReauth:                 true,
 		}
+	case config.OpenStackAuthenticationMethodVaultSecret:
+		// Credentials from Vault secret
+		if creds.VaultSecret.Server == "" || creds.VaultSecret.SecretEngine == "" || creds.VaultSecret.SecretPath == "" {
+			return nil, fmt.Errorf("openstack: invalid vault secret configuration for %s", creds.Project)
+		}
+
+		// Read and validate secret contents
+		vaultClient, ok := vaultclients.Clientset.Get(creds.VaultSecret.Server)
+		if !ok {
+			return nil, fmt.Errorf("openstack: vault secret refers to unknown vault server %s", creds.VaultSecret.Server)
+		}
+
+		vaultSecret, err := vaultClient.KVv2(creds.VaultSecret.SecretEngine).Get(ctx, creds.VaultSecret.SecretPath)
+		if err != nil {
+			return nil, fmt.Errorf("openstack: cannot read secret %s/%s from vault: %w", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath, err)
+		}
+
+		data, err := json.Marshal(vaultSecret.Data)
+		if err != nil {
+			return nil, fmt.Errorf("openstack: cannot marshal vault secret %s/%s: %w", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath, err)
+		}
+
+		var secret openstackVaultSecret
+		if err := json.Unmarshal(data, &secret); err != nil {
+			return nil, fmt.Errorf("openstack: cannot unmarshal vault secret %s/%s: %w", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath, err)
+		}
+
+		switch secret.Kind {
+		case openstackVaultSecretKindV3Password:
+			// Username/password authentication
+			if secret.Username == "" || secret.Password == "" {
+				return nil, fmt.Errorf("openstack: empty username or password for vault secret %s/%s", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath)
+			}
+			authOpts = gophercloud.AuthOptions{
+				IdentityEndpoint: creds.AuthEndpoint,
+				DomainName:       creds.Domain,
+				TenantName:       creds.Project,
+				Username:         secret.Username,
+				Password:         secret.Password,
+				AllowReauth:      true,
+			}
+		case openstackVaultSecretKindV3ApplicationCredential:
+			// Application Credentials authentication
+			if secret.ApplicationCredentialID == "" || secret.ApplicationCredentialSecret == "" {
+				return nil, fmt.Errorf("openstack: empty app id or app secret for vault secret %s/%s", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath)
+			}
+
+			authOpts = gophercloud.AuthOptions{
+				IdentityEndpoint:            creds.AuthEndpoint,
+				ApplicationCredentialID:     secret.ApplicationCredentialID,
+				ApplicationCredentialSecret: secret.ApplicationCredentialSecret,
+				AllowReauth:                 true,
+			}
+		default:
+			return nil, fmt.Errorf("openstack: invalid vault secret kind for %s/%s: %q", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath, secret.Kind)
+		}
+
 	default:
 		return nil, fmt.Errorf("unknown authentication method: %s", creds.Authentication)
 	}
