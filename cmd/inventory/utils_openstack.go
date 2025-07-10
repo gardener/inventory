@@ -209,7 +209,11 @@ func configureOpenStackServiceClientset(
 	conf *config.Config,
 	serviceFunc func(providerClient *gophercloud.ProviderClient, eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error)) error {
 	for _, credentials := range serviceConfig.UseCredentials {
-		namedCreds := conf.OpenStack.Credentials[credentials]
+		namedCreds, ok := conf.OpenStack.Credentials[credentials]
+		if !ok {
+			return fmt.Errorf("openstack: %w: %q", errUnknownNamedCredentials, credentials)
+		}
+
 		providerClient, err := newOpenStackProviderClient(ctx, &namedCreds)
 
 		if err != nil {
