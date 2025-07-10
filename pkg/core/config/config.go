@@ -265,9 +265,10 @@ type OpenStackServiceCredentials struct {
 // API clients.
 type OpenStackCredentialsConfig struct {
 	// Authentication specifies the authentication method/strategy to use
-	// when creating OpenStack API clients.
-	// The currently supported authentication mechanisms are `password' for username/password
-	// and `app_credentials'.
+	// when creating OpenStack API clients. The currently supported
+	// authentication mechanisms are `password' for username/password,
+	// `app_credentials' for Application Credentials and `vault_secret' for
+	// reading credentials from a Vault secret.
 	Authentication string `yaml:"authentication"`
 
 	// Password provides the settings to use for authentication when using username/password.
@@ -275,6 +276,10 @@ type OpenStackCredentialsConfig struct {
 
 	// AppCredentials provides the settings to use for authentication when using application credentials.
 	AppCredentials OpenStackAppCredentialsConfig `yaml:"app_credentials"`
+
+	// VaultSecret specifies config settings for reading OpenStack
+	// credentials from a Vault secret.
+	VaultSecret OpenStackVaultSecretConfig `yaml:"vault_secret"`
 
 	// Domain specifies the domain to use when initializing an OpenStack client.
 	Domain string `yaml:"domain"`
@@ -287,6 +292,21 @@ type OpenStackCredentialsConfig struct {
 
 	// AuthEndpoint specifies the authentication endpoint to use when initializing an OpenStack client.
 	AuthEndpoint string `yaml:"auth_endpoint"`
+}
+
+// OpenStackVaultSecretConfig provides the config settings for reading OpenStack
+// credentials from a Vault secret.
+type OpenStackVaultSecretConfig struct {
+	// Server specifies the name of the Vault server, which contains the
+	// secret.
+	Server string `yaml:"server"`
+
+	// SecretEngine is the mount path for a KV v2 secret engine, which
+	// provides the secret.
+	SecretEngine string `yaml:"secret_engine"`
+
+	// SecretPath specifies the path to the secret.
+	SecretPath string `yaml:"secret_path"`
 }
 
 // OpenStackPasswordConfig provides the settings to use for authentication when using username/password.
