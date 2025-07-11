@@ -378,6 +378,7 @@ openstack:
       app_credentials:
         app_credentials_id: "<app-id>"
         app_credentials_secret_file: "<path-to-secret-file>"
+    # Another Application Credentials example
     sa2:
       domain: <domain>
       auth_endpoint: <endpoint>
@@ -387,6 +388,7 @@ openstack:
       app_credentials:
         app_credentials_id: "<app-id>"
         app_credentials_secret_file: "<path-to-secret-file>"
+    # Example of using a Vault secret
     sa3:
       domain: <domain>
       auth_endpoint: <endpoint>
