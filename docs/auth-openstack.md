@@ -182,7 +182,7 @@ secret.
 The following example creates a `v3password` secret in Vault for username and
 password authentication.
 
-``` yaml
+``` shell
 vault kv put kvv2/path/to/my/secret \
       kind=v3password \
       username=my-username \
@@ -192,7 +192,7 @@ vault kv put kvv2/path/to/my/secret \
 This example creates a `v3applicationcredential` secret in Vault for Application
 Credentials authentication.
 
-``` yaml
+``` shell
 vault kv put kvv2/path/to/my/secret \
       kind=v3applicationcredential \
       application_credential_id=app-id \
