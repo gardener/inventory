@@ -176,7 +176,7 @@ openstack:
 When using `vault_secret` for configuring OpenStack credentials the Vault secret
 may provide a `v3password` (username and password pair) or
 `v3applicationcredential` ([Application
-Credentials](https://docs.openstack.org/keystone/queens/user/application_credentials.html))
+Credentials](https://docs.openstack.org/keystone/latest/user/application_credentials.html))
 secret.
 
 The following example creates a `v3password` secret in Vault for username and
