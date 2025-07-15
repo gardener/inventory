@@ -176,18 +176,20 @@ func collectProjects(ctx context.Context, payload CollectProjectsPayload) error 
 				}
 
 				for _, p := range projectList {
-					item := models.Project{
-						ProjectID:   p.ID,
-						Name:        p.Name,
-						Domain:      client.Domain,
-						Region:      client.Region,
-						ParentID:    p.ParentID,
-						Description: p.Description,
-						Enabled:     p.Enabled,
-						IsDomain:    p.IsDomain,
-					}
+					if p.Name == payload.Scope.Project {
+						item := models.Project{
+							ProjectID:   p.ID,
+							Name:        p.Name,
+							Domain:      client.Domain,
+							Region:      client.Region,
+							ParentID:    p.ParentID,
+							Description: p.Description,
+							Enabled:     p.Enabled,
+							IsDomain:    p.IsDomain,
+						}
 
-					items = append(items, item)
+						items = append(items, item)
+					}
 				}
 
 				return true, nil
