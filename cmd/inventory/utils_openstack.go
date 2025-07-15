@@ -33,17 +33,13 @@ var errNoDomain = errors.New("no domain specified")
 var errNoRegion = errors.New("no region specified")
 var errNoProject = errors.New("no project specified")
 
-// The kinds of OpenStack credentials provided by Vault secrets.
-var openstackVaultSecretKindV3Password = "v3password"
-var openstackVaultSecretKindV3ApplicationCredential = "v3applicationcredential"
-
 // openstackVaultSecret provides OpenStack credentials, which were read from a
 // Vault secret.
 type openstackVaultSecret struct {
 	// Kind specifies the kind of OpenStack credentials provided by the
-	// secret.  It should be [openstackVaultSecretKindV3Password] for
+	// secret.  It should be [config.OpenstackVaultSecretKindV3Password] for
 	// username/password credentials, or
-	// [openstackVaultSecretKindV3ApplicationCredential] for Application
+	// [config.OpenstackVaultSecretKindV3ApplicationCredential] for Application
 	// Credentials.
 	Kind string `json:"kind,omitempty"`
 
@@ -266,7 +262,7 @@ func newOpenStackProviderClient(
 		}
 
 		switch secret.Kind {
-		case openstackVaultSecretKindV3Password:
+		case config.OpenStackVaultSecretKindV3Password:
 			// Username/password authentication
 			if secret.Username == "" || secret.Password == "" {
 				return nil, fmt.Errorf("openstack: empty username or password for vault secret %s/%s", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath)
@@ -279,7 +275,7 @@ func newOpenStackProviderClient(
 				Password:         secret.Password,
 				AllowReauth:      true,
 			}
-		case openstackVaultSecretKindV3ApplicationCredential:
+		case config.OpenStackVaultSecretKindV3ApplicationCredential:
 			// Application Credentials authentication
 			if secret.ApplicationCredentialID == "" || secret.ApplicationCredentialSecret == "" {
 				return nil, fmt.Errorf("openstack: empty app id or app secret for vault secret %s/%s", creds.VaultSecret.SecretEngine, creds.VaultSecret.SecretPath)
