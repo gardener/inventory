@@ -158,8 +158,7 @@ func WithTokenFromEnv(env string) Option {
 // mount path for the Vault Authentication Method.
 func WithMountPath(mountPath string) Option {
 	opt := func(a *Auth) error {
-		// Remove any trailing slashes from the given mount path
-		a.mountPath = strings.TrimRight(mountPath, "/")
+		a.mountPath = mountPath
 
 		return nil
 	}
