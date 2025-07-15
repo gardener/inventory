@@ -76,6 +76,14 @@ const (
 	// a Vault secret.
 	OpenStackAuthenticationMethodVaultSecret = "vault_secret"
 
+	// OpenStackVaultSecretKindV3Password is a Vault secret kind for
+	// OpenStack credentials using username/password.
+	OpenStackVaultSecretKindV3Password = "v3password"
+
+	// OpenStackVaultSecretKindV3ApplicationCredential is a Vault secret kind for
+	// OpenStack credentials using Application Credentials.
+	OpenStackVaultSecretKindV3ApplicationCredential = "v3applicationcredential"
+
 	// DefaultWorkerMetricsAddress is the network address from which the
 	// worker is serving metrics.
 	DefaultWorkerMetricsAddress = ":6080"
