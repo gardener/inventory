@@ -146,6 +146,9 @@ func WithTokenFromPath(path string) Option {
 func WithTokenFromEnv(env string) Option {
 	opt := func(a *Auth) error {
 		value := os.Getenv(env)
+		if value == "" {
+			return fmt.Errorf("%w: env var %s is not set", ErrNoToken, env)
+		}
 		a.token = value
 
 		return nil
