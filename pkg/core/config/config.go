@@ -234,6 +234,10 @@ type VaultJWTAuthMethodConfig struct {
 	// TokenPath specifies a path to a file containing the JWT token to be
 	// used when logging into the JWT Auth Method endpoint.
 	TokenPath string `yaml:"token_path"`
+
+	// TokenEnv specifies the name of an environment variable, from which to
+	// read the JWT token.
+	TokenEnv string `yaml:"token_env"`
 }
 
 // OpenStackConfig provides the OpenStack-related configuration.

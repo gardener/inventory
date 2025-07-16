@@ -366,10 +366,14 @@ func NewFromConfig(conf *config.VaultEndpointConfig) (*Client, error) {
 		client.SetToken(token)
 	case JWTAuthMethodName:
 		// Configure JWT Auth Method implementation
-		amOpts := []jwtauth.Option{
-			jwtauth.WithMountPath(conf.JWTAuth.MountPath),
-			jwtauth.WithTokenFromPath(conf.JWTAuth.TokenPath),
+		amOpts := []jwtauth.Option{jwtauth.WithMountPath(conf.JWTAuth.MountPath)}
+		if conf.JWTAuth.TokenPath != "" {
+			amOpts = append(amOpts, jwtauth.WithTokenFromPath(conf.JWTAuth.TokenPath))
 		}
+		if conf.JWTAuth.TokenEnv != "" {
+			amOpts = append(amOpts, jwtauth.WithTokenFromEnv(conf.JWTAuth.TokenEnv))
+		}
+
 		am, err := jwtauth.New(conf.JWTAuth.RoleName, amOpts...)
 		if err != nil {
 			return nil, err

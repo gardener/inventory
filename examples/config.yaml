@@ -63,7 +63,7 @@ vault:
       token_auth:
         token_path: /path/to/my/token
 
-    # # Production Vault server example
+    # Production Vault server example
     # vault-prod:
     #   # Endpoint of the Vault server
     #   endpoint: https://vault.example.org:8200/
@@ -92,6 +92,10 @@ vault:
     #     role_name: my-role-name
     #     # Path to a JWT token to use for logging into Vault
     #     token_path: /path/to/my/jwt/token
+    #     # Name of env var from which to read the JWT token when logging into
+    #     # Vault. JWT token from env var takes precedence over a JWT provided
+    #     # from path.
+    #     # token_env: MY_JWT_TOKEN
 
 # Worker settings
 worker:
