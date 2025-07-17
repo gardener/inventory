@@ -270,6 +270,9 @@ type OpenStackServices struct {
 
 	// Identity provides the Identity service configuration.
 	Identity OpenStackServiceCredentials `yaml:"identity"`
+
+	// BlockStorage provides the BlockStorage service configuration.
+	BlockStorage OpenStackServiceCredentials `yaml:"block_storage"`
 }
 
 // OpenStackServiceCredentials specifies which credentials a service can use.
