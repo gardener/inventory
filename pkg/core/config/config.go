@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 const (
@@ -813,11 +813,11 @@ type LoggingConfig struct {
 func ParseFileInto(path string, out any) error {
 	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return fmt.Errorf("%w: %s", err, path)
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	if err := yaml.Unmarshal(data, out); err != nil {
-		return fmt.Errorf("%w: %s", err, path)
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	return nil
