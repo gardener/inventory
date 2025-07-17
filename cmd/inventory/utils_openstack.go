@@ -63,6 +63,7 @@ func validateOpenStackConfig(conf *config.Config) error {
 		"object_storage": conf.OpenStack.Services.ObjectStorage,
 		"load_balancer":  conf.OpenStack.Services.LoadBalancer,
 		"identity":       conf.OpenStack.Services.Identity,
+		"block_storage":  conf.OpenStack.Services.BlockStorage,
 	}
 
 	for name, creds := range conf.OpenStack.Credentials {
@@ -169,6 +170,7 @@ func configureOpenStackClients(ctx context.Context, conf *config.Config) error {
 		"object_storage": configureOpenStackObjectStorageClientsets,
 		"load_balancer":  configureOpenStackLoadBalancerClientsets,
 		"identity":       configureOpenStackIdentityClientsets,
+		"block_storage":  configureOpenStackBlockStorageClientsets,
 	}
 
 	for svc, configFunc := range configFuncs {
@@ -382,4 +384,10 @@ func configureOpenStackLoadBalancerClientsets(ctx context.Context, conf *config.
 // configureOpenStackIdentityClientsets configures the OpenStack Identity API clientsets.
 func configureOpenStackIdentityClientsets(ctx context.Context, conf *config.Config) error {
 	return configureOpenStackServiceClientset(ctx, "identity", openstackclients.IdentityClientset, conf.OpenStack.Services.Identity, conf, openstack.NewIdentityV3)
+}
+
+// configureOpenStackBlockStorageClientsets configures the OpenStack BlockStorage API clientsets.
+func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.Config) error {
+	return configureOpenStackServiceClientset(ctx, "block_storage", openstackclients.BlockStorageClientset,
+		conf.OpenStack.Services.BlockStorage, conf, openstack.NewBlockStorageV3)
 }
