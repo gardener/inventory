@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/goccy/go-yaml"
 	"github.com/hibiken/asynq"
-	"gopkg.in/yaml.v3"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/core/config"

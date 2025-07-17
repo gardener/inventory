@@ -29,6 +29,7 @@ require (
 	github.com/gardener/gardener-extension-provider-gcp v1.44.0
 	github.com/gardener/gardener-extension-provider-openstack v1.47.0
 	github.com/gardener/machine-controller-manager v0.58.0
+	github.com/goccy/go-yaml v1.18.0
 	github.com/google/uuid v1.6.0
 	github.com/gophercloud/gophercloud/v2 v2.7.0
 	github.com/hashicorp/vault/api v1.20.0
@@ -44,7 +45,6 @@ require (
 	github.com/uptrace/bun/extra/bundebug v1.2.14
 	github.com/urfave/cli/v2 v2.27.7
 	google.golang.org/api v0.241.0
-	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.33.2
 	k8s.io/apimachinery v0.33.2
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
@@ -185,6 +185,7 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.33.1 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250610211856-8b98d1ed966a // indirect
