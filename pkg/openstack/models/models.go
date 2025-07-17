@@ -33,6 +33,7 @@ const (
 	PoolMemberModelName           = "openstack:model:pool_member"
 	ContainerModelName            = "openstack:model:container"
 	ObjectModelName               = "openstack:model:object"
+	VolumeModelName               = "openstack:model:volume"
 
 	SubnetToNetworkModelName       = "openstack:model:link_subnet_to_network"
 	SubnetToProjectModelName       = "openstack:model:link_subnet_to_project"
@@ -63,6 +64,7 @@ var models = map[string]any{
 	PoolMemberModelName:           &PoolMember{},
 	ContainerModelName:            &Container{},
 	ObjectModelName:               &Object{},
+	VolumeModelName:               &Volume{},
 
 	// Link models
 	SubnetToNetworkModelName:       &SubnetToNetwork{},
@@ -404,6 +406,31 @@ type LoadBalancerWithPool struct {
 	ProjectID      string        `bun:"project_id,notnull,unique:openstack_loadbalancer_with_pool_key"`
 	LoadBalancer   *LoadBalancer `bun:"rel:has-one,join:project_id=project_id,join:loadbalancer_id=loadbalancer_id"`
 	Pool           *Pool         `bun:"rel:has-one,join:project_id=project_id,join:pool_id=pool_id"`
+}
+
+// Volume represents an OpenStack Volume.
+type Volume struct {
+	bun.BaseModel `bun:"table:openstack_volume"`
+	coremodels.Model
+
+	VolumeID          string    `bun:"volume_id,notnull,unique:openstack_volume_key"`
+	Name              string    `bun:"name,notnull"`
+	ProjectID         string    `bun:"project_id,notnull,unique:openstack_volume_key"`
+	Domain            string    `bun:"domain,notnull,unique:openstack_volume_key"`
+	Region            string    `bun:"region,notnull,unique:openstack_volume_key"`
+	UserID            string    `bun:"user_id,notnull"`
+	AvailabilityZone  string    `bun:"availability_zone,notnull"`
+	Size              int       `bun:"size,notnull"`
+	VolumeType        string    `bun:"volume_type,notnull"`
+	Status            string    `bun:"status,notnull"`
+	ReplicationStatus string    `bun:"replication_status,notnull"`
+	Bootable          string    `bun:"bootable,notnull"`
+	Encrypted         bool      `bun:"encrypted,notnull"`
+	MultiAttach       bool      `bun:"multi_attach,notnull"`
+	SnapshotID        string    `bun:"snapshot_id,notnull"`
+	Description       string    `bun:"description,notnull"`
+	TimeCreated       time.Time `bun:"volume_created_at,notnull"`
+	TimeUpdated       time.Time `bun:"volume_updated_at,notnull"`
 }
 
 func init() {
