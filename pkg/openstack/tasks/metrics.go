@@ -109,6 +109,15 @@ var (
 		[]string{"project", "domain", "region"},
 		nil,
 	)
+
+	// volumesDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack volumes
+	volumesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_volumes"),
+		"A gauge which tracks the number of collected OpenStack Volumes",
+		[]string{"project", "domain", "region"},
+		nil,
+	)
 )
 
 func init() {

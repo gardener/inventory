@@ -80,6 +80,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectObjects, asynq.HandlerFunc(HandleCollectObjectsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectPools, asynq.HandlerFunc(HandleCollectPoolsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectContainers, asynq.HandlerFunc(HandleCollectContainersTask))
+	registry.TaskRegistry.MustRegister(TaskCollectVolumes, asynq.HandlerFunc(HandleCollectVolumesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
