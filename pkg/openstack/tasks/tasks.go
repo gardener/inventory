@@ -43,6 +43,7 @@ func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 		NewCollectObjectsTask,
 		NewCollectPoolsTask,
 		NewCollectContainersTask,
+		NewCollectVolumesTask,
 	}
 
 	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
