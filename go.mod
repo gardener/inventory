@@ -39,7 +39,7 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go v1.78.0
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/prometheus/client_golang v1.22.0
-	github.com/uptrace/bun v1.2.14
+	github.com/uptrace/bun v1.2.15
 	github.com/uptrace/bun/dialect/pgdialect v1.2.14
 	github.com/uptrace/bun/driver/pgdriver v1.2.14
 	github.com/uptrace/bun/extra/bundebug v1.2.14
@@ -174,7 +174,7 @@ require (
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
