@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 16,
+  "id": 5,
   "links": [],
   "panels": [
     {
@@ -85,7 +85,32 @@
           },
           "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "openstack:task:collect-servers"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -627,7 +652,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_servers) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_servers[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -725,7 +750,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_projects)",
+          "expr": "sum(sum_over_time(inventory_openstack_projects[30m])) by (project)",
           "instant": false,
           "legendFormat": "count",
           "range": true,
@@ -823,7 +848,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_subnets) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_subnets[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -885,8 +910,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -921,7 +945,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_networks) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_networks[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -983,8 +1007,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1019,7 +1042,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_floating_ips) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_floating_ips[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1081,8 +1104,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1117,7 +1139,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_loadbalancers) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_loadbalancers[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1179,8 +1201,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1215,7 +1236,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_pools) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_pools[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1277,8 +1298,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1313,7 +1333,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_routers) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_routers[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1375,8 +1395,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1411,7 +1430,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_ports) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_ports[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1473,8 +1492,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1509,7 +1527,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_containers) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_containers[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1571,8 +1589,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1607,7 +1624,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(inventory_openstack_objects) by (project_id)",
+          "expr": "sum(sum_over_time(inventory_openstack_objects[30m])) by (project)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
