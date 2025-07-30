@@ -62,7 +62,6 @@ var models = map[string]any{
 	ProjectToMemberModelName:          &ProjectToMember{},
 }
 
-// ShootToProject represents a link table connecting the Shoot with Project.
 type ShootToProject struct {
 	bun.BaseModel `bun:"table:l_g_shoot_to_project"`
 	coremodels.Model
