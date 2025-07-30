@@ -2,10 +2,10 @@
 
 Users of the Inventory can provide OpenStack service specific credentials, which
 are then used against the specified OpenStack Keystone service.  Multiple
-credentials can be provided per service, with the unique property being
-project_id, which is expected to be unique globally. With this setup, users can
-collect resources from multiple regions/clusters, as long as the credentials are
-configured properly.
+credentials can be provided per service, with the unique property being a 
+composite of (project, domain, region), which is expected to be unique globally.
+With this setup, users can collect resources from multiple regions/clusters,
+as long as the credentials are configured properly.
 
 Make sure the credentials you provide have the roles needed to access the
 respective resources. If there are resources with different policies in the same
