@@ -133,5 +133,6 @@ func init() {
 		objectsDesc,
 		poolsDesc,
 		containersDesc,
+		volumesDesc,
 	)
 }
