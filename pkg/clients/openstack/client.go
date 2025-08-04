@@ -14,6 +14,9 @@ type ClientScope struct {
 	// Project is the project associated with the client.
 	Project string
 
+	// ProjectID is the project ID associated with the client.
+	ProjectID string
+
 	// Domain is the domain associated with the client.
 	Domain string
 
