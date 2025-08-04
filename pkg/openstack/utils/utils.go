@@ -47,6 +47,10 @@ func IsValidProjectScope(scope openstackclients.ClientScope) error {
 		return errors.New("missing project name")
 	}
 
+	if scope.ProjectID == "" {
+		return errors.New("missing project ID")
+	}
+
 	return nil
 }
 
