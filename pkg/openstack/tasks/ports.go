@@ -163,7 +163,7 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 	portIPs := make([]models.PortIP, 0)
 
 	opts := ports.ListOpts{
-		ProjectID: client.ClientScope.ProjectID,
+		ProjectID: client.ProjectID,
 	}
 	err := ports.List(client.Client, opts).
 		EachPage(ctx,
