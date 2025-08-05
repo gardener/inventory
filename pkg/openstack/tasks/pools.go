@@ -163,7 +163,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 	memberItems := make([]models.PoolMember, 0)
 
 	opts := pools.ListOpts{
-		ProjectID: client.ClientScope.ProjectID,
+		ProjectID: client.ProjectID,
 	}
 	err := pools.List(client.Client, opts).
 		EachPage(ctx,
