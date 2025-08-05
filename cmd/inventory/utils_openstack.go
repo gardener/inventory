@@ -336,45 +336,9 @@ func configureOpenStackServiceClientset(
 			Region:           namedCreds.Region,
 		}
 
-		identityClient, err := openstack.NewIdentityV3(providerClient, gophercloud.EndpointOpts{
-			Region: clientScope.Region,
-		})
+		projectID, err := getProjectIDForClient(ctx, providerClient, clientScope)
 		if err != nil {
-			return fmt.Errorf("%w: %w", "could not create identity client for project metadata:", err)
-		}
-
-		var projectID string
-		found := false
-
-		err = projects.ListAvailable(identityClient).
-			EachPage(ctx,
-				func(_ context.Context, page pagination.Page) (bool, error) {
-					projectList, err := projects.ExtractProjects(page)
-
-					if err != nil {
-						return false, fmt.Errorf(
-							"could not extract project pages: %w",
-							err,
-						)
-					}
-
-					for _, p := range projectList {
-						if p.Name == clientScope.Project {
-							projectID = p.ID
-							found = true
-							break
-						}
-					}
-
-					return true, nil
-				})
-
-		if !found {
-			return fmt.Errorf("could not find project with name %s for credentials: %s", clientScope.Project, credentials)
-		}
-
-		if projectID == "" {
-			return fmt.Errorf("project ID is empty")
+			return fmt.Errorf("unable to retrieve project ID: %w", err)
 		}
 
 		clientScope.ProjectID = projectID
@@ -435,4 +399,53 @@ func configureOpenStackIdentityClientsets(ctx context.Context, conf *config.Conf
 func configureOpenStackBlockStorageClientsets(ctx context.Context, conf *config.Config) error {
 	return configureOpenStackServiceClientset(ctx, "block_storage", openstackclients.BlockStorageClientset,
 		conf.OpenStack.Services.BlockStorage, conf, openstack.NewBlockStorageV3)
+}
+
+func getProjectIDForClient(ctx context.Context, providerClient *gophercloud.ProviderClient, clientScope openstackclients.ClientScope) (string, error) {
+	identityClient, err := openstack.NewIdentityV3(providerClient, gophercloud.EndpointOpts{
+		Region: clientScope.Region,
+	})
+	if err != nil {
+		return "", fmt.Errorf("could not create identity client for project metadata: %w", err)
+	}
+
+	var projectID string
+	found := false
+
+	err = projects.ListAvailable(identityClient).
+		EachPage(ctx,
+			func(_ context.Context, page pagination.Page) (bool, error) {
+				projectList, err := projects.ExtractProjects(page)
+
+				if err != nil {
+					return false, fmt.Errorf(
+						"could not extract project pages: %w",
+						err,
+					)
+				}
+
+				for _, p := range projectList {
+					if p.Name == clientScope.Project {
+						projectID = p.ID
+						found = true
+
+						break
+					}
+				}
+
+				return true, nil
+			})
+	if err != nil {
+		return "", fmt.Errorf("could not extract project ID: %w", err)
+	}
+
+	if !found {
+		return "", fmt.Errorf("project not found: %s", clientScope.Project)
+	}
+
+	if projectID == "" {
+		return "", fmt.Errorf("project ID is empty")
+	}
+
+	return projectID, nil
 }
