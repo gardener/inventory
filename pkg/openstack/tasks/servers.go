@@ -161,7 +161,10 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 	items := make([]models.Server, 0)
 
-	err := servers.List(client.Client, nil).
+	opts := servers.ListOpts{
+		TenantID: client.ProjectID,
+	}
+	err := servers.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				serverList, err := servers.ExtractServers(page)

@@ -161,7 +161,10 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	items := make([]models.Subnet, 0)
 
-	err := subnets.List(client.Client, nil).
+	opts := subnets.ListOpts {
+		ProjectID: client.ClientScope.ProjectID,
+	}
+	err := subnets.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				subnetList, err := subnets.ExtractSubnets(page)

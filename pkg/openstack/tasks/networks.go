@@ -151,7 +151,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 			payload.Scope.Region,
 		)
 		key := metrics.Key(
-			TaskCollectServers,
+			TaskCollectNetworks,
 			payload.Scope.Project,
 			payload.Scope.Domain,
 			payload.Scope.Region,
@@ -161,7 +161,10 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 
 	items := make([]models.Network, 0)
 
-	err := networks.List(client.Client, nil).
+	opts := networks.ListOpts {
+		ProjectID: client.ClientScope.ProjectID,
+	}
+	err := networks.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				networkList, err := networks.ExtractNetworks(page)

@@ -211,7 +211,7 @@ func collectObjects(ctx context.Context, payload CollectObjectsPayload) error {
 						item := models.Object{
 							Name:          o.Name,
 							ContainerName: name,
-							ProjectID:     client.Project,
+							ProjectID:     client.ProjectID,
 							ContentType:   o.ContentType,
 							LastModified:  o.LastModified,
 							IsLatest:      o.IsLatest,

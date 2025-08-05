@@ -162,7 +162,10 @@ func collectPorts(ctx context.Context, payload CollectPortsPayload) error {
 	items := make([]models.Port, 0)
 	portIPs := make([]models.PortIP, 0)
 
-	err := ports.List(client.Client, ports.ListOpts{}).
+	opts := ports.ListOpts{
+		ProjectID: client.ClientScope.ProjectID,
+	}
+	err := ports.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				portList, err := ports.ExtractPorts(page)

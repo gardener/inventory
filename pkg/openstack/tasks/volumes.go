@@ -161,7 +161,10 @@ func collectVolumes(ctx context.Context, payload CollectVolumesPayload) error {
 
 	items := make([]models.Volume, 0)
 
-	err := volumes.List(client.Client, nil).
+	opts := volumes.ListOpts{
+		TenantID: client.ProjectID,
+	}
+	err := volumes.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				volumeList, err := volumes.ExtractVolumes(page)

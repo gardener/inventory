@@ -162,7 +162,10 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 	poolItems := make([]models.Pool, 0)
 	memberItems := make([]models.PoolMember, 0)
 
-	err := pools.List(client.Client, nil).
+	opts := pools.ListOpts{
+		ProjectID: client.ClientScope.ProjectID,
+	}
+	err := pools.List(client.Client, opts).
 		EachPage(ctx,
 			func(ctx context.Context, page pagination.Page) (bool, error) {
 				extractedPools, err := pools.ExtractPools(page)
@@ -180,7 +183,10 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 				}
 
 				for _, pool := range extractedPools {
-					err = pools.ListMembers(client.Client, pool.ID, nil).
+					memberOpts := pools.ListMembersOpts{
+						ProjectID: client.ProjectID,
+					}
+					err = pools.ListMembers(client.Client, pool.ID, memberOpts).
 						EachPage(ctx,
 							func(ctx context.Context, page pagination.Page) (bool, error) {
 								extractedMembers, err := pools.ExtractMembers(page)
