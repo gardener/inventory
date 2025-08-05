@@ -161,8 +161,8 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 
 	items := make([]models.Subnet, 0)
 
-	opts := subnets.ListOpts {
-		ProjectID: client.ClientScope.ProjectID,
+	opts := subnets.ListOpts{
+		ProjectID: client.ProjectID,
 	}
 	err := subnets.List(client.Client, opts).
 		EachPage(ctx,

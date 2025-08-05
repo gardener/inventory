@@ -161,7 +161,7 @@ func collectNetworks(ctx context.Context, payload CollectNetworksPayload) error 
 
 	items := make([]models.Network, 0)
 
-	opts := networks.ListOpts {
+	opts := networks.ListOpts{
 		ProjectID: client.ProjectID,
 	}
 	err := networks.List(client.Client, opts).
