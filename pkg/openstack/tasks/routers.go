@@ -156,7 +156,10 @@ func collectRouters(ctx context.Context, payload CollectRoutersPayload) error {
 	items := make([]models.Router, 0)
 	externalIPs := make([]models.RouterExternalIP, 0)
 
-	err := routers.List(client.Client, routers.ListOpts{}).
+	opts := routers.ListOpts{
+		ProjectID: client.ProjectID,
+	}
+	err := routers.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				routerList, err := routers.ExtractRouters(page)

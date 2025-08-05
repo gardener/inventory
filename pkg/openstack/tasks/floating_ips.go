@@ -162,7 +162,10 @@ func collectFloatingIPs(ctx context.Context, payload CollectFloatingIPsPayload) 
 
 	items := make([]models.FloatingIP, 0)
 
-	err := floatingips.List(client.Client, nil).
+	opts := floatingips.ListOpts{
+		ProjectID: client.ProjectID,
+	}
+	err := floatingips.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				floatingIPList, err := floatingips.ExtractFloatingIPs(page)

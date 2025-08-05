@@ -161,7 +161,10 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 	items := make([]models.LoadBalancer, 0)
 	lbWithPoolItems := make([]models.LoadBalancerWithPool, 0)
 
-	err := loadbalancers.List(client.Client, nil).
+	opts := loadbalancers.ListOpts{
+		ProjectID: client.ProjectID,
+	}
+	err := loadbalancers.List(client.Client, opts).
 		EachPage(ctx,
 			func(_ context.Context, page pagination.Page) (bool, error) {
 				lbList, err := loadbalancers.ExtractLoadBalancers(page)
@@ -290,7 +293,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 		return err
 	}
 
-	count, err = out.RowsAffected()
+	poolCount, err := out.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -300,7 +303,7 @@ func collectLoadBalancers(ctx context.Context, payload CollectLoadBalancersPaylo
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
-		"count", count,
+		"count", poolCount,
 	)
 
 	return nil
