@@ -3,7 +3,7 @@ module github.com/gardener/inventory
 go 1.24.0
 
 require (
-	cloud.google.com/go/auth v0.16.2
+	cloud.google.com/go/auth v0.16.3
 	cloud.google.com/go/compute v1.39.0
 	cloud.google.com/go/container v1.43.0
 	cloud.google.com/go/resourcemanager v1.10.6
