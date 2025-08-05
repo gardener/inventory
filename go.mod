@@ -36,7 +36,7 @@ require (
 	github.com/hibiken/asynq v0.25.1
 	github.com/hibiken/asynq/x v0.0.0-20250401060612-c327bc40a28e
 	github.com/hibiken/asynqmon v0.7.2
-	github.com/microsoftgraph/msgraph-sdk-go v1.78.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.81.0
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/prometheus/client_golang v1.23.0
 	github.com/uptrace/bun v1.2.15
@@ -122,7 +122,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
-	github.com/microsoft/kiota-abstractions-go v1.9.2 // indirect
+	github.com/microsoft/kiota-abstractions-go v1.9.3 // indirect
 	github.com/microsoft/kiota-authentication-azure-go v1.3.0 // indirect
 	github.com/microsoft/kiota-http-go v1.5.4 // indirect
 	github.com/microsoft/kiota-serialization-form-go v1.1.2 // indirect
