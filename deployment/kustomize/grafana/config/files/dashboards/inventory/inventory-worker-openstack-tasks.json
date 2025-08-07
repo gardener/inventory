@@ -756,7 +756,7 @@
             "uid": "ds_prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(sum_over_time(inventory_openstack_projects[30m])) by (project)",
+          "expr": "sum(sum_over_time(inventory_openstack_projects[30m]))",
           "instant": false,
           "interval": "30m",
           "legendFormat": "__auto",
@@ -1314,8 +1314,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1413,8 +1412,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1512,8 +1510,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1611,8 +1608,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1710,8 +1706,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1773,6 +1768,6 @@
   "timezone": "browser",
   "title": "Inventory: Worker Metrics (OpenStack tasks)",
   "uid": "deqitvz1nbm68d",
-  "version": 13,
+  "version": 16,
   "weekStart": ""
 }
