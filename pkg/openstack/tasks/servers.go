@@ -142,6 +142,14 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 
 	var count int64
 	defer func() {
+		logger.Info(
+			"adding openstack server metrics",
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
+			"count", count,
+		)
+
 		metric := prometheus.MustNewConstMetric(
 			serversDesc,
 			prometheus.GaugeValue,
@@ -157,6 +165,14 @@ func collectServers(ctx context.Context, payload CollectServersPayload) error {
 			payload.Scope.Region,
 		)
 		metrics.DefaultCollector.AddMetric(key, metric)
+
+		logger.Info(
+			"successfully added openstack server metrics",
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
+			"count", count,
+		)
 	}()
 
 	items := make([]models.Server, 0)
