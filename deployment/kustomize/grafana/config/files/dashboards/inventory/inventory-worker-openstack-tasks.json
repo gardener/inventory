@@ -143,6 +143,7 @@
           "exemplar": false,
           "expr": "round(sum(increase(inventory_task_successful_total{task_name=~\"openstack:task:.*\"}[30m])) by (task_name))",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -248,6 +249,7 @@
           "exemplar": false,
           "expr": "sum(rate(inventory_task_duration_seconds_sum{task_name=~\"openstack:task:.*\"}[30m])) by (task_name)\n/\nsum(rate(inventory_task_duration_seconds_count{task_name=~\"openstack:task:.*\"}[30m])) by (task_name)\n",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -353,6 +355,7 @@
           "exemplar": false,
           "expr": "round(sum(increase(inventory_task_failed_total{task_name=~\"openstack:task:.*\"}[30m])) by (task_name))",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -458,6 +461,7 @@
           "exemplar": false,
           "expr": "round(sum(increase(inventory_task_skipped_total{task_name=~\"openstack:task:.*\"}[30m])) by (task_name))",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -556,6 +560,7 @@
           "editorMode": "code",
           "expr": "sum(inventory_housekeeper_deleted_records{model_name=~\"openstack:model:.*\"}) by (model_name)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -654,6 +659,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_servers[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -752,6 +758,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_projects[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -850,6 +857,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_subnets[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -948,6 +956,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_networks[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1046,6 +1055,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_floating_ips[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1106,7 +1116,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1143,6 +1154,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_loadbalancers[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1203,7 +1215,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1240,6 +1253,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_pools[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1300,7 +1314,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1337,6 +1352,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_routers[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1397,7 +1413,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1434,6 +1451,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_ports[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1494,7 +1512,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1531,6 +1550,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_containers[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1591,7 +1611,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1628,6 +1649,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_objects[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1688,7 +1710,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1725,6 +1748,7 @@
           "editorMode": "code",
           "expr": "sum(sum_over_time(inventory_openstack_volumes[30m])) by (project)",
           "instant": false,
+          "interval": "30m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1749,6 +1773,6 @@
   "timezone": "browser",
   "title": "Inventory: Worker Metrics (OpenStack tasks)",
   "uid": "deqitvz1nbm68d",
-  "version": 8,
+  "version": 13,
   "weekStart": ""
 }
