@@ -3,7 +3,7 @@ module github.com/gardener/inventory
 go 1.24.0
 
 require (
-	cloud.google.com/go/auth v0.16.3
+	cloud.google.com/go/auth v0.16.4
 	cloud.google.com/go/compute v1.41.0
 	cloud.google.com/go/container v1.44.0
 	cloud.google.com/go/resourcemanager v1.10.6
@@ -55,7 +55,7 @@ require (
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go v0.121.4 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
-	cloud.google.com/go/compute/metadata v0.7.0 // indirect
+	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
 	cloud.google.com/go/monitoring v1.24.2 // indirect
