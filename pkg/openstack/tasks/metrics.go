@@ -101,6 +101,15 @@ var (
 		nil,
 	)
 
+	// poolMembersDesc is the descriptor for a metric,
+	// which tracks the number of collected OpenStack Pool Members
+	poolMembersDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "openstack_pool_members"),
+		"A gauge which tracks the number of collected OpenStack Pool Members",
+		[]string{"project", "domain", "region", "pool_id", "pool_name"},
+		nil,
+	)
+
 	// containersDesc is the descriptor for a metric,
 	// which tracks the number of collected OpenStack Containers
 	containersDesc = prometheus.NewDesc(
@@ -132,6 +141,7 @@ func init() {
 		routersDesc,
 		objectsDesc,
 		poolsDesc,
+		poolMembersDesc,
 		containersDesc,
 		volumesDesc,
 	)

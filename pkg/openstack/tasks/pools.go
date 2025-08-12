@@ -28,6 +28,9 @@ const (
 	// TaskCollectPools is the name of the task for collecting OpenStack
 	// Pools.
 	TaskCollectPools = "openstack:task:collect-pools"
+	// TaskCollectPoolMembers is the name of the task for collecting OpenStack
+	// Pool Members for a specific pool.
+	TaskCollectPoolMembers = "openstack:task:collect-pool-members"
 )
 
 // CollectPoolsPayload represents the payload, which specifies
@@ -37,10 +40,32 @@ type CollectPoolsPayload struct {
 	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 }
 
+// CollectPoolMembersPayload represents the payload for collecting pool members
+// for a specific pool.
+type CollectPoolMembersPayload struct {
+	// Scope specifies the project scope to use for collection.
+	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
+	// PoolID is the ID of the pool to collect members for.
+	PoolID string `json:"pool_id" yaml:"pool_id"`
+	// PoolName is the name of the pool.
+	PoolName string `json:"pool_name" yaml:"pool_name"`
+}
+
 // NewCollectPoolsTask creates a new [asynq.Task] for collecting OpenStack
 // Pools, without specifying a payload.
 func NewCollectPoolsTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectPools, nil)
+}
+
+// NewCollectPoolMembersTask creates a new [asynq.Task] for collecting OpenStack
+// Pool Members for a specific pool.
+func NewCollectPoolMembersTask(payload CollectPoolMembersPayload) (*asynq.Task, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return asynq.NewTask(TaskCollectPoolMembers, data), nil
 }
 
 // HandleCollectPoolsTask handles the task for collecting OpenStack Pools.
@@ -62,6 +87,21 @@ func HandleCollectPoolsTask(ctx context.Context, t *asynq.Task) error {
 	}
 
 	return collectPools(ctx, payload)
+}
+
+// HandleCollectPoolMembersTask handles the task for collecting OpenStack Pool Members
+// for a specific pool.
+func HandleCollectPoolMembersTask(ctx context.Context, t *asynq.Task) error {
+	var payload CollectPoolMembersPayload
+	if err := asynqutils.Unmarshal(t.Payload(), &payload); err != nil {
+		return asynqutils.SkipRetry(err)
+	}
+
+	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
+		return asynqutils.SkipRetry(ErrInvalidScope)
+	}
+
+	return collectPoolMembers(ctx, payload)
 }
 
 // enqueueCollectPools enqueues tasks for collecting OpenStack Pools from
@@ -125,6 +165,7 @@ func enqueueCollectPools(ctx context.Context) error {
 
 // collectPools collects the OpenStack Pools,
 // using the client associated with the client scope in the given payload.
+// For each pool found, it enqueues a separate task to collect pool members.
 func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 	logger := asynqutils.GetLogger(ctx)
 
@@ -160,14 +201,13 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 	}()
 
 	poolItems := make([]models.Pool, 0)
-	memberItems := make([]models.PoolMember, 0)
 
 	opts := pools.ListOpts{
 		ProjectID: client.ProjectID,
 	}
 	err := pools.List(client.Client, opts).
 		EachPage(ctx,
-			func(ctx context.Context, page pagination.Page) (bool, error) {
+			func(_ context.Context, page pagination.Page) (bool, error) {
 				extractedPools, err := pools.ExtractPools(page)
 
 				if err != nil {
@@ -183,63 +223,7 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 				}
 
 				for _, pool := range extractedPools {
-					memberOpts := pools.ListMembersOpts{
-						ProjectID: client.ProjectID,
-					}
-					err = pools.ListMembers(client.Client, pool.ID, memberOpts).
-						EachPage(ctx,
-							func(ctx context.Context, page pagination.Page) (bool, error) {
-								extractedMembers, err := pools.ExtractMembers(page)
-
-								if err != nil {
-									logger.Error(
-										"could not extract pool member pages",
-										"project", payload.Scope.Project,
-										"domain", payload.Scope.Domain,
-										"region", payload.Scope.Region,
-										"reason", err,
-									)
-
-									return false, err
-								}
-
-								for _, member := range extractedMembers {
-									var inferredGardenerShoot string
-									shoot, err := gardenerutils.InferShootFromInstanceName(ctx, member.Name)
-									if err == nil {
-										inferredGardenerShoot = shoot.TechnicalID
-									}
-
-									item := models.PoolMember{
-										MemberID:              member.ID,
-										PoolID:                pool.ID,
-										ProjectID:             member.ProjectID,
-										Name:                  member.Name,
-										InferredGardenerShoot: inferredGardenerShoot,
-										SubnetID:              member.SubnetID,
-										ProtocolPort:          member.ProtocolPort,
-										MemberCreatedAt:       member.CreatedAt,
-										MemberUpdatedAt:       member.UpdatedAt,
-									}
-
-									memberItems = append(memberItems, item)
-								}
-
-								return true, nil
-							})
-
-					if err != nil {
-						logger.Error(
-							"could not extract pool member pages",
-							"project", payload.Scope.Project,
-							"domain", payload.Scope.Domain,
-							"region", payload.Scope.Region,
-							"reason", err,
-						)
-
-						return false, err
-					}
-
+					// Create pool record
 					item := models.Pool{
 						PoolID:      pool.ID,
 						ProjectID:   pool.ProjectID,
@@ -247,8 +231,48 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 						SubnetID:    pool.SubnetID,
 						Description: pool.Description,
 					}
-
 					poolItems = append(poolItems, item)
+
+					// Enqueue task to collect pool members for this pool
+					memberPayload := CollectPoolMembersPayload{
+						Scope:    payload.Scope,
+						PoolID:   pool.ID,
+						PoolName: pool.Name,
+					}
+					data, err := json.Marshal(memberPayload)
+					if err != nil {
+						logger.Error(
+							"failed to marshal pool member payload",
+							"pool_id", pool.ID,
+							"pool_name", pool.Name,
+							"project", payload.Scope.Project,
+							"reason", err,
+						)
+
+						continue
+					}
+
+					task := asynq.NewTask(TaskCollectPoolMembers, data)
+					info, err := asynqclient.Client.Enqueue(task)
+					if err != nil {
+						logger.Error(
+							"failed to enqueue pool member collection task",
+							"pool_id", pool.ID,
+							"pool_name", pool.Name,
+							"project", payload.Scope.Project,
+							"reason", err,
+						)
+
+						continue
+					}
+
+					logger.Info(
+						"enqueued pool member collection task",
+						"task_id", info.ID,
+						"pool_id", pool.ID,
+						"pool_name", pool.Name,
+						"project", payload.Scope.Project,
+					)
 				}
 
 				return true, nil
@@ -305,11 +329,118 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 		"count", count,
 	)
 
+	return nil
+}
+
+// collectPoolMembers collects the OpenStack Pool Members for a specific pool,
+// using the client associated with the client scope in the given payload.
+func collectPoolMembers(ctx context.Context, payload CollectPoolMembersPayload) error {
+	logger := asynqutils.GetLogger(ctx)
+
+	client, ok := openstackclients.LoadBalancerClientset.Get(payload.Scope)
+	if !ok {
+		return asynqutils.SkipRetry(ClientNotFound(payload.Scope.Project))
+	}
+
+	logger.Info(
+		"collecting OpenStack pool members",
+		"pool_id", payload.PoolID,
+		"pool_name", payload.PoolName,
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
+	)
+
+	var memberCount int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			poolMembersDesc,
+			prometheus.GaugeValue,
+			float64(memberCount),
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+			payload.PoolID,
+			payload.PoolName,
+		)
+		key := metrics.Key(
+			TaskCollectPoolMembers,
+			payload.Scope.Project,
+			payload.Scope.Domain,
+			payload.Scope.Region,
+			payload.PoolID,
+		)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
+	memberItems := make([]models.PoolMember, 0)
+
+	memberOpts := pools.ListMembersOpts{
+		ProjectID: client.ProjectID,
+	}
+	err := pools.ListMembers(client.Client, payload.PoolID, memberOpts).
+		EachPage(ctx,
+			func(ctx context.Context, page pagination.Page) (bool, error) {
+				extractedMembers, err := pools.ExtractMembers(page)
+
+				if err != nil {
+					logger.Error(
+						"could not extract pool member pages",
+						"pool_id", payload.PoolID,
+						"pool_name", payload.PoolName,
+						"project", payload.Scope.Project,
+						"domain", payload.Scope.Domain,
+						"region", payload.Scope.Region,
+						"reason", err,
+					)
+
+					return false, err
+				}
+
+				for _, member := range extractedMembers {
+					var inferredGardenerShoot string
+					shoot, err := gardenerutils.InferShootFromInstanceName(ctx, member.Name)
+					if err == nil {
+						inferredGardenerShoot = shoot.TechnicalID
+					}
+
+					item := models.PoolMember{
+						MemberID:              member.ID,
+						PoolID:                payload.PoolID,
+						ProjectID:             member.ProjectID,
+						Name:                  member.Name,
+						InferredGardenerShoot: inferredGardenerShoot,
+						SubnetID:              member.SubnetID,
+						ProtocolPort:          member.ProtocolPort,
+						MemberCreatedAt:       member.CreatedAt,
+						MemberUpdatedAt:       member.UpdatedAt,
+					}
+
+					memberItems = append(memberItems, item)
+				}
+
+				return true, nil
+			})
+
+	if err != nil {
+		logger.Error(
+			"could not extract pool member pages",
+			"pool_id", payload.PoolID,
+			"pool_name", payload.PoolName,
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
+			"reason", err,
+		)
+
+		return err
+	}
+
 	if len(memberItems) == 0 {
 		return nil
 	}
 
-	out, err = db.DB.NewInsert().
+	out, err := db.DB.NewInsert().
 		Model(&memberItems).
 		On("CONFLICT (member_id, pool_id, project_id) DO UPDATE").
 		Set("name = EXCLUDED.name").
@@ -325,6 +456,8 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 	if err != nil {
 		logger.Error(
 			"could not insert pool members into db",
+			"pool_id", payload.PoolID,
+			"pool_name", payload.PoolName,
 			"project", payload.Scope.Project,
 			"domain", payload.Scope.Domain,
 			"region", payload.Scope.Region,
@@ -334,13 +467,15 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 		return err
 	}
 
-	memberCount, err := out.RowsAffected()
+	memberCount, err = out.RowsAffected()
 	if err != nil {
 		return err
 	}
 
 	logger.Info(
 		"populated openstack pool members",
+		"pool_id", payload.PoolID,
+		"pool_name", payload.PoolName,
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
