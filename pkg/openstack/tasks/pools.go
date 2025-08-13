@@ -7,6 +7,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/pools"
@@ -97,6 +98,10 @@ func HandleCollectPoolMembersTask(ctx context.Context, t *asynq.Task) error {
 
 	if err := openstackutils.IsValidProjectScope(payload.Scope); err != nil {
 		return asynqutils.SkipRetry(ErrInvalidScope)
+	}
+
+	if payload.PoolID == "" {
+		return asynqutils.SkipRetry(errors.New("empty pool ID specified"))
 	}
 
 	return collectPoolMembers(ctx, payload)
