@@ -47,8 +47,6 @@ type CollectPoolMembersPayload struct {
 	Scope openstackclients.ClientScope `json:"scope" yaml:"scope"`
 	// PoolID is the ID of the pool to collect members for.
 	PoolID string `json:"pool_id" yaml:"pool_id"`
-	// PoolName is the name of the pool.
-	PoolName string `json:"pool_name" yaml:"pool_name"`
 }
 
 // NewCollectPoolsTask creates a new [asynq.Task] for collecting OpenStack
@@ -237,7 +235,6 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 					memberPayload := CollectPoolMembersPayload{
 						Scope:    payload.Scope,
 						PoolID:   pool.ID,
-						PoolName: pool.Name,
 					}
 					data, err := json.Marshal(memberPayload)
 					if err != nil {
@@ -345,7 +342,6 @@ func collectPoolMembers(ctx context.Context, payload CollectPoolMembersPayload) 
 	logger.Info(
 		"collecting OpenStack pool members",
 		"pool_id", payload.PoolID,
-		"pool_name", payload.PoolName,
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
@@ -361,7 +357,6 @@ func collectPoolMembers(ctx context.Context, payload CollectPoolMembersPayload) 
 			payload.Scope.Domain,
 			payload.Scope.Region,
 			payload.PoolID,
-			payload.PoolName,
 		)
 		key := metrics.Key(
 			TaskCollectPoolMembers,
@@ -387,7 +382,6 @@ func collectPoolMembers(ctx context.Context, payload CollectPoolMembersPayload) 
 					logger.Error(
 						"could not extract pool member pages",
 						"pool_id", payload.PoolID,
-						"pool_name", payload.PoolName,
 						"project", payload.Scope.Project,
 						"domain", payload.Scope.Domain,
 						"region", payload.Scope.Region,
@@ -426,7 +420,6 @@ func collectPoolMembers(ctx context.Context, payload CollectPoolMembersPayload) 
 		logger.Error(
 			"could not extract pool member pages",
 			"pool_id", payload.PoolID,
-			"pool_name", payload.PoolName,
 			"project", payload.Scope.Project,
 			"domain", payload.Scope.Domain,
 			"region", payload.Scope.Region,
@@ -457,7 +450,6 @@ func collectPoolMembers(ctx context.Context, payload CollectPoolMembersPayload) 
 		logger.Error(
 			"could not insert pool members into db",
 			"pool_id", payload.PoolID,
-			"pool_name", payload.PoolName,
 			"project", payload.Scope.Project,
 			"domain", payload.Scope.Domain,
 			"region", payload.Scope.Region,
@@ -475,7 +467,6 @@ func collectPoolMembers(ctx context.Context, payload CollectPoolMembersPayload) 
 	logger.Info(
 		"populated openstack pool members",
 		"pool_id", payload.PoolID,
-		"pool_name", payload.PoolName,
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,

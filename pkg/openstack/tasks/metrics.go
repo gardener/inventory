@@ -106,7 +106,7 @@ var (
 	poolMembersDesc = prometheus.NewDesc(
 		prometheus.BuildFQName(metrics.Namespace, "", "openstack_pool_members"),
 		"A gauge which tracks the number of collected OpenStack Pool Members",
-		[]string{"project", "domain", "region", "pool_id", "pool_name"},
+		[]string{"project", "domain", "region", "pool_id"},
 		nil,
 	)
 
