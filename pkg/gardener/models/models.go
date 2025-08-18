@@ -28,6 +28,7 @@ const (
 	CloudProfileAzureImageModelName   = "g:model:cloud_profile_azure_image"
 	PersistentVolumeModelName         = "g:model:persistent_volume"
 	ProjectMemberModelName            = "g:model:project_member"
+	DNSRecordModelName                = "g:model:dns_record"
 	ShootToProjectModelName           = "g:model:link_shoot_to_project"
 	ShootToSeedModelName              = "g:model:link_shoot_to_seed"
 	MachineToShootModelName           = "g:model:link_machine_to_shoot"
@@ -51,6 +52,7 @@ var models = map[string]any{
 	CloudProfileAzureImageModelName: &CloudProfileAzureImage{},
 	PersistentVolumeModelName:       &PersistentVolume{},
 	ProjectMemberModelName:          &ProjectMember{},
+	DNSRecordModelName:              &DNSRecord{},
 
 	// Link models
 	ShootToProjectModelName:           &ShootToProject{},
@@ -311,6 +313,28 @@ type PersistentVolume struct {
 	VolumeMode        string    `bun:"volume_mode,nullzero"`
 	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
 	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
+}
+
+// DNSRecord represents a Gardener DNSRecord resource
+type DNSRecord struct {
+	bun.BaseModel `bun:"table:g_dns_record"`
+	coremodels.Model
+
+	Name               string    `bun:"name,notnull,unique:g_dns_record_key"`
+	Namespace          string    `bun:"namespace,notnull,unique:g_dns_record_key"`
+	DNSName            string    `bun:"dns_name,notnull"`
+	RecordType         string    `bun:"record_type,notnull"`
+	Values             string    `bun:"values,notnull"`
+	TTL                int       `bun:"ttl,nullzero"`
+	ProviderType       string    `bun:"provider_type,nullzero"`
+	Region             string    `bun:"region,nullzero"`
+	Zone               string    `bun:"zone,nullzero"`
+	State              string    `bun:"state,nullzero"`
+	Message            string    `bun:"message,nullzero"`
+	ObservedGeneration string    `bun:"observed_generation,nullzero"`
+	SeedName           string    `bun:"seed_name,notnull"`
+	CreationTimestamp  time.Time `bun:"creation_timestamp,nullzero"`
+	Seed               *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }
 
 // init registers the models with the [registry.ModelRegistry]
