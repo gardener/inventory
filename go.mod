@@ -46,7 +46,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.7
 	google.golang.org/api v0.246.0
 	k8s.io/api v0.33.3
-	k8s.io/apimachinery v0.33.3
+	k8s.io/apimachinery v0.33.4
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
 )
