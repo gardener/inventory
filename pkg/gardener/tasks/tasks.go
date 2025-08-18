@@ -39,6 +39,7 @@ func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 		NewCollectBackupBucketsTask,
 		NewCollectCloudProfilesTask,
 		NewCollectPersistentVolumesTask,
+		NewCollectDNSRecordsTask,
 	}
 
 	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
@@ -74,6 +75,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectAzureMachineImages, asynq.HandlerFunc(HandleCollectAzureMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectOpenStackMachineImages, asynq.HandlerFunc(HandleCollectOpenStackMachineImagesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectPersistentVolumes, asynq.HandlerFunc(HandleCollectPersistentVolumesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectDNSRecords, asynq.HandlerFunc(HandleCollectDNSRecordsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
