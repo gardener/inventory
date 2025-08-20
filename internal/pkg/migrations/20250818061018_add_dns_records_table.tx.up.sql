@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS "g_dns_record" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updated_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "name" VARCHAR NOT NULL,
+    "namespace" VARCHAR NOT NULL,
+    "dns_name" VARCHAR NOT NULL,
+    "record_type" VARCHAR NOT NULL,
+    "values" VARCHAR NOT NULL,
+    "ttl" INTEGER DEFAULT 0,
+    "provider_type" VARCHAR,
+    "region" VARCHAR,
+    "zone" VARCHAR,
+    "state" VARCHAR,
+    "description" VARCHAR,
+    "observed_generation" VARCHAR,
+    "seed_name" VARCHAR NOT NULL,
+    "creation_timestamp" TIMESTAMPTZ,
+    CONSTRAINT "g_dns_record_key" UNIQUE ("name", "namespace")
+);
