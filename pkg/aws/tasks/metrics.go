@@ -91,6 +91,15 @@ var (
 		[]string{"account_id", "region", "vpc_id"},
 		nil,
 	)
+
+	// hostedZonesDesc is the descriptor for a metric, which tracks the
+	// number of collected AWS Route53 Hosted Zones.
+	hostedZonesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "aws_hosted_zones"),
+		"A gauge which tracks the number of collected AWS Route53 Hosted Zones",
+		[]string{"account_id", "region"},
+		nil,
+	)
 )
 
 // init registers the metrics with the [metrics.DefaultCollector]
@@ -105,5 +114,6 @@ func init() {
 		instancesDesc,
 		loadBalancersDesc,
 		netInterfacesDesc,
+		hostedZonesDesc,
 	)
 }
