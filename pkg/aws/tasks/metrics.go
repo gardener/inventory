@@ -91,6 +91,33 @@ var (
 		[]string{"account_id", "region", "vpc_id"},
 		nil,
 	)
+
+	// hostedZonesDesc is the descriptor for a metric, which tracks the
+	// number of collected AWS Route53 Hosted Zones.
+	hostedZonesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "aws_hosted_zones"),
+		"A gauge which tracks the number of collected AWS Route53 Hosted Zones",
+		[]string{"account_id"},
+		nil,
+	)
+
+	// recordSetsDesc is the descriptor for a metric, which tracks the
+	// number of collected AWS Route53 DNS record sets.
+	recordSetsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "aws_record_sets"),
+		"A gauge which tracks the number of collected AWS Route53 DNS record sets",
+		[]string{"account_id", "hosted_zone_id"},
+		nil,
+	)
+
+	// recordsDesc is the descriptor for a metric, which tracks the
+	// number of collected AWS Route53 DNS records.
+	recordsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "aws_records"),
+		"A gauge which tracks the number of collected AWS Route53 DNS records",
+		[]string{"account_id", "hosted_zone_id"},
+		nil,
+	)
 )
 
 // init registers the metrics with the [metrics.DefaultCollector]
@@ -105,5 +132,6 @@ func init() {
 		instancesDesc,
 		loadBalancersDesc,
 		netInterfacesDesc,
+		hostedZonesDesc,
 	)
 }
