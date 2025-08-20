@@ -10,10 +10,10 @@ import (
 	"errors"
 	"fmt"
 
+	gardenerv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/hibiken/asynq"
 	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
@@ -164,6 +164,8 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 		return asynqutils.SkipRetry(fmt.Errorf("cannot create dynamic client for seed %q: %s", payload.Seed, err))
 	}
 
+	client := gardenerclient.DefaultClient.GardenClient()
+
 	// Define the GroupVersionResource for DNSRecord
 	gvr := schema.GroupVersionResource{
 		Group:    "extensions.gardener.cloud",
@@ -179,63 +181,45 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 	)
 	opts := metav1.ListOptions{Limit: constants.PageSize}
 	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
-		u, ok := obj.(*unstructured.Unstructured)
+		record, ok := obj.(*gardenerv1alpha1.DNSRecord)
 		if !ok {
 			return fmt.Errorf("unexpected object type: %T", obj)
 		}
 
-		// Extract DNSRecord fields
-		spec, found, err := unstructured.NestedMap(u.Object, "spec")
-		if err != nil || !found {
-			return fmt.Errorf("failed to get spec from DNSRecord: %w", err)
+		spec := record.Spec
+		status := record.Status
+
+		dnsName := spec.Name
+		recordType := spec.RecordType
+		values := spec.Values
+		ttl := spec.TTL
+
+		providerType := spec.Type
+		region := spec.Region
+		zone := spec.Zone
+
+		var state, description string
+		if status.LastOperation != nil {
+			state = status.LastOperation
+			description = status.LastOperation.Description
 		}
 
-		status, _, _ := unstructured.NestedMap(u.Object, "status")
+		observedGeneration := status.ObservedGeneration
 
-		// Extract basic fields from spec
-		dnsName, _, _ := unstructured.NestedString(spec, "name")
-		recordType, _, _ := unstructured.NestedString(spec, "recordType")
-		values, _, _ := unstructured.NestedStringSlice(spec, "values")
-		ttl, _, _ := unstructured.NestedInt64(spec, "ttl")
-
-		// Extract provider-specific fields
-		providerType, _, _ := unstructured.NestedString(spec, "type")
-		region, _, _ := unstructured.NestedString(spec, "region")
-		zone, _, _ := unstructured.NestedString(spec, "zone")
-
-		// Extract status fields
-		var state, message, observedGeneration string
-		if len(status) > 0 {
-			state, _, _ = unstructured.NestedString(status, "lastOperation", "state")
-			message, _, _ = unstructured.NestedString(status, "lastOperation", "description")
-			if gen, found, err := unstructured.NestedInt64(status, "observedGeneration"); err == nil && found {
-				observedGeneration = fmt.Sprintf("%d", gen)
-			}
-		}
-
-		// Convert values slice to comma-separated string for storage
-		var valuesStr string
-		if len(values) > 0 {
-			valuesStr = values[0]
-			if len(values) > 1 {
-				for i := 1; i < len(values); i++ {
-					valuesStr += "," + values[i]
-				}
-			}
-		}
+		allValues := strings.Join(values, ",")
 
 		item := models.DNSRecord{
 			Name:               u.GetName(),
 			Namespace:          u.GetNamespace(),
 			DNSName:            dnsName,
 			RecordType:         recordType,
-			Values:             valuesStr,
+			Values:             allValues,
 			TTL:                int(ttl),
 			ProviderType:       providerType,
 			Region:             region,
 			Zone:               zone,
 			State:              state,
-			Message:            message,
+			Description:            description,
 			ObservedGeneration: observedGeneration,
 			SeedName:           payload.Seed,
 			CreationTimestamp:  u.GetCreationTimestamp().Time,
