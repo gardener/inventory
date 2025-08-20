@@ -554,6 +554,9 @@ type AWSServices struct {
 
 	// S3 provides S3-specific service configuration
 	S3 AWSServiceConfig `yaml:"s3"`
+
+	// Route53 provides Route 53-specific service configuration
+	Route53 AWSServiceConfig `yaml:"route53"`
 }
 
 // AWSServiceConfig prvides service-specific configuration for an AWS service.
