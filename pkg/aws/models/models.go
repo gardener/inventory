@@ -27,6 +27,7 @@ const (
 	BucketModelName                         = "aws:model:bucket"
 	NetworkInterfaceModelName               = "aws:model:network_interface"
 	DHCPOptionSetModelName                  = "aws:model:dhcp_option_set"
+	HostedZoneModelName                     = "aws:model:hosted_zone"
 	RegionToAZModelName                     = "aws:model:link_region_to_az"
 	RegionToVPCModelName                    = "aws:model:link_region_to_vpc"
 	VPCToSubnetModelName                    = "aws:model:link_vpc_to_subnet"
@@ -55,6 +56,7 @@ var models = map[string]any{
 	BucketModelName:           &Bucket{},
 	NetworkInterfaceModelName: &NetworkInterface{},
 	DHCPOptionSetModelName:    &DHCPOptionSet{},
+	HostedZoneModelName:       &HostedZone{},
 
 	// Link models
 	RegionToAZModelName:                     &RegionToAZ{},
@@ -369,6 +371,24 @@ type NetworkInterface struct {
 	InstanceID          string    `bun:"instance_id,notnull"`
 	InstanceOwnerID     string    `bun:"instance_owner_id,notnull"`
 	AttachmentStatus    string    `bun:"attachment_status,notnull"`
+}
+
+// HostedZone represents an AWS Route53 Hosted Zone
+type HostedZone struct {
+	bun.BaseModel `bun:"table:aws_hosted_zone"`
+	coremodels.Model
+
+	RegionName             string `bun:"region_name,notnull"`
+	AccountID              string `bun:"account_id,notnull,unique:aws_hosted_zone_key"`
+	HostedZoneID           string `bun:"hosted_zone_id,notnull,unique:aws_hosted_zone_key"`
+	Name                   string `bun:"name,notnull"`
+	Description            string `bun:"description,notnull"`
+	CallerReference        string `bun:"caller_reference,notnull"`
+	Comment                string `bun:"comment,nullzero"`
+	IsPrivate              bool   `bun:"is_private,notnull"`
+	ResourceRecordSetCount int64  `bun:"resource_record_set_count,notnull"`
+
+	Region *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // LoadBalancerToNetworkInterface represents a link table connecting the

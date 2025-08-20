@@ -14,6 +14,10 @@ import (
 	"github.com/gardener/inventory/pkg/clients/db"
 )
 
+const (
+	hostedZoneIdPrefix = "/hostedzone/"
+)
+
 // FetchTag returns the value of the AWS tag with the key s or an empty string if the tag is not found.
 func FetchTag(tags []types.Tag, key string) string {
 	for _, t := range tags {
@@ -34,4 +38,10 @@ func GetRegionsFromDB(ctx context.Context) ([]models.Region, error) {
 	err := db.DB.NewSelect().Model(&items).Scan(ctx)
 
 	return items, err
+}
+
+func CutHostedZonePrefix(s string) string {
+	// not interested in whether it was actually found
+	result, _ := strings.CutPrefix(s, hostedZoneIdPrefix)
+	return result
 }
