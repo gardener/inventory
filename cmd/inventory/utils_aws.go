@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 
@@ -48,10 +49,11 @@ func validateAWSConfig(conf *config.Config) error {
 
 	// Make sure that services have configured named credentials
 	services := map[string][]string{
-		"ec2":   conf.AWS.Services.EC2.UseCredentials,
-		"elb":   conf.AWS.Services.ELB.UseCredentials,
-		"elbv2": conf.AWS.Services.ELBv2.UseCredentials,
-		"s3":    conf.AWS.Services.S3.UseCredentials,
+		"ec2":     conf.AWS.Services.EC2.UseCredentials,
+		"elb":     conf.AWS.Services.ELB.UseCredentials,
+		"elbv2":   conf.AWS.Services.ELBv2.UseCredentials,
+		"s3":      conf.AWS.Services.S3.UseCredentials,
+		"route53": conf.AWS.Services.Route53.UseCredentials,
 	}
 
 	for service, namedCredentials := range services {
@@ -342,6 +344,44 @@ func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 	return nil
 }
 
+// configureRoute53Clientset configures the [awsclients.Route53Clientset] registry.
+func configureRoute53Clientset(ctx context.Context, conf *config.Config) error {
+	for _, namedCreds := range conf.AWS.Services.Route53.UseCredentials {
+		awsConf, err := loadAWSConfig(ctx, conf, namedCreds)
+		if err != nil {
+			return err
+		}
+
+		// Get the caller identity information associated with the named
+		// credentials which were used to create the client and register
+		// it.
+		awsClient := route53.NewFromConfig(awsConf)
+		stsClient := sts.NewFromConfig(awsConf)
+		callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+		if err != nil {
+			return err
+		}
+		client := &awsclients.Client[*route53.Client]{
+			NamedCredentials: namedCreds,
+			AccountID:        ptr.StringFromPointer(callerIdentity.Account),
+			ARN:              ptr.StringFromPointer(callerIdentity.Arn),
+			UserID:           ptr.StringFromPointer(callerIdentity.UserId),
+			Client:           awsClient,
+		}
+		awsclients.Route53Clientset.Overwrite(client.AccountID, client)
+		slog.Info(
+			"configured AWS client",
+			"service", "route53",
+			"credentials", client.NamedCredentials,
+			"account_id", client.AccountID,
+			"arn", client.ARN,
+			"user_id", client.UserID,
+		)
+	}
+
+	return nil
+}
+
 // configureAWSClients creates the AWS clients for the supported by Inventory
 // AWS services and registers them.
 func configureAWSClients(ctx context.Context, conf *config.Config) error {
@@ -357,10 +397,11 @@ func configureAWSClients(ctx context.Context, conf *config.Config) error {
 	}
 
 	configFuncs := map[string]func(ctx context.Context, conf *config.Config) error{
-		"ec2":   configureEC2Clientset,
-		"elb":   configureELBClientset,
-		"elbv2": configureELBv2Clientset,
-		"s3":    configureS3Clientset,
+		"ec2":     configureEC2Clientset,
+		"elb":     configureELBClientset,
+		"elbv2":   configureELBv2Clientset,
+		"s3":      configureS3Clientset,
+		"route53": configureRoute53Clientset,
 	}
 
 	for svc, configFunc := range configFuncs {
