@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/hibiken/asynq"
@@ -84,6 +83,7 @@ func enqueueCollectDNSRecords(ctx context.Context) error {
 		payload := CollectDNSRecordsPayload{
 			Seed: s.Name,
 		}
+
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
@@ -186,8 +186,6 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 		namespace := item.Namespace
 		fqdn := spec.Name
 		recordType := string(spec.RecordType)
-		values := spec.Values
-		allValues := strings.Join(values, ",")
 
 		ttl := spec.TTL
 
@@ -196,19 +194,21 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 
 		creationTimestamp := item.CreationTimestamp.Time
 
-		item := models.DNSRecord{
-			Name:              name,
-			Namespace:         namespace,
-			FQDN:              fqdn,
-			RecordType:        recordType,
-			Values:            allValues,
-			TTL:               ttl,
-			Region:            region,
-			DNSZone:           dnsZone,
-			SeedName:          payload.Seed,
-			CreationTimestamp: creationTimestamp,
+		for _, value := range spec.Values {
+			record := models.DNSRecord{
+				Name:              name,
+				Namespace:         namespace,
+				FQDN:              fqdn,
+				RecordType:        recordType,
+				Value:             value,
+				TTL:               ttl,
+				Region:            region,
+				DNSZone:           dnsZone,
+				SeedName:          payload.Seed,
+				CreationTimestamp: creationTimestamp,
+			}
+			dnsRecords = append(dnsRecords, record)
 		}
-		dnsRecords = append(dnsRecords, item)
 	}
 
 	if err != nil {
@@ -221,14 +221,12 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 
 	out, err := db.DB.NewInsert().
 		Model(&dnsRecords).
-		On("CONFLICT (name, namespace) DO UPDATE").
+		On("CONFLICT (name, namespace, seed_name, value) DO UPDATE").
 		Set("fqdn = EXCLUDED.fqdn").
 		Set("record_type = EXCLUDED.record_type").
-		Set("values = EXCLUDED.values").
 		Set("ttl = EXCLUDED.ttl").
 		Set("region = EXCLUDED.region").
 		Set("dns_zone = EXCLUDED.dns_zone").
-		Set("seed_name = EXCLUDED.seed_name").
 		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").

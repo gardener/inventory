@@ -324,13 +324,13 @@ type DNSRecord struct {
 
 	Name              string    `bun:"name,notnull,unique:g_dns_record_key"`
 	Namespace         string    `bun:"namespace,notnull,unique:g_dns_record_key"`
-	FQDN              string    `bun:"fqdn,notnull"`
+	SeedName          string    `bun:"seed_name,notnull,unique:g_dns_record_key"`
+	Value             string    `bun:"value,notnull,unique:g_dns_record_key"`
 	RecordType        string    `bun:"record_type,notnull"`
-	Values            string    `bun:"values,notnull"`
+	FQDN              string    `bun:"fqdn,notnull"`
 	TTL               *int64    `bun:"ttl"`
 	Region            string    `bun:"region,nullzero"`
 	DNSZone           string    `bun:"dns_zone,notnull"`
-	SeedName          string    `bun:"seed_name,notnull"`
 	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
 	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }
@@ -342,13 +342,13 @@ type DNSEntry struct {
 
 	Name              string    `bun:"name,notnull,unique:g_dns_entry_key"`
 	Namespace         string    `bun:"namespace,notnull,unique:g_dns_entry_key"`
+	SeedName          string    `bun:"seed_name,notnull,unique:g_dns_entry_key"`
+	Value             string    `bun:"value,notnull,unique:g_dns_entry_key"`
 	FQDN              string    `bun:"fqdn,notnull"`
-	Values            string    `bun:"values,notnull"`
 	TTL               *int64    `bun:"ttl"`
 	DNSZone           string    `bun:"dns_zone,notnull"`
 	ProviderType      string    `bun:"provider_type,notnull"`
 	Provider          string    `bun:"provider,notnull"`
-	SeedName          string    `bun:"seed_name,notnull"`
 	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
 	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }
