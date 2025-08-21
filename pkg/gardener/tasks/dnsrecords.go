@@ -9,24 +9,22 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
-	gardenerv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/hibiken/asynq"
 	"github.com/prometheus/client_golang/prometheus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/tools/pager"
+	crtclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	"github.com/gardener/inventory/pkg/clients/db"
 	gardenerclient "github.com/gardener/inventory/pkg/clients/gardener"
-	"github.com/gardener/inventory/pkg/gardener/constants"
 	"github.com/gardener/inventory/pkg/gardener/models"
 	gutils "github.com/gardener/inventory/pkg/gardener/utils"
 	"github.com/gardener/inventory/pkg/metrics"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	"github.com/gardener/inventory/pkg/utils/ptr"
 )
 
 const (
@@ -89,7 +87,7 @@ func enqueueCollectDNSRecords(ctx context.Context) error {
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
-				"failed to marshal payload for Gardener DNSRecords",
+				"failed to marshal payload for Gardener DNS records",
 				"seed", s.Name,
 				"reason", err,
 			)
@@ -144,7 +142,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
-	logger.Info("collecting Gardener DNSRecords", "seed", payload.Seed)
+	logger.Info("collecting Gardener DNS records", "seed", payload.Seed)
 	restConfig, err := gardenerclient.DefaultClient.SeedRestConfig(ctx, payload.Seed)
 	if err != nil {
 		if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
@@ -158,79 +156,63 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 		return asynqutils.SkipRetry(fmt.Errorf("cannot get rest config for seed %q: %s", payload.Seed, err))
 	}
 
-	// Create dynamic client for custom resources
-	dynamicClient, err := dynamic.NewForConfig(restConfig)
+	scheme := runtime.NewScheme()
+	err = extensionsv1alpha1.AddToScheme(scheme)
 	if err != nil {
-		return asynqutils.SkipRetry(fmt.Errorf("cannot create dynamic client for seed %q: %s", payload.Seed, err))
+		return asynqutils.SkipRetry(fmt.Errorf("could not add DNS record scheme to client for seed %q: %s", payload.Seed, err))
 	}
 
-	client := gardenerclient.DefaultClient.GardenClient()
+	client, err := crtclient.New(restConfig, crtclient.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		return asynqutils.SkipRetry(fmt.Errorf("cannot create client for seed %q: %s", payload.Seed, err))
+	}
 
-	// Define the GroupVersionResource for DNSRecord
-	gvr := schema.GroupVersionResource{
-		Group:    "extensions.gardener.cloud",
-		Version:  "v1alpha1",
-		Resource: "dnsrecords",
+	var result extensionsv1alpha1.DNSRecordList
+
+	opts := make([]crtclient.ListOption, 0)
+	err = client.List(ctx, &result, opts...)
+	if err != nil {
+		return fmt.Errorf("cannot list DNS records for seed %q: %s", payload.Seed, err)
 	}
 
 	dnsRecords := make([]models.DNSRecord, 0)
-	p := pager.New(
-		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return dynamicClient.Resource(gvr).List(ctx, opts)
-		}),
-	)
-	opts := metav1.ListOptions{Limit: constants.PageSize}
-	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
-		record, ok := obj.(*gardenerv1alpha1.DNSRecord)
-		if !ok {
-			return fmt.Errorf("unexpected object type: %T", obj)
-		}
 
-		spec := record.Spec
-		status := record.Status
+	for _, item := range result.Items {
+		spec := item.Spec
 
-		dnsName := spec.Name
-		recordType := spec.RecordType
+		name := item.Name
+		namespace := item.Namespace
+		fqdn := spec.Name
+		recordType := string(spec.RecordType)
 		values := spec.Values
-		ttl := spec.TTL
-
-		providerType := spec.Type
-		region := spec.Region
-		zone := spec.Zone
-
-		var state, description string
-		if status.LastOperation != nil {
-			state = status.LastOperation
-			description = status.LastOperation.Description
-		}
-
-		observedGeneration := status.ObservedGeneration
-
 		allValues := strings.Join(values, ",")
 
+		ttl := spec.TTL
+
+		region := ptr.StringFromPointer(spec.Region)
+		dnsZone := ptr.StringFromPointer(spec.Zone)
+
+		creationTimestamp := item.CreationTimestamp.Time
+
 		item := models.DNSRecord{
-			Name:               u.GetName(),
-			Namespace:          u.GetNamespace(),
-			DNSName:            dnsName,
-			RecordType:         recordType,
-			Values:             allValues,
-			TTL:                int(ttl),
-			ProviderType:       providerType,
-			Region:             region,
-			Zone:               zone,
-			State:              state,
-			Description:            description,
-			ObservedGeneration: observedGeneration,
-			SeedName:           payload.Seed,
-			CreationTimestamp:  u.GetCreationTimestamp().Time,
+			Name:              name,
+			Namespace:         namespace,
+			FQDN:              fqdn,
+			RecordType:        recordType,
+			Values:            allValues,
+			TTL:               ttl,
+			Region:            region,
+			DNSZone:           dnsZone,
+			SeedName:          payload.Seed,
+			CreationTimestamp: creationTimestamp,
 		}
 		dnsRecords = append(dnsRecords, item)
-
-		return nil
-	})
+	}
 
 	if err != nil {
-		return fmt.Errorf("could not list DNSRecord resources for seed %q: %w", payload.Seed, err)
+		return fmt.Errorf("could not list DNS records for seed %q: %w", payload.Seed, err)
 	}
 
 	if len(dnsRecords) == 0 {
@@ -240,16 +222,12 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 	out, err := db.DB.NewInsert().
 		Model(&dnsRecords).
 		On("CONFLICT (name, namespace) DO UPDATE").
-		Set("dns_name = EXCLUDED.dns_name").
+		Set("fqdn = EXCLUDED.fqdn").
 		Set("record_type = EXCLUDED.record_type").
 		Set("values = EXCLUDED.values").
 		Set("ttl = EXCLUDED.ttl").
-		Set("provider_type = EXCLUDED.provider_type").
 		Set("region = EXCLUDED.region").
-		Set("zone = EXCLUDED.zone").
-		Set("state = EXCLUDED.state").
-		Set("message = EXCLUDED.message").
-		Set("observed_generation = EXCLUDED.observed_generation").
+		Set("dns_zone = EXCLUDED.dns_zone").
 		Set("seed_name = EXCLUDED.seed_name").
 		Set("creation_timestamp = EXCLUDED.creation_timestamp").
 		Set("updated_at = EXCLUDED.updated_at").
@@ -258,7 +236,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 
 	if err != nil {
 		logger.Error(
-			"could not insert Gardener DNSRecords into db",
+			"could not insert Gardener DNS records into db",
 			"seed", payload.Seed,
 			"reason", err,
 		)
@@ -272,7 +250,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 	}
 
 	logger.Info(
-		"populated Gardener DNSRecords",
+		"populated Gardener DNS records",
 		"seed", payload.Seed,
 		"count", count,
 	)
