@@ -42,7 +42,7 @@ type CollectHostedZonesPayload struct {
 	AccountID string `json:"account_id" yaml:"account_id"`
 }
 
-// NewCollectHostedZoneTask creates a new [asynq.Task] for collecting AWS
+// NewCollectHostedZonesTask creates a new [asynq.Task] for collecting AWS
 // Route 53 hosted zones, without specifying a payload.
 func NewCollectHostedZonesTask() *asynq.Task {
 	return asynq.NewTask(TaskCollectHostedZones, nil)
