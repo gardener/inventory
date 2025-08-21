@@ -322,21 +322,17 @@ type DNSRecord struct {
 	bun.BaseModel `bun:"table:g_dns_record"`
 	coremodels.Model
 
-	Name               string    `bun:"name,notnull,unique:g_dns_record_key"`
-	Namespace          string    `bun:"namespace,notnull,unique:g_dns_record_key"`
-	DNSName            string    `bun:"dns_name,notnull"`
-	RecordType         string    `bun:"record_type,notnull"`
-	Values             string    `bun:"values,notnull"`
-	TTL                int       `bun:"ttl,nullzero"`
-	ProviderType       string    `bun:"provider_type,nullzero"`
-	Region             string    `bun:"region,nullzero"`
-	Zone               string    `bun:"zone,nullzero"`
-	State              string    `bun:"state,nullzero"`
-	Description        string    `bun:"description,nullzero"`
-	ObservedGeneration string    `bun:"observed_generation,nullzero"`
-	SeedName           string    `bun:"seed_name,notnull"`
-	CreationTimestamp  time.Time `bun:"creation_timestamp,nullzero"`
-	Seed               *Seed     `bun:"rel:has-one,join:seed_name=name"`
+	Name              string    `bun:"name,notnull,unique:g_dns_record_key"`
+	Namespace         string    `bun:"namespace,notnull,unique:g_dns_record_key"`
+	FQDN              string    `bun:"fqdn,notnull"`
+	RecordType        string    `bun:"record_type,notnull"`
+	Values            string    `bun:"values,notnull"`
+	TTL               *int64    `bun:"ttl"`
+	Region            string    `bun:"region,nullzero"`
+	DNSZone           string    `bun:"dns_zone,notnull"`
+	SeedName          string    `bun:"seed_name,notnull"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }
 
 // DNSEntry represents a Gardener DNSEntry resource
@@ -344,21 +340,18 @@ type DNSEntry struct {
 	bun.BaseModel `bun:"table:g_dns_entry"`
 	coremodels.Model
 
-	Name               string    `bun:"name,notnull,unique:g_dns_entry_key"`
-	Namespace          string    `bun:"namespace,notnull,unique:g_dns_entry_key"`
-	DNSName            string    `bun:"dns_name,notnull"`
-	EntryType          string    `bun:"entry_type,notnull"`
-	Values             string    `bun:"values,notnull"`
-	TTL                int       `bun:"ttl,nullzero"`
-	ProviderType       string    `bun:"provider_type,nullzero"`
-	Region             string    `bun:"region,nullzero"`
-	Zone               string    `bun:"zone,nullzero"`
-	State              string    `bun:"state,nullzero"`
-	Message            string    `bun:"message,nullzero"`
-	ObservedGeneration string    `bun:"observed_generation,nullzero"`
-	SeedName           string    `bun:"seed_name,notnull"`
-	CreationTimestamp  time.Time `bun:"creation_timestamp,nullzero"`
-	Seed               *Seed     `bun:"rel:has-one,join:seed_name=name"`
+	Name              string    `bun:"name,notnull,unique:g_dns_entry_key"`
+	Namespace         string    `bun:"namespace,notnull,unique:g_dns_entry_key"`
+	FQDN              string    `bun:"fqdn,notnull"`
+	Values            string    `bun:"values,notnull"`
+	Text              string    `bun:"text,notnull"`
+	TTL               *int64    `bun:"ttl"`
+	DNSZone           string    `bun:"dns_zone,notnull"`
+	ProviderType      string    `bun:"provider_type,notnull"`
+	Provider          string    `bun:"provider,notnull"`
+	SeedName          string    `bun:"seed_name,notnull"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }
 
 // init registers the models with the [registry.ModelRegistry]
