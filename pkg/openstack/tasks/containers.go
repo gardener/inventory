@@ -21,6 +21,7 @@ import (
 	"github.com/gardener/inventory/pkg/openstack/models"
 	openstackutils "github.com/gardener/inventory/pkg/openstack/utils"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
+	dbutils "github.com/gardener/inventory/pkg/utils/db"
 )
 
 const (
@@ -162,7 +163,7 @@ func collectContainers(ctx context.Context, payload CollectContainersPayload) er
 
 	items := make([]models.Container, 0)
 
-	projects, err := openstackutils.GetResourcesFromDB[models.Project](ctx)
+	projects, err := dbutils.GetResourcesFromDB[models.Project](ctx)
 
 	if err != nil {
 		logger.Error(
