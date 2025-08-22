@@ -5,10 +5,8 @@
 package utils
 
 import (
-	"context"
 	"errors"
 
-	"github.com/gardener/inventory/pkg/clients/db"
 	openstackclients "github.com/gardener/inventory/pkg/clients/openstack"
 	"github.com/gardener/inventory/pkg/openstack/models"
 )
@@ -52,14 +50,6 @@ func IsValidProjectScope(scope openstackclients.ClientScope) error {
 	}
 
 	return nil
-}
-
-// GetResourcesFromDB fetches the given model from the database.
-func GetResourcesFromDB[T any](ctx context.Context) ([]T, error) {
-	items := make([]T, 0)
-	err := db.DB.NewSelect().Model(&items).Scan(ctx)
-
-	return items, err
 }
 
 // MatchScopeToProject matches the given scope to an OpenStack project.
