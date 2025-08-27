@@ -500,6 +500,9 @@ scheduler:
     - name: "g:task:collect-persistent-volumes"
       spec: "@every 1h"
       desc: "Collect Gardener Persistent Volumes"
+    - name: "g:task:collect-dns-records"
+      spec: "@every 1h"
+      desc: "Collect Gardener DNSRecords"
     - name: "g:task:link-all"
       spec: "@every 30m"
       desc: "Link all Gardener models"
@@ -657,6 +660,8 @@ scheduler:
           - name: "g:model:cloud_profile_azure_image"
             duration: 24h
           - name: "g:model:cloud_profile_openstack_image"
+            duration: 24h
+          - name: "g:model:dns_record"
             duration: 24h
           # GCP
           - name: "gcp:model:project"

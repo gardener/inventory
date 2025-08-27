@@ -28,6 +28,8 @@ const (
 	CloudProfileAzureImageModelName   = "g:model:cloud_profile_azure_image"
 	PersistentVolumeModelName         = "g:model:persistent_volume"
 	ProjectMemberModelName            = "g:model:project_member"
+	DNSRecordModelName                = "g:model:dns_record"
+	DNSEntryModelName                 = "g:model:dns_entry"
 	ShootToProjectModelName           = "g:model:link_shoot_to_project"
 	ShootToSeedModelName              = "g:model:link_shoot_to_seed"
 	MachineToShootModelName           = "g:model:link_machine_to_shoot"
@@ -51,6 +53,8 @@ var models = map[string]any{
 	CloudProfileAzureImageModelName: &CloudProfileAzureImage{},
 	PersistentVolumeModelName:       &PersistentVolume{},
 	ProjectMemberModelName:          &ProjectMember{},
+	DNSRecordModelName:              &DNSRecord{},
+	DNSEntryModelName:               &DNSEntry{},
 
 	// Link models
 	ShootToProjectModelName:           &ShootToProject{},
@@ -309,6 +313,42 @@ type PersistentVolume struct {
 	Capacity          string    `bun:"capacity,notnull"`
 	StorageClass      string    `bun:"storage_class,notnull"`
 	VolumeMode        string    `bun:"volume_mode,nullzero"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
+}
+
+// DNSRecord represents a Gardener DNSRecord resource
+type DNSRecord struct {
+	bun.BaseModel `bun:"table:g_dns_record"`
+	coremodels.Model
+
+	Name              string    `bun:"name,notnull,unique:g_dns_record_key"`
+	Namespace         string    `bun:"namespace,notnull,unique:g_dns_record_key"`
+	FQDN              string    `bun:"fqdn,notnull"`
+	RecordType        string    `bun:"record_type,notnull"`
+	Values            string    `bun:"values,notnull"`
+	TTL               *int64    `bun:"ttl"`
+	Region            string    `bun:"region,nullzero"`
+	DNSZone           string    `bun:"dns_zone,notnull"`
+	SeedName          string    `bun:"seed_name,notnull"`
+	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
+	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
+}
+
+// DNSEntry represents a Gardener DNSEntry resource
+type DNSEntry struct {
+	bun.BaseModel `bun:"table:g_dns_entry"`
+	coremodels.Model
+
+	Name              string    `bun:"name,notnull,unique:g_dns_entry_key"`
+	Namespace         string    `bun:"namespace,notnull,unique:g_dns_entry_key"`
+	FQDN              string    `bun:"fqdn,notnull"`
+	Values            string    `bun:"values,notnull"`
+	TTL               *int64    `bun:"ttl"`
+	DNSZone           string    `bun:"dns_zone,notnull"`
+	ProviderType      string    `bun:"provider_type,notnull"`
+	Provider          string    `bun:"provider,notnull"`
+	SeedName          string    `bun:"seed_name,notnull"`
 	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
 	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
 }

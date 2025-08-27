@@ -82,6 +82,25 @@ var (
 		[]string{"seed"},
 		nil,
 	)
+
+	// dnsRecordsDesc is the descriptor for a metric, which tracks the
+	// number of collected Gardener DNSRecords from seed clusters.
+	dnsRecordsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_dns_records"),
+		"A gauge which tracks the number of collected Gardener DNSRecords from seeds",
+		[]string{"seed"},
+		nil,
+	)
+
+	// dnsEntriesDesc is the descriptor for a metric, which tracks the
+	// number of collected Gardener DNSEntry resources from seed clusters.
+	dnsEntriesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_dns_entries"),
+		`A gauge which tracks the number of collected Gardener DNSEntry
+		resources from seeds`,
+		[]string{"seed"},
+		nil,
+	)
 )
 
 // init registers metrics with the [metrics.DefaultCollector].
@@ -95,5 +114,7 @@ func init() {
 		backupBucketsDesc,
 		cloudProfilesDesc,
 		seedVolumesDesc,
+		dnsRecordsDesc,
+		dnsEntriesDesc,
 	)
 }
