@@ -16,7 +16,6 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -27,14 +26,17 @@ import (
 )
 
 const (
-	// TaskCollectRecords is the name of the task for collecting
+	// TaskCollectRecordSets is the name of the task for collecting
 	// AWS Route 53 DNS records from hosted zones.
-	TaskCollectRecords = "aws:task:collect-record"
+	TaskCollectRecordSets = "aws:task:collect-record-sets"
 )
 
-// CollectRecordsPayload represents the payload for collecting AWS
+// CollectRecordSetsPayload represents the payload for collecting AWS
 // Route 53 DNS records from a specific hosted zone
-type CollectRecordsPayload struct {
+type CollectRecordSetsPayload struct {
+	// Region specifies the region from which to collect.
+	Region string `json:"region" yaml:"region"`
+
 	// AccountID specifies the AWS Account ID, which is associated with a
 	// registered client.
 	AccountID string `json:"account_id" yaml:"account_id"`
@@ -43,23 +45,23 @@ type CollectRecordsPayload struct {
 	HostedZoneID string `json:"hosted_zone_id" yaml:"hosted_zone_id"`
 }
 
-// NewCollectRecordsTask creates a new [asynq.Task] for collecting AWS
+// NewCollectRecordSetsTask creates a new [asynq.Task] for collecting AWS
 // Route 53 DNS records, without specifying a payload.
-func NewCollectRecordsTask() *asynq.Task {
-	return asynq.NewTask(TaskCollectRecords, nil)
+func NewCollectRecordSetsTask() *asynq.Task {
+	return asynq.NewTask(TaskCollectRecordSets, nil)
 }
 
-// HandleCollectRecordsTask handles the task for collecting AWS
+// HandleCollectRecordSetsTask handles the task for collecting AWS
 // Route 53 DNS records
-func HandleCollectRecordsTask(ctx context.Context, t *asynq.Task) error {
+func HandleCollectRecordSetsTask(ctx context.Context, t *asynq.Task) error {
 	// If we were called without a payload, then we enqueue tasks for
 	// collecting records from all known hosted zones.
 	data := t.Payload()
 	if data == nil {
-		return enqueueCollectRecords(ctx)
+		return enqueueCollectRecordSets(ctx)
 	}
 
-	var payload CollectRecordsPayload
+	var payload CollectRecordSetsPayload
 	if err := asynqutils.Unmarshal(data, &payload); err != nil {
 		return asynqutils.SkipRetry(err)
 	}
@@ -68,16 +70,20 @@ func HandleCollectRecordsTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(ErrNoAccountID)
 	}
 
+	if payload.Region == "" {
+		return asynqutils.SkipRetry(ErrNoRegion)
+	}
+
 	if payload.HostedZoneID == "" {
 		return asynqutils.SkipRetry(fmt.Errorf("hosted zone ID is required"))
 	}
 
-	return collectRecords(ctx, payload)
+	return collectRecordSets(ctx, payload)
 }
 
-// enqueueCollectRecords enqueues tasks for collecting
+// enqueueCollectRecordSets enqueues tasks for collecting
 // AWS Route53 DNS records for all known hosted zones.
-func enqueueCollectRecords(ctx context.Context) error {
+func enqueueCollectRecordSets(ctx context.Context) error {
 	hostedZones, err := dbutils.GetResourcesFromDB[models.HostedZone](ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get hosted zones: %w", err)
@@ -90,6 +96,7 @@ func enqueueCollectRecords(ctx context.Context) error {
 		if !awsclients.Route53Clientset.Exists(hz.AccountID) {
 			logger.Warn(
 				"AWS client not found",
+				"region", hz.RegionName,
 				"account_id", hz.AccountID,
 				"hosted_zone_id", hz.HostedZoneID,
 			)
@@ -97,14 +104,16 @@ func enqueueCollectRecords(ctx context.Context) error {
 			continue
 		}
 
-		payload := CollectRecordsPayload{
+		payload := CollectRecordSetsPayload{
+			Region:       hz.RegionName,
 			AccountID:    hz.AccountID,
 			HostedZoneID: hz.HostedZoneID,
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
-				"failed to marshal payload for AWS dns records",
+				"failed to marshal payload for AWS record sets",
+				"region", hz.RegionName,
 				"account_id", hz.AccountID,
 				"hosted_zone_id", hz.HostedZoneID,
 				"reason", err,
@@ -113,12 +122,13 @@ func enqueueCollectRecords(ctx context.Context) error {
 			continue
 		}
 
-		task := asynq.NewTask(TaskCollectRecords, data)
+		task := asynq.NewTask(TaskCollectRecordSets, data)
 		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
 				"failed to enqueue task",
 				"type", task.Type(),
+				"region", hz.RegionName,
 				"account_id", hz.AccountID,
 				"hosted_zone_id", hz.HostedZoneID,
 				"reason", err,
@@ -132,6 +142,7 @@ func enqueueCollectRecords(ctx context.Context) error {
 			"type", task.Type(),
 			"id", info.ID,
 			"queue", info.Queue,
+			"region", hz.RegionName,
 			"account_id", hz.AccountID,
 			"hosted_zone_id", hz.HostedZoneID,
 		)
@@ -140,11 +151,15 @@ func enqueueCollectRecords(ctx context.Context) error {
 	return nil
 }
 
-// collectRecords collects the AWS Route53 DNS records from the specified hosted zone
+// collectRecordSets collects the AWS Route53 DNS records from the specified hosted zone
 // using the client associated with the given AccountID from the payload.
-func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
+func collectRecordSets(ctx context.Context, payload CollectRecordSetsPayload) error {
 	if payload.AccountID == "" {
 		return asynqutils.SkipRetry(ErrNoAccountID)
+	}
+
+	if payload.Region == "" {
+		return asynqutils.SkipRetry(ErrNoRegion)
 	}
 
 	if payload.HostedZoneID == "" {
@@ -159,19 +174,21 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 	var count int64
 	defer func() {
 		metric := prometheus.MustNewConstMetric(
-			recordsDesc,
+			recordSetsDesc,
 			prometheus.GaugeValue,
 			float64(count),
 			payload.AccountID,
+			payload.Region,
 			payload.HostedZoneID,
 		)
-		key := metrics.Key(TaskCollectRecords, payload.AccountID, payload.HostedZoneID)
+		key := metrics.Key(TaskCollectRecordSets, payload.AccountID, payload.Region, payload.HostedZoneID)
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info(
-		"collecting AWS Route53 dns records",
+		"collecting AWS Route53 record sets",
+		"region", payload.Region,
 		"account_id", payload.AccountID,
 		"hosted_zone_id", payload.HostedZoneID,
 	)
@@ -187,14 +204,19 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 		},
 	)
 
-	recordSets := make([]types.ResourceRecordSet, 0)
+	items := make([]types.ResourceRecordSet, 0)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(
 			ctx,
+			func(o *route53.Options) {
+				o.Region = payload.Region
+			},
 		)
+
 		if err != nil {
 			logger.Error(
-				"could not list AWS dns records",
+				"could not list resource record sets",
+				"region", payload.Region,
 				"account_id", payload.AccountID,
 				"hosted_zone_id", payload.HostedZoneID,
 				"reason", err,
@@ -202,58 +224,40 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 
 			return err
 		}
-
-		recordSets = append(recordSets, page.ResourceRecordSets...)
+		items = append(items, page.ResourceRecordSets...)
 	}
 
-	records := make([]models.ResourceRecord, 0)
-	for _, set := range recordSets {
-		var dnsName string
+	recordSets := make([]models.RecordSet, 0, len(items))
+	for _, item := range items {
+		var dnsName/*, aliasHostedZoneID*/ string
 		var isAlias, evaluateHealth bool
-		if set.AliasTarget != nil && set.ResourceRecords != nil && len(set.ResourceRecords) > 0 {
-			logger.Warn("WTF, RIOT???")
-		}
-
-		name := utils.RestoreAsteriskPrefix(ptr.StringFromPointer(set.Name))
-		if set.AliasTarget != nil {
+		if item.AliasTarget != nil {
 			isAlias = true
-			dnsName = ptr.StringFromPointer(set.AliasTarget.DNSName)
-			evaluateHealth = set.AliasTarget.EvaluateTargetHealth
-			record := models.ResourceRecord{
-				AccountID:      payload.AccountID,
-				HostedZoneID:   payload.HostedZoneID,
-				Name:           name,
-				IsAlias:        isAlias,
-				Type:           string(set.Type),
-				TTL:            set.TTL,
-				SetIdentifier:  ptr.StringFromPointer(set.SetIdentifier),
-				AliasDNSName:   dnsName,
-				EvaluateHealth: evaluateHealth,
-			}
-
-			records = append(records, record)
-		} else {
-			for _, rr := range set.ResourceRecords {
-				record := models.ResourceRecord{
-					AccountID:      payload.AccountID,
-					HostedZoneID:   payload.HostedZoneID,
-					Name:           name,
-					IsAlias:        isAlias,
-					Type:           string(set.Type),
-					TTL:            set.TTL,
-					SetIdentifier:  ptr.StringFromPointer(set.SetIdentifier),
-					AliasDNSName:   dnsName,
-					EvaluateHealth: evaluateHealth,
-					Value:          ptr.StringFromPointer(rr.Value),
-				}
-				records = append(records, record)
-			}
+			dnsName = ptr.StringFromPointer(item.AliasTarget.DNSName)
+			evaluateHealth = item.AliasTarget.EvaluateTargetHealth
+			// aliasHostedZoneID = ptr.StringFromPointer(item.AliasTarget.HostedZoneId)
 		}
+
+		recordSet := models.RecordSet{
+			RegionName:     payload.Region,
+			AccountID:      payload.AccountID,
+			HostedZoneID:   payload.HostedZoneID,
+			Name:           ptr.StringFromPointer(item.Name),
+			IsAlias:        isAlias,
+			Type:           string(item.Type),
+			TTL:            item.TTL,
+			SetIdentifier:  ptr.StringFromPointer(item.SetIdentifier),
+			AliasDNSName:   dnsName,
+			EvaluateHealth: evaluateHealth,
+		}
+
+		recordSets = append(recordSets, recordSet)
 	}
 
 	out, err := db.DB.NewInsert().
-		Model(&records).
-		On("CONFLICT (account_id, hosted_zone_id, name, type, set_identifier, value) DO UPDATE").
+		Model(&recordSets).
+		On("CONFLICT (account_id, hosted_zone_id, name, type, set_identifier) DO UPDATE").
+		Set("region_name = EXCLUDED.region_name").
 		Set("is_alias = EXCLUDED.is_alias").
 		Set("ttl = EXCLUDED.ttl").
 		Set("alias_dns_name = EXCLUDED.alias_dns_name").
@@ -264,7 +268,8 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 
 	if err != nil {
 		logger.Error(
-			"could not insert dns records into db",
+			"could not insert record sets into db",
+			"region", payload.Region,
 			"account_id", payload.AccountID,
 			"hosted_zone_id", payload.HostedZoneID,
 			"reason", err,
@@ -279,10 +284,10 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 	}
 
 	logger.Info(
-		"populated AWS Route53 dns records",
+		"populated AWS Route53 record sets",
+		"region", payload.Region,
 		"account_id", payload.AccountID,
 		"hosted_zone_id", payload.HostedZoneID,
-		"slice count", len(records),
 		"count", count,
 	)
 
