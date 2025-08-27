@@ -82,6 +82,8 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectBuckets, asynq.HandlerFunc(HandleCollectBucketsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectNetworkInterfaces, asynq.HandlerFunc(HandleCollectNetworkInterfacesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectHostedZones, asynq.HandlerFunc(HandleCollectHostedZonesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectRecordSets, asynq.HandlerFunc(HandleCollectRecordSetsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectRecords, asynq.HandlerFunc(HandleCollectRecordsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
