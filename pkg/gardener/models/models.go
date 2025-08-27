@@ -344,7 +344,6 @@ type DNSEntry struct {
 	Namespace         string    `bun:"namespace,notnull,unique:g_dns_entry_key"`
 	FQDN              string    `bun:"fqdn,notnull"`
 	Values            string    `bun:"values,notnull"`
-	Text              string    `bun:"text,notnull"`
 	TTL               *int64    `bun:"ttl"`
 	DNSZone           string    `bun:"dns_zone,notnull"`
 	ProviderType      string    `bun:"provider_type,notnull"`

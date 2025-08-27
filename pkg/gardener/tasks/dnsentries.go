@@ -83,7 +83,6 @@ func enqueueCollectDNSEntries(ctx context.Context) error {
 	logger := asynqutils.GetLogger(ctx)
 	queue := asynqutils.GetQueueName(ctx)
 
-	// Create a task for each known seed cluster
 	for _, s := range seeds {
 		payload := CollectDNSEntriesPayload{
 			Seed: s.Name,
@@ -160,19 +159,10 @@ func collectDNSEntries(ctx context.Context, payload CollectDNSEntriesPayload) er
 		return asynqutils.SkipRetry(fmt.Errorf("cannot get rest config for seed %q: %s", payload.Seed, err))
 	}
 
-	// Create dynamic client for custom resources
 	client, err := dnsclientset.NewForConfig(restConfig)
 	if err != nil {
 		return asynqutils.SkipRetry(fmt.Errorf("cannot create client for dns entries %q: %s", payload.Seed, err))
 	}
-	// dynamicClient, err := dynamic.NewForConfig(restConfig)
-
-	// Define the GroupVersionResource for DNSEntries
-	// gvr := schema.GroupVersionResource{
-	// 	Group:    "extensions.gardener.cloud",
-	// 	Version:  "v1alpha1",
-	// 	Resource: "dnsentries",
-	// }
 
 	dnsEntries := make([]models.DNSEntry, 0)
 	p := pager.New(
@@ -191,14 +181,15 @@ func collectDNSEntries(ctx context.Context, payload CollectDNSEntriesPayload) er
 		name := entry.Name
 		namespace := entry.Namespace
 		fqdn := entry.Spec.DNSName
-		targets := entry.Spec.Targets
-		text := entry.Spec.Text
-		allTargets := strings.Join(targets, ",")
-		allText := strings.Join(text, ",")
+
+		// combine Spec.Targets and Spec.Text, as either one or the other
+		// can be specified
+		values := entry.Spec.Targets
+		values = append(values, entry.Spec.Text...)
+		allValues := strings.Join(values, ",")
 
 		ttl := entry.Spec.TTL
 
-		// region := ptr.StringFromPointer(entry.Spec.Region)
 		dnsZone := ptr.StringFromPointer(entry.Status.Zone)
 
 		providerType := ptr.StringFromPointer(entry.Status.ProviderType)
@@ -210,8 +201,7 @@ func collectDNSEntries(ctx context.Context, payload CollectDNSEntriesPayload) er
 			Name:              name,
 			Namespace:         namespace,
 			FQDN:              fqdn,
-			Values:            allTargets,
-			Text:              allText,
+			Values:            allValues,
 			TTL:               ttl,
 			DNSZone:           dnsZone,
 			ProviderType:      providerType,
@@ -237,7 +227,6 @@ func collectDNSEntries(ctx context.Context, payload CollectDNSEntriesPayload) er
 		On("CONFLICT (name, namespace) DO UPDATE").
 		Set("fqdn = EXCLUDED.fqdn").
 		Set("values = EXCLUDED.values").
-		Set("text = EXCLUDED.text").
 		Set("ttl = EXCLUDED.ttl").
 		Set("dns_zone = EXCLUDED.dns_zone").
 		Set("provider_type = EXCLUDED.provider_type").
