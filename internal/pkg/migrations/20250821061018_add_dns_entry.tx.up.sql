@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS "g_dns_entry" (
     "namespace" VARCHAR NOT NULL,
     "fqdn" VARCHAR NOT NULL,
     "values" VARCHAR NOT NULL,
-    "text" VARCHAR NOT NULL,
     "ttl" INTEGER,
     "dns_zone" VARCHAR NOT NULL,
     "provider_type" VARCHAR NOT NULL,
