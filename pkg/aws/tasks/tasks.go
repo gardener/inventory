@@ -84,6 +84,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectNetworkInterfaces, asynq.HandlerFunc(HandleCollectNetworkInterfacesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectDHCPOptionSets, asynq.HandlerFunc(HandleCollectDHCPOptionSetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectHostedZones, asynq.HandlerFunc(HandleCollectHostedZonesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectRecords, asynq.HandlerFunc(HandleCollectRecordsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }
