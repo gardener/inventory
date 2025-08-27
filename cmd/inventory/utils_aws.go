@@ -12,6 +12,7 @@ import (
 	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
@@ -352,10 +353,19 @@ func configureRoute53Clientset(ctx context.Context, conf *config.Config) error {
 			return err
 		}
 
+		// configure a custom retryer per client instance, so they don't share
+		// the same bucket
+		retryer := retry.NewStandard(func(o *retry.StandardOptions) {
+			o.MaxAttempts = 5
+		})
+
 		// Get the caller identity information associated with the named
 		// credentials which were used to create the client and register
 		// it.
-		awsClient := route53.NewFromConfig(awsConf)
+		awsClient := route53.NewFromConfig(awsConf, func (o *route53.Options) {
+			o.Retryer = retryer
+		})
+
 		stsClient := sts.NewFromConfig(awsConf)
 		callerIdentity, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 		if err != nil {
