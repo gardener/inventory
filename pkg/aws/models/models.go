@@ -28,6 +28,8 @@ const (
 	NetworkInterfaceModelName               = "aws:model:network_interface"
 	DHCPOptionSetModelName                  = "aws:model:dhcp_option_set"
 	HostedZoneModelName                     = "aws:model:hosted_zone"
+	RecordSetModelName                      = "aws:model:record_set"
+	ResourceRecordModelName                 = "aws:model:resource_record"
 	RegionToAZModelName                     = "aws:model:link_region_to_az"
 	RegionToVPCModelName                    = "aws:model:link_region_to_vpc"
 	VPCToSubnetModelName                    = "aws:model:link_vpc_to_subnet"
@@ -41,6 +43,7 @@ const (
 	LoadBalancerToRegionModelName           = "aws:model:link_lb_to_region"
 	LoadBalancerToNetworkInterfaceModelName = "aws:model:link_lb_to_net_interface"
 	InstanceToNetworkInterfaceModelName     = "aws:model:link_instance_to_net_interface"
+	// RecordSetToResourceRecordModelName      = "aws:model:link_record_set_to_resource_record"
 )
 
 // models specifies the mapping between name and model type, which will be
@@ -57,6 +60,8 @@ var models = map[string]any{
 	NetworkInterfaceModelName: &NetworkInterface{},
 	DHCPOptionSetModelName:    &DHCPOptionSet{},
 	HostedZoneModelName:       &HostedZone{},
+	RecordSetModelName:        &RecordSet{},
+	ResourceRecordModelName:   &ResourceRecord{},
 
 	// Link models
 	RegionToAZModelName:                     &RegionToAZ{},
@@ -72,6 +77,7 @@ var models = map[string]any{
 	LoadBalancerToRegionModelName:           &LoadBalancerToRegion{},
 	LoadBalancerToNetworkInterfaceModelName: &LoadBalancerToNetworkInterface{},
 	InstanceToNetworkInterfaceModelName:     &InstanceToNetworkInterface{},
+	// RecordSetToResourceRecordModelName:      &RecordSetToResourceRecord{},
 }
 
 // RegionToAZ represents a link table connecting the Region with AZ.
@@ -390,6 +396,58 @@ type HostedZone struct {
 
 	Region *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
+
+// RecordSet represents an AWS Route53 ResourceRecordSet
+type RecordSet struct {
+	bun.BaseModel `bun:"table:aws_record_set"`
+	coremodels.Model
+
+	RegionName     string `bun:"region_name,notnull"`
+	AccountID      string `bun:"account_id,notnull,unique:aws_record_set_key"`
+	HostedZoneID   string `bun:"hosted_zone_id,notnull,unique:aws_record_set_key"`
+	Name           string `bun:"name,notnull,unique:aws_record_set_key"`
+	Type           string `bun:"type,notnull,unique:aws_record_set_key"`
+	SetIdentifier  string `bun:"set_identifier,unique:aws_record_set_key"`
+	IsAlias        bool   `bun:"is_alias,notnull"`
+	TTL            *int64 `bun:"ttl,nullzero"`
+	AliasDNSName   string `bun:"alias_dns_name,nullzero"`
+	EvaluateHealth bool   `bun:"evaluate_health"`
+
+	Region     *Region     `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
+	HostedZone *HostedZone `bun:"rel:has-one,join:hosted_zone_id=hosted_zone_id,join:account_id=account_id"`
+}
+
+// ResourceRecord represents a Route 53 DNS record
+type ResourceRecord struct {
+	bun.BaseModel `bun:"table:aws_dns_record"`
+	coremodels.Model
+
+	RegionName     string `bun:"region_name,notnull"`
+	AccountID      string `bun:"account_id,notnull,unique:aws_record_key"`
+	HostedZoneID   string `bun:"hosted_zone_id,notnull,unique:aws_record_key"`
+	Name           string `bun:"name,notnull,unique:aws_record_key"`
+	Type           string `bun:"type,notnull,unique:aws_record_key"`
+	SetIdentifier  string `bun:"set_identifier,unique:aws_record_key"`
+	Value          string `bun:"value,notnull,unique:aws_record_key"`
+	IsAlias        bool   `bun:"is_alias,notnull"`
+	TTL            *int64 `bun:"ttl,nullzero"`
+	AliasDNSName   string `bun:"alias_dns_name,nullzero"`
+	EvaluateHealth bool   `bun:"evaluate_health"`
+
+	Region     *Region     `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
+	HostedZone *HostedZone `bun:"rel:has-one,join:hosted_zone_id=hosted_zone_id,join:account_id=account_id"`
+	// RecordSet  *RecordSet  `bun:"rel:has-one,join:record_set_id=id"`
+}
+
+// // RecordSetToResourceRecord represents a link table connecting the
+// // [RecordSet] with [ResourceRecord].
+// type RecordSetToResourceRecord struct {
+// 	bun.BaseModel `bun:"table:l_aws_record_set_to_resource_record"`
+// 	coremodels.Model
+
+// 	RecordSetID      uuid.UUID `bun:"record_set_id,notnull,type:uuid,unique:l_aws_record_set_to_resource_record_key"`
+// 	ResourceRecordID uuid.UUID `bun:"resource_record_id,notnull,type:uuid,unique:l_aws_record_set_to_resource_record_key"`
+// }
 
 // LoadBalancerToNetworkInterface represents a link table connecting the
 // [LoadBalancer] with [NetworkInterface].
