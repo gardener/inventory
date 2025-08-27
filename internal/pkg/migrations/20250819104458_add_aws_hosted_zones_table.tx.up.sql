@@ -9,7 +9,6 @@ CREATE TABLE "aws_hosted_zone" (
     "comment" TEXT,
     "is_private" BOOLEAN NOT NULL DEFAULT FALSE,
     "resource_record_set_count" BIGINT NOT NULL DEFAULT 0,
-    "region_name" TEXT NOT NULL,
 
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
