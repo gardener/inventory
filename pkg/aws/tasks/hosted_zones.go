@@ -206,7 +206,6 @@ func collectHostedZones(ctx context.Context, payload CollectHostedZonesPayload) 
 		items = append(items, page.HostedZones...)
 	}
 
-	// Create model instances from the collected data
 	hostedZones := make([]models.HostedZone, 0, len(items))
 	for _, item := range items {
 		var description string
@@ -222,10 +221,12 @@ func collectHostedZones(ctx context.Context, payload CollectHostedZonesPayload) 
 			comment = ptr.StringFromPointer(item.Config.Comment)
 		}
 
+		hostedZoneID := awsutils.CutHostedZonePrefix(ptr.StringFromPointer(item.Id))
+
 		hostedZone := models.HostedZone{
 			RegionName:             payload.Region,
 			AccountID:              payload.AccountID,
-			HostedZoneID:           ptr.StringFromPointer(item.Id),
+			HostedZoneID:           hostedZoneID,
 			Name:                   ptr.StringFromPointer(item.Name),
 			Description:            description,
 			CallerReference:        ptr.StringFromPointer(item.CallerReference),
