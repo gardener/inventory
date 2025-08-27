@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.87.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.38.0
 	github.com/gardener/gardener v1.121.1
 	github.com/gardener/gardener-extension-provider-aws v1.62.2
 	github.com/gardener/gardener-extension-provider-azure v1.53.0
