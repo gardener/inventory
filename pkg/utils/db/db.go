@@ -13,8 +13,8 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 
-	"github.com/gardener/inventory/pkg/core/config"
 	dbclient "github.com/gardener/inventory/pkg/clients/db"
+	"github.com/gardener/inventory/pkg/core/config"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
 

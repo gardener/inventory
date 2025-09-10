@@ -41,9 +41,11 @@ func GetRegionsFromDB(ctx context.Context) ([]models.Region, error) {
 	return items, err
 }
 
+// CutHostedZonePrefix removes the 'hosted-zone' prefix from AWS hosted zone IDs
 func CutHostedZonePrefix(s string) string {
 	// not interested in whether it was actually found
-	result, _ := strings.CutPrefix(s, hostedZoneIdPrefix)
+	result, _ := strings.CutPrefix(s, hostedZoneIDPrefix)
+
 	return result
 }
 
