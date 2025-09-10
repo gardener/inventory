@@ -111,7 +111,6 @@ func enqueueCollectHostedZones(ctx context.Context) error {
 		return nil
 	})
 
-
 	return err
 }
 
@@ -157,8 +156,6 @@ func collectHostedZones(ctx context.Context, payload CollectHostedZonesPayload) 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(
 			ctx,
-			func(o *route53.Options) {
-			},
 		)
 
 		if err != nil {

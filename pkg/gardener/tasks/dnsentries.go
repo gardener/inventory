@@ -164,6 +164,7 @@ func enqueueCollectDNSEntries(ctx context.Context) error {
 		"id", info.ID,
 		"queue", info.Queue,
 	)
+
 	return nil
 }
 
@@ -341,6 +342,15 @@ func collectDNSEntriesFromGarden(ctx context.Context, payload CollectDNSEntriesP
 	gardenRestConfig := gardenerclient.DefaultClient.RESTConfig()
 
 	client, err := dnsclientset.NewForConfig(gardenRestConfig)
+	if err != nil {
+		logger.Error(
+			"could not create garden client",
+			"seed", gardenClusterIdentifier,
+			"reason", err,
+		)
+
+		return err
+	}
 
 	dnsEntries := make([]models.DNSEntry, 0)
 	p := pager.New(
