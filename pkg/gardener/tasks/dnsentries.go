@@ -404,7 +404,7 @@ func collectDNSEntriesFromGarden(ctx context.Context, payload CollectDNSEntriesP
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not list dns entries for seed %q: %w", payload.Seed, err)
+		return fmt.Errorf("could not list dns entries for garden cluster: %w", err)
 	}
 
 	if len(dnsEntries) == 0 {
