@@ -437,3 +437,7 @@ func tokenIsAboutToExpire(token string) bool {
 
 	return (time.Now().UTC().Unix() + 60) > tokenPayload.Exp // gone in 60 seconds
 }
+
+func (c *Client) RESTConfig() *rest.Config {
+	return c.restConfig
+}
