@@ -346,11 +346,12 @@ func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 	return nil
 }
 
-type delayer struct {}
+type delayer struct{}
 
 func (delayer) BackoffDelay(attempt int, err error) (time.Duration, error) {
-	fmt.Printf("backoff delay: attemp: %d err: %s", attempt, err)
-	return time.Second , nil
+	fmt.Printf("backoff delay: attempt: %d err: %s", attempt, err)
+
+	return time.Second, nil
 }
 
 // configureRoute53Clientset configures the [awsclients.Route53Clientset] registry.
@@ -373,7 +374,7 @@ func configureRoute53Clientset(ctx context.Context, conf *config.Config) error {
 		// Get the caller identity information associated with the named
 		// credentials which were used to create the client and register
 		// it.
-		awsClient := route53.NewFromConfig(awsConf, func (o *route53.Options) {
+		awsClient := route53.NewFromConfig(awsConf, func(o *route53.Options) {
 			o.Retryer = retryer
 		})
 

@@ -438,6 +438,8 @@ func tokenIsAboutToExpire(token string) bool {
 	return (time.Now().UTC().Unix() + 60) > tokenPayload.Exp // gone in 60 seconds
 }
 
+// RESTConfig exposes the gardener rest config, so custom clientsets can be
+// created.
 func (c *Client) RESTConfig() *rest.Config {
 	return c.restConfig
 }
