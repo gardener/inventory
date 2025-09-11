@@ -406,7 +406,6 @@ type ResourceRecord struct {
 	Value          string `bun:"value,notnull,unique:aws_record_key"`
 	IsAlias        bool   `bun:"is_alias,notnull"`
 	TTL            *int64 `bun:"ttl,nullzero"`
-	AliasDNSName   string `bun:"alias_dns_name,nullzero"`
 	EvaluateHealth bool   `bun:"evaluate_health"`
 
 	HostedZone *HostedZone `bun:"rel:has-one,join:hosted_zone_id=hosted_zone_id,join:account_id=account_id"`
