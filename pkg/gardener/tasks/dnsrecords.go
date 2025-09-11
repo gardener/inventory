@@ -171,8 +171,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 
 	var result extensionsv1alpha1.DNSRecordList
 
-	opts := make([]crtclient.ListOption, 0)
-	err = client.List(ctx, &result, opts...)
+	err = client.List(ctx, &result)
 	if err != nil {
 		return fmt.Errorf("cannot list DNS records for seed %q: %s", payload.Seed, err)
 	}
