@@ -91,6 +91,15 @@ var (
 		[]string{"account_id", "region", "vpc_id"},
 		nil,
 	)
+
+	// dhcpOptionSetDesc is the descriptor for a metric, which tracks the
+	// number of collected AWS DHCP option sets.
+	dhcpOptionSetDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "aws_dhcp_option_set"),
+		"A gauge which tracks the number of collected AWS DHCP option sets",
+		[]string{"account_id", "region"},
+		nil,
+	)
 )
 
 // init registers the metrics with the [metrics.DefaultCollector]
@@ -105,5 +114,6 @@ func init() {
 		instancesDesc,
 		loadBalancersDesc,
 		netInterfacesDesc,
+		dhcpOptionSetDesc,
 	)
 }
