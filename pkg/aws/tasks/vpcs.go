@@ -201,15 +201,16 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 	for _, vpc := range items {
 		name := awsutils.FetchTag(vpc.Tags, "Name")
 		item := models.VPC{
-			Name:       name,
-			AccountID:  payload.AccountID,
-			VpcID:      ptr.StringFromPointer(vpc.VpcId),
-			State:      string(vpc.State),
-			IPv4CIDR:   ptr.StringFromPointer(vpc.CidrBlock),
-			IPv6CIDR:   "", // TODO: fetch IPv6 CIDR
-			IsDefault:  ptr.Value(vpc.IsDefault, false),
-			OwnerID:    ptr.StringFromPointer(vpc.OwnerId),
-			RegionName: payload.Region,
+			Name:         name,
+			AccountID:    payload.AccountID,
+			VpcID:        ptr.StringFromPointer(vpc.VpcId),
+			State:        string(vpc.State),
+			IPv4CIDR:     ptr.StringFromPointer(vpc.CidrBlock),
+			IPv6CIDR:     "", // TODO: fetch IPv6 CIDR
+			IsDefault:    ptr.Value(vpc.IsDefault, false),
+			OwnerID:      ptr.StringFromPointer(vpc.OwnerId),
+			DHCPOptionSetID: ptr.StringFromPointer(vpc.DhcpOptionsId),
+			RegionName:   payload.Region,
 		}
 		vpcs = append(vpcs, item)
 	}
@@ -227,6 +228,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 		Set("ipv6_cidr = EXCLUDED.ipv6_cidr").
 		Set("is_default = EXCLUDED.is_default").
 		Set("owner_id = EXCLUDED.owner_id").
+		Set("dhcp_option_set_id = EXCLUDED.dhcp_option_set_id").
 		Set("region_name = EXCLUDED.region_name").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
