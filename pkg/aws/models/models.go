@@ -26,6 +26,7 @@ const (
 	LoadBalancerModelName                   = "aws:model:loadbalancer"
 	BucketModelName                         = "aws:model:bucket"
 	NetworkInterfaceModelName               = "aws:model:network_interface"
+	DHCPOptionSetModelName                  = "aws:model:dhcp_option_set"
 	RegionToAZModelName                     = "aws:model:link_region_to_az"
 	RegionToVPCModelName                    = "aws:model:link_region_to_vpc"
 	VPCToSubnetModelName                    = "aws:model:link_vpc_to_subnet"
@@ -53,6 +54,7 @@ var models = map[string]any{
 	LoadBalancerModelName:     &LoadBalancer{},
 	BucketModelName:           &Bucket{},
 	NetworkInterfaceModelName: &NetworkInterface{},
+	DHCPOptionSetModelName:    &DHCPOptionSet{},
 
 	// Link models
 	RegionToAZModelName:                     &RegionToAZ{},
@@ -184,16 +186,17 @@ type VPC struct {
 	bun.BaseModel `bun:"table:aws_vpc"`
 	coremodels.Model
 
-	Name       string  `bun:"name,notnull"`
-	VpcID      string  `bun:"vpc_id,notnull,unique:aws_vpc_key"`
-	AccountID  string  `bun:"account_id,notnull,unique:aws_vpc_key"`
-	State      string  `bun:"state,notnull"`
-	IPv4CIDR   string  `bun:"ipv4_cidr,notnull"`
-	IPv6CIDR   string  `bun:"ipv6_cidr,nullzero"`
-	IsDefault  bool    `bun:"is_default,notnull"`
-	OwnerID    string  `bun:"owner_id,notnull"`
-	RegionName string  `bun:"region_name,notnull"`
-	Region     *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
+	Name            string  `bun:"name,notnull"`
+	VpcID           string  `bun:"vpc_id,notnull,unique:aws_vpc_key"`
+	AccountID       string  `bun:"account_id,notnull,unique:aws_vpc_key"`
+	State           string  `bun:"state,notnull"`
+	IPv4CIDR        string  `bun:"ipv4_cidr,notnull"`
+	IPv6CIDR        string  `bun:"ipv6_cidr,nullzero"`
+	IsDefault       bool    `bun:"is_default,notnull"`
+	OwnerID         string  `bun:"owner_id,notnull"`
+	DHCPOptionSetID string  `bun:"dhcp_option_set_id,notnull"`
+	RegionName      string  `bun:"region_name,notnull"`
+	Region          *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // Subnet represents an AWS Subnet
@@ -376,6 +379,18 @@ type LoadBalancerToNetworkInterface struct {
 
 	LoadBalancerID     uuid.UUID `bun:"lb_id,notnull,type:uuid,unique:l_aws_lb_to_net_interface_key"`
 	NetworkInterfaceID uuid.UUID `bun:"ni_id,notnull,type:uuid,unique:l_aws_lb_to_net_interface_key"`
+}
+
+// DHCPOptionSet represents an AWS DHCP option set
+type DHCPOptionSet struct {
+	bun.BaseModel `bun:"table:aws_dhcp_option_set"`
+	coremodels.Model
+
+	Name       string  `bun:"name,notnull"`
+	AccountID  string  `bun:"account_id,notnull,unique:aws_dhcp_option_set_key"`
+	SetID      string  `bun:"set_id,notnull,unique:aws_dhcp_option_set_key"`
+	RegionName string  `bun:"region_name,notnull"`
+	Region     *Region `bun:"rel:has-one,join:region_name=name,join:account_id=account_id"`
 }
 
 // init registers the models with the [registry.ModelRegistry]
