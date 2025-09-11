@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS "aws_dns_record" (
     "set_identifier" TEXT,
     "is_alias" BOOLEAN NOT NULL,
     "ttl" BIGINT,
-    "alias_dns_name" TEXT,
     "evaluate_health" BOOLEAN,
     "value" TEXT,
 
