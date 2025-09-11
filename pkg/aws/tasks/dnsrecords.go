@@ -210,7 +210,13 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 		var dnsName string
 		var isAlias, evaluateHealth bool
 		if set.AliasTarget != nil && set.ResourceRecords != nil && len(set.ResourceRecords) > 0 {
-			logger.Warn("WTF, RIOT???")
+			logger.Warn(`ambiguous state found in aws dns:
+				record is both alias and has a records set.
+				Treating as alias.`,
+				"account_id", payload.AccountID,
+				"hosted_zone_id", payload.HostedZoneID,
+				"fqdn", set.Name,
+			)
 		}
 		if set.AliasTarget != nil {
 			isAlias = true
@@ -224,8 +230,8 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 				Type:           string(set.Type),
 				TTL:            set.TTL,
 				SetIdentifier:  ptr.StringFromPointer(set.SetIdentifier),
-				AliasDNSName:   dnsName,
 				EvaluateHealth: evaluateHealth,
+				Value:          dnsName,
 			}
 
 			records = append(records, record)
@@ -239,7 +245,6 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 					Type:           string(set.Type),
 					TTL:            set.TTL,
 					SetIdentifier:  ptr.StringFromPointer(set.SetIdentifier),
-					AliasDNSName:   dnsName,
 					EvaluateHealth: evaluateHealth,
 					Value:          ptr.StringFromPointer(rr.Value),
 				}
@@ -253,7 +258,6 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 		On("CONFLICT (account_id, hosted_zone_id, name, type, set_identifier, value) DO UPDATE").
 		Set("is_alias = EXCLUDED.is_alias").
 		Set("ttl = EXCLUDED.ttl").
-		Set("alias_dns_name = EXCLUDED.alias_dns_name").
 		Set("evaluate_health = EXCLUDED.evaluate_health").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
