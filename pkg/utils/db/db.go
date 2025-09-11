@@ -13,6 +13,7 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 
+	dbclient "github.com/gardener/inventory/pkg/clients/db"
 	"github.com/gardener/inventory/pkg/core/config"
 	asynqutils "github.com/gardener/inventory/pkg/utils/asynq"
 )
@@ -49,4 +50,12 @@ func LinkObjects(ctx context.Context, db *bun.DB, items []LinkFunction) error {
 	}
 
 	return nil
+}
+
+// GetResourcesFromDB fetches the given model from the database.
+func GetResourcesFromDB[T any](ctx context.Context) ([]T, error) {
+	items := make([]T, 0)
+	err := dbclient.DB.NewSelect().Model(&items).Scan(ctx)
+
+	return items, err
 }
