@@ -201,16 +201,16 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 	for _, vpc := range items {
 		name := awsutils.FetchTag(vpc.Tags, "Name")
 		item := models.VPC{
-			Name:         name,
-			AccountID:    payload.AccountID,
-			VpcID:        ptr.StringFromPointer(vpc.VpcId),
-			State:        string(vpc.State),
-			IPv4CIDR:     ptr.StringFromPointer(vpc.CidrBlock),
-			IPv6CIDR:     "", // TODO: fetch IPv6 CIDR
-			IsDefault:    ptr.Value(vpc.IsDefault, false),
-			OwnerID:      ptr.StringFromPointer(vpc.OwnerId),
+			Name:            name,
+			AccountID:       payload.AccountID,
+			VpcID:           ptr.StringFromPointer(vpc.VpcId),
+			State:           string(vpc.State),
+			IPv4CIDR:        ptr.StringFromPointer(vpc.CidrBlock),
+			IPv6CIDR:        "", // TODO: fetch IPv6 CIDR
+			IsDefault:       ptr.Value(vpc.IsDefault, false),
+			OwnerID:         ptr.StringFromPointer(vpc.OwnerId),
 			DHCPOptionSetID: ptr.StringFromPointer(vpc.DhcpOptionsId),
-			RegionName:   payload.Region,
+			RegionName:      payload.Region,
 		}
 		vpcs = append(vpcs, item)
 	}

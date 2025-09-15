@@ -210,10 +210,10 @@ func collectDHCPOptionSets(ctx context.Context, payload CollectDHCPOptionSetsPay
 		}
 
 		item := models.DHCPOptionSet{
-			Name:         name,
-			AccountID:    payload.AccountID,
-			SetID:        *set.DhcpOptionsId,
-			RegionName:   payload.Region,
+			Name:       name,
+			AccountID:  payload.AccountID,
+			SetID:      *set.DhcpOptionsId,
+			RegionName: payload.Region,
 		}
 		dhcpOptionSets = append(dhcpOptionSets, item)
 	}
