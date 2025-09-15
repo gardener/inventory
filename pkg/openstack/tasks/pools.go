@@ -238,8 +238,8 @@ func collectPools(ctx context.Context, payload CollectPoolsPayload) error {
 
 					// Enqueue task to collect pool members for this pool
 					memberPayload := CollectPoolMembersPayload{
-						Scope:    payload.Scope,
-						PoolID:   pool.ID,
+						Scope:  payload.Scope,
+						PoolID: pool.ID,
 					}
 					data, err := json.Marshal(memberPayload)
 					if err != nil {
