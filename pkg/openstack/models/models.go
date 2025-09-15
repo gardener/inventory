@@ -34,6 +34,7 @@ const (
 	ContainerModelName            = "openstack:model:container"
 	ObjectModelName               = "openstack:model:object"
 	VolumeModelName               = "openstack:model:volume"
+	VolumeAttachmentModelName     = "openstack:model:volume_attachment"
 
 	SubnetToNetworkModelName       = "openstack:model:link_subnet_to_network"
 	SubnetToProjectModelName       = "openstack:model:link_subnet_to_project"
@@ -65,6 +66,7 @@ var models = map[string]any{
 	ContainerModelName:            &Container{},
 	ObjectModelName:               &Object{},
 	VolumeModelName:               &Volume{},
+	VolumeAttachmentModelName:     &VolumeAttachment{},
 
 	// Link models
 	SubnetToNetworkModelName:       &SubnetToNetwork{},
@@ -431,6 +433,20 @@ type Volume struct {
 	Description       string    `bun:"description,notnull"`
 	TimeCreated       time.Time `bun:"volume_created_at,notnull"`
 	TimeUpdated       time.Time `bun:"volume_updated_at,notnull"`
+}
+
+// VolumeAttachment represents an OpenStack Volume attachment.
+// A single volume can have multiple attachments.
+type VolumeAttachment struct {
+	bun.BaseModel `bun:"table:openstack_volume_attachment"`
+	coremodels.Model
+
+	AttachmentID string    `bun:"attachment_id,notnull,unique:openstack_volume_attachment_key"`
+	VolumeID     string    `bun:"volume_id,notnull"`
+	AttachedAt   time.Time `bun:"attached_at,notnull"`
+	Device       string    `bun:"device,notnull"`
+	Hostname     string    `bun:"hostname,notnull"`
+	ServerID     string    `bun:"server_id,notnull"`
 }
 
 func init() {
