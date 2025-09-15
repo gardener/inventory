@@ -160,6 +160,7 @@ func collectVolumes(ctx context.Context, payload CollectVolumesPayload) error {
 	}()
 
 	items := make([]models.Volume, 0)
+	attachments := make([]models.VolumeAttachment, 0)
 
 	opts := volumes.ListOpts{
 		TenantID: client.ProjectID,
@@ -198,6 +199,19 @@ func collectVolumes(ctx context.Context, payload CollectVolumesPayload) error {
 						Description:       v.Description,
 						TimeCreated:       v.CreatedAt,
 						TimeUpdated:       v.UpdatedAt,
+					}
+
+					for _, a := range v.Attachments {
+						attachmentItem := models.VolumeAttachment{
+							AttachmentID: a.AttachmentID,
+							VolumeID:     a.VolumeID,
+							ServerID:     a.ServerID,
+							Device:       a.Device,
+							Hostname:     a.HostName,
+							AttachedAt:   a.AttachedAt,
+						}
+
+						attachments = append(attachments, attachmentItem)
 					}
 
 					items = append(items, item)
@@ -259,6 +273,47 @@ func collectVolumes(ctx context.Context, payload CollectVolumesPayload) error {
 
 	logger.Info(
 		"populated openstack volumes",
+		"project", payload.Scope.Project,
+		"domain", payload.Scope.Domain,
+		"region", payload.Scope.Region,
+		"count", count,
+	)
+
+	if len(attachments) == 0 {
+		return nil
+	}
+
+	out, err = db.DB.NewInsert().
+		Model(&attachments).
+		On("CONFLICT (attachment_id) DO UPDATE").
+		Set("volume_id = EXCLUDED.volume_id").
+		Set("server_id = EXCLUDED.server_id").
+		Set("device = EXCLUDED.device").
+		Set("hostname = EXCLUDED.hostname").
+		Set("attached_at = EXCLUDED.attached_at").
+		Set("updated_at = EXCLUDED.updated_at").
+		Returning("id").
+		Exec(ctx)
+
+	if err != nil {
+		logger.Error(
+			"could not insert volume attachments into db",
+			"project", payload.Scope.Project,
+			"domain", payload.Scope.Domain,
+			"region", payload.Scope.Region,
+			"reason", err,
+		)
+
+		return err
+	}
+
+	count, err = out.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	logger.Info(
+		"populated openstack volume attachments",
 		"project", payload.Scope.Project,
 		"domain", payload.Scope.Domain,
 		"region", payload.Scope.Region,
