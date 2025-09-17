@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	hostedZoneIdPrefix = "/hostedzone/"
+	hostedZoneIDPrefix = "/hostedzone/"
+	route53AsteriskCode = "\\052"
 )
 
 // FetchTag returns the value of the AWS tag with the key s or an empty string if the tag is not found.
@@ -43,5 +44,17 @@ func GetRegionsFromDB(ctx context.Context) ([]models.Region, error) {
 func CutHostedZonePrefix(s string) string {
 	// not interested in whether it was actually found
 	result, _ := strings.CutPrefix(s, hostedZoneIdPrefix)
+	return result
+}
+
+// RestoreAsteriskPrefix checks whether the string starts with a \052 prefix
+// and swaps it with an asterisk for internal storage.
+// ex: \052.inventory.gardener.com becomes *.inventory.gardener.com
+func RestoreAsteriskPrefix(route string) string {
+	result, found := strings.CutPrefix(route, route53AsteriskCode)
+	if found {
+		result = "*" + result
+	}
+
 	return result
 }
