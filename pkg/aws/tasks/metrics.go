@@ -110,10 +110,10 @@ var (
 		nil,
 	)
 
-	// recordsDesc is the descriptor for a metric, which tracks the
+	// dnsRecordsDesc is the descriptor for a metric, which tracks the
 	// number of collected AWS Route53 DNS records.
-	recordsDesc = prometheus.NewDesc(
-		prometheus.BuildFQName(metrics.Namespace, "", "aws_records"),
+	dnsRecordsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "aws_dns_records"),
 		"A gauge which tracks the number of collected AWS Route53 DNS records",
 		[]string{"account_id", "hosted_zone_id"},
 		nil,
@@ -134,6 +134,6 @@ func init() {
 		netInterfacesDesc,
 		dhcpOptionSetDesc,
 		hostedZonesDesc,
-		recordsDesc,
+		dnsRecordsDesc,
 	)
 }

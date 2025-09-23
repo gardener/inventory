@@ -43,6 +43,7 @@ func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 		NewCollectNetworkInterfacesTask,
 		NewCollectDHCPOptionSetsTask,
 		NewCollectHostedZonesTask,
+		NewCollectDNSRecordsTask,
 	}
 
 	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
@@ -84,7 +85,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectNetworkInterfaces, asynq.HandlerFunc(HandleCollectNetworkInterfacesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectDHCPOptionSets, asynq.HandlerFunc(HandleCollectDHCPOptionSetsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectHostedZones, asynq.HandlerFunc(HandleCollectHostedZonesTask))
-	registry.TaskRegistry.MustRegister(TaskCollectRecords, asynq.HandlerFunc(HandleCollectRecordsTask))
+	registry.TaskRegistry.MustRegister(TaskCollectDNSRecords, asynq.HandlerFunc(HandleCollectDNSRecordsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }

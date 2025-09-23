@@ -27,39 +27,39 @@ import (
 )
 
 const (
-	// TaskCollectRecords is the name of the task for collecting
+	// TaskCollectDNSRecords is the name of the task for collecting
 	// AWS Route 53 DNS records from hosted zones.
-	TaskCollectRecords = "aws:task:collect-record"
+	TaskCollectDNSRecords = "aws:task:collect-dns-record"
 )
 
-// CollectRecordsPayload represents the payload for collecting AWS
+// CollectDNSRecordsPayload represents the payload for collecting AWS
 // Route 53 DNS records from a specific hosted zone
-type CollectRecordsPayload struct {
+type CollectDNSRecordsPayload struct {
 	// AccountID specifies the AWS Account ID, which is associated with a
 	// registered client.
 	AccountID string `json:"account_id" yaml:"account_id"`
 
-	// HostedZoneID specifies the hosted zone from which to collect records.
+	// HostedZoneID specifies the hosted zone from which to collect DNS records.
 	HostedZoneID string `json:"hosted_zone_id" yaml:"hosted_zone_id"`
 }
 
-// NewCollectRecordsTask creates a new [asynq.Task] for collecting AWS
+// NewCollectDNSRecordsTask creates a new [asynq.Task] for collecting AWS
 // Route 53 DNS records, without specifying a payload.
-func NewCollectRecordsTask() *asynq.Task {
-	return asynq.NewTask(TaskCollectRecords, nil)
+func NewCollectDNSRecordsTask() *asynq.Task {
+	return asynq.NewTask(TaskCollectDNSRecords, nil)
 }
 
-// HandleCollectRecordsTask handles the task for collecting AWS
+// HandleCollectDNSRecordsTask handles the task for collecting AWS
 // Route 53 DNS records
-func HandleCollectRecordsTask(ctx context.Context, t *asynq.Task) error {
-	// If we were called without a payload, then we enqueue tasks for
-	// collecting records from all known hosted zones.
+func HandleCollectDNSRecordsTask(ctx context.Context, t *asynq.Task) error {
+	// If were called without a payload, then enqueue tasks for
+	// collecting DNS records from all known hosted zones.
 	data := t.Payload()
 	if data == nil {
-		return enqueueCollectRecords(ctx)
+		return enqueueCollectDNSRecords(ctx)
 	}
 
-	var payload CollectRecordsPayload
+	var payload CollectDNSRecordsPayload
 	if err := asynqutils.Unmarshal(data, &payload); err != nil {
 		return asynqutils.SkipRetry(err)
 	}
@@ -72,12 +72,12 @@ func HandleCollectRecordsTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(fmt.Errorf("hosted zone ID is required"))
 	}
 
-	return collectRecords(ctx, payload)
+	return collectDNSRecords(ctx, payload)
 }
 
-// enqueueCollectRecords enqueues tasks for collecting
+// enqueueCollectDNSRecords enqueues tasks for collecting
 // AWS Route53 DNS records for all known hosted zones.
-func enqueueCollectRecords(ctx context.Context) error {
+func enqueueCollectDNSRecords(ctx context.Context) error {
 	hostedZones, err := dbutils.GetResourcesFromDB[models.HostedZone](ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get hosted zones: %w", err)
@@ -97,14 +97,14 @@ func enqueueCollectRecords(ctx context.Context) error {
 			continue
 		}
 
-		payload := CollectRecordsPayload{
+		payload := CollectDNSRecordsPayload{
 			AccountID:    hz.AccountID,
 			HostedZoneID: hz.HostedZoneID,
 		}
 		data, err := json.Marshal(payload)
 		if err != nil {
 			logger.Error(
-				"failed to marshal payload for AWS dns records",
+				"failed to marshal payload for aws dns records",
 				"account_id", hz.AccountID,
 				"hosted_zone_id", hz.HostedZoneID,
 				"reason", err,
@@ -113,7 +113,7 @@ func enqueueCollectRecords(ctx context.Context) error {
 			continue
 		}
 
-		task := asynq.NewTask(TaskCollectRecords, data)
+		task := asynq.NewTask(TaskCollectDNSRecords, data)
 		info, err := asynqclient.Client.Enqueue(task, asynq.Queue(queue))
 		if err != nil {
 			logger.Error(
@@ -140,9 +140,9 @@ func enqueueCollectRecords(ctx context.Context) error {
 	return nil
 }
 
-// collectRecords collects the AWS Route53 DNS records from the specified hosted zone
+// collectDNSRecords collects the AWS Route53 DNS records from the specified hosted zone
 // using the client associated with the given AccountID from the payload.
-func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
+func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) error {
 	if payload.AccountID == "" {
 		return asynqutils.SkipRetry(ErrNoAccountID)
 	}
@@ -159,13 +159,13 @@ func collectRecords(ctx context.Context, payload CollectRecordsPayload) error {
 	var count int64
 	defer func() {
 		metric := prometheus.MustNewConstMetric(
-			recordsDesc,
+			dnsRecordsDesc,
 			prometheus.GaugeValue,
 			float64(count),
 			payload.AccountID,
 			payload.HostedZoneID,
 		)
-		key := metrics.Key(TaskCollectRecords, payload.AccountID, payload.HostedZoneID)
+		key := metrics.Key(TaskCollectDNSRecords, payload.AccountID, payload.HostedZoneID)
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
