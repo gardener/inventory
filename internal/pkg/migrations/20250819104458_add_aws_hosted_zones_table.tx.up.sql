@@ -1,5 +1,3 @@
-SET statement_timeout = 0;
-
 CREATE TABLE "aws_hosted_zone" (
     "hosted_zone_id" TEXT NOT NULL,
     "account_id" TEXT NOT NULL,
