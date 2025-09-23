@@ -349,8 +349,6 @@ func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 type delayer struct{}
 
 func (delayer) BackoffDelay(attempt int, err error) (time.Duration, error) {
-	fmt.Printf("backoff delay: attempt: %d err: %s", attempt, err)
-
 	return time.Second, nil
 }
 
