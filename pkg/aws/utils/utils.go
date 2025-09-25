@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	hostedZoneIDPrefix = "/hostedzone/"
+	hostedZoneIDPrefix  = "/hostedzone/"
 	route53AsteriskCode = "\\052"
 )
 

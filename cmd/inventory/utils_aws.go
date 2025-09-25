@@ -346,9 +346,10 @@ func configureS3Clientset(ctx context.Context, conf *config.Config) error {
 	return nil
 }
 
-type delayer struct{}
-
-func (delayer) BackoffDelay(attempt int, err error) (time.Duration, error) {
+// BackoffDelay is a simple implementation for backoff logic, implementing
+// the BackoffDelayer interface in
+// https://github.com/aws/aws-sdk-go-v2/blob/main/aws/retry/standard.go
+func BackoffDelay(_ int, _ error) (time.Duration, error) {
 	return time.Second, nil
 }
 
@@ -360,13 +361,11 @@ func configureRoute53Clientset(ctx context.Context, conf *config.Config) error {
 			return err
 		}
 
-		var d delayer
-
 		// configure a custom retryer per client instance, so they don't share
 		// the same bucket
 		retryer := retry.NewStandard(func(o *retry.StandardOptions) {
 			o.MaxAttempts = 5
-			o.Backoff = d
+			o.Backoff = retry.BackoffDelayerFunc(BackoffDelay)
 		})
 
 		// Get the caller identity information associated with the named
