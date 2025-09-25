@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/pager"
 
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
@@ -34,7 +35,11 @@ const (
 	// DNSEntry resources.
 	TaskCollectDNSEntries = "g:task:collect-dns-entries"
 
-	gardenClusterIdentifier = "garden"
+	// GardenClusterIdentifier contains the unique identifier for the garden
+	// cluster, as separation from the rest of the seeds.
+	// Pluses added to reduce the chance of colliding with the name
+	// of a seed cluster
+	GardenClusterIdentifier = "++garden++"
 )
 
 // CollectDNSEntriesPayload is the payload, which is used for collecting Gardener
@@ -71,11 +76,7 @@ func HandleCollectDNSEntriesTask(ctx context.Context, t *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	if payload.TargetGarden {
-		return collectDNSEntries(ctx, payload)
-	}
-
-	if payload.Seed == "" {
+	if !payload.TargetGarden && payload.Seed == "" {
 		return asynqutils.SkipRetry(ErrNoSeedCluster)
 	}
 
@@ -171,17 +172,15 @@ func enqueueCollectDNSEntries(ctx context.Context) error {
 // collectDNSEntries collects the Gardener DNSentry resources from the Seed Cluster
 // specified in the payload.
 func collectDNSEntries(ctx context.Context, payload CollectDNSEntriesPayload) error {
+	logger := asynqutils.GetLogger(ctx)
+
+	var clusterIdentifier string
 	if payload.TargetGarden {
-		return collectDNSEntriesFromGarden(ctx, payload)
+		clusterIdentifier = GardenClusterIdentifier
+	} else {
+		clusterIdentifier = payload.Seed
 	}
 
-	return collectDNSEntriesFromSeed(ctx, payload)
-}
-
-// collectDNSEntriesFromSeed collects the Gardener DNSentry resources from the Seed Cluster
-// specified in the payload.
-func collectDNSEntriesFromSeed(ctx context.Context, payload CollectDNSEntriesPayload) error {
-	logger := asynqutils.GetLogger(ctx)
 	if !gardenerclient.IsDefaultClientSet() {
 		logger.Warn("gardener client not configured")
 
@@ -194,29 +193,36 @@ func collectDNSEntriesFromSeed(ctx context.Context, payload CollectDNSEntriesPay
 			dnsEntriesDesc,
 			prometheus.GaugeValue,
 			float64(count),
-			payload.Seed,
+			clusterIdentifier,
 		)
-		key := metrics.Key(TaskCollectDNSEntries, payload.Seed)
+		key := metrics.Key(TaskCollectDNSEntries, clusterIdentifier)
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
-	logger.Info("collecting Gardener DNS entries", "seed", payload.Seed)
-	restConfig, err := gardenerclient.DefaultClient.SeedRestConfig(ctx, payload.Seed)
-	if err != nil {
-		if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
-			// Don't treat excluded seeds as errors, in order to
-			// avoid accumulating archived tasks
-			logger.Warn("seed is excluded", "seed", payload.Seed)
+	logger.Info("collecting Gardener DNS entries", "cluster", clusterIdentifier)
 
-			return nil
+	var restConfig *rest.Config
+	var err error
+	if payload.TargetGarden {
+		restConfig = gardenerclient.DefaultClient.RESTConfig()
+	} else {
+		restConfig, err = gardenerclient.DefaultClient.SeedRestConfig(ctx, clusterIdentifier)
+		if err != nil {
+			if errors.Is(err, gardenerclient.ErrSeedIsExcluded) {
+				// Don't treat excluded seeds as errors, in order to
+				// avoid accumulating archived tasks
+				logger.Warn("seed is excluded", "seed", clusterIdentifier)
+
+				return nil
+			}
+
+			return asynqutils.SkipRetry(fmt.Errorf("cannot get rest config for seed %s: %w", clusterIdentifier, err))
 		}
-
-		return asynqutils.SkipRetry(fmt.Errorf("cannot get rest config for seed %q: %s", payload.Seed, err))
 	}
 
 	client, err := dnsclientset.NewForConfig(restConfig)
 	if err != nil {
-		return asynqutils.SkipRetry(fmt.Errorf("cannot create client for dns entries %q: %s", payload.Seed, err))
+		return asynqutils.SkipRetry(fmt.Errorf("cannot create client for dns entries %s: %w", clusterIdentifier, err))
 	}
 
 	dnsEntries := make([]models.DNSEntry, 0)
@@ -261,7 +267,7 @@ func collectDNSEntriesFromSeed(ctx context.Context, payload CollectDNSEntriesPay
 				DNSZone:           dnsZone,
 				ProviderType:      providerType,
 				Provider:          provider,
-				SeedName:          payload.Seed,
+				SeedName:          clusterIdentifier,
 				CreationTimestamp: creationTimestamp,
 			}
 			dnsEntries = append(dnsEntries, item)
@@ -271,140 +277,7 @@ func collectDNSEntriesFromSeed(ctx context.Context, payload CollectDNSEntriesPay
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not list dns entries for seed %q: %w", payload.Seed, err)
-	}
-
-	if len(dnsEntries) == 0 {
-		return nil
-	}
-
-	out, err := db.DB.NewInsert().
-		Model(&dnsEntries).
-		On("CONFLICT (name, namespace, seed_name, value) DO UPDATE").
-		Set("fqdn = EXCLUDED.fqdn").
-		Set("value = EXCLUDED.value").
-		Set("ttl = EXCLUDED.ttl").
-		Set("dns_zone = EXCLUDED.dns_zone").
-		Set("provider_type = EXCLUDED.provider_type").
-		Set("provider = EXCLUDED.provider").
-		Set("seed_name = EXCLUDED.seed_name").
-		Set("creation_timestamp = EXCLUDED.creation_timestamp").
-		Set("updated_at = EXCLUDED.updated_at").
-		Returning("id").
-		Exec(ctx)
-
-	if err != nil {
-		logger.Error(
-			"could not insert Gardener DNS entries into db",
-			"seed", payload.Seed,
-			"reason", err,
-		)
-
-		return err
-	}
-
-	count, err = out.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	logger.Info(
-		"populated Gardener DNS entries",
-		"seed", payload.Seed,
-		"count", count,
-	)
-
-	return nil
-}
-
-// collectDNSEntriesFromGarden collects the Gardener DNSentry resources from the Garden Cluster
-func collectDNSEntriesFromGarden(ctx context.Context, payload CollectDNSEntriesPayload) error {
-	logger := asynqutils.GetLogger(ctx)
-	if !gardenerclient.IsDefaultClientSet() {
-		logger.Warn("gardener client not configured")
-
-		return nil
-	}
-
-	var count int64
-	defer func() {
-		metric := prometheus.MustNewConstMetric(
-			dnsEntriesDesc,
-			prometheus.GaugeValue,
-			float64(count),
-			gardenClusterIdentifier,
-		)
-		key := metrics.Key(TaskCollectDNSEntries, gardenClusterIdentifier)
-		metrics.DefaultCollector.AddMetric(key, metric)
-	}()
-
-	logger.Info("collecting DNS entries for garden cluster")
-	gardenRestConfig := gardenerclient.DefaultClient.RESTConfig()
-
-	client, err := dnsclientset.NewForConfig(gardenRestConfig)
-	if err != nil {
-		logger.Error(
-			"could not create garden client",
-			"seed", gardenClusterIdentifier,
-			"reason", err,
-		)
-
-		return err
-	}
-
-	dnsEntries := make([]models.DNSEntry, 0)
-	p := pager.New(
-		pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) {
-			return client.DnsV1alpha1().DNSEntries("").List(ctx, opts)
-		}),
-	)
-
-	opts := metav1.ListOptions{Limit: constants.PageSize}
-	err = p.EachListItem(ctx, opts, func(obj runtime.Object) error {
-		entry, ok := obj.(*dnsapi.DNSEntry)
-		if !ok {
-			return fmt.Errorf("unexpected object type: %T", obj)
-		}
-
-		name := entry.Name
-		namespace := entry.Namespace
-		fqdn := entry.Spec.DNSName
-
-		// combine Spec.Targets and Spec.Text, as either one or the other
-		// can be specified
-		values := entry.Spec.Targets
-		values = append(values, entry.Spec.Text...)
-
-		ttl := entry.Spec.TTL
-
-		dnsZone := ptr.StringFromPointer(entry.Status.Zone)
-
-		providerType := ptr.StringFromPointer(entry.Status.ProviderType)
-		provider := ptr.StringFromPointer(entry.Status.Provider)
-
-		creationTimestamp := entry.CreationTimestamp.Time
-
-		for _, value := range values {
-			item := models.DNSEntry{
-				Name:              name,
-				Namespace:         namespace,
-				FQDN:              fqdn,
-				Value:             value,
-				TTL:               ttl,
-				DNSZone:           dnsZone,
-				ProviderType:      providerType,
-				Provider:          provider,
-				SeedName:          gardenClusterIdentifier,
-				CreationTimestamp: creationTimestamp,
-			}
-			dnsEntries = append(dnsEntries, item)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return fmt.Errorf("could not list dns entries for garden cluster: %w", err)
+		return fmt.Errorf("could not list dns entries for seed %q: %w", clusterIdentifier, err)
 	}
 
 	if len(dnsEntries) == 0 {
@@ -427,7 +300,7 @@ func collectDNSEntriesFromGarden(ctx context.Context, payload CollectDNSEntriesP
 	if err != nil {
 		logger.Error(
 			"could not insert Gardener DNS entries into db",
-			"seed", payload.Seed,
+			"seed", clusterIdentifier,
 			"reason", err,
 		)
 
@@ -441,7 +314,7 @@ func collectDNSEntriesFromGarden(ctx context.Context, payload CollectDNSEntriesP
 
 	logger.Info(
 		"populated Gardener DNS entries",
-		"seed", payload.Seed,
+		"seed", clusterIdentifier,
 		"count", count,
 	)
 
