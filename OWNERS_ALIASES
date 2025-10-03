@@ -1,0 +1,11 @@
+# See the OWNERS docs at https://go.k8s.io/owners
+
+aliases:
+  inventory-reviewers:
+  - Bobi-Wan
+  - dnaeon
+  - nickytd
+  inventory-approvers:
+  - Bobi-Wan
+  - dnaeon
+  - nickytd
