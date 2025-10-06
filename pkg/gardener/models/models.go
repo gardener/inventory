@@ -5,6 +5,7 @@
 package models
 
 import (
+	"net"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,6 +31,7 @@ const (
 	ProjectMemberModelName            = "g:model:project_member"
 	DNSRecordModelName                = "g:model:dns_record"
 	DNSEntryModelName                 = "g:model:dns_entry"
+	BastionModelName                  = "g:model:bastion"
 	ShootToProjectModelName           = "g:model:link_shoot_to_project"
 	ShootToSeedModelName              = "g:model:link_shoot_to_seed"
 	MachineToShootModelName           = "g:model:link_machine_to_shoot"
@@ -55,6 +57,7 @@ var models = map[string]any{
 	ProjectMemberModelName:          &ProjectMember{},
 	DNSRecordModelName:              &DNSRecord{},
 	DNSEntryModelName:               &DNSEntry{},
+	BastionModelName:                &Bastion{},
 
 	// Link models
 	ShootToProjectModelName:           &ShootToProject{},
@@ -351,6 +354,19 @@ type DNSEntry struct {
 	Provider          string    `bun:"provider,notnull"`
 	CreationTimestamp time.Time `bun:"creation_timestamp,nullzero"`
 	Seed              *Seed     `bun:"rel:has-one,join:seed_name=name"`
+}
+
+// Bastion represents a Gardener Bastion instance
+type Bastion struct {
+	bun.BaseModel `bun:"table:g_bastion"`
+	coremodels.Model
+
+	Name      string `bun:"name,notnull,unique:g_bastion_key"`
+	Namespace string `bun:"namespace,notnull,unique:g_bastion_key"`
+	SeedName  string `bun:"seed_name,notnull,unique:g_bastion_key"`
+	IP        net.IP `bun:"ip,nullzero"`
+	Hostname  string `bun:"hostname,nullzero"`
+	Seed      *Seed  `bun:"rel:has-one,join:seed_name=name"`
 }
 
 // init registers the models with the [registry.ModelRegistry]
