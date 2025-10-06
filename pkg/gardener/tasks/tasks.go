@@ -41,6 +41,7 @@ func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 		NewCollectPersistentVolumesTask,
 		NewCollectDNSRecordsTask,
 		NewCollectDNSEntriesTask,
+		NewCollectBastionsTask,
 	}
 
 	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
@@ -78,6 +79,7 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectPersistentVolumes, asynq.HandlerFunc(HandleCollectPersistentVolumesTask))
 	registry.TaskRegistry.MustRegister(TaskCollectDNSRecords, asynq.HandlerFunc(HandleCollectDNSRecordsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectDNSEntries, asynq.HandlerFunc(HandleCollectDNSEntriesTask))
+	registry.TaskRegistry.MustRegister(TaskCollectBastions, asynq.HandlerFunc(HandleCollectBastionsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectAll, asynq.HandlerFunc(HandleCollectAllTask))
 	registry.TaskRegistry.MustRegister(TaskLinkAll, asynq.HandlerFunc(HandleLinkAllTask))
 }

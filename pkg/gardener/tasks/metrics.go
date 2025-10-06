@@ -101,6 +101,15 @@ var (
 		[]string{"seed"},
 		nil,
 	)
+
+	// bastionsDesc is the descriptor for a metric, which tracks the number
+	// of collected Gardener Bastions from seed clusters.
+	bastionsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "g_bastions"),
+		"A gauge which tracks the number of collected Gardener Bastions",
+		[]string{"seed"},
+		nil,
+	)
 )
 
 // init registers metrics with the [metrics.DefaultCollector].
@@ -116,5 +125,6 @@ func init() {
 		seedVolumesDesc,
 		dnsRecordsDesc,
 		dnsEntriesDesc,
+		bastionsDesc,
 	)
 }
