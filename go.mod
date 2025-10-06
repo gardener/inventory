@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.6
 	github.com/gardener/external-dns-management v0.27.0
-	github.com/gardener/gardener v1.125.0
+	github.com/gardener/gardener v1.126.3
 	github.com/gardener/gardener-extension-provider-aws v1.62.2
 	github.com/gardener/gardener-extension-provider-azure v1.53.0
 	github.com/gardener/gardener-extension-provider-gcp v1.44.0
@@ -50,7 +50,7 @@ require (
 	k8s.io/api v0.34.1
 	k8s.io/apimachinery v0.34.1
 	k8s.io/client-go v0.34.1
-	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
+	k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d
 	sigs.k8s.io/controller-runtime v0.22.1
 )
 
