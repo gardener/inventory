@@ -31,6 +31,8 @@ const (
 	GKEClusterModelName                 = "gcp:model:gke_cluster"
 	TargetPoolModelName                 = "gcp:model:target_pool"
 	TargetPoolInstanceModelName         = "gcp:model:target_pool_instance"
+	IAMPolicyModelName                  = "gcp:model:iam_policy"
+	IAMBindingModelName                 = "gcp:model:iam_binding"
 	InstanceToProjectModelName          = "gcp:model:link_instance_to_project"
 	VPCToProjectModelName               = "gcp:model:link_vpc_to_project"
 	AddressToProjectModelName           = "gcp:model:link_addr_to_project"
@@ -60,6 +62,8 @@ var models = map[string]any{
 	GKEClusterModelName:         &GKECluster{},
 	TargetPoolModelName:         &TargetPool{},
 	TargetPoolInstanceModelName: &TargetPoolInstance{},
+	IAMPolicyModelName:          &IAMPolicy{},
+	IAMBindingModelName:         &IAMBinding{},
 
 	// Link models
 	InstanceToProjectModelName:          &InstanceToProject{},
@@ -455,6 +459,43 @@ type TargetPoolToProject struct {
 
 	TargetPoolID uuid.UUID `bun:"target_pool_id,notnull,type:uuid,unique:l_gcp_target_pool_to_project_key"`
 	ProjectID    uuid.UUID `bun:"project_id,notnull,type:uuid,unique:l_gcp_target_pool_to_project_key"`
+}
+
+// IAMPolicy represents a GCP IAM Policy attached to a resource
+// Unique per resource - in our case: projects folders and organisations.
+type IAMPolicy struct {
+	bun.BaseModel `bun:"table:gcp_iam_policy"`
+	coremodels.Model
+
+	ResourceName string       `bun:"resource_name,notnull,unique:gcp_iam_policy_key"`
+	ResourceType string       `bun:"resource_type,notnull,unique:gcp_iam_policy_key"`
+	Version      int32        `bun:"version,notnull"`
+	Bindings     []IAMBinding `bun:"rel:has-many,join:resource_name=resource_name,join:resource_type=resource_type"`
+}
+
+// IAMBinding represents a binding of a single role to principals within an IAM Policy.
+type IAMBinding struct {
+	bun.BaseModel `bun:"table:gcp_iam_binding"`
+	coremodels.Model
+
+	Role         string     `bun:"role,notnull,unique:gcp_iam_binding_key"`
+	ResourceName string     `bun:"resource_name,notnull,unique:gcp_iam_binding_key"`
+	ResourceType string     `bun:"resource_type,notnull,unique:gcp_iam_binding_key"`
+	Condition    string     `bun:"condition,nullzero"`
+	Policy       *IAMPolicy `bun:"rel:has-one,join:resource_name=resource_name,join:resource_type=resource_type"`
+}
+
+// IAMRoleMember represents a single role-principal pair in a binding.
+type IAMRoleMember struct {
+	bun.BaseModel `bun:"table:gcp_iam_role_member"`
+	coremodels.Model
+
+	Role         string      `bun:"role,notnull,unique:gcp_iam_role_member_key"`
+	Member       string      `bun:"member,notnull,unique:gcp_iam_role_member_key"`
+	ResourceName string      `bun:"resource_name,notnull,unique:gcp_iam_role_member_key"`
+	ResourceType string      `bun:"resource_type,notnull,unique:gcp_iam_role_member_key"`
+	Policy       *IAMPolicy  `bun:"rel:has-one,join:resource_name=resource_name,join:resource_type=resource_type"`
+	Binding      *IAMBinding `bun:"rel:has-one,join:resource_name=resource_name,join:resource_type=resource_type,join:role=role"`
 }
 
 // init registers the models with the [registry.ModelRegistry]
