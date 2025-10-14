@@ -109,6 +109,15 @@ var (
 		[]string{"project_id"},
 		nil,
 	)
+
+	// iamBindingsDesc is the descriptor for a metric, which tracks the number
+	// of collected GCP IAM policy bindings.
+	iamBindingsDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "gcp_iam_bindings"),
+		"A gauge which tracks the number of collected GCP IAM policy bindings",
+		[]string{"project_id"},
+		nil,
+	)
 )
 
 // init registers the metrics with the [metrics.DefaultCollector].
@@ -125,5 +134,6 @@ func init() {
 		targetPoolsDesc,
 		forwardingRulesDesc,
 		iamPoliciesDesc,
+		iamBindingsDesc,
 	)
 }
