@@ -33,6 +33,7 @@ const (
 	TargetPoolInstanceModelName         = "gcp:model:target_pool_instance"
 	IAMPolicyModelName                  = "gcp:model:iam_policy"
 	IAMBindingModelName                 = "gcp:model:iam_binding"
+	IAMRoleMemberModelName              = "gcp:model:iam_role_member"
 	InstanceToProjectModelName          = "gcp:model:link_instance_to_project"
 	VPCToProjectModelName               = "gcp:model:link_vpc_to_project"
 	AddressToProjectModelName           = "gcp:model:link_addr_to_project"
@@ -64,6 +65,7 @@ var models = map[string]any{
 	TargetPoolInstanceModelName: &TargetPoolInstance{},
 	IAMPolicyModelName:          &IAMPolicy{},
 	IAMBindingModelName:         &IAMBinding{},
+	IAMRoleMemberModelName:      &IAMRoleMember{},
 
 	// Link models
 	InstanceToProjectModelName:          &InstanceToProject{},
