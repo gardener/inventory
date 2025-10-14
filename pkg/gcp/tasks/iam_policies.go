@@ -145,6 +145,18 @@ func collectIAMPolicies(ctx context.Context, payload CollectIAMPoliciesPayload) 
 		metrics.DefaultCollector.AddMetric(key, metric)
 	}()
 
+	var bindingCount int64
+	defer func() {
+		metric := prometheus.MustNewConstMetric(
+			iamBindingsDesc,
+			prometheus.GaugeValue,
+			float64(bindingCount),
+			projectID,
+		)
+		key := metrics.Key(TaskCollectIAMPolicies, "bindings", payload.ProjectID)
+		metrics.DefaultCollector.AddMetric(key, metric)
+	}()
+
 	logger.Info("collecting GCP IAM policies", "project", projectID)
 
 	req := &iamv1.GetIamPolicyRequest{
@@ -241,7 +253,7 @@ func collectIAMPolicies(ctx context.Context, payload CollectIAMPoliciesPayload) 
 			return err
 		}
 
-		count, err = out.RowsAffected()
+		bindingCount, err = out.RowsAffected()
 		if err != nil {
 			return err
 		}
@@ -265,7 +277,7 @@ func collectIAMPolicies(ctx context.Context, payload CollectIAMPoliciesPayload) 
 			return err
 		}
 
-		count, err = out.RowsAffected()
+		_, err = out.RowsAffected()
 		if err != nil {
 			return err
 		}
