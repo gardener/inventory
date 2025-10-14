@@ -40,6 +40,7 @@ func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 		NewCollectDisksTask,
 		NewCollectGKEClustersTask,
 		NewCollectTargetPoolsTask,
+		NewCollectIAMPoliciesTask,
 	}
 
 	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
@@ -80,4 +81,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectDisks, asynq.HandlerFunc(HandleCollectDisksTask))
 	registry.TaskRegistry.MustRegister(TaskCollectGKEClusters, asynq.HandlerFunc(HandleCollectGKEClusters))
 	registry.TaskRegistry.MustRegister(TaskCollectTargetPools, asynq.HandlerFunc(HandleCollectTargetPools))
+	registry.TaskRegistry.MustRegister(TaskCollectIAMPolicies, asynq.HandlerFunc(HandleCollectIAMPoliciesTask))
 }
