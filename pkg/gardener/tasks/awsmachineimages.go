@@ -60,6 +60,18 @@ func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImages
 	logger := asynqutils.GetLogger(ctx)
 	logger.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	items := make([]models.CloudProfileAWSImage, 0)
+
+	// represents the complex key of the item. used for
+	// deduplicating records.
+	type key struct {
+		Name             string
+		Version          string
+		Region           string
+		AMI              string
+		CloudProfileName string
+	}
+	keys := make(map[key]struct{}, 0)
+
 	for _, image := range images {
 		for _, version := range image.Versions {
 			for _, region := range version.Regions {
@@ -72,6 +84,19 @@ func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImages
 					CloudProfileName: payload.CloudProfileName,
 				}
 
+				k := key{
+					Name:             item.Name,
+					Version:          item.Version,
+					Region:           item.RegionName,
+					AMI:              item.AMI,
+					CloudProfileName: item.CloudProfileName,
+				}
+
+				if _, exists := keys[k]; exists {
+					continue
+				}
+
+				keys[k] = struct{}{}
 				items = append(items, item)
 			}
 		}
