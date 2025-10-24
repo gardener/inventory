@@ -61,6 +61,17 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 	logger.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	items := make([]models.CloudProfileAzureImage, 0)
 
+	// represents the complex key of the item. used for
+	// deduplicating records.
+	type key struct {
+		Name             string
+		Version          string
+		ImageID          string
+		Architecture     string
+		CloudProfileName string
+	}
+	keys := make(map[key]struct{}, 0)
+
 	for _, image := range images {
 		for _, version := range image.Versions {
 			var imageID string
@@ -81,6 +92,19 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 				CloudProfileName: payload.CloudProfileName,
 			}
 
+			k := key{
+				Name:             item.Name,
+				Version:          item.Version,
+				ImageID:          item.ImageID,
+				Architecture:     item.Architecture,
+				CloudProfileName: item.CloudProfileName,
+			}
+
+			if _, exists := keys[k]; exists {
+				continue
+			}
+
+			keys[k] = struct{}{}
 			items = append(items, item)
 		}
 	}
