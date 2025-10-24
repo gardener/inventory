@@ -7,6 +7,8 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/gardener/gardener-extension-provider-gcp/pkg/apis/gcp"
 	gcpinstall "github.com/gardener/gardener-extension-provider-gcp/pkg/apis/gcp/install"
@@ -62,16 +64,6 @@ func collectGCPMachineImages(ctx context.Context, payload CollectCPMachineImages
 	logger.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	items := make([]models.CloudProfileGCPImage, 0)
 
-	// represents the complex key of the item. used for
-	// deduplicating records.
-	type key struct {
-		Name             string
-		Version          string
-		Image            string
-		CloudProfileName string
-	}
-	keys := make(map[key]struct{}, 0)
-
 	for _, image := range images {
 		for _, version := range image.Versions {
 			item := models.CloudProfileGCPImage{
@@ -82,21 +74,15 @@ func collectGCPMachineImages(ctx context.Context, payload CollectCPMachineImages
 				CloudProfileName: payload.CloudProfileName,
 			}
 
-			k := key{
-				Name:             item.Name,
-				Version:          item.Version,
-				Image:            item.Image,
-				CloudProfileName: item.CloudProfileName,
-			}
-
-			if _, exists := keys[k]; exists {
-				continue
-			}
-
-			keys[k] = struct{}{}
 			items = append(items, item)
 		}
 	}
+
+	if len(items) == 0 {
+		return nil
+	}
+
+	items = deduplicateGCPItemsByKey(items)
 
 	out, err := db.DB.NewInsert().
 		Model(&items).
@@ -154,4 +140,31 @@ func decodeGCPProviderConfig(rawProviderConfig []byte) (*gcp.CloudProfileConfig,
 	}
 
 	return providerConfig, nil
+}
+
+func deduplicateGCPItemsByKey(items []models.CloudProfileGCPImage) []models.CloudProfileGCPImage {
+	keyCompareFunc := func(a, b models.CloudProfileGCPImage) int {
+		if res := strings.Compare(a.CloudProfileName, b.CloudProfileName); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Name, b.Name); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Version, b.Version); res != 0 {
+			return res
+		}
+
+		return strings.Compare(a.Image, b.Image)
+	}
+
+	keyCompactFunc := func(a, b models.CloudProfileGCPImage) bool {
+		return strings.Compare(a.CloudProfileName, b.CloudProfileName) == 0 &&
+			strings.Compare(a.Name, b.Name) == 0 &&
+			strings.Compare(a.Version, b.Version) == 0 &&
+			strings.Compare(a.Image, b.Image) == 0
+	}
+
+	slices.SortFunc(items, keyCompareFunc)
+
+	return slices.CompactFunc(items, keyCompactFunc)
 }

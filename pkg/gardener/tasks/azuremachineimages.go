@@ -7,6 +7,8 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/gardener/gardener-extension-provider-azure/pkg/apis/azure"
 	azureinstall "github.com/gardener/gardener-extension-provider-azure/pkg/apis/azure/install"
@@ -61,17 +63,6 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 	logger.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	items := make([]models.CloudProfileAzureImage, 0)
 
-	// represents the complex key of the item. used for
-	// deduplicating records.
-	type key struct {
-		Name             string
-		Version          string
-		ImageID          string
-		Architecture     string
-		CloudProfileName string
-	}
-	keys := make(map[key]struct{}, 0)
-
 	for _, image := range images {
 		for _, version := range image.Versions {
 			var imageID string
@@ -92,19 +83,6 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 				CloudProfileName: payload.CloudProfileName,
 			}
 
-			k := key{
-				Name:             item.Name,
-				Version:          item.Version,
-				ImageID:          item.ImageID,
-				Architecture:     item.Architecture,
-				CloudProfileName: item.CloudProfileName,
-			}
-
-			if _, exists := keys[k]; exists {
-				continue
-			}
-
-			keys[k] = struct{}{}
 			items = append(items, item)
 		}
 	}
@@ -112,6 +90,8 @@ func collectAzureMachineImages(ctx context.Context, payload CollectCPMachineImag
 	if len(items) == 0 {
 		return nil
 	}
+
+	items = deduplicateAzureItemsByKey(items)
 
 	out, err := db.DB.NewInsert().
 		Model(&items).
@@ -168,4 +148,35 @@ func decodeAzureProviderConfig(rawProviderConfig []byte) (*azure.CloudProfileCon
 	}
 
 	return providerConfig, nil
+}
+
+func deduplicateAzureItemsByKey(items []models.CloudProfileAzureImage) []models.CloudProfileAzureImage {
+	keyCompareFunc := func(a, b models.CloudProfileAzureImage) int {
+		if res := strings.Compare(a.CloudProfileName, b.CloudProfileName); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Name, b.Name); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Version, b.Version); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Architecture, b.Architecture); res != 0 {
+			return res
+		}
+
+		return strings.Compare(a.ImageID, b.ImageID)
+	}
+
+	keyCompactFunc := func(a, b models.CloudProfileAzureImage) bool {
+		return strings.Compare(a.CloudProfileName, b.CloudProfileName) == 0 &&
+			strings.Compare(a.Name, b.Name) == 0 &&
+			strings.Compare(a.Version, b.Version) == 0 &&
+			strings.Compare(a.Architecture, b.Architecture) == 0 &&
+			strings.Compare(a.ImageID, b.ImageID) == 0
+	}
+
+	slices.SortFunc(items, keyCompareFunc)
+
+	return slices.CompactFunc(items, keyCompactFunc)
 }
