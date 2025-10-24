@@ -7,6 +7,8 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"strings"
+	"slices"
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack"
 	openstackinstall "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack/install"
@@ -81,6 +83,8 @@ func collectOpenStackMachineImages(ctx context.Context, payload CollectCPMachine
 		return nil
 	}
 
+	items = deduplicateOpenStackItemsByKey(items)
+
 	out, err := db.DB.NewInsert().
 		Model(&items).
 		On("CONFLICT (name, version, region_name, image_id, cloud_profile_name) DO UPDATE").
@@ -137,4 +141,35 @@ func decodeOpenStackProviderConfig(rawProviderConfig []byte) (*openstack.CloudPr
 	}
 
 	return providerConfig, nil
+}
+
+func deduplicateOpenStackItemsByKey(items []models.CloudProfileOpenStackImage) []models.CloudProfileOpenStackImage {
+	keyCompareFunc := func(a, b models.CloudProfileOpenStackImage) int {
+		if res := strings.Compare(a.CloudProfileName, b.CloudProfileName); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Name, b.Name); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Version, b.Version); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.RegionName, b.RegionName); res != 0 {
+			return res
+		}
+
+		return strings.Compare(a.ImageID, b.ImageID)
+	}
+
+	keyCompactFunc := func(a, b models.CloudProfileOpenStackImage) bool {
+		return strings.Compare(a.CloudProfileName, b.CloudProfileName) == 0 &&
+			strings.Compare(a.Name, b.Name) == 0 &&
+			strings.Compare(a.Version, b.Version) == 0 &&
+			strings.Compare(a.RegionName, b.RegionName) == 0 &&
+			strings.Compare(a.ImageID, b.ImageID) == 0
+	}
+
+	slices.SortFunc(items, keyCompareFunc)
+
+	return slices.CompactFunc(items, keyCompactFunc)
 }
