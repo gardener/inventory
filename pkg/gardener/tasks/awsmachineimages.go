@@ -7,6 +7,8 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws"
 	awsinstall "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/install"
@@ -61,17 +63,6 @@ func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImages
 	logger.Info("collecting machine images", "cloud_profile", payload.CloudProfileName)
 	items := make([]models.CloudProfileAWSImage, 0)
 
-	// represents the complex key of the item. used for
-	// deduplicating records.
-	type key struct {
-		Name             string
-		Version          string
-		Region           string
-		AMI              string
-		CloudProfileName string
-	}
-	keys := make(map[key]struct{}, 0)
-
 	for _, image := range images {
 		for _, version := range image.Versions {
 			for _, region := range version.Regions {
@@ -84,23 +75,16 @@ func collectAWSMachineImages(ctx context.Context, payload CollectCPMachineImages
 					CloudProfileName: payload.CloudProfileName,
 				}
 
-				k := key{
-					Name:             item.Name,
-					Version:          item.Version,
-					Region:           item.RegionName,
-					AMI:              item.AMI,
-					CloudProfileName: item.CloudProfileName,
-				}
-
-				if _, exists := keys[k]; exists {
-					continue
-				}
-
-				keys[k] = struct{}{}
 				items = append(items, item)
 			}
 		}
 	}
+
+	if len(items) == 0 {
+		return nil
+	}
+
+	items = deduplicateAWSItemsByKey(items)
 
 	out, err := db.DB.NewInsert().
 		Model(&items).
@@ -158,4 +142,35 @@ func decodeAWSProviderConfig(rawProviderConfig []byte) (*aws.CloudProfileConfig,
 	}
 
 	return providerConfig, nil
+}
+
+func deduplicateAWSItemsByKey(items []models.CloudProfileAWSImage) []models.CloudProfileAWSImage {
+	keyCompareFunc := func(a, b models.CloudProfileAWSImage) int {
+		if res := strings.Compare(a.CloudProfileName, b.CloudProfileName); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Name, b.Name); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.Version, b.Version); res != 0 {
+			return res
+		}
+		if res := strings.Compare(a.RegionName, b.RegionName); res != 0 {
+			return res
+		}
+
+		return strings.Compare(a.AMI, b.AMI)
+	}
+
+	keyCompactFunc := func(a, b models.CloudProfileAWSImage) bool {
+		return strings.Compare(a.CloudProfileName, b.CloudProfileName) == 0 &&
+			strings.Compare(a.Name, b.Name) == 0 &&
+			strings.Compare(a.Version, b.Version) == 0 &&
+			strings.Compare(a.RegionName, b.RegionName) == 0 &&
+			strings.Compare(a.AMI, b.AMI) == 0
+	}
+
+	slices.SortFunc(items, keyCompareFunc)
+
+	return slices.CompactFunc(items, keyCompactFunc)
 }
