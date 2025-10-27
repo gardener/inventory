@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.257.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.50.6
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.58.5
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.59.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.9
 	github.com/gardener/external-dns-management v0.27.0
