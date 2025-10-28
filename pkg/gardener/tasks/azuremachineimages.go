@@ -5,6 +5,7 @@
 package tasks
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -152,20 +153,13 @@ func decodeAzureProviderConfig(rawProviderConfig []byte) (*azure.CloudProfileCon
 
 func deduplicateAzureItemsByKey(items []models.CloudProfileAzureImage) []models.CloudProfileAzureImage {
 	keyCompareFunc := func(a, b models.CloudProfileAzureImage) int {
-		if res := strings.Compare(a.CloudProfileName, b.CloudProfileName); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.Name, b.Name); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.Version, b.Version); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.Architecture, b.Architecture); res != 0 {
-			return res
-		}
-
-		return strings.Compare(a.ImageID, b.ImageID)
+		return cmp.Or(
+			strings.Compare(a.CloudProfileName, b.CloudProfileName),
+			strings.Compare(a.Name, b.Name),
+			strings.Compare(a.Version, b.Version),
+			strings.Compare(a.Architecture, b.Architecture),
+			strings.Compare(a.ImageID, b.ImageID),
+		)
 	}
 
 	keyCompactFunc := func(a, b models.CloudProfileAzureImage) bool {

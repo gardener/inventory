@@ -5,6 +5,7 @@
 package tasks
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -144,17 +145,12 @@ func decodeGCPProviderConfig(rawProviderConfig []byte) (*gcp.CloudProfileConfig,
 
 func deduplicateGCPItemsByKey(items []models.CloudProfileGCPImage) []models.CloudProfileGCPImage {
 	keyCompareFunc := func(a, b models.CloudProfileGCPImage) int {
-		if res := strings.Compare(a.CloudProfileName, b.CloudProfileName); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.Name, b.Name); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.Version, b.Version); res != 0 {
-			return res
-		}
-
-		return strings.Compare(a.Image, b.Image)
+		return cmp.Or(
+			strings.Compare(a.CloudProfileName, b.CloudProfileName),
+			strings.Compare(a.Name, b.Name),
+			strings.Compare(a.Version, b.Version),
+			strings.Compare(a.Image, b.Image),
+		)
 	}
 
 	keyCompactFunc := func(a, b models.CloudProfileGCPImage) bool {
