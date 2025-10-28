@@ -5,10 +5,11 @@
 package tasks
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"strings"
 	"slices"
+	"strings"
 
 	"github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack"
 	openstackinstall "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack/install"
@@ -145,20 +146,13 @@ func decodeOpenStackProviderConfig(rawProviderConfig []byte) (*openstack.CloudPr
 
 func deduplicateOpenStackItemsByKey(items []models.CloudProfileOpenStackImage) []models.CloudProfileOpenStackImage {
 	keyCompareFunc := func(a, b models.CloudProfileOpenStackImage) int {
-		if res := strings.Compare(a.CloudProfileName, b.CloudProfileName); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.Name, b.Name); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.Version, b.Version); res != 0 {
-			return res
-		}
-		if res := strings.Compare(a.RegionName, b.RegionName); res != 0 {
-			return res
-		}
-
-		return strings.Compare(a.ImageID, b.ImageID)
+		return cmp.Or(
+			strings.Compare(a.CloudProfileName, b.CloudProfileName),
+			strings.Compare(a.Name, b.Name),
+			strings.Compare(a.Version, b.Version),
+			strings.Compare(a.RegionName, b.RegionName),
+			strings.Compare(a.ImageID, b.ImageID),
+		)
 	}
 
 	keyCompactFunc := func(a, b models.CloudProfileOpenStackImage) bool {
