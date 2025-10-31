@@ -154,10 +154,7 @@ func deduplicateGCPItemsByKey(items []models.CloudProfileGCPImage) []models.Clou
 	}
 
 	keyCompactFunc := func(a, b models.CloudProfileGCPImage) bool {
-		return strings.Compare(a.CloudProfileName, b.CloudProfileName) == 0 &&
-			strings.Compare(a.Name, b.Name) == 0 &&
-			strings.Compare(a.Version, b.Version) == 0 &&
-			strings.Compare(a.Image, b.Image) == 0
+		return keyCompareFunc(a, b) == 0
 	}
 
 	slices.SortFunc(items, keyCompareFunc)

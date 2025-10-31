@@ -157,11 +157,7 @@ func deduplicateAWSItemsByKey(items []models.CloudProfileAWSImage) []models.Clou
 	}
 
 	keyCompactFunc := func(a, b models.CloudProfileAWSImage) bool {
-		return strings.Compare(a.CloudProfileName, b.CloudProfileName) == 0 &&
-			strings.Compare(a.Name, b.Name) == 0 &&
-			strings.Compare(a.Version, b.Version) == 0 &&
-			strings.Compare(a.RegionName, b.RegionName) == 0 &&
-			strings.Compare(a.AMI, b.AMI) == 0
+		return keyCompareFunc(a, b) == 0
 	}
 
 	slices.SortFunc(items, keyCompareFunc)
