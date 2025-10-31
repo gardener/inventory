@@ -163,11 +163,7 @@ func deduplicateAzureItemsByKey(items []models.CloudProfileAzureImage) []models.
 	}
 
 	keyCompactFunc := func(a, b models.CloudProfileAzureImage) bool {
-		return strings.Compare(a.CloudProfileName, b.CloudProfileName) == 0 &&
-			strings.Compare(a.Name, b.Name) == 0 &&
-			strings.Compare(a.Version, b.Version) == 0 &&
-			strings.Compare(a.Architecture, b.Architecture) == 0 &&
-			strings.Compare(a.ImageID, b.ImageID) == 0
+		return keyCompareFunc(a, b) == 0
 	}
 
 	slices.SortFunc(items, keyCompareFunc)
