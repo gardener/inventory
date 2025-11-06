@@ -18,46 +18,48 @@ import (
 // Names for the various models provided by this package.
 // These names are used for registering models with [registry.ModelRegistry]
 const (
-	ProjectModelName                  = "g:model:project"
-	SeedModelName                     = "g:model:seed"
-	ShootModelName                    = "g:model:shoot"
-	MachineModelName                  = "g:model:machine"
-	BackupBucketModelName             = "g:model:backup_bucket"
-	CloudProfileModelName             = "g:model:cloud_profile"
-	CloudProfileAWSImageModelName     = "g:model:cloud_profile_aws_image"
-	CloudProfileGCPImageModelName     = "g:model:cloud_profile_gcp_image"
-	CloudProfileAzureImageModelName   = "g:model:cloud_profile_azure_image"
-	PersistentVolumeModelName         = "g:model:persistent_volume"
-	ProjectMemberModelName            = "g:model:project_member"
-	DNSRecordModelName                = "g:model:dns_record"
-	DNSEntryModelName                 = "g:model:dns_entry"
-	BastionModelName                  = "g:model:bastion"
-	ShootToProjectModelName           = "g:model:link_shoot_to_project"
-	ShootToSeedModelName              = "g:model:link_shoot_to_seed"
-	MachineToShootModelName           = "g:model:link_machine_to_shoot"
-	AWSImageToCloudProfileModelName   = "g:model:link_aws_image_to_cloud_profile"
-	GCPImageToCloudProfileModelName   = "g:model:link_gcp_image_to_cloud_profile"
-	AzureImageToCloudProfileModelName = "g:model:link_azure_image_to_cloud_profile"
-	ProjectToMemberModelName          = "g:model:link_project_to_member"
+	ProjectModelName                    = "g:model:project"
+	SeedModelName                       = "g:model:seed"
+	ShootModelName                      = "g:model:shoot"
+	MachineModelName                    = "g:model:machine"
+	BackupBucketModelName               = "g:model:backup_bucket"
+	CloudProfileModelName               = "g:model:cloud_profile"
+	CloudProfileAWSImageModelName       = "g:model:cloud_profile_aws_image"
+	CloudProfileGCPImageModelName       = "g:model:cloud_profile_gcp_image"
+	CloudProfileAzureImageModelName     = "g:model:cloud_profile_azure_image"
+	CloudProfileOpenStackImageModelName = "g:model:cloud_profile_openstack_image"
+	PersistentVolumeModelName           = "g:model:persistent_volume"
+	ProjectMemberModelName              = "g:model:project_member"
+	DNSRecordModelName                  = "g:model:dns_record"
+	DNSEntryModelName                   = "g:model:dns_entry"
+	BastionModelName                    = "g:model:bastion"
+	ShootToProjectModelName             = "g:model:link_shoot_to_project"
+	ShootToSeedModelName                = "g:model:link_shoot_to_seed"
+	MachineToShootModelName             = "g:model:link_machine_to_shoot"
+	AWSImageToCloudProfileModelName     = "g:model:link_aws_image_to_cloud_profile"
+	GCPImageToCloudProfileModelName     = "g:model:link_gcp_image_to_cloud_profile"
+	AzureImageToCloudProfileModelName   = "g:model:link_azure_image_to_cloud_profile"
+	ProjectToMemberModelName            = "g:model:link_project_to_member"
 )
 
 // models specifies the mapping between name and model type, which will be
 // registered with [registry.ModelRegistry].
 var models = map[string]any{
-	ProjectModelName:                &Project{},
-	SeedModelName:                   &Seed{},
-	ShootModelName:                  &Shoot{},
-	MachineModelName:                &Machine{},
-	BackupBucketModelName:           &BackupBucket{},
-	CloudProfileModelName:           &CloudProfile{},
-	CloudProfileAWSImageModelName:   &CloudProfileAWSImage{},
-	CloudProfileGCPImageModelName:   &CloudProfileGCPImage{},
-	CloudProfileAzureImageModelName: &CloudProfileAzureImage{},
-	PersistentVolumeModelName:       &PersistentVolume{},
-	ProjectMemberModelName:          &ProjectMember{},
-	DNSRecordModelName:              &DNSRecord{},
-	DNSEntryModelName:               &DNSEntry{},
-	BastionModelName:                &Bastion{},
+	ProjectModelName:                    &Project{},
+	SeedModelName:                       &Seed{},
+	ShootModelName:                      &Shoot{},
+	MachineModelName:                    &Machine{},
+	BackupBucketModelName:               &BackupBucket{},
+	CloudProfileModelName:               &CloudProfile{},
+	CloudProfileAWSImageModelName:       &CloudProfileAWSImage{},
+	CloudProfileGCPImageModelName:       &CloudProfileGCPImage{},
+	CloudProfileAzureImageModelName:     &CloudProfileAzureImage{},
+	CloudProfileOpenStackImageModelName: &CloudProfileOpenStackImage{},
+	PersistentVolumeModelName:           &PersistentVolume{},
+	ProjectMemberModelName:              &ProjectMember{},
+	DNSRecordModelName:                  &DNSRecord{},
+	DNSEntryModelName:                   &DNSEntry{},
+	BastionModelName:                    &Bastion{},
 
 	// Link models
 	ShootToProjectModelName:           &ShootToProject{},
