@@ -332,6 +332,7 @@ type DNSRecord struct {
 	SeedName          string    `bun:"seed_name,notnull,unique:g_dns_record_key"`
 	Value             string    `bun:"value,notnull,unique:g_dns_record_key"`
 	RecordType        string    `bun:"record_type,notnull"`
+	ProviderType      string    `bun:"provider_type"`
 	FQDN              string    `bun:"fqdn,notnull"`
 	TTL               *int64    `bun:"ttl"`
 	Region            string    `bun:"region,nullzero"`

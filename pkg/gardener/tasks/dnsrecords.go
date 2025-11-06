@@ -199,6 +199,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 				Namespace:         namespace,
 				FQDN:              fqdn,
 				RecordType:        recordType,
+				ProviderType:      spec.Type,
 				Value:             value,
 				TTL:               ttl,
 				Region:            region,
@@ -223,6 +224,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 		On("CONFLICT (name, namespace, seed_name, value) DO UPDATE").
 		Set("fqdn = EXCLUDED.fqdn").
 		Set("record_type = EXCLUDED.record_type").
+		Set("provider_type = EXCLUDED.provider_type").
 		Set("ttl = EXCLUDED.ttl").
 		Set("region = EXCLUDED.region").
 		Set("dns_zone = EXCLUDED.dns_zone").
