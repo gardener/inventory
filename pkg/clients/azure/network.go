@@ -25,3 +25,7 @@ var VirtualNetworksClientset = registry.New[string, *Client[*armnetwork.VirtualN
 // SubnetsClientset provides the registry of Azure API clients
 // for interfacing with Subnets.
 var SubnetsClientset = registry.New[string, *Client[*armnetwork.SubnetsClient]]()
+
+// NetworkInterfacesClientset provides the registry of Azure API clients
+// for interfacing with Network Interfaces.
+var NetworkInterfacesClientset = registry.New[string, *Client[*armnetwork.InterfacesClient]]()
