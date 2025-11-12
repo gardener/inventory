@@ -91,6 +91,15 @@ var (
 		[]string{"subscription_id", "resource_group"},
 		nil,
 	)
+
+	// networkInterfacesDesc is the descriptor for a metric, which tracks the
+	// number of collected Azure Network Interfaces.
+	networkInterfacesDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(metrics.Namespace, "", "az_network_interfaces"),
+		"A gauge which tracks the number of collected Azure Network Interfaces",
+		[]string{"subscription_id", "resource_group"},
+		nil,
+	)
 )
 
 // init registers the metric descriptors with the [metrics.DefaultCollector].
@@ -105,5 +114,6 @@ func init() {
 		publicAddressesDesc,
 		storageAccountsDesc,
 		virtualMachinesDesc,
+		networkInterfacesDesc,
 	)
 }
