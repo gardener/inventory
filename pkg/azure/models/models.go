@@ -21,6 +21,7 @@ const (
 	SubscriptionModelName                  = "az:model:subscription"
 	ResourceGroupModelName                 = "az:model:resource_group"
 	VirtualMachineModelName                = "az:model:vm"
+	NetworkInterfaceModelName              = "az:model:network_interface"
 	PublicAddressModelName                 = "az:model:public_address"
 	LoadBalancerModelName                  = "az:model:loadbalancer"
 	VPCModelName                           = "az:model:vpc"
@@ -40,16 +41,17 @@ const (
 // models specifies the mapping between name and model type, which will be
 // registered with [registry.ModelRegistry].
 var models = map[string]any{
-	SubscriptionModelName:   &Subscription{},
-	ResourceGroupModelName:  &ResourceGroup{},
-	VirtualMachineModelName: &VirtualMachine{},
-	PublicAddressModelName:  &PublicAddress{},
-	LoadBalancerModelName:   &LoadBalancer{},
-	VPCModelName:            &VPC{},
-	SubnetModelName:         &Subnet{},
-	StorageAccountModelName: &StorageAccount{},
-	BlobContainerModelName:  &BlobContainer{},
-	UserModelName:           &User{},
+	SubscriptionModelName:     &Subscription{},
+	ResourceGroupModelName:    &ResourceGroup{},
+	VirtualMachineModelName:   &VirtualMachine{},
+	NetworkInterfaceModelName: &NetworkInterface{},
+	PublicAddressModelName:    &PublicAddress{},
+	LoadBalancerModelName:     &LoadBalancer{},
+	VPCModelName:              &VPC{},
+	SubnetModelName:           &Subnet{},
+	StorageAccountModelName:   &StorageAccount{},
+	BlobContainerModelName:    &BlobContainer{},
+	UserModelName:             &User{},
 
 	// Link models
 	ResourceGroupToSubscriptionModelName:   &ResourceGroupToSubscription{},
@@ -122,6 +124,55 @@ type VirtualMachineToResourceGroup struct {
 
 	ResourceGroupID uuid.UUID `bun:"rg_id,notnull,type:uuid,unique:l_az_vm_to_rg_key"`
 	VMID            uuid.UUID `bun:"vm_id,notnull,type:uuid,unique:l_az_vm_to_rg_key"`
+}
+
+// NetworkInterface represents an Azure Network Interface.
+type NetworkInterface struct {
+	bun.BaseModel `bun:"table:az_network_interface"`
+	coremodels.Model
+
+	Name                 string          `bun:"name,notnull,unique:az_network_interface_key"`
+	SubscriptionID       string          `bun:"subscription_id,notnull,unique:az_network_interface_key"`
+	ResourceGroupName    string          `bun:"resource_group,notnull,unique:az_network_interface_key"`
+	Location             string          `bun:"location,notnull"`
+	ProvisioningState    string          `bun:"provisioning_state,notnull"`
+	MacAddress           string          `bun:"mac_address,nullzero"`
+	NICType              string          `bun:"nic_type,nullzero"`
+	PrimaryNIC           bool            `bun:"primary_nic,notnull"`
+	VMName               string          `bun:"vm_name,nullzero"`
+	VPCName              string          `bun:"vpc_name,nullzero"`
+	SubnetName           string          `bun:"subnet_name,nullzero"`
+	PrivateIP            net.IP          `bun:"private_ip,nullzero,type:inet"`
+	PrivateIPAllocation  string          `bun:"private_ip_allocation,nullzero"`
+	PublicIPName         string          `bun:"public_ip_name,nullzero"`
+	NetworkSecurityGroup string          `bun:"network_security_group,nullzero"`
+	IPForwardingEnabled  bool            `bun:"ip_forwarding_enabled,notnull"`
+	Subscription         *Subscription   `bun:"rel:has-one,join:subscription_id=subscription_id"`
+	ResourceGroup        *ResourceGroup  `bun:"rel:has-one,join:resource_group=name,join:subscription_id=subscription_id"`
+	VirtualMachine       *VirtualMachine `bun:"rel:has-one,join:vm_name=name,join:subscription_id=subscription_id,join:resource_group=resource_group"`
+	VPC                  *VPC            `bun:"rel:has-one,join:vpc_name=name,join:subscription_id=subscription_id,join:resource_group=resource_group"`
+	Subnet               *Subnet         `bun:"rel:has-one,join:subnet_name=name,join:vpc_name=vpc_name,join:subscription_id=subscription_id,join:resource_group=resource_group"`
+	PublicAddress        *PublicAddress  `bun:"rel:has-one,join:public_ip_name=name,join:subscription_id=subscription_id,join:resource_group=resource_group"`
+}
+
+// NetworkInterfaceToVM represents a link table connecting the
+// [NetworkInterface] with [VirtualMachine] models.
+type NetworkInterfaceToVM struct {
+	bun.BaseModel `bun:"table:l_az_nic_to_vm"`
+	coremodels.Model
+
+	NetworkInterfaceID uuid.UUID `bun:"nic_id,notnull,type:uuid,unique:l_az_nic_to_vm_key"`
+	VMID               uuid.UUID `bun:"vm_id,notnull,type:uuid,unique:l_az_nic_to_vm_key"`
+}
+
+// NetworkInterfaceToPublicAddress represents a link table connecting the
+// [NetworkInterface] with [PublicAddress] models.
+type NetworkInterfaceToPublicAddress struct {
+	bun.BaseModel `bun:"table:l_az_nic_to_pub_addr"`
+	coremodels.Model
+
+	NetworkInterfaceID uuid.UUID `bun:"nic_id,notnull,type:uuid,unique:l_az_nic_to_pub_addr_key"`
+	PublicAddressID    uuid.UUID `bun:"pa_id,notnull,type:uuid,unique:l_az_nic_to_pub_addr_key"`
 }
 
 // PublicAddress represents an Azure Public IP Address.
