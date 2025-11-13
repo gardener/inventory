@@ -89,7 +89,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 			logger.Warn(
 				"Azure Subnets client not found",
 				"subscription_id", vpc.SubscriptionID,
-				"resource_group", vpc.Name,
+				"resource_group", vpc.ResourceGroupName,
 			)
 
 			continue
@@ -143,7 +143,7 @@ func enqueueCollectSubnets(ctx context.Context) error {
 }
 
 // collectSubnets collects the Azure Subnets from the
-// subscription and resource group specified in the payload.
+// subscription, resource group and VPC specified in the payload.
 func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 	client, ok := azureclients.SubnetsClientset.Get(payload.SubscriptionID)
 	if !ok {
