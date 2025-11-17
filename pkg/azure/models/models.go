@@ -155,26 +155,6 @@ type NetworkInterface struct {
 	PublicAddress        *PublicAddress  `bun:"rel:has-one,join:public_ip_name=name,join:subscription_id=subscription_id,join:resource_group=resource_group"`
 }
 
-// NetworkInterfaceToVM represents a link table connecting the
-// [NetworkInterface] with [VirtualMachine] models.
-type NetworkInterfaceToVM struct {
-	bun.BaseModel `bun:"table:l_az_nic_to_vm"`
-	coremodels.Model
-
-	NetworkInterfaceID uuid.UUID `bun:"nic_id,notnull,type:uuid,unique:l_az_nic_to_vm_key"`
-	VMID               uuid.UUID `bun:"vm_id,notnull,type:uuid,unique:l_az_nic_to_vm_key"`
-}
-
-// NetworkInterfaceToPublicAddress represents a link table connecting the
-// [NetworkInterface] with [PublicAddress] models.
-type NetworkInterfaceToPublicAddress struct {
-	bun.BaseModel `bun:"table:l_az_nic_to_pub_addr"`
-	coremodels.Model
-
-	NetworkInterfaceID uuid.UUID `bun:"nic_id,notnull,type:uuid,unique:l_az_nic_to_pub_addr_key"`
-	PublicAddressID    uuid.UUID `bun:"pa_id,notnull,type:uuid,unique:l_az_nic_to_pub_addr_key"`
-}
-
 // PublicAddress represents an Azure Public IP Address.
 type PublicAddress struct {
 	bun.BaseModel `bun:"table:az_public_address"`

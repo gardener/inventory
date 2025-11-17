@@ -39,6 +39,7 @@ func HandleCollectAllTask(ctx context.Context, _ *asynq.Task) error {
 		NewCollectSubnetsTask,
 		NewCollectStorageAccountsTask,
 		NewCollectBlobContainersTask,
+		NewCollectNetworkInterfacesTask,
 	}
 
 	return asynqutils.Enqueue(ctx, taskFns, asynq.Queue(queue))
@@ -75,4 +76,5 @@ func init() {
 	registry.TaskRegistry.MustRegister(TaskCollectStorageAccounts, asynq.HandlerFunc(HandleCollectStorageAccountsTask))
 	registry.TaskRegistry.MustRegister(TaskCollectBlobContainers, asynq.HandlerFunc(HandleCollectBlobContainersTask))
 	registry.TaskRegistry.MustRegister(TaskCollectUsers, asynq.HandlerFunc(HandleCollectUsersTask))
+	registry.TaskRegistry.MustRegister(TaskCollectNetworkInterfaces, asynq.HandlerFunc(HandleCollectNetworkInterfacesTask))
 }
