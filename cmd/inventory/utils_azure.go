@@ -355,6 +355,26 @@ func configureAzureNetworkClientsets(ctx context.Context, conf *config.Config) e
 				return err
 			}
 
+			// Register Network Interfaces client
+			nicClient := factory.NewInterfacesClient()
+			azureclients.NetworkInterfacesClientset.Overwrite(
+				subscriptionID,
+				&azureclients.Client[*armnetwork.InterfacesClient]{
+					NamedCredentials: namedCreds,
+					SubscriptionID:   subscriptionID,
+					SubscriptionName: subscriptionName,
+					Client:           nicClient,
+				},
+			)
+			slog.Info(
+				"configured Azure client",
+				"service", "network",
+				"sub_service", "network-interfaces",
+				"credentials", namedCreds,
+				"subscription_id", subscriptionID,
+				"subscription_name", subscriptionName,
+			)
+
 			// Register Public IP Addresses client
 			ipClient := factory.NewPublicIPAddressesClient()
 			azureclients.PublicIPAddressesClientset.Overwrite(
