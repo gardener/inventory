@@ -1,0 +1,2 @@
+ALTER TABLE "g_bastion" DROP COLUMN "ip";
+ALTER TABLE "g_bastion" ADD COLUMN "ip" VARCHAR;
