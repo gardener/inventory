@@ -92,3 +92,36 @@ func MaybeSkipRetry(err error) error {
 
 	return err
 }
+
+// ExtractResourceNameFromID extracts the resource name from an Azure resource ID.
+// Azure resource IDs have the format:
+// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{namespace}/{resourceType}/{resourceName}
+func ExtractResourceNameFromID(resourceID string) string {
+	if resourceID == "" {
+		return ""
+	}
+
+	parts := strings.Split(strings.TrimSuffix(resourceID, "/"), "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+
+	return ""
+}
+
+// ExtractParentResourceNameFromID extracts the parent resource name from an Azure resource ID.
+// This is useful for nested resources like subnets, where you need the VNet name.
+// For a subnet ID like: /subscriptions/.../virtualNetworks/{vnetName}/subnets/{subnetName}
+// This returns {vnetName}
+func ExtractParentResourceNameFromID(resourceID string) string {
+	if resourceID == "" {
+		return ""
+	}
+
+	parts := strings.Split(strings.TrimSuffix(resourceID, "/"), "/")
+	if len(parts) >= 3 {
+		return parts[len(parts)-3]
+	}
+
+	return ""
+}
