@@ -17,14 +17,14 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.8.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription v1.2.0
 	github.com/aws/aws-sdk-go-v2 v1.39.6
-	github.com/aws/aws-sdk-go-v2/config v1.31.18
-	github.com/aws/aws-sdk-go-v2/credentials v1.18.22
+	github.com/aws/aws-sdk-go-v2/config v1.31.20
+	github.com/aws/aws-sdk-go-v2/credentials v1.18.24
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.257.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.13
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.50.6
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.59.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.89.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.40.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.40.2
 	github.com/gardener/external-dns-management v0.28.0
 	github.com/gardener/gardener v1.129.1
 	github.com/gardener/gardener-extension-provider-aws v1.65.3
@@ -77,8 +77,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.30.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.7 // indirect
 	github.com/aws/smithy-go v1.23.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
