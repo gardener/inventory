@@ -147,6 +147,7 @@ type NetworkInterface struct {
 	IPv6AccessType string    `bun:"ipv6_access_type,notnull"`
 	NICType        string    `bun:"nic_type,notnull"`
 	StackType      string    `bun:"stack_type,notnull"`
+	NATIP          net.IP    `bun:"nat_ip,nullzero"`
 	Instance       *Instance `bun:"rel:has-one,join:project_id=project_id,join:instance_id=instance_id"`
 }
 

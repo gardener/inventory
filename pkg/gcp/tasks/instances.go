@@ -223,6 +223,33 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 
 			// Collect NICs
 			for _, ni := range inst.GetNetworkInterfaces() {
+				accessConfigCount := 0
+
+				var natIP string
+
+				accessConfig := ni.GetAccessConfigs()
+				for _, conf := range accessConfig {
+					accessConfigCount++
+					if conf == nil {
+						continue
+					}
+
+					if ip := conf.GetNatIP(); ip != "" {
+						natIP = ip
+					}
+				}
+
+				if accessConfigCount > 1 {
+					logger.Warn(
+						"too many access configs for instance NIC",
+						"nic_id", ni.GetName(),
+						"instance_id", inst.GetId(),
+						"project_id", payload.ProjectID,
+					)
+
+					continue
+				}
+
 				nic := models.NetworkInterface{
 					Name:           ni.GetName(),
 					ProjectID:      payload.ProjectID,
@@ -234,6 +261,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 					IPv6AccessType: ni.GetIpv6AccessType(),
 					NICType:        ni.GetNicType(),
 					StackType:      ni.GetStackType(),
+					NATIP:          net.ParseIP(natIP),
 				}
 				nics = append(nics, nic)
 			}
@@ -301,6 +329,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 		Set("ipv6_access_type = EXCLUDED.ipv6_access_type").
 		Set("nic_type = EXCLUDED.nic_type").
 		Set("stack_type = EXCLUDED.stack_type").
+		Set("nat_ip = EXCLUDED.nat_ip").
 		Set("updated_at = EXCLUDED.updated_at").
 		Returning("id").
 		Exec(ctx)
