@@ -42,9 +42,9 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go v1.89.0
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/uptrace/bun v1.2.15
+	github.com/uptrace/bun v1.2.16
 	github.com/uptrace/bun/dialect/pgdialect v1.2.15
-	github.com/uptrace/bun/driver/pgdriver v1.2.15
+	github.com/uptrace/bun/driver/pgdriver v1.2.16
 	github.com/uptrace/bun/extra/bundebug v1.2.15
 	github.com/urfave/cli/v2 v2.27.7
 	google.golang.org/api v0.256.0
