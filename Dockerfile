@@ -31,7 +31,7 @@ COPY pkg/ ./pkg
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o inventory ./cmd/inventory
 
 #FROM gcr.io/distroless/static:nonroot
-FROM alpine:3.22
+FROM alpine:3.23
 RUN apk add --update \
     python3 curl which bash
 RUN curl -sSL https://sdk.cloud.google.com > /tmp/gcl && \
