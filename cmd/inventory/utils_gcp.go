@@ -104,7 +104,7 @@ func getGCPClientOptions(conf *config.Config, namedCredentials string) ([]option
 		if creds.KeyFile.Path == "" {
 			return nil, fmt.Errorf("gcp: %w: credentials %s", errNoGCPKeyFile, namedCredentials)
 		}
-		opts = append(opts, option.WithAuthCredentialsFile(option.ServiceAccount, creds.KeyFile.Path))
+		opts = append(opts, option.WithAuthCredentialsFile(option.ExternalAccount, creds.KeyFile.Path))
 	default:
 		return nil, fmt.Errorf("gcp: %w: %s uses %s", errUnknownAuthenticationMethod, namedCredentials, creds.Authentication)
 	}
