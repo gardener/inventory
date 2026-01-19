@@ -117,7 +117,7 @@ func collectAvailabilityZones(ctx context.Context, payload CollectAvailabilityZo
 			"reason", err,
 		)
 
-		return err
+		return awsutils.MaybeSkipRetry(err)
 	}
 
 	items := make([]models.AvailabilityZone, 0, len(result.AvailabilityZones))

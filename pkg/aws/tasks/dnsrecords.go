@@ -16,7 +16,7 @@ import (
 
 	"github.com/gardener/inventory/pkg/aws/constants"
 	"github.com/gardener/inventory/pkg/aws/models"
-	"github.com/gardener/inventory/pkg/aws/utils"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -200,7 +200,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 
 		recordSets = append(recordSets, page.ResourceRecordSets...)
@@ -220,7 +220,7 @@ func collectDNSRecords(ctx context.Context, payload CollectDNSRecordsPayload) er
 			)
 		}
 
-		name := utils.RestoreAsteriskPrefix(ptr.StringFromPointer(set.Name))
+		name := awsutils.RestoreAsteriskPrefix(ptr.StringFromPointer(set.Name))
 		if set.AliasTarget != nil {
 			isAlias = true
 			dnsName = ptr.StringFromPointer(set.AliasTarget.DNSName)

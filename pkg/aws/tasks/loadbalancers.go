@@ -215,7 +215,7 @@ func collectELBv2(ctx context.Context, payload CollectLoadBalancersPayload) erro
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 		items = append(items, page.LoadBalancers...)
 	}
@@ -347,7 +347,7 @@ func collectELBv1(ctx context.Context, payload CollectLoadBalancersPayload) erro
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 		items = append(items, page.LoadBalancerDescriptions...)
 	}

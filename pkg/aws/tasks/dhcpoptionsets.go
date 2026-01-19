@@ -191,7 +191,7 @@ func collectDHCPOptionSets(ctx context.Context, payload CollectDHCPOptionSetsPay
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 		items = append(items, page.DhcpOptions...)
 	}

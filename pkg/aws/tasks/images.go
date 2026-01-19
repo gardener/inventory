@@ -204,7 +204,7 @@ func collectImages(ctx context.Context, payload CollectImagesPayload) error {
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 
 		items = append(items, page.Images...)

@@ -177,7 +177,7 @@ func collectSubnets(ctx context.Context, payload CollectSubnetsPayload) error {
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 		items = append(items, page.Subnets...)
 	}

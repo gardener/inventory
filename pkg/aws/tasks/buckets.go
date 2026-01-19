@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/models"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -133,7 +134,7 @@ func collectBuckets(ctx context.Context, payload CollectBucketsPayload) error {
 			"reason", err,
 		)
 
-		return err
+		return awsutils.MaybeSkipRetry(err)
 	}
 
 	buckets := make([]models.Bucket, 0, len(result.Buckets))
