@@ -183,7 +183,7 @@ func collectENIs(ctx context.Context, payload CollectNetworkInterfacesPayload) e
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 		items = append(items, page.NetworkInterfaces...)
 	}

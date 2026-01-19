@@ -183,7 +183,7 @@ func collectInstances(ctx context.Context, payload CollectInstancesPayload) erro
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 
 		for _, reservation := range page.Reservations {

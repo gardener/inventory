@@ -192,7 +192,7 @@ func collectVPCs(ctx context.Context, payload CollectVPCsPayload) error {
 				"reason", err,
 			)
 
-			return err
+			return awsutils.MaybeSkipRetry(err)
 		}
 		items = append(items, page.Vpcs...)
 	}

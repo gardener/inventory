@@ -13,6 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/gardener/inventory/pkg/aws/models"
+	awsutils "github.com/gardener/inventory/pkg/aws/utils"
 	asynqclient "github.com/gardener/inventory/pkg/clients/asynq"
 	awsclients "github.com/gardener/inventory/pkg/clients/aws"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -146,7 +147,7 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 			"reason", err,
 		)
 
-		return err
+		return awsutils.MaybeSkipRetry(err)
 	}
 
 	regions := make([]models.Region, 0, len(result.Regions))
