@@ -25,6 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.89.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6
+	github.com/aws/smithy-go v1.24.0
 	github.com/gardener/external-dns-management v0.28.0
 	github.com/gardener/gardener v1.129.1
 	github.com/gardener/gardener-extension-provider-aws v1.65.3
@@ -34,7 +35,7 @@ require (
 	github.com/gardener/machine-controller-manager v0.60.0
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/uuid v1.6.0
-	github.com/gophercloud/gophercloud/v2 v2.9.0
+	github.com/gophercloud/gophercloud/v2 v2.10.0
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/hibiken/asynq v0.25.1
 	github.com/hibiken/asynq/x v0.0.0-20250401060612-c327bc40a28e
@@ -80,7 +81,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.12 // indirect
-	github.com/aws/smithy-go v1.24.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
