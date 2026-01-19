@@ -6,9 +6,14 @@ package utils
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/smithy-go"
+	"github.com/hibiken/asynq"
 
 	"github.com/gardener/inventory/pkg/aws/models"
 	"github.com/gardener/inventory/pkg/clients/db"
@@ -59,4 +64,23 @@ func RestoreAsteriskPrefix(route string) string {
 	}
 
 	return result
+}
+
+// MaybeSkipRetry wraps known AWS errors with [asynq.SkipRetry], so that the
+// tasks from which these errors originate from won't be retried.
+func MaybeSkipRetry(err error) error {
+	// Do not retry tasks where the API call resulted in errors caused by
+	// the caller.
+	skipRetryCodes := []smithy.ErrorFault{
+		smithy.FaultClient,
+	}
+
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		if slices.Contains(skipRetryCodes, apiErr.ErrorFault()) {
+			return fmt.Errorf("%w (%w)", err, asynq.SkipRetry)
+		}
+	}
+
+	return err
 }
