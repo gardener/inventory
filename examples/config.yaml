@@ -481,7 +481,7 @@ scheduler:
     - name: "aws:task:collect-hosted-zones"
       spec: "@every 1h"
       desc: "Collect AWS DNS Hosted Zones"
-    - name: "aws:task:collect-dns-records"
+    - name: "aws:task:collect-dns-record"
       spec: "@every 1h"
       desc: "Collect AWS DNS Records"
     - name: "aws:task:collect-dhcp-option-sets"
@@ -516,6 +516,9 @@ scheduler:
     - name: "g:task:collect-dns-records"
       spec: "@every 1h"
       desc: "Collect Gardener DNSRecords"
+    - name: "g:task:collect-dns-entries"
+      spec: "@every 1h"
+      desc: "Collect Gardener DNSEntries"
     - name: "g:task:collect-bastions"
       spec: "@every 1h"
       desc: "Collect Gardener Bastions"
@@ -589,6 +592,9 @@ scheduler:
     - name: "az:task:collect-blob-containers"
       spec: "@every 1h"
       desc: "Collect Azure Blob containers"
+    - name: "az:task:collect-network-interfaces"
+      spec: "@every 1h"
+      desc: "Collect Azure Network Interfaces"
     - name: "az:task:link-all"
       spec: "@every 1h"
       desc: "Link all Azure models"
@@ -684,7 +690,7 @@ scheduler:
             duration: 24h
           - name: "g:model:cloud_profile_openstack_image"
             duration: 24h
-          - name: "g:model:persistent_volumes"
+          - name: "g:model:persistent_volume"
             duration: 24h
           - name: "g:model:dns_record"
             duration: 24h
@@ -744,6 +750,8 @@ scheduler:
             duration: 24h
           - name: "az:model:blob_container"
             duration: 24h
+          - name: "az:model:network_interface"
+            duration: 24h
           - name: "az:model:user"
             duration: 24h
           # OpenStack
@@ -778,6 +786,8 @@ scheduler:
           - name: "openstack:model:container"
             duration: 24h
           - name: "openstack:model:volume"
+            duration: 24h
+          - name: "openstack:model:volume_attachment"
             duration: 24h
           # Auxiliary
           - name: "aux:model:housekeeper_run"
