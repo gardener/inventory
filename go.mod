@@ -35,7 +35,7 @@ require (
 	github.com/gardener/machine-controller-manager v0.60.0
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/uuid v1.6.0
-	github.com/gophercloud/gophercloud/v2 v2.9.0
+	github.com/gophercloud/gophercloud/v2 v2.10.0
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/hibiken/asynq v0.25.1
 	github.com/hibiken/asynq/x v0.0.0-20250401060612-c327bc40a28e
