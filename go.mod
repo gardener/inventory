@@ -33,7 +33,7 @@ require (
 	github.com/gardener/gardener-extension-provider-gcp v1.44.0
 	github.com/gardener/gardener-extension-provider-openstack v1.47.0
 	github.com/gardener/machine-controller-manager v0.60.0
-	github.com/goccy/go-yaml v1.18.0
+	github.com/goccy/go-yaml v1.19.2
 	github.com/google/uuid v1.6.0
 	github.com/gophercloud/gophercloud/v2 v2.10.0
 	github.com/hashicorp/vault/api v1.22.0
