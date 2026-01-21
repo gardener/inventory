@@ -6,6 +6,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -57,8 +58,11 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		return asynqutils.SkipRetry(err)
 	}
 
-	// Record each model processed by the housekeeper
+	// Record successful models processed by the housekeeper
 	hkRuns := make([]models.HousekeeperRun, 0)
+
+	// Capture all errors from all models during a housekeeper run.
+	allErrs := make([]error, 0)
 
 	logger := asynqutils.GetLogger(ctx)
 	for _, item := range payload.Retention {
@@ -77,6 +81,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 			Where("date_part('epoch', updated_at) < ?", past.Unix()).
 			Exec(ctx)
 
+		allErrs = append(allErrs, err)
 		completedAt := time.Now()
 		switch err {
 		case nil:
@@ -111,7 +116,7 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 	}
 
 	if len(hkRuns) == 0 {
-		return nil
+		return errors.Join(allErrs...)
 	}
 
 	_, err := db.DB.NewInsert().
@@ -119,7 +124,9 @@ func HandleHousekeeperTask(ctx context.Context, task *asynq.Task) error {
 		Returning("id").
 		Exec(ctx)
 
-	return err
+	allErrs = append(allErrs, err)
+
+	return errors.Join(allErrs...)
 }
 
 func init() {
