@@ -260,6 +260,10 @@ func collectDisks(ctx context.Context, payload CollectDisksPayload) error {
 		"count", count,
 	)
 
+	if len(attachedDisks) == 0 {
+		return nil
+	}
+
 	out, err = db.DB.NewInsert().
 		Model(&attachedDisks).
 		On("CONFLICT (instance_name, disk_name, project_id) DO UPDATE").
