@@ -45,9 +45,6 @@ spec:
           - name: INVENTORY_CONFIG
             value: /app/config/config.yaml
         resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
           requests:
             cpu: 10m
             memory: 64Mi
