@@ -40,11 +40,11 @@ jobs:
   publish-oci:
     if: github.event_name == 'push' && github.repository == 'gardener/inventory'
     uses: ./.github/workflows/oci-images.yaml
+    secrets: inherit
     permissions:
       contents: read
       packages: write
       id-token: write
-      pull-requests: write
     needs:
       - test
     with:
