@@ -49,9 +49,9 @@ require (
 	github.com/uptrace/bun/extra/bundebug v1.2.16
 	github.com/urfave/cli/v2 v2.27.7
 	google.golang.org/api v0.271.0
-	k8s.io/api v0.35.1
-	k8s.io/apimachinery v0.35.1
-	k8s.io/client-go v0.35.1
+	k8s.io/api v0.35.3
+	k8s.io/apimachinery v0.35.3
+	k8s.io/client-go v0.35.3
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
 	sigs.k8s.io/controller-runtime v0.22.4
 )
