@@ -37,7 +37,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gophercloud/gophercloud/v2 v2.10.0
 	github.com/hashicorp/vault/api v1.22.0
-	github.com/hibiken/asynq v0.25.1
+	github.com/hibiken/asynq v0.26.0
 	github.com/hibiken/asynq/x v0.0.0-20250401060612-c327bc40a28e
 	github.com/hibiken/asynqmon v0.7.2
 	github.com/microsoftgraph/msgraph-sdk-go v1.96.0
@@ -149,7 +149,7 @@ require (
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
-	github.com/redis/go-redis/v9 v9.10.0 // indirect
+	github.com/redis/go-redis/v9 v9.14.1 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
