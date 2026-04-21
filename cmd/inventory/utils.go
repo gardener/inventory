@@ -119,6 +119,7 @@ func newWorker(ctx context.Context, conf *config.Config) *workerutils.Worker {
 	// Configure middlewares
 	middlewares := []asynq.MiddlewareFunc{
 		asynqutils.NewLoggerMiddleware(slog.Default()),
+		asynqutils.NewConfigMiddleware(conf),
 		asynqutils.NewMeasuringMiddleware(),
 		asynqutils.NewMetricsMiddleware(),
 	}
