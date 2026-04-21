@@ -289,6 +289,12 @@ aws:
   default_region: eu-central-1  # Frankfurt
   app_id: gardener-inventory  # Optional application specific identifier
 
+  # The list of excluded regions specifies AWS region names, from which
+  # collection will be skipped.
+  # excluded_regions:
+  #   - eu-west-1
+  #   - eu-west-2
+
   # This section provides configuration specific to each AWS service and which
   # named credentials are used for each service. This allows the Inventory to
   # connect to multiple AWS accounts based on the named credentials which are

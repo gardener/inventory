@@ -7,6 +7,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hibiken/asynq"
@@ -151,9 +152,17 @@ func collectRegions(ctx context.Context, payload CollectRegionsPayload) error {
 	}
 
 	regions := make([]models.Region, 0, len(result.Regions))
+	conf := asynqutils.GetConfig(ctx)
 	for _, region := range result.Regions {
+		regionName := ptr.StringFromPointer(region.RegionName)
+		if slices.Contains(conf.AWS.ExcludedRegions, regionName) {
+			logger.Warn("skipping excluded region", "region", regionName, "account_id", payload.AccountID)
+
+			continue
+		}
+
 		item := models.Region{
-			Name:        ptr.StringFromPointer(region.RegionName),
+			Name:        regionName,
 			AccountID:   payload.AccountID,
 			Endpoint:    ptr.StringFromPointer(region.Endpoint),
 			OptInStatus: ptr.StringFromPointer(region.OptInStatus),

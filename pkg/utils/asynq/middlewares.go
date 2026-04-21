@@ -13,6 +13,7 @@ import (
 
 	"github.com/hibiken/asynq"
 
+	"github.com/gardener/inventory/pkg/core/config"
 	"github.com/gardener/inventory/pkg/metrics"
 )
 
@@ -39,6 +40,22 @@ func NewLoggerMiddleware(logger *slog.Logger) asynq.MiddlewareFunc {
 			logHandler := logger.Handler().WithAttrs(attrs)
 			newLogger := slog.New(logHandler)
 			newCtx := context.WithValue(ctx, loggerKey{}, newLogger)
+
+			return handler.ProcessTask(newCtx, task)
+		}
+
+		return asynq.HandlerFunc(mw)
+	}
+
+	return asynq.MiddlewareFunc(middleware)
+}
+
+// NewConfigMiddleware returns a new [asynq.MiddlewareFunc], which embeds a
+// [config.Config] in the context provided to task handlers.
+func NewConfigMiddleware(conf *config.Config) asynq.MiddlewareFunc {
+	middleware := func(handler asynq.Handler) asynq.Handler {
+		mw := func(ctx context.Context, task *asynq.Task) error {
+			newCtx := context.WithValue(ctx, configKey{}, conf)
 
 			return handler.ProcessTask(newCtx, task)
 		}

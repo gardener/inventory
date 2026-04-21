@@ -39,6 +39,9 @@ func Unmarshal(data []byte, v any) error {
 // loggerKey is the key used to store a [slog.Logger] in a [context.Context]
 type loggerKey struct{}
 
+// configKey is the key used to store a [config.Config] in a [context.Context]
+type configKey struct{}
+
 // GetLogger returns the [slog.Logger] instance from the provided context, if
 // found, or [slog.DefaultLogger] otherwise.
 func GetLogger(ctx context.Context) *slog.Logger {
@@ -49,6 +52,18 @@ func GetLogger(ctx context.Context) *slog.Logger {
 	}
 
 	return logger
+}
+
+// GetConfig returns the [config.Config] instance from the provided context, if
+// found, or an empty [config.Config] otherwise.
+func GetConfig(ctx context.Context) *config.Config {
+	value := ctx.Value(configKey{})
+	conf, ok := value.(*config.Config)
+	if !ok {
+		return &config.Config{}
+	}
+
+	return conf
 }
 
 // NewDefaultErrorHandler returns an [asynq.ErrorHandlerFunc], which logs the

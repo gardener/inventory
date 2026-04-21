@@ -532,6 +532,10 @@ type AWSConfig struct {
 	// AppID is an optional application specific identifier.
 	AppID string `yaml:"app_id"`
 
+	// ExcludedRegions is a list of AWS region names, which will be
+	// excluded from collection.
+	ExcludedRegions []string `yaml:"excluded_regions"`
+
 	// Services provides AWS service-specific configuration,
 	// e.g. credentials to use when accessing a given AWS service.
 	Services AWSServices `yaml:"services"`
