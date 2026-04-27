@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.296.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.24
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.10
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.1
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.6
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0
 	github.com/aws/smithy-go v1.25.0
