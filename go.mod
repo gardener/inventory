@@ -6,9 +6,9 @@ require (
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/compute v1.60.0
 	cloud.google.com/go/container v1.48.0
-	cloud.google.com/go/iam v1.6.0
+	cloud.google.com/go/iam v1.7.0
 	cloud.google.com/go/resourcemanager v1.11.0
-	cloud.google.com/go/storage v1.61.3
+	cloud.google.com/go/storage v1.62.1
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6 v6.4.0
@@ -61,7 +61,7 @@ require (
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
-	cloud.google.com/go/longrunning v0.8.0 // indirect
+	cloud.google.com/go/longrunning v0.9.0 // indirect
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.6.0 // indirect
