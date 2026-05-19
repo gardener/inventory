@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	cloud.google.com/go/auth v0.20.0
-	cloud.google.com/go/compute v1.60.0
+	cloud.google.com/go/compute v1.63.0
 	cloud.google.com/go/container v1.51.0
 	cloud.google.com/go/iam v1.7.0
 	cloud.google.com/go/resourcemanager v1.11.0
