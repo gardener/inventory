@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/compute v1.63.0
 	cloud.google.com/go/container v1.51.0
-	cloud.google.com/go/iam v1.7.0
+	cloud.google.com/go/iam v1.11.0
 	cloud.google.com/go/resourcemanager v1.15.0
 	cloud.google.com/go/storage v1.62.1
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1
