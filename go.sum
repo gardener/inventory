@@ -12,8 +12,8 @@ cloud.google.com/go/compute v1.65.0 h1:K0a3NRvazE7sZn5qswwI6BtlaZv1fgR5wFop5LZCL
 cloud.google.com/go/compute v1.65.0/go.mod h1:vFq+Ztj9Rzhc8zf1t6hGp/6NdrEVG1GakkyVRQPRgKc=
 cloud.google.com/go/compute/metadata v0.9.0 h1:pDUj4QMoPejqq20dK0Pg2N4yG9zIkYGdBtwLoEkH9Zs=
 cloud.google.com/go/compute/metadata v0.9.0/go.mod h1:E0bWwX5wTnLPedCKqk3pJmVgCBSM6qQI1yTBdEb3C10=
-cloud.google.com/go/container v1.51.0 h1:KdeWHqwlOvABdhkhSTSb4QFySMOuXnc3UUoQMmq9lic=
-cloud.google.com/go/container v1.51.0/go.mod h1:EvqoT2eXfxLweXXUlhAMGR0sOAB00XPzEjoL01esSDs=
+cloud.google.com/go/container v1.53.0 h1:3zUySblDfZI9c+5gUWVOacKrdsQwiEerK4HM8eS/Ud8=
+cloud.google.com/go/container v1.53.0/go.mod h1:SBOylKhlKYCBFs/8kz2yqRdUW5ctVNHs82JKOTjrB9s=
 cloud.google.com/go/iam v1.11.0 h1:KieQ9Pb+LLPak1O3Rv3GgCxhnmkYf7Xyh0P5HfF1jFM=
 cloud.google.com/go/iam v1.11.0/go.mod h1:KP+nKGugNJW4LcLx1uEZcq1ok5sQHFaQehQNl4QDgV4=
 cloud.google.com/go/logging v1.18.0 h1:KhzZq+1cSkPH9YUaKLLhLtQxIHitVayBmk0sGfoM9+k=
