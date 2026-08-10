@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	cloud.google.com/go/auth v0.22.0
 	cloud.google.com/go/compute v1.65.0
-	cloud.google.com/go/container v1.53.0
+	cloud.google.com/go/container v1.53.1
 	cloud.google.com/go/iam v1.12.0
 	cloud.google.com/go/resourcemanager v1.16.0
 	cloud.google.com/go/storage v1.64.0
