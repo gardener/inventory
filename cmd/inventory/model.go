@@ -114,11 +114,11 @@ func NewModelCommand() *cli.Command {
 						return fmt.Errorf("model %q not found in registry", modelName)
 					}
 
-					offset := ctx.Int("offset")
+					offset := int64(ctx.Int("offset"))
 					if offset < 0 {
 						return fmt.Errorf("invalid offset %d", offset)
 					}
-					limit := ctx.Int("limit")
+					limit := int64(ctx.Int("limit"))
 					if limit < 0 {
 						return fmt.Errorf("invalid limit %d", limit)
 					}

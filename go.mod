@@ -44,8 +44,8 @@ require (
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/prometheus/client_golang v1.24.0
 	github.com/uptrace/bun v1.3.0
-	github.com/uptrace/bun/dialect/pgdialect v1.2.18
-	github.com/uptrace/bun/driver/pgdriver v1.2.18
+	github.com/uptrace/bun/dialect/pgdialect v1.3.0
+	github.com/uptrace/bun/driver/pgdriver v1.3.0
 	github.com/uptrace/bun/extra/bundebug v1.3.0
 	github.com/urfave/cli/v2 v2.27.7
 	google.golang.org/api v0.293.0
