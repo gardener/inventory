@@ -134,7 +134,7 @@ func newDB(conf *config.Config) (*bun.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(conf.Debug)))
+	db = db.WithQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(conf.Debug)))
 
 	return db, nil
 }
